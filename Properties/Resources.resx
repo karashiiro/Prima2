@@ -1,0 +1,207 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ClockAddSuccess" xml:space="preserve">
+    <value>The clock has been added! Please allow up to one minute for the clock to update.</value>
+  </data>
+  <data name="ClockRemoveSuccess" xml:space="preserve">
+    <value>The clock has been removed!</value>
+  </data>
+  <data name="CommandAssemblyReloadSuccess" xml:space="preserve">
+    <value>Command assembly reloaded!</value>
+  </data>
+  <data name="CommandPrefixUpdateSuccess" xml:space="preserve">
+    <value>Command prefix updated!</value>
+  </data>
+  <data name="DBUserCountInProgress" xml:space="preserve">
+    <value>Counting all entities in the User database, please wait...</value>
+  </data>
+  <data name="DiscordNicknameTooLongError" xml:space="preserve">
+    <value>Because of Discord's limitations, nicknames must be 32 characters or fewer in length.</value>
+  </data>
+  <data name="GenericSuccess" xml:space="preserve">
+    <value>Task completed!</value>
+  </data>
+  <data name="IncompatiblePresetError" xml:space="preserve">
+    <value>The Preset provided is not compatible with the operation requested.</value>
+  </data>
+  <data name="InvalidNumberError" xml:space="preserve">
+    <value>That's not a valid number!</value>
+  </data>
+  <data name="LodestoneBAAchievementSuccess" xml:space="preserve">
+    <value>The achievement has been found, and you have been given the Arsenal Master role.</value>
+  </data>
+  <data name="LodestoneBAMountSuccess" xml:space="preserve">
+    <value>The mount has been found, and you have been given the Cleared role.</value>
+  </data>
+  <data name="LodestoneDiscordIdNotFoundError" xml:space="preserve">
+    <value>Discord ID not found. Please ensure your Discord ID is located somewhere in your Lodestone bio.</value>
+  </data>
+  <data name="LodestoneMountAchievementNotFoundError" xml:space="preserve">
+    <value>The mount or achievement was not found. Please ensure your achievements and mounts are public for this operation.</value>
+  </data>
+  <data name="MemberAlreadyHasRoleError" xml:space="preserve">
+    <value>You already have all roles associated with this command!</value>
+  </data>
+  <data name="MentionNotProvidedError" xml:space="preserve">
+    <value>Please provide a user mention in your command.</value>
+  </data>
+  <data name="MustBeUsedInGuildError" xml:space="preserve">
+    <value>That command must be used in a guild!</value>
+  </data>
+  <data name="MustBeUsedOnVoiceChannelError" xml:space="preserve">
+    <value>That argument must reference a voice channel, not a text channel!</value>
+  </data>
+  <data name="NotATimezoneIdError" xml:space="preserve">
+    <value>That is not a valid timezone ID!</value>
+  </data>
+  <data name="ReportInGuildWarning" xml:space="preserve">
+    <value>in the future, please only use the report command in my DMs. Though your report is being processed, using my DM to make the report helps maintain everyone's privacy. Thank you ^^</value>
+  </data>
+  <data name="ReportThankYou" xml:space="preserve">
+    <value>Thank you for your report. The moderators will read it as soon as they are available.</value>
+  </data>
+  <data name="UndefinedPresetError" xml:space="preserve">
+    <value>Preset Undefined enables all commands, without enabling the corresponding services.\nThis configuration is prohibited.</value>
+  </data>
+  <data name="UnsavedMessageAttachmentsWarning" xml:space="preserve">
+    <value>Unsaved message attachments linked below. Please be aware that attempting to access deleted files may return 403 Forbidden from the CDN.</value>
+  </data>
+  <data name="UserNotFoundError" xml:space="preserve">
+    <value>No user matching the query could be found.</value>
+  </data>
+  <data name="UserNotInDatabaseError" xml:space="preserve">
+    <value>That user was not found in the database.</value>
+  </data>
+  <data name="UWPConnectionString" xml:space="preserve">
+    <value>Data Source=DiscordXIVUsers.db</value>
+  </data>
+  <data name="VerificationProcess1" xml:space="preserve">
+    <value>You have begun the verification process. Your **Discord account ID** is `</value>
+  </data>
+  <data name="VerificationProcess2" xml:space="preserve">
+    <value>`.
+Please add this somewhere in your FFXIV Lodestone account description.
+You can edit your account description here: https://na.finalfantasyxiv.com/lodestone/my/setting/profile/
+After you have put your Discord account ID in your Lodestone profile, please use</value>
+  </data>
+  <data name="VerificationProcess3" xml:space="preserve">
+    <value>verify `Lodestone ID` to tell me your Lodestone ID **(located in your character profile URL)**.</value>
+  </data>
+</root>
