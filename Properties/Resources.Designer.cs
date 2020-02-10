@@ -115,6 +115,15 @@ namespace Prima.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Task failed!.
+        /// </summary>
+        internal static string GenericFailure {
+            get {
+                return ResourceManager.GetString("GenericFailure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Task completed!.
         /// </summary>
         internal static string GenericSuccess {
@@ -138,6 +147,15 @@ namespace Prima.Properties {
         internal static string InvalidNumberError {
             get {
                 return ResourceManager.GetString("InvalidNumberError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to That&apos;s not a valid regex string!.
+        /// </summary>
+        internal static string InvalidRegexError {
+            get {
+                return ResourceManager.GetString("InvalidRegexError", resourceCulture);
             }
         }
         
@@ -219,6 +237,15 @@ namespace Prima.Properties {
         internal static string NotATimezoneIdError {
             get {
                 return ResourceManager.GetString("NotATimezoneIdError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The specified regular expression was not found in the database..
+        /// </summary>
+        internal static string RegexNotFoundError {
+            get {
+                return ResourceManager.GetString("RegexNotFoundError", resourceCulture);
             }
         }
         

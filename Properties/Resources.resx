@@ -135,6 +135,9 @@
   <data name="DiscordNicknameTooLongError" xml:space="preserve">
     <value>Because of Discord's limitations, nicknames must be 32 characters or fewer in length.</value>
   </data>
+  <data name="GenericFailure" xml:space="preserve">
+    <value>Task failed!</value>
+  </data>
   <data name="GenericSuccess" xml:space="preserve">
     <value>Task completed!</value>
   </data>
@@ -143,6 +146,9 @@
   </data>
   <data name="InvalidNumberError" xml:space="preserve">
     <value>That's not a valid number!</value>
+  </data>
+  <data name="InvalidRegexError" xml:space="preserve">
+    <value>That's not a valid regex string!</value>
   </data>
   <data name="LodestoneBAAchievementSuccess" xml:space="preserve">
     <value>The achievement has been found, and you have been given the Arsenal Master role.</value>
@@ -170,6 +176,9 @@
   </data>
   <data name="NotATimezoneIdError" xml:space="preserve">
     <value>That is not a valid timezone ID!</value>
+  </data>
+  <data name="RegexNotFoundError" xml:space="preserve">
+    <value>The specified regular expression was not found in the database.</value>
   </data>
   <data name="ReportInGuildWarning" xml:space="preserve">
     <value>in the future, please only use the report command in my DMs. Though your report is being processed, using my DM to make the report helps maintain everyone's privacy. Thank you ^^</value>

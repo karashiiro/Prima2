@@ -5,6 +5,7 @@ using Prima.Contexts;
 using Prima.Services;
 using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Prima.Modules
@@ -17,6 +18,7 @@ namespace Prima.Modules
     public class ModerationModule : ModuleBase<SocketCommandContext>
     {
         public ConfigurationService Config { get; set; }
+        public EventService Events { get; set; }
 
         // Check who a user is.
         [Command("whois")]
@@ -67,6 +69,61 @@ namespace Prima.Modules
             long timestampFromSnowflake = ((long)user.Id / 4194304) + 1420070400000;
             DateTime then = new DateTime(timestampFromSnowflake);
             await ReplyAsync(then.ToString());
+        }
+
+        // Add a regex to the blacklist.
+        [Command("blocktext")]
+        [RequireUserPermission(GuildPermission.BanMembers)]
+        public async Task BlockTextAsync([Remainder] string regexString)
+        {
+            try
+            {
+                Regex.IsMatch("", regexString);
+            }
+            catch (ArgumentException)
+            {
+                await ReplyAsync(Properties.Resources.InvalidRegexError);
+                return;
+            }
+
+            using (var db = new TextBlacklistContext())
+            {
+                var entry = new GuildTextBlacklistEntry();
+                entry.GuildId = Context.Guild.Id;
+                entry.RegexString = regexString;
+                db.RegexStrings.Add(entry);
+                await db.SaveChangesAsync();
+            }
+
+            await ReplyAsync(Properties.Resources.GenericSuccess);
+        }
+
+        // Remove a regex from the blacklist.
+        [Command("unblocktext")]
+        [RequireUserPermission(GuildPermission.BanMembers)]
+        public async Task UnblockTextAsync([Remainder] string regexString)
+        {
+            using var db = new TextBlacklistContext();
+            if (string.IsNullOrEmpty(regexString)) // Remove the last regex that was matched if none was specified.
+            {
+                var entry = db.RegexStrings.Single(rs => rs.RegexString == Events.LastCaughtRegex);
+                db.Remove(entry);
+            }
+            else
+            {
+                try
+                {
+                    var entry = db.RegexStrings.Single(rs => rs.RegexString == regexString);
+                    db.Remove(entry);
+                }
+                catch (InvalidOperationException)
+                {
+                    await ReplyAsync(Properties.Resources.RegexNotFoundError);
+                    return;
+                }
+            }
+            await db.SaveChangesAsync();
+            await ReplyAsync(Properties.Resources.GenericSuccess);
         }
     }
 }

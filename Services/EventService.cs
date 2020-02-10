@@ -22,6 +22,8 @@ namespace Prima.Services
         private readonly HttpClient _http;
         private readonly XIVAPIService _XIVAPI;
 
+        public string LastCaughtRegex { get; private set; }
+
         private IDMChannel _botMaster;
         private readonly List<ulong> _cemUnverifiedMembers;
 
@@ -33,6 +35,8 @@ namespace Prima.Services
             _XIVAPI = XIVAPI;
 
             _cemUnverifiedMembers = new List<ulong>();
+
+            LastCaughtRegex = string.Empty;
         }
 
         public async Task InitializeAsync()
@@ -201,6 +205,7 @@ namespace Prima.Services
                 var match = Regex.Match(rawMessage.Content, entry.RegexString);
                 if (match.Success)
                 {
+                    LastCaughtRegex = entry.RegexString;
                     await rawMessage.DeleteAsync();
                 }
             }
