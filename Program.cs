@@ -136,7 +136,6 @@ namespace Prima
                 // Group 2
                 .AddSingleton<CommandService>()
                 .AddSingleton<DiagnosticService>()
-                .AddSingleton<PictureService>()
                 .AddSingleton<PresenceService>()
                 .AddSingleton<ServerClockService>()
                 .AddSingleton<XIVAPIService>()
