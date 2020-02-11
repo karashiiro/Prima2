@@ -3,6 +3,7 @@ using Discord.Net;
 using Discord.WebSocket;
 using Prima.Contexts;
 using Prima.Resources;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -151,7 +152,7 @@ namespace Prima.Services
             if (_client.GetChannel(rawMessage.Channel.Id) is SocketGuildChannel)
             {
                 SocketGuildChannel guildChannel = rawMessage.Channel as SocketGuildChannel;
-                await ProcessAttachments(rawMessage, guildChannel);
+                if (_config.CurrentPreset == Preset.Clerical) await ProcessAttachments(rawMessage, guildChannel);
                 switch (guildChannel.Id)
                 {
                     case 550702475112480769:
@@ -177,7 +178,7 @@ namespace Prima.Services
                     Stream outFileData = new MemoryStream();
                     bitmap.Save(outFileData, System.Drawing.Imaging.ImageFormat.Png);
                     timer.Stop();
-                    Console.WriteLine($"Processed BMP from {rawMessage.Author.Username}#{rawMessage.Author.Discriminator}, ({timer.ElapsedMilliseconds}ms)!");
+                    Log.Information("Processed BMP from {DiscordName}, ({Time}ms)!", $"{rawMessage.Author.Username}#{rawMessage.Author.Discriminator}", timer.ElapsedMilliseconds);
                     await (guildChannel as ITextChannel).SendFileAsync(outFileData, justFileName + ".png", $"{rawMessage.Author.Mention}: Your file has been automatically converted from BMP to PNG (BMP files don't render automatically).");
                     bitmap.Dispose();
                     outFileData.Dispose();
@@ -255,7 +256,7 @@ namespace Prima.Services
         private async Task CEMRecoverDataFailed(SocketGuildUser member)
         {
             await _botMaster.SendMessageAsync($"Please manually recover data for {member.Mention}.");
-                    _cemUnverifiedMembers.Add(member.Id);
+                _cemUnverifiedMembers.Add(member.Id);
         }
 
         public async Task ReactionAdded(Cacheable<IUserMessage, ulong> cmessage, ISocketMessageChannel channel, SocketReaction reaction)

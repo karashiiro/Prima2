@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using NodaTime;
 using Prima.Services;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -44,6 +45,13 @@ namespace Prima
                 Console.Error.WriteLine(e);
                 Environment.Exit(1);
             }
+
+            // Initialize the logger.
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.Console()
+                .WriteTo.SQLite(Properties.Resources.UWPConnectionString)
+                .CreateLogger();
 
             // Initialize the ASP.NET service provider and freeze this Task indefinitely.
             using (ServiceProvider services = ConfigureServices(preset))
@@ -90,9 +98,29 @@ namespace Prima
             }
         }
 
-        private Task LogAsync(LogMessage log)
+        private Task LogAsync(LogMessage message)
         {
-            Console.WriteLine(log.ToString());
+            switch (message.Severity)
+            {
+                case LogSeverity.Critical:
+                    Log.Error(message.ToString());
+                    break;
+                case LogSeverity.Error:
+                    Log.Error(message.ToString());
+                    break;
+                case LogSeverity.Warning:
+                    Log.Warning(message.ToString());
+                    break;
+                case LogSeverity.Info:
+                    Log.Information(message.ToString());
+                    break;
+                case LogSeverity.Verbose:
+                    Log.Verbose(message.ToString());
+                    break;
+                case LogSeverity.Debug:
+                    Log.Debug(message.ToString());
+                    break;
+            }
             return Task.CompletedTask;
         }
 

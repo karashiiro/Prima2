@@ -21,15 +21,6 @@ namespace Prima.Modules
         {
             await ReplyAsync($"`Prima {Config.CurrentPreset} online, heartbeat {Diagnostics.GetLatency()}ms`");
         }
-
-        // Sets a custom command prefix on the server.
-        [Command("setprefix")]
-        public async Task SetPrefixAsync(string prefix)
-        {
-            Config.GetSection($"{Context.Guild.Id}").GetSection("prefix").Value = prefix;
-            await CommandHandler.ReinitalizeAsync();
-            await ReplyAsync(Properties.Resources.CommandPrefixUpdateSuccess);
-        }
         
         // Reloads the command assembly.
         [Command("reloadcommands")]

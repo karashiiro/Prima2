@@ -3,6 +3,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -58,7 +59,7 @@ namespace Prima.Services
             if (!message.HasCharPrefix(prefix, ref argPos)) return;
 
 #pragma warning disable CA1062 // Validate arguments of public methods
-            Console.WriteLine($"{rawMessage.Author.Username}#{rawMessage.Author.Discriminator}: {rawMessage.Content}");
+            Log.Information("({DiscordID}) {DiscordName}: {MessageContent}", rawMessage.Author.Id, rawMessage.Author.Username + "#" + rawMessage.Author.Discriminator, rawMessage.Content);
 #pragma warning restore CA1062 // Validate arguments of public methods
 
             // Perform the execution of the command. In this method,
@@ -77,7 +78,7 @@ namespace Prima.Services
             if (result != null && result.IsSuccess)
                 return;
 
-            Console.WriteLine($"error: {result}");
+            Log.Error($"error: {result}");
             await Task.Delay(1);
         }
     }

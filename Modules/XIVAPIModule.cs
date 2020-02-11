@@ -139,10 +139,7 @@ namespace Prima.Modules
                     }
                 });
             }
-            catch (HttpException)
-            {
-                // Log error
-            }
+            catch (HttpException) {}
 
             // Cleanup
             IUserMessage finalReply = await ReplyAsync(embed: responseEmbed);
@@ -245,10 +242,7 @@ namespace Prima.Modules
                     }
                 });
             }
-            catch (HttpException)
-            {
-                // Log error
-            }
+            catch (HttpException) {}
 
             // Cleanup
             IUserMessage finalReply = await ReplyAsync(embed: responseEmbed);
