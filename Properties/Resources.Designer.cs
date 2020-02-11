@@ -304,11 +304,38 @@ namespace Prima.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Data Source=Configuration.db.
+        /// </summary>
+        internal static string UWPConfigConnectionString {
+            get {
+                return ResourceManager.GetString("UWPConfigConnectionString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Data Source=DiscordXIVUsers.db.
         /// </summary>
-        internal static string UWPConnectionString {
+        internal static string UWPDXIVConnectionString {
             get {
-                return ResourceManager.GetString("UWPConnectionString", resourceCulture);
+                return ResourceManager.GetString("UWPDXIVConnectionString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Data Source=Log.db.
+        /// </summary>
+        internal static string UWPLogConnectionString {
+            get {
+                return ResourceManager.GetString("UWPLogConnectionString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Data Source=TextBlacklist.db.
+        /// </summary>
+        internal static string UWPTextBlacklistConnectionString {
+            get {
+                return ResourceManager.GetString("UWPTextBlacklistConnectionString", resourceCulture);
             }
         }
         

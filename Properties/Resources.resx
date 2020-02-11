@@ -198,8 +198,17 @@
   <data name="UserNotInDatabaseError" xml:space="preserve">
     <value>That user was not found in the database.</value>
   </data>
-  <data name="UWPConnectionString" xml:space="preserve">
+  <data name="UWPConfigConnectionString" xml:space="preserve">
+    <value>Data Source=Configuration.db</value>
+  </data>
+  <data name="UWPDXIVConnectionString" xml:space="preserve">
     <value>Data Source=DiscordXIVUsers.db</value>
+  </data>
+  <data name="UWPLogConnectionString" xml:space="preserve">
+    <value>Data Source=Log.db</value>
+  </data>
+  <data name="UWPTextBlacklistConnectionString" xml:space="preserve">
+    <value>Data Source=TextBlacklist.db</value>
   </data>
   <data name="VerificationProcess1" xml:space="preserve">
     <value>You have begun the verification process. Your **Discord account ID** is `</value>

@@ -9,7 +9,7 @@ namespace Prima.Contexts
         public DbSet<DiscordXIVUser> Users { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
-            => options.UseSqlite(Properties.Resources.UWPConnectionString);
+            => options.UseSqlite(Properties.Resources.UWPDXIVConnectionString);
     }
 
     public class DiscordXIVUser
