@@ -426,7 +426,8 @@ namespace Prima.Services
 
                 await statusChannel.SendMessageAsync($"User {oldMember.Nickname} changed their nickname to {newMember.Nickname}.");
             }
-            catch (InvalidOperationException) {}
+            catch (InvalidOperationException) {} // User is not in the database
+            catch (HttpException) {} // User has a higher permission level than this bot
         }
 
         private static string GetDefaultNickname(DiscordXIVUser user)
