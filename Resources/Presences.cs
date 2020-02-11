@@ -26,6 +26,13 @@ namespace Prima.Resources
             new Activity("Fire Emblem: Three Houses", Discord.ActivityType.Playing),
             new Activity("The Baldesion Arsenal", Discord.ActivityType.Playing),
             new Activity("CLIP STUDIO PAINT", Discord.ActivityType.Playing),
+            new Activity("MONSTER HUNTER: WORLD", Discord.ActivityType.Playing),
+            new Activity("Microsoft Visual Studio", Discord.ActivityType.Playing),
+            new Activity("League of Legends", Discord.ActivityType.Playing),
+            new Activity("the piano", Discord.ActivityType.Playing),
+            new Activity("Dragalia Lost", Discord.ActivityType.Playing),
+            new Activity("Dragalia Found", Discord.ActivityType.Playing),
+            new Activity("Pokémon Black 2", Discord.ActivityType.Playing),
             // Listening
             new Activity("Dorime 10-Hour Loop", Discord.ActivityType.Listening),
             new Activity("Pokémon ~ Jazz/Orchestra Mix", Discord.ActivityType.Listening),
