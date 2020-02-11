@@ -46,13 +46,6 @@ namespace Prima
                 Environment.Exit(1);
             }
 
-            // Initialize the logger.
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .WriteTo.Console()
-                .WriteTo.SQLite(Properties.Resources.UWPConnectionString)
-                .CreateLogger();
-
             // Initialize the ASP.NET service provider and freeze this Task indefinitely.
             using (ServiceProvider services = ConfigureServices(preset))
             {
