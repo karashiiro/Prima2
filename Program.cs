@@ -46,9 +46,24 @@ namespace Prima
                 Environment.Exit(1);
             }
 
-            // Initialize the ASP.NET service provider and freeze this Task indefinitely.
-            using (ServiceProvider services = ConfigureServices(preset))
+            var disConfig = new DiscordSocketConfig
             {
+                AlwaysDownloadUsers = true,
+                LargeThreshold = 250,
+                MessageCacheSize = 100,
+            };
+
+            // Initialize the ASP.NET service provider and freeze this Task indefinitely.
+            using (ServiceProvider services = ConfigureServices(disConfig, preset))
+            {
+                // Initialize the static logger from configuration.
+                Log.Logger = new LoggerConfiguration()
+                    .MinimumLevel.Verbose()
+                    .Enrich.WithProperty("System", services.GetRequiredService<ConfigurationService>().CurrentPreset)
+                    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3} {System}] {Message:lj}{NewLine}{Exception}")
+                    .WriteTo.SQLite(Properties.Resources.UWPLogConnectionString)
+                    .CreateLogger();
+
                 var client = services.GetRequiredService<DiscordSocketClient>();
                 var events = services.GetRequiredService<EventService>();
 
@@ -70,11 +85,8 @@ namespace Prima
 
                 await client.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("DISCORD_TOKEN"));
                 await client.StartAsync();
-                Console.WriteLine($"Logged in with configuration preset {preset}.");
-
-                await client.DownloadUsersAsync(client.Guilds);
-                await services.GetRequiredService<EventService>().InitializeAsync();
-
+                Log.Information($"Logged in with configuration preset {preset}.");
+                
                 if (preset == Preset.Clerical)
                 {
                     await services.GetRequiredService<ServerClockService>().InitializeAsync();
@@ -117,15 +129,17 @@ namespace Prima
             return Task.CompletedTask;
         }
 
-        private static ServiceProvider ConfigureServices(Preset preset)
+        private static ServiceProvider ConfigureServices(DiscordSocketConfig disConfig, Preset preset)
         {
             IServiceCollection sc = new ServiceCollection()
                 // Group 1 - No dependencies
                 .AddSingleton(new ConfigurationService(preset))
-                .AddSingleton<DiscordSocketClient>()
+#pragma warning disable CA2000 // Dispose objects before losing scope
+                .AddSingleton(new DiscordSocketClient(disConfig))
+#pragma warning restore CA2000 // Dispose objects before losing scope
                 .AddSingleton<HttpClient>()
                 .AddSingleton<LotoIdService>()
-                .AddSingleton<SystemClock>()
+                .AddSingleton(SystemClock.Instance)
                 // Group 2
                 .AddSingleton<CommandService>()
                 .AddSingleton<DiagnosticService>()

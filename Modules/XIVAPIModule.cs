@@ -7,6 +7,7 @@ using Prima.Contexts;
 using Prima.Resources;
 using Prima.Services;
 using Prima.XIVAPI;
+using Serilog;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -141,6 +142,8 @@ namespace Prima.Modules
             }
             catch (HttpException) {}
 
+            Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
+
             // Cleanup
             IUserMessage finalReply = await ReplyAsync(embed: responseEmbed);
             typing.Dispose();
@@ -244,6 +247,8 @@ namespace Prima.Modules
             }
             catch (HttpException) {}
 
+            Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
+
             // Cleanup
             IUserMessage finalReply = await ReplyAsync(embed: responseEmbed);
             typing.Dispose();
@@ -266,6 +271,7 @@ namespace Prima.Modules
                 await ReplyAsync(Properties.Resources.MemberAlreadyHasRoleError);
                 return;
             }
+            IDisposable typing = Context.Channel.EnterTypingState();
             using var db = new DiscordXIVUserContext();
             DiscordXIVUser user = db.Users
                 .Single(user => user.DiscordId == Context.User.Id);
@@ -281,6 +287,7 @@ namespace Prima.Modules
             {
                 if (achievement.ID == 2229)
                 {
+                    Log.Information("Added role " + arsenalMaster.Name);
                     await member.AddRoleAsync(arsenalMaster);
                     await ReplyAsync(Properties.Resources.LodestoneBAAchievementSuccess);
                     hasAchievement = true;
@@ -291,6 +298,7 @@ namespace Prima.Modules
             {
                 if (mimo.Name == "Demi-Ozma")
                 {
+                    Log.Information("Added role " + cleared.Name);
                     await member.AddRoleAsync(cleared);
                     await ReplyAsync(Properties.Resources.LodestoneBAMountSuccess);
                     hasMount = true;
@@ -300,6 +308,8 @@ namespace Prima.Modules
 
             if (!hasAchievement && !hasMount)
                 await ReplyAsync(Properties.Resources.LodestoneMountAchievementNotFoundError);
+
+            typing.Dispose();
         }
     }
 }

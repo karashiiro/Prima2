@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using Prima.Attributes;
 using Prima.Contexts;
 using Prima.Services;
+using Serilog;
 using System;
 using System.IO;
 using System.Linq;
@@ -32,7 +33,7 @@ namespace Prima.Modules
             SocketGuildUser user = Context.Guild.GetUser(Context.User.Id);
             SocketRole memberRole = Context.Guild.GetRole(Config.GetULong(Context.Guild.Id.ToString(), "Roles", "Member"));
             await user.AddRoleAsync(memberRole);
-            Console.WriteLine($"Added {Context.User.Username}#{Context.User.Discriminator} to {memberRole.Name}.");
+            Log.Information("Added {DiscordName} to {Member}.", $"{Context.User.Username}#{Context.User.Discriminator}", memberRole.Name);
         }
 
         // Submit a report.
@@ -71,7 +72,7 @@ namespace Prima.Modules
         }
 
         // Check who this user is.
-        [Command("whoami")]
+        [Command("whoami", RunMode = RunMode.Async)]
         public async Task WhoAmIAsync()
         {
             using (var db = new DiscordXIVUserContext())
@@ -95,6 +96,8 @@ namespace Prima.Modules
                     .WithThumbnailUrl(found.Avatar)
                     .Build();
 
+                Log.Information("Answered whoami from ({World}) {Name}.", found.World, found.Name);
+
                 await ReplyAsync(embed: responseEmbed);
             }
         }
@@ -107,6 +110,7 @@ namespace Prima.Modules
             await ReplyAsync(Properties.Resources.DBUserCountInProgress);
             using var db = new DiscordXIVUserContext();
             await ReplyAsync($"There are {db.Users.Count()} users in the database.");
+            Log.Information("There are {DBEntryCount} users in the database.", db.Users.Count());
         }
 
         // Add a clock to a voice channel.
@@ -134,6 +138,7 @@ namespace Prima.Modules
                 return;
             }
             await ReplyAsync(Properties.Resources.ClockAddSuccess);
+            Log.Information(Properties.Resources.ClockAddSuccess);
         }
 
         // Remove a clock from a voice channel.
@@ -153,6 +158,7 @@ namespace Prima.Modules
             }
             await Clocks.RemoveClock(channelId);
             await ReplyAsync(Properties.Resources.ClockRemoveSuccess);
+            Log.Information(Properties.Resources.ClockRemoveSuccess);
         }
     }
 }

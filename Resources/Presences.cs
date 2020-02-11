@@ -42,8 +42,6 @@ namespace Prima.Resources
             // Watching
             new Activity("Live Vana'diel", Discord.ActivityType.Watching),
             new Activity("you", Discord.ActivityType.Watching),
-            // Streaming
-            new Activity("you", Discord.ActivityType.Streaming),
         };
     }
 }

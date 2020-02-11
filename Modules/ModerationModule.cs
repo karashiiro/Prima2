@@ -3,6 +3,7 @@ using Discord.Commands;
 using Prima.Attributes;
 using Prima.Contexts;
 using Prima.Services;
+using Serilog;
 using System;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -21,7 +22,7 @@ namespace Prima.Modules
         public EventService Events { get; set; }
 
         // Check who a user is.
-        [Command("whois")]
+        [Command("whois", RunMode = RunMode.Async)]
         [RequireUserPermission(GuildPermission.KickMembers)]
         public async Task WhoIsAsync(IUser member) // Who knows?
         {
@@ -53,6 +54,7 @@ namespace Prima.Modules
                     .Build();
 
                 await ReplyAsync(embed: responseEmbed);
+                Log.Information("Successfully responded to whoami.");
             }
         }
 
@@ -69,6 +71,7 @@ namespace Prima.Modules
             long timestampFromSnowflake = ((long)user.Id / 4194304) + 1420070400000;
             DateTime then = new DateTime(timestampFromSnowflake);
             await ReplyAsync(then.ToString());
+            Log.Information("Successfully responded to whoami.");
         }
 
         // Add a regex to the blacklist.

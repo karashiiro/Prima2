@@ -25,7 +25,6 @@ namespace Prima.Services
 
         public string LastCaughtRegex { get; private set; }
 
-        private IDMChannel _botMaster;
         private readonly List<ulong> _cemUnverifiedMembers;
 
         public EventService(ConfigurationService config, DiscordSocketClient client, HttpClient http, XIVAPIService XIVAPI)
@@ -40,18 +39,13 @@ namespace Prima.Services
             LastCaughtRegex = string.Empty;
         }
 
-        public async Task InitializeAsync()
-        {
-            _botMaster = await _client.GetUser(_config.GetULong("BotMaster")).GetOrCreateDMChannelAsync();
-        }
-
         public async Task GuildMemberUpdated(SocketGuildUser oldMember, SocketGuildUser newMember)
         {
             if (_config.CurrentPreset != Preset.Clerical) return;
 
             if (oldMember == null || newMember == null)
             {
-                throw new ArgumentNullException(oldMember == null ? "oldMember" : "newMember");
+                throw new ArgumentNullException(oldMember == null ? nameof(oldMember) : nameof(newMember));
             }
 
             switch (newMember.Guild.Id)
@@ -168,7 +162,7 @@ namespace Prima.Services
 
             foreach (Attachment attachment in rawMessage.Attachments)
             {
-                if (attachment.Filename.ToLower().EndsWith(".bmp"))
+                if (attachment.Filename.ToLower().EndsWith(".bmp") || attachment.Filename.ToLower().EndsWith(".dib"))
                 {
                     string justFileName = attachment.Filename.Substring(0, attachment.Filename.LastIndexOf("."));
                     Stopwatch timer = new Stopwatch();
@@ -255,8 +249,9 @@ namespace Prima.Services
 
         private async Task CEMRecoverDataFailed(SocketGuildUser member)
         {
-            await _botMaster.SendMessageAsync($"Please manually recover data for {member.Mention}.");
-                _cemUnverifiedMembers.Add(member.Id);
+            await (await _client.GetUser(_config.GetULong("BotMaster")).GetOrCreateDMChannelAsync())
+                .SendMessageAsync($"Please manually recover data for {member.Mention}.");
+            _cemUnverifiedMembers.Add(member.Id);
         }
 
         public async Task ReactionAdded(Cacheable<IUserMessage, ulong> cmessage, ISocketMessageChannel channel, SocketReaction reaction)

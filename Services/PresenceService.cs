@@ -32,7 +32,12 @@ namespace Prima.Services
 
         public void Stop() => _active = false;
 
-        public void SetDelay(int ms) => DelayTime = ms;
+        public void SetDelay(int ms)
+        {
+            DelayTime = ms;
+            Stop();
+            Start();
+        }
 
         public bool IsFaulted() => _runningTask.IsFaulted;
 

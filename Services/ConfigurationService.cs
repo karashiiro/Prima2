@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Prima.Contexts;
@@ -64,9 +65,13 @@ namespace Prima.Services
         /// </summary>
         public static async Task<IList<ClockConfiguration>> GetClockData()
         {
-            IList<ClockConfiguration> configurations;
+            IList<ClockConfiguration> configurations = new List<ClockConfiguration>();
             using var db = new ConfigurationContext();
-            configurations = await db.ClockData.ToListAsync();
+            try
+            {
+                configurations = await db.ClockData.ToListAsync();
+            }
+            catch (SqliteException) {}
             return configurations;
         }
 
@@ -95,12 +100,13 @@ namespace Prima.Services
         public static async Task DeleteClock(ulong gid, ulong cid)
         {
             using var db = new ConfigurationContext();
-            ClockConfiguration exists = await db.ClockData.SingleAsync(clock => clock.GuildId == gid & clock.ChannelId == cid);
-            if (exists != null)
+            try
             {
-                db.ClockData.Remove(exists);
+                ClockConfiguration cc = await db.ClockData.SingleAsync(clock => clock.GuildId == gid & clock.ChannelId == cid);
+                db.ClockData.Remove(cc);
                 await db.SaveChangesAsync();
             }
+            catch (InvalidOperationException) {}
         }
 
         private void BuildConfiguration()
