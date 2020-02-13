@@ -39,6 +39,8 @@ namespace Prima.Resources
             new Activity("Vaporwave Furret 10 Hours", Discord.ActivityType.Listening),
             new Activity("VA-11 HALL-A - Second Round [Full Album]", Discord.ActivityType.Listening),
             new Activity("DORIME🙏🏻 (loli cover)", Discord.ActivityType.Listening),
+            new Activity("Super Touhou Eurobeat Mix", Discord.ActivityType.Listening),
+            // Streaming gets turned into "Playing" if there's no actual stream.
             // Watching
             new Activity("Live Vana'diel", Discord.ActivityType.Watching),
             new Activity("you", Discord.ActivityType.Watching),

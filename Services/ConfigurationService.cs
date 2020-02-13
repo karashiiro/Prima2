@@ -1,11 +1,11 @@
-﻿using Discord;
-using Discord.WebSocket;
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Prima.Contexts;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Prima.Services
@@ -17,11 +17,21 @@ namespace Prima.Services
         /// </summary>
         public Preset CurrentPreset { get; private set; }
 
+        /// <summary>
+        /// Gets the directory of the temporary cache.
+        /// </summary>
+        public string TempDir { get => Path.Combine(Assembly.GetEntryAssembly().Location, "..", GetSection("TemporaryCache").Value); }
+
         private IConfigurationRoot _config;
         public ConfigurationService(Preset preset)
         {
             CurrentPreset = preset;
             BuildConfiguration();
+            try
+            {
+                Directory.CreateDirectory(TempDir);
+            }
+            catch (IOException) {}
         }
 
         /// <summary>

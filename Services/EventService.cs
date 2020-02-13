@@ -10,9 +10,14 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+
+using Color = Discord.Color;
+using Image = System.Drawing.Image;
+using ImageFormat = System.Drawing.Imaging.ImageFormat;
 
 namespace Prima.Services
 {
@@ -53,6 +58,9 @@ namespace Prima.Services
                 case 550702475112480769:
                     await CEMNamingScheme(oldMember, newMember);
                     break;
+                case 550910482194890781:
+                    await CEMNamingScheme(oldMember, newMember);
+                    break;
             }
         }
 
@@ -71,15 +79,20 @@ namespace Prima.Services
 
             // Get executor of the deletion.
             var auditLogs = await guild.GetAuditLogsAsync(10).FlattenAsync();
-            var thisLog = auditLogs
-                .Where(log => log.Action == ActionType.MessageDeleted)
-                .First();
-            IUser executor = thisLog.User ?? message.Author; // If no user is listed as the executor, the executor is the author of the message.
+            IUser executor = message.Author; // If no user is listed as the executor, the executor is the author of the message.
+            try
+            {
+                var thisLog = auditLogs
+                    .Where(log => log.Action == ActionType.MessageDeleted)
+                    .First();
+                executor = thisLog.User ?? message.Author; // If no user is listed as the executor, the executor is the author of the message.
+            }
+            catch (InvalidOperationException) {}
 
             // Build the embed.
             Embed messageEmbed = new EmbedBuilder()
-                .WithTitle($"#{ichannel.Name} at {message.Timestamp}")
-                .WithColor(Discord.Color.Blue)
+                .WithTitle("#" + ichannel.Name)
+                .WithColor(Color.Blue)
                 .WithAuthor(message.Author)
                 .WithDescription(message.Content)
                 .WithFooter($"Deleted by {executor.Username}#{executor.Discriminator}", executor.GetAvatarUrl())
@@ -103,9 +116,7 @@ namespace Prima.Services
             {
                 try
                 {
-                    Stream data = await _http.GetStreamAsync(new Uri(attachment.Url));
-                    data.Seek(0, SeekOrigin.Begin);
-                    await deletedMessageChannel.SendFileAsync(data, attachment.Filename, string.Empty);
+                    await deletedMessageChannel.SendFileAsync(Path.Combine(_config.TempDir, attachment.Filename), attachment.Filename);
                 }
                 catch (HttpException)
                 {
@@ -117,23 +128,23 @@ namespace Prima.Services
                 await deletedMessageChannel.SendMessageAsync(Properties.Resources.UnsavedMessageAttachmentsWarning + unsaved);
             }
 
-            // Copy reactions and send those, too.
+            /*// Copy reactions and send those, too.
             if (message.Reactions.Count > 0)
             {
+                string userString = string.Empty;
                 foreach (var reactionEntry in message.Reactions)
                 {
-                    var emote = reactionEntry.Key as Emote;
+                    var emote = reactionEntry.Key;
 
-                    string userString = $"Users who reacted with {emote}:";
+                    userString += $"\nUsers who reacted with {emote}:";
                     IEnumerable<IUser> users = await message.GetReactionUsersAsync(emote, int.MaxValue).FlattenAsync();
                     foreach (IUser user in users)
                     {
-                        userString += $"\n{user.Mention}";
+                        userString += "\n" + user.Mention;
                     }
-
-                    await deletedMessageChannel.SendMessageAsync(userString);
                 }
-            }
+                await deletedMessageChannel.SendMessageAsync(userString);
+            }*/
         }
 
         public async Task MessageRecieved(SocketMessage rawMessage)
@@ -146,7 +157,11 @@ namespace Prima.Services
             if (_client.GetChannel(rawMessage.Channel.Id) is SocketGuildChannel)
             {
                 SocketGuildChannel guildChannel = rawMessage.Channel as SocketGuildChannel;
-                if (_config.CurrentPreset == Preset.Clerical) await ProcessAttachments(rawMessage, guildChannel);
+                if (_config.CurrentPreset == Preset.Moderation)
+                {
+                    if (rawMessage.Author.Id != _client.CurrentUser.Id) SaveAttachments(rawMessage);
+                    await ProcessAttachments(rawMessage, guildChannel);
+                }
                 switch (guildChannel.Id)
                 {
                     case 550702475112480769:
@@ -156,26 +171,45 @@ namespace Prima.Services
             }
         }
 
+        /// <summary>
+        /// Save attachments to a local directory. Remember to clear out this folder periodically.
+        /// </summary>
+        private void SaveAttachments(SocketMessage rawMessage)
+        {
+            if (!rawMessage.Attachments.Any()) return;
+            foreach (Attachment a in rawMessage.Attachments)
+            {
+                using WebClient wc = new WebClient();
+                wc.DownloadFile(new Uri(a.Url), Path.Combine(_config.TempDir, a.Filename));
+                Log.Information("Saved attachment {Filename}", Path.Combine(_config.TempDir, a.Filename));
+            }
+        }
+
+        /// <summary>
+        /// Convert attachments that don't render automatically to formats that do.
+        /// </summary>
         private async Task ProcessAttachments(SocketMessage rawMessage, SocketGuildChannel guildChannel)
         {
             if (!rawMessage.Attachments.Any()) return;
 
             foreach (Attachment attachment in rawMessage.Attachments)
             {
+                string justFileName = attachment.Filename.Substring(0, attachment.Filename.LastIndexOf("."));
                 if (attachment.Filename.ToLower().EndsWith(".bmp") || attachment.Filename.ToLower().EndsWith(".dib"))
                 {
-                    string justFileName = attachment.Filename.Substring(0, attachment.Filename.LastIndexOf("."));
-                    Stopwatch timer = new Stopwatch();
-                    Stream fileData = await _http.GetStreamAsync(new Uri(attachment.Url));
-                    fileData.Seek(0, SeekOrigin.Begin);
-                    Bitmap bitmap = new Bitmap(fileData);
-                    Stream outFileData = new MemoryStream();
-                    bitmap.Save(outFileData, System.Drawing.Imaging.ImageFormat.Png);
-                    timer.Stop();
-                    Log.Information("Processed BMP from {DiscordName}, ({Time}ms)!", $"{rawMessage.Author.Username}#{rawMessage.Author.Discriminator}", timer.ElapsedMilliseconds);
-                    await (guildChannel as ITextChannel).SendFileAsync(outFileData, justFileName + ".png", $"{rawMessage.Author.Mention}: Your file has been automatically converted from BMP to PNG (BMP files don't render automatically).");
-                    bitmap.Dispose();
-                    outFileData.Dispose();
+                    try
+                    {
+                        Stopwatch timer = new Stopwatch();
+                        using Bitmap bitmap = new Bitmap(Path.Combine(_config.TempDir, attachment.Filename));
+                        bitmap.Save(Path.Combine(_config.TempDir, justFileName + ".png"), ImageFormat.Png);
+                        timer.Stop();
+                        Log.Information("Processed BMP from {DiscordName}, ({Time}ms)!", $"{rawMessage.Author.Username}#{rawMessage.Author.Discriminator}", timer.ElapsedMilliseconds);
+                        await (guildChannel as ITextChannel).SendFileAsync(Path.Combine(_config.TempDir, justFileName + ".png"), $"{rawMessage.Author.Mention}: Your file has been automatically converted from BMP/DIB to PNG (BMP files don't render automatically).");
+                    }
+                    catch (FileNotFoundException)
+                    {
+                        Log.Error("Could not find file {Filename}", Path.Combine(_config.TempDir, attachment.Filename));
+                    }
                 }
             }
         }
@@ -403,7 +437,7 @@ namespace Prima.Services
                     return; // Nothing to do; their nickname is fine.
                 }
 
-                string nickname = $"({newMember.Nickname}) ${user.Name}";
+                string nickname = $"({newMember.Nickname}) {user.Name}";
                 if (nickname.Length > 32) // Throws an exception otherwise
                 {
                     IDMChannel userDm = await newMember.GetOrCreateDMChannelAsync();
@@ -428,7 +462,7 @@ namespace Prima.Services
 
         private static string GetDefaultNickname(DiscordXIVUser user)
         {
-            string nickname = $"({user.World}) ${user.Name}";
+            string nickname = $"({user.World}) {user.Name}";
             if (nickname.Length > 32)
             {
                 nickname = user.Name;

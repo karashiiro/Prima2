@@ -1,11 +1,14 @@
 ﻿using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using Prima.Attributes;
 using Prima.Contexts;
 using Prima.Services;
 using Serilog;
 using System;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -20,6 +23,42 @@ namespace Prima.Modules
     {
         public ConfigurationService Config { get; set; }
         public EventService Events { get; set; }
+        public HttpClient Http { get; set; }
+
+        // Submit a report.
+        [Command("report")]
+        public async Task ReportAsync()
+        {
+            if (Context.Guild != null)
+            {
+                WarnOfPublicReport().Start();
+            }
+            // We're not awaiting this because we want to delete their message ASAP if they're in a guild.
+            Context.Channel.SendMessageAsync(Properties.Resources.ReportThankYou).Start();
+            SocketGuild guild = Context.Guild ?? Context.Client.GetGuild(Config.GetULong("" + Context.User.MutualGuilds.First().Id));
+            SocketTextChannel postChannel = guild.GetTextChannel(Config.GetULong("" + guild.Id, "Channels", "reports"));
+            string output = $"<@&{Config.GetSection("" + guild.Id, "Roles", "Moderator")}> {Context.User.Username}#{Context.User.Discriminator} just sent a report: {Context.Message.Content}";
+            if (output.Length > 2000) // This can only be the case once, no need for a loop.
+            {
+                await postChannel.SendMessageAsync(output.Substring(0, 2000));
+                output = output.Substring(2000);
+            }
+            await postChannel.SendMessageAsync(output);
+            foreach (Attachment attachment in Context.Message.Attachments)
+            {
+                Stream attachmentData = await Http.GetStreamAsync(new Uri(attachment.Url));
+                attachmentData.Seek(0, SeekOrigin.Begin);
+                await postChannel.SendFileAsync(attachmentData, attachment.Filename, string.Empty);
+            }
+            await Context.Message.DeleteAsync();
+        }
+
+        private async Task WarnOfPublicReport()
+        {
+            IUserMessage warning = await ReplyAsync(Context.User.Mention + ", " + Properties.Resources.ReportInGuildWarning);
+            await Task.Delay(5000);
+            await warning.DeleteAsync();
+        }
 
         // Check who a user is.
         [Command("whois", RunMode = RunMode.Async)]

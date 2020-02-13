@@ -2,6 +2,7 @@
 using NodaTime;
 using Prima.Contexts;
 using Prima.Resources;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -92,6 +93,7 @@ namespace Prima.Services
                         ZonedDateTime time = c.Timezone.GetCurrentZonedDateTime();
                         string clockEmoji = time.Minute < 30 ? Arrays.ClockFaces[time.Hour / 2] : Arrays.HalfHourClockFaces[time.Hour / 2];
                         properties.Name = clockEmoji + " " + time.ToString("h:mm tt z", null);
+                        Log.Information("Done!");
                     });
                 }
                 await Task.Delay(60000);
