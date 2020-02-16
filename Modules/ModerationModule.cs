@@ -26,7 +26,7 @@ namespace Prima.Modules
         public HttpClient Http { get; set; }
 
         // Submit a report.
-        [Command("report")]
+        [Command("report", RunMode = RunMode.Async)]
         public async Task ReportAsync(params string[] p)
         {
             if (Context.Guild != null)
