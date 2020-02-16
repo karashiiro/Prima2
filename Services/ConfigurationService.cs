@@ -22,6 +22,11 @@ namespace Prima.Services
         /// </summary>
         public string TempDir { get => Path.Combine(Assembly.GetEntryAssembly().Location, "..", GetSection("TemporaryCache").Value); }
 
+        /// <summary>
+        /// Gets the directory of the queue folder.
+        /// </summary>
+        public string QueueDir { get => Path.Combine(Assembly.GetEntryAssembly().Location, "..", GetSection("QueueFolder").Value); }
+
         private IConfigurationRoot _config;
         public ConfigurationService(Preset preset)
         {
