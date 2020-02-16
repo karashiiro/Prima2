@@ -92,7 +92,7 @@ namespace Prima.Services
                     {
                         ZonedDateTime time = c.Timezone.GetCurrentZonedDateTime();
                         string clockEmoji = time.Minute < 30 ? Arrays.ClockFaces[time.Hour / 2] : Arrays.HalfHourClockFaces[time.Hour / 2];
-                        properties.Name = clockEmoji + " " + time.ToString("h:mm tt z", null);
+                        properties.Name = clockEmoji + " " + time.ToString("h:mm tt x", null);
                         Log.Information("Done!");
                     });
                 }

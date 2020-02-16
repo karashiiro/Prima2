@@ -7,6 +7,7 @@ using Prima.Services;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -140,6 +141,7 @@ namespace Prima
                 .AddSingleton<HttpClient>()
                 .AddSingleton<LotoIdService>()
                 .AddSingleton(SystemClock.Instance)
+                .AddSingleton<WebClient>()
                 // Group 2
                 .AddSingleton<CommandService>()
                 .AddSingleton<DiagnosticService>()

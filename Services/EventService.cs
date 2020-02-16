@@ -11,7 +11,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -25,18 +24,18 @@ namespace Prima.Services
     {
         private readonly ConfigurationService _config;
         private readonly DiscordSocketClient _client;
-        private readonly HttpClient _http;
+        private readonly WebClient _wc;
         private readonly XIVAPIService _XIVAPI;
 
         public string LastCaughtRegex { get; private set; }
 
         private readonly List<ulong> _cemUnverifiedMembers;
 
-        public EventService(ConfigurationService config, DiscordSocketClient client, HttpClient http, XIVAPIService XIVAPI)
+        public EventService(ConfigurationService config, DiscordSocketClient client, WebClient wc, XIVAPIService XIVAPI)
         {
             _config = config;
             _client = client;
-            _http = http;
+            _wc = wc;
             _XIVAPI = XIVAPI;
 
             _cemUnverifiedMembers = new List<ulong>();
@@ -157,10 +156,13 @@ namespace Prima.Services
             if (_client.GetChannel(rawMessage.Channel.Id) is SocketGuildChannel)
             {
                 SocketGuildChannel guildChannel = rawMessage.Channel as SocketGuildChannel;
-                if (_config.CurrentPreset == Preset.Moderation)
+                if (_config.CurrentPreset == Preset.Moderation && rawMessage.Author.Id != _client.CurrentUser.Id)
                 {
-                    if (rawMessage.Author.Id != _client.CurrentUser.Id) SaveAttachments(rawMessage);
-                    await ProcessAttachments(rawMessage, guildChannel);
+                    SaveAttachments(rawMessage);
+                    if (!rawMessage.Content.StartsWith("~report"))
+                    {
+                        await ProcessAttachments(rawMessage, guildChannel);
+                    }
                 }
                 switch (guildChannel.Id)
                 {
@@ -179,8 +181,7 @@ namespace Prima.Services
             if (!rawMessage.Attachments.Any()) return;
             foreach (Attachment a in rawMessage.Attachments)
             {
-                using WebClient wc = new WebClient();
-                wc.DownloadFile(new Uri(a.Url), Path.Combine(_config.TempDir, a.Filename));
+                _wc.DownloadFile(new Uri(a.Url), Path.Combine(_config.TempDir, a.Filename));
                 Log.Information("Saved attachment {Filename}", Path.Combine(_config.TempDir, a.Filename));
             }
         }

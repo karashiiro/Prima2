@@ -27,17 +27,16 @@ namespace Prima.Modules
 
         // Submit a report.
         [Command("report")]
-        public async Task ReportAsync()
+        public async Task ReportAsync(params string[] p)
         {
             if (Context.Guild != null)
             {
-                WarnOfPublicReport().Start();
+                _ = WarnOfPublicReport();
             }
-            // We're not awaiting this because we want to delete their message ASAP if they're in a guild.
-            Context.Channel.SendMessageAsync(Properties.Resources.ReportThankYou).Start();
+            var responseMessage = await Context.Channel.SendMessageAsync(Properties.Resources.ReportThankYou);
             SocketGuild guild = Context.Guild ?? Context.Client.GetGuild(Config.GetULong("" + Context.User.MutualGuilds.First().Id));
             SocketTextChannel postChannel = guild.GetTextChannel(Config.GetULong("" + guild.Id, "Channels", "reports"));
-            string output = $"<@&{Config.GetSection("" + guild.Id, "Roles", "Moderator")}> {Context.User.Username}#{Context.User.Discriminator} just sent a report: {Context.Message.Content}";
+            string output = $"<@&{Config.GetSection("" + guild.Id, "Roles", "Moderator").Value}> {Context.User.Username}#{Context.User.Discriminator} just sent a report:{Context.Message.Content.Substring(7)}";
             if (output.Length > 2000) // This can only be the case once, no need for a loop.
             {
                 await postChannel.SendMessageAsync(output.Substring(0, 2000));
@@ -46,11 +45,14 @@ namespace Prima.Modules
             await postChannel.SendMessageAsync(output);
             foreach (Attachment attachment in Context.Message.Attachments)
             {
-                Stream attachmentData = await Http.GetStreamAsync(new Uri(attachment.Url));
-                attachmentData.Seek(0, SeekOrigin.Begin);
-                await postChannel.SendFileAsync(attachmentData, attachment.Filename, string.Empty);
+                await postChannel.SendFileAsync(Path.Combine(Config.TempDir, attachment.Filename), string.Empty);
             }
-            await Context.Message.DeleteAsync();
+            if (Context.Guild != null)
+            {
+                await Context.Message.DeleteAsync();
+                await Task.Delay(10000);
+                await responseMessage.DeleteAsync();
+            }
         }
 
         private async Task WarnOfPublicReport()
@@ -130,9 +132,11 @@ namespace Prima.Modules
 
             using (var db = new TextBlacklistContext())
             {
-                var entry = new GuildTextBlacklistEntry();
-                entry.GuildId = Context.Guild.Id;
-                entry.RegexString = regexString;
+                var entry = new GuildTextBlacklistEntry
+                {
+                    GuildId = Context.Guild.Id,
+                    RegexString = regexString
+                };
                 db.RegexStrings.Add(entry);
                 await db.SaveChangesAsync();
             }

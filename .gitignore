@@ -354,3 +354,5 @@ MigrationBackup/
 
 *.json
 *.db
+
+temp/
