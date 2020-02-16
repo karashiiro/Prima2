@@ -89,16 +89,18 @@ namespace Prima.Services
             {
                 DiscordId[] userIds = q.Value.GetTimeoutCandidatesOnce();
                 long warnTime = q.Value.TimeLimit * (1 - (1 / 12));
-                long hours = (long)Math.Floor((double)(q.Value.TimeLimit / 60000.0));
-                long minutes = (q.Value.TimeLimit - (long)Math.Floor((double)(q.Value.TimeLimit / 60000) * 60000)) / 60000;
+                byte warnHours = (byte)Math.Floor(warnTime / 60000.0);
+                byte warnMinutes = (byte)Math.Ceiling((warnTime - (long)Math.Floor(warnTime / 60000.0) * 60000) / 60000.0);
+                byte hours = (byte)Math.Floor(q.Value.TimeLimit / 60000.0);
+                byte minutes = (byte)Math.Ceiling((q.Value.TimeLimit - (long)Math.Floor(q.Value.TimeLimit / 60000.0) * 60000) / 60000.0);
                 foreach (DiscordId userId in userIds)
                 {
-                    IUser user = _client.GetUser(userId);
+                    IUser user = _client.GetUser(_config.GetULong("BotMaster"));
                     IDMChannel userChannel = await user.GetOrCreateDMChannelAsync();
                     await userChannel.SendMessageAsync(
-                        $"You have been in this queue for {hours} hours and {minutes} minutes:" +
+                        $"You have been in this queue for {warnHours} hours and {warnMinutes} minutes:" +
                         q.Key.Substring(0, q.Key.LastIndexOf(".")) +
-                        $"Please send `~refreshqueue` within the next {warnTime * (1 / 12.0)} minutes to avoid being kicked under our {hours}:{minutes} time limit." +
+                        $"Please send `~refreshqueue` within the next {(byte)Math.Ceiling(warnTime * (1 / 12.0))} minutes to avoid being kicked under our {hours}:{minutes} time limit." +
                         $"This command will renew your queue times and allow you to stay queued for an additional {hours}:{minutes}."
                         );
                 }
@@ -111,11 +113,11 @@ namespace Prima.Services
             foreach (KeyValuePair<string, Queue> q in _queues)
             {
                 DiscordId[] userIds = q.Value.GetTimeoutCandidates();
-                long hours = (long)Math.Floor((double)(q.Value.TimeLimit / 60000.0));
-                long minutes = (q.Value.TimeLimit - (long)Math.Floor((double)(q.Value.TimeLimit / 60000) * 60000)) / 60000;
+                byte hours = (byte)Math.Floor(q.Value.TimeLimit / 60000.0);
+                byte minutes = (byte)Math.Ceiling((q.Value.TimeLimit - (long)Math.Floor(q.Value.TimeLimit / 60000.0) * 60000) / 60000.0);
                 foreach (DiscordId userId in userIds)
                 {
-                    IUser user = _client.GetUser(userId);
+                    IUser user = _client.GetUser(_config.GetULong("BotMaster"));
                     IDMChannel userChannel = await user.GetOrCreateDMChannelAsync();
                     await userChannel.SendMessageAsync(
                         $"You have been in this queue for more than {hours}:{minutes}, and have been removed:" +
