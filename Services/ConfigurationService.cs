@@ -27,6 +27,16 @@ namespace Prima.Services
         /// </summary>
         public string QueueDir { get => Path.Combine(Assembly.GetEntryAssembly().Location, "..", GetSection("QueueFolder").Value); }
 
+        /// <summary>
+        /// Gets the directory of the calendar information folder.
+        /// </summary>
+        public string CalendarDir { get => Path.Combine(Assembly.GetEntryAssembly().Location, "..", GetSection("CalendarFolder").Value); }
+
+        /// <summary>
+        /// Gets the directory of the Google APIs token.json.
+        /// </summary>
+        public string GTokenFile { get => Path.Combine(Assembly.GetEntryAssembly().Location, "..", GetSection("GoogleToken").Value); }
+
         private IConfigurationRoot _config;
         public ConfigurationService(Preset preset)
         {
