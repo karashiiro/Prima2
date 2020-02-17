@@ -22,6 +22,8 @@ namespace Prima.Modules
         public ConfigurationService Config { get; set; }
         public ServerClockService Clocks { get; set; }
 
+        public DiscordXIVUserContext Users { get; set; }
+
         // If they've registered, this adds them to the Member group.
         [Command("agree")]
         [RequireUserInDatabase]
@@ -38,31 +40,28 @@ namespace Prima.Modules
         [Command("whoami", RunMode = RunMode.Async)]
         public async Task WhoAmIAsync()
         {
-            using (var db = new DiscordXIVUserContext())
+            DiscordXIVUser found;
+            try
             {
-                DiscordXIVUser found;
-                try
-                {
-                    found = db.Users
-                        .Single(user => user.DiscordId == Context.User.Id);
-                }
-                catch (InvalidOperationException)
-                {
-                    await ReplyAsync(Properties.Resources.UserNotInDatabaseError);
-                    return;
-                }
-
-                Embed responseEmbed = new EmbedBuilder()
-                    .WithTitle($"({found.World}) {found.Name}")
-                    .WithUrl($"https://na.finalfantasyxiv.com/lodestone/character/{found.LodestoneId}/")
-                    .WithColor(Color.Blue)
-                    .WithThumbnailUrl(found.Avatar)
-                    .Build();
-
-                Log.Information("Answered whoami from ({World}) {Name}.", found.World, found.Name);
-
-                await ReplyAsync(embed: responseEmbed);
+                found = Users.Users
+                    .Single(user => user.DiscordId == Context.User.Id);
             }
+            catch (InvalidOperationException)
+            {
+                await ReplyAsync(Properties.Resources.UserNotInDatabaseError);
+                return;
+            }
+
+            Embed responseEmbed = new EmbedBuilder()
+                .WithTitle($"({found.World}) {found.Name}")
+                .WithUrl($"https://na.finalfantasyxiv.com/lodestone/character/{found.LodestoneId}/")
+                .WithColor(Color.Blue)
+                .WithThumbnailUrl(found.Avatar)
+                .Build();
+
+            Log.Information("Answered whoami from ({World}) {Name}.", found.World, found.Name);
+
+            await ReplyAsync(embed: responseEmbed);
         }
 
         // Check who a user is.
@@ -76,30 +75,27 @@ namespace Prima.Modules
                 return;
             }
 
-            using (var db = new DiscordXIVUserContext())
+            DiscordXIVUser found;
+            try
             {
-                DiscordXIVUser found;
-                try
-                {
-                    found = db.Users
-                        .Single(user => user.DiscordId == member.Id);
-                }
-                catch (InvalidOperationException)
-                {
-                    await ReplyAsync(Properties.Resources.UserNotInDatabaseError);
-                    return;
-                }
-
-                Embed responseEmbed = new EmbedBuilder()
-                    .WithTitle($"({found.World}) {found.Name}")
-                    .WithUrl($"https://na.finalfantasyxiv.com/lodestone/character/{found.LodestoneId}/")
-                    .WithColor(Color.Blue)
-                    .WithThumbnailUrl(found.Avatar)
-                    .Build();
-
-                await ReplyAsync(embed: responseEmbed);
-                Log.Information("Successfully responded to whoami.");
+                found = Users.Users
+                    .Single(user => user.DiscordId == member.Id);
             }
+            catch (InvalidOperationException)
+            {
+                await ReplyAsync(Properties.Resources.UserNotInDatabaseError);
+                return;
+            }
+
+            Embed responseEmbed = new EmbedBuilder()
+                .WithTitle($"({found.World}) {found.Name}")
+                .WithUrl($"https://na.finalfantasyxiv.com/lodestone/character/{found.LodestoneId}/")
+                .WithColor(Color.Blue)
+                .WithThumbnailUrl(found.Avatar)
+                .Build();
+
+            await ReplyAsync(embed: responseEmbed);
+            Log.Information("Successfully responded to whoami.");
         }
 
         // Check the number of database entries.
@@ -108,9 +104,8 @@ namespace Prima.Modules
         public async Task IndexCountAsync()
         {
             await ReplyAsync(Properties.Resources.DBUserCountInProgress);
-            using var db = new DiscordXIVUserContext();
-            await ReplyAsync($"There are {db.Users.Count()} users in the database.");
-            Log.Information("There are {DBEntryCount} users in the database.", db.Users.Count());
+            await ReplyAsync($"There are {Users.Users.Count()} users in the database.");
+            Log.Information("There are {DBEntryCount} users in the database.", Users.Users.Count());
         }
 
         // Add a clock to a voice channel.

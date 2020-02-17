@@ -186,6 +186,9 @@
   <data name="ReportThankYou" xml:space="preserve">
     <value>Thank you for your report. The moderators will read it as soon as they are available.</value>
   </data>
+  <data name="SerilogFilename" xml:space="preserve">
+    <value>Log.db</value>
+  </data>
   <data name="UndefinedPresetError" xml:space="preserve">
     <value>Preset Undefined enables all commands, without enabling the corresponding services.\nThis configuration is prohibited.</value>
   </data>
@@ -198,16 +201,13 @@
   <data name="UserNotInDatabaseError" xml:space="preserve">
     <value>That user was not found in the database.</value>
   </data>
-  <data name="UWPConfigConnectionString" xml:space="preserve">
+  <data name="UWPConnectionStringConfiguration" xml:space="preserve">
     <value>Data Source=Configuration.db</value>
   </data>
-  <data name="UWPDXIVConnectionString" xml:space="preserve">
+  <data name="UWPConnectionStringDXIVUsers" xml:space="preserve">
     <value>Data Source=DiscordXIVUsers.db</value>
   </data>
-  <data name="UWPLogConnectionString" xml:space="preserve">
-    <value>Data Source=Log.db</value>
-  </data>
-  <data name="UWPTextBlacklistConnectionString" xml:space="preserve">
+  <data name="UWPConnectionStringTextBlacklist" xml:space="preserve">
     <value>Data Source=TextBlacklist.db</value>
   </data>
   <data name="VerificationProcess1" xml:space="preserve">

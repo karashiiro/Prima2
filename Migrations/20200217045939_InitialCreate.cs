@@ -7,26 +7,24 @@ namespace Prima.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Users",
+                name: "ClockData",
                 columns: table => new
                 {
-                    DiscordId = table.Column<ulong>(nullable: false)
+                    ChannelId = table.Column<ulong>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    LodestoneId = table.Column<ulong>(nullable: false),
-                    World = table.Column<string>(nullable: true),
-                    Name = table.Column<string>(nullable: true),
-                    Avatar = table.Column<string>(nullable: true)
+                    GuildId = table.Column<ulong>(nullable: false),
+                    TzId = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Users", x => x.DiscordId);
+                    table.PrimaryKey("PK_ClockData", x => x.ChannelId);
                 });
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "ClockData");
         }
     }
 }

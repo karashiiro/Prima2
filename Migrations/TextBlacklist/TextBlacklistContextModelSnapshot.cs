@@ -4,10 +4,10 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Prima.Contexts;
 
-namespace Prima.Migrations.Configuration
+namespace Prima.Migrations.TextBlacklist
 {
-    [DbContext(typeof(ConfigurationContext))]
-    partial class ConfigurationContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(TextBlacklistContext))]
+    partial class TextBlacklistContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
@@ -15,21 +15,18 @@ namespace Prima.Migrations.Configuration
             modelBuilder
                 .HasAnnotation("ProductVersion", "3.1.1");
 
-            modelBuilder.Entity("Prima.Contexts.ClockConfiguration", b =>
+            modelBuilder.Entity("Prima.Contexts.GuildTextBlacklistEntry", b =>
                 {
-                    b.Property<ulong>("ChannelId")
+                    b.Property<ulong>("GuildId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<ulong>("GuildId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("TzId")
+                    b.Property<string>("RegexString")
                         .HasColumnType("TEXT");
 
-                    b.HasKey("ChannelId");
+                    b.HasKey("GuildId");
 
-                    b.ToTable("ClockData");
+                    b.ToTable("RegexStrings");
                 });
 #pragma warning restore 612, 618
         }

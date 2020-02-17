@@ -1,6 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
 
 namespace Prima.Contexts
 {
@@ -9,7 +8,7 @@ namespace Prima.Contexts
         public DbSet<DiscordXIVUser> Users { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
-            => options.UseSqlite(Properties.Resources.UWPDXIVConnectionString);
+            => options.UseSqlite(Properties.Resources.UWPConnectionStringDXIVUsers);
     }
 
     public class DiscordXIVUser

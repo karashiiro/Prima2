@@ -28,16 +28,22 @@ namespace Prima.Services
         private readonly WebClient _wc;
         private readonly XIVAPIService _XIVAPI;
 
+        private readonly DiscordXIVUserContext _users;
+        private readonly TextBlacklistContext _blacklist;
+
         public string LastCaughtRegex { get; private set; }
 
         private readonly List<ulong> _cemUnverifiedMembers;
 
-        public EventService(ConfigurationService config, DiscordSocketClient client, WebClient wc, XIVAPIService XIVAPI)
+        public EventService(ConfigurationService config, DiscordSocketClient client, WebClient wc, XIVAPIService XIVAPI, DiscordXIVUserContext users, TextBlacklistContext blacklist)
         {
             _config = config;
             _client = client;
             _wc = wc;
             _XIVAPI = XIVAPI;
+
+            _users = users;
+            _blacklist = blacklist;
 
             _cemUnverifiedMembers = new List<ulong>();
 
@@ -179,20 +185,6 @@ namespace Prima.Services
             }
         }
 
-        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "<Pending>")]
-        public static async Task CheckTextBlacklist(SocketMessage rawMessage, SocketGuildChannel guildChannel)
-        {
-            using var db = new TextBlacklistContext();
-            foreach (var regex in db.RegexStrings.Where((entry) => entry.GuildId == guildChannel.Guild.Id))
-            {
-                var match = Regex.Match(rawMessage.Content, regex.RegexString);
-                if (match.Success)
-                {
-                    await rawMessage.DeleteAsync();
-                }
-            }
-        }
-
         /// <summary>
         /// Save attachments to a local directory. Remember to clear out this folder periodically.
         /// </summary>
@@ -240,16 +232,14 @@ namespace Prima.Services
             switch (_config.CurrentPreset)
             {
                 case Preset.Clerical:
-                    await CEMTextBlacklist(rawMessage, guildChannel);
                     await CEMRecoverData(rawMessage, guildChannel);
                     break;
             }
         }
 
-        private async Task CEMTextBlacklist(SocketMessage rawMessage, SocketGuildChannel guildChannel)
+        private async Task CheckTextBlacklist(SocketMessage rawMessage, SocketGuildChannel guildChannel)
         {
-            using var db = new TextBlacklistContext();
-            IQueryable<GuildTextBlacklistEntry> blacklist = db.RegexStrings.Where(rs => rs.GuildId == guildChannel.Guild.Id);
+            IQueryable<GuildTextBlacklistEntry> blacklist = _blacklist.RegexStrings.Where(rs => rs.GuildId == guildChannel.Guild.Id);
             foreach (var entry in blacklist)
             {
                 var match = Regex.Match(rawMessage.Content, entry.RegexString);
@@ -265,10 +255,9 @@ namespace Prima.Services
         {
             SocketGuild guild = guildChannel.Guild;
             SocketGuildUser member = guildChannel.Guild.GetUser(rawMessage.Author.Id);
-            using var db = new DiscordXIVUserContext();
             try
             {
-                DiscordXIVUser user = db.Users
+                DiscordXIVUser user = _users.Users
                     .Single(user => user.DiscordId == member.Id);
             }
             catch (InvalidOperationException)
@@ -289,8 +278,8 @@ namespace Prima.Services
                 {
                     foundCharacter = await _XIVAPI.GetDiscordXIVUser(world, name, 0);
                     foundCharacter.DiscordId = member.Id;
-                    db.Users.Add(foundCharacter);
-                    await db.SaveChangesAsync();
+                    _users.Users.Add(foundCharacter);
+                    await _users.SaveChangesAsync();
                     Log.Information("Recovered data for {User}", $"{member.Username}#{member.Discriminator}");
                 }
                 catch (XIVAPICharacterNotFoundException)
@@ -427,10 +416,9 @@ namespace Prima.Services
         {
             SocketTextChannel statusChannel = newMember.Guild.GetChannel(_config.GetULong(newMember.Guild.Id.ToString(), "Channels", "status")) as SocketTextChannel;
             if (oldMember.Nickname == newMember.Nickname) return; // They might just be editing their avatar or something.
-            using var db = new DiscordXIVUserContext();
             try
             {
-                DiscordXIVUser user = db.Users.Single(user => user.DiscordId == newMember.Id);
+                DiscordXIVUser user = _users.Users.Single(user => user.DiscordId == newMember.Id);
 
                 if (string.IsNullOrEmpty(newMember.Nickname)) // They want no flair.
                 {

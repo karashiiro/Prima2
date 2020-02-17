@@ -268,6 +268,15 @@ namespace Prima.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Log.db.
+        /// </summary>
+        internal static string SerilogFilename {
+            get {
+                return ResourceManager.GetString("SerilogFilename", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Preset Undefined enables all commands, without enabling the corresponding services.\nThis configuration is prohibited..
         /// </summary>
         internal static string UndefinedPresetError {
@@ -306,36 +315,27 @@ namespace Prima.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Data Source=Configuration.db.
         /// </summary>
-        internal static string UWPConfigConnectionString {
+        internal static string UWPConnectionStringConfiguration {
             get {
-                return ResourceManager.GetString("UWPConfigConnectionString", resourceCulture);
+                return ResourceManager.GetString("UWPConnectionStringConfiguration", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Data Source=DiscordXIVUsers.db.
         /// </summary>
-        internal static string UWPDXIVConnectionString {
+        internal static string UWPConnectionStringDXIVUsers {
             get {
-                return ResourceManager.GetString("UWPDXIVConnectionString", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Data Source=Log.db.
-        /// </summary>
-        internal static string UWPLogConnectionString {
-            get {
-                return ResourceManager.GetString("UWPLogConnectionString", resourceCulture);
+                return ResourceManager.GetString("UWPConnectionStringDXIVUsers", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Data Source=TextBlacklist.db.
         /// </summary>
-        internal static string UWPTextBlacklistConnectionString {
+        internal static string UWPConnectionStringTextBlacklist {
             get {
-                return ResourceManager.GetString("UWPTextBlacklistConnectionString", resourceCulture);
+                return ResourceManager.GetString("UWPConnectionStringTextBlacklist", resourceCulture);
             }
         }
         

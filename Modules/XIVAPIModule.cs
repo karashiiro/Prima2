@@ -24,6 +24,8 @@ namespace Prima.Modules
         public ConfigurationService Config { get; set; }
         public XIVAPIService XIVAPI { get; set; }
 
+        public DiscordXIVUserContext Users { get; set; }
+
         private readonly int messageDeleteDelay = 10000;
         private readonly int minimumJobLevel = 60;
 
@@ -82,38 +84,35 @@ namespace Prima.Modules
             }
 
             // Add the user and character to the database.
-            using (var db = new DiscordXIVUserContext())
+            try
             {
-                try
-                {
-                    // Update an existing file.
-                    DiscordXIVUser user = db.Users
-                        .Single(user => user.DiscordId == Context.User.Id);
+                // Update an existing file.
+                DiscordXIVUser user = Users.Users
+                    .Single(user => user.DiscordId == Context.User.Id);
 
-                    // If they're verified and aren't reregistering the same character, return.
-                    if (member.Roles.Contains(cleared))
+                // If they're verified and aren't reregistering the same character, return.
+                if (member.Roles.Contains(cleared))
+                {
+                    if (user.LodestoneId != foundCharacter.LodestoneId)
                     {
-                        if (user.LodestoneId != foundCharacter.LodestoneId)
-                        {
-                            var message = await ReplyAsync($"{Context.User.Mention}, you have already verified your character.");
-                            await Task.Delay(5000);
-                            await message.DeleteAsync();
-                            return;
-                        }
+                        var message = await ReplyAsync($"{Context.User.Mention}, you have already verified your character.");
+                        await Task.Delay(5000);
+                        await message.DeleteAsync();
+                        return;
                     }
+                }
 
-                    user.Avatar = foundCharacter.Avatar;
-                    user.Name = foundCharacter.Name;
-                    user.World = foundCharacter.World;
-                }
-                catch (InvalidOperationException)
-                {
-                    DiscordXIVUser user = foundCharacter;
-                    foundCharacter.DiscordId = Context.User.Id;
-                    await db.Users.AddAsync(user);
-                }
-                await db.SaveChangesAsync();
+                user.Avatar = foundCharacter.Avatar;
+                user.Name = foundCharacter.Name;
+                user.World = foundCharacter.World;
             }
+            catch (InvalidOperationException)
+            {
+                DiscordXIVUser user = foundCharacter;
+                foundCharacter.DiscordId = Context.User.Id;
+                await Users.Users.AddAsync(user);
+            }
+            await Users.SaveChangesAsync();
 
             // We use the user-provided parameter because the Lodestone format includes the data center.
             string outputName = $"({world}) {foundCharacter.Name}";
@@ -199,26 +198,23 @@ namespace Prima.Modules
             }
 
             // Add the user and character to the database.
-            using (var db = new DiscordXIVUserContext())
+            try
             {
-                try
-                {
-                    DiscordXIVUser user = db.Users
-                        .Single(user => user.DiscordId == userMention.Id);
+                DiscordXIVUser user = Users.Users
+                    .Single(user => user.DiscordId == userMention.Id);
 
-                    user.LodestoneId = foundCharacter.LodestoneId;
-                    user.Avatar = foundCharacter.Avatar;
-                    user.Name = foundCharacter.Name;
-                    user.World = foundCharacter.World;
-                }
-                catch (InvalidOperationException)
-                {
-                    DiscordXIVUser user = foundCharacter;
-                    foundCharacter.DiscordId = userMention.Id;
-                    await db.Users.AddAsync(user);
-                }
-                await db.SaveChangesAsync();
+                user.LodestoneId = foundCharacter.LodestoneId;
+                user.Avatar = foundCharacter.Avatar;
+                user.Name = foundCharacter.Name;
+                user.World = foundCharacter.World;
             }
+            catch (InvalidOperationException)
+            {
+                DiscordXIVUser user = foundCharacter;
+                foundCharacter.DiscordId = userMention.Id;
+                await Users.Users.AddAsync(user);
+            }
+            await Users.SaveChangesAsync();
 
             // We use the user-provided parameter because the Lodestone format includes the data center.
             string outputName = $"({world}) {foundCharacter.Name}";
@@ -272,8 +268,7 @@ namespace Prima.Modules
                 return;
             }
             IDisposable typing = Context.Channel.EnterTypingState();
-            using var db = new DiscordXIVUserContext();
-            DiscordXIVUser user = db.Users
+            DiscordXIVUser user = Users.Users
                 .Single(user => user.DiscordId == Context.User.Id);
             Character character = await XIVAPI.GetCharacter(user.LodestoneId);
             bool hasAchievement = false;

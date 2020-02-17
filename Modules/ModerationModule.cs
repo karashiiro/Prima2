@@ -25,6 +25,8 @@ namespace Prima.Modules
         public EventService Events { get; set; }
         public HttpClient Http { get; set; }
 
+        public TextBlacklistContext Blacklist { get; set; }
+
         // Submit a report.
         [Command("report", RunMode = RunMode.Async)]
         public async Task ReportAsync(params string[] p)
@@ -93,16 +95,13 @@ namespace Prima.Modules
                 return;
             }
 
-            using (var db = new TextBlacklistContext())
+            var entry = new GuildTextBlacklistEntry
             {
-                var entry = new GuildTextBlacklistEntry
-                {
-                    GuildId = Context.Guild.Id,
-                    RegexString = regexString
-                };
-                db.RegexStrings.Add(entry);
-                await db.SaveChangesAsync();
-            }
+                GuildId = Context.Guild.Id,
+                RegexString = regexString
+            };
+            Blacklist.RegexStrings.Add(entry);
+            await Blacklist.SaveChangesAsync();
 
             await ReplyAsync(Properties.Resources.GenericSuccess);
         }
@@ -112,18 +111,17 @@ namespace Prima.Modules
         [RequireUserPermission(GuildPermission.BanMembers)]
         public async Task UnblockTextAsync([Remainder] string regexString)
         {
-            using var db = new TextBlacklistContext();
             if (string.IsNullOrEmpty(regexString)) // Remove the last regex that was matched if none was specified.
             {
-                var entry = db.RegexStrings.Single(rs => rs.RegexString == Events.LastCaughtRegex);
-                db.Remove(entry);
+                var entry = Blacklist.RegexStrings.Single(rs => rs.RegexString == Events.LastCaughtRegex);
+                Blacklist.Remove(entry);
             }
             else
             {
                 try
                 {
-                    var entry = db.RegexStrings.Single(rs => rs.RegexString == regexString);
-                    db.Remove(entry);
+                    var entry = Blacklist.RegexStrings.Single(rs => rs.RegexString == regexString);
+                    Blacklist.Remove(entry);
                 }
                 catch (InvalidOperationException)
                 {
@@ -131,7 +129,7 @@ namespace Prima.Modules
                     return;
                 }
             }
-            await db.SaveChangesAsync();
+            await Blacklist.SaveChangesAsync();
             await ReplyAsync(Properties.Resources.GenericSuccess);
         }
     }

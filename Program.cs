@@ -3,10 +3,12 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using NodaTime;
+using Prima.Contexts;
 using Prima.Services;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -62,7 +64,7 @@ namespace Prima
                     .MinimumLevel.Verbose()
                     .Enrich.WithProperty("System", services.GetRequiredService<ConfigurationService>().CurrentPreset)
                     .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3} {System}] {Message:lj}{NewLine}{Exception}")
-                    .WriteTo.SQLite(Properties.Resources.UWPLogConnectionString)
+                    .WriteTo.SQLite(Properties.Resources.SerilogFilename)
                     .CreateLogger();
 
                 var client = services.GetRequiredService<DiscordSocketClient>();
@@ -130,14 +132,16 @@ namespace Prima
             return Task.CompletedTask;
         }
 
+        [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "<Pending>")]
         private static ServiceProvider ConfigureServices(DiscordSocketConfig disConfig, Preset preset)
         {
             IServiceCollection sc = new ServiceCollection()
+                // DB Contexts
+                .AddDbContext<DiscordXIVUserContext>()
+                .AddDbContext<TextBlacklistContext>()
                 // Group 1 - No dependencies
                 .AddSingleton(new ConfigurationService(preset))
-#pragma warning disable CA2000 // Dispose objects before losing scope
                 .AddSingleton(new DiscordSocketClient(disConfig))
-#pragma warning restore CA2000 // Dispose objects before losing scope
                 .AddSingleton<HttpClient>()
                 .AddSingleton<LotoIdService>()
                 .AddSingleton(SystemClock.Instance)

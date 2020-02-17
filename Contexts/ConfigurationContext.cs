@@ -8,7 +8,7 @@ namespace Prima.Contexts
         public DbSet<ClockConfiguration> ClockData { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
-            => options.UseSqlite(Properties.Resources.UWPConfigConnectionString);
+            => options.UseSqlite(Properties.Resources.UWPConnectionStringConfiguration);
     }
 
     public class ClockConfiguration

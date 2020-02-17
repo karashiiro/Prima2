@@ -8,7 +8,7 @@ namespace Prima.Contexts
         public DbSet<GuildTextBlacklistEntry> RegexStrings { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
-            => options.UseSqlite(Properties.Resources.UWPTextBlacklistConnectionString);
+            => options.UseSqlite(Properties.Resources.UWPConnectionStringTextBlacklist);
     }
 
     public class GuildTextBlacklistEntry
