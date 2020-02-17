@@ -20,6 +20,7 @@ namespace Prima.Modules
     public class ClericalModule : ModuleBase<SocketCommandContext>
     {
         public ConfigurationService Config { get; set; }
+        public DiscordSocketClient Client { get; set; }
         public ServerClockService Clocks { get; set; }
 
         public DiscordXIVUserContext Users { get; set; }
@@ -154,6 +155,20 @@ namespace Prima.Modules
             await Clocks.RemoveClock(channelId);
             await ReplyAsync(Properties.Resources.ClockRemoveSuccess);
             Log.Information(Properties.Resources.ClockRemoveSuccess);
+        }
+
+        // DM kara what servers the bot's on.
+        [Command("whatservers")]
+        [RequireOwner]
+        public async Task WhatServersAsync(IUser user)
+        {
+            string theseGuilds = "```\n";
+            foreach (SocketGuild guild in Client.Guilds)
+            {
+                theseGuilds += $"{guild.Id} - {guild.Name} ({guild.Owner.Id})\n";
+            }
+            theseGuilds += "```";
+            await user.SendMessageAsync(theseGuilds);
         }
     }
 }
