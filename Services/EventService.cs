@@ -7,6 +7,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -163,6 +164,8 @@ namespace Prima.Services
                     {
                         await ProcessAttachments(rawMessage, guildChannel);
                     }
+
+                    await CheckTextBlacklist(rawMessage, guildChannel);
                 }
                 switch (guildChannel.Guild.Id)
                 {
@@ -172,6 +175,20 @@ namespace Prima.Services
                     case 550910482194890781:
                         await CEMRecoverData(rawMessage, guildChannel);
                         break;
+                }
+            }
+        }
+
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "<Pending>")]
+        public static async Task CheckTextBlacklist(SocketMessage rawMessage, SocketGuildChannel guildChannel)
+        {
+            using var db = new TextBlacklistContext();
+            foreach (var regex in db.RegexStrings.Where((entry) => entry.GuildId == guildChannel.Guild.Id))
+            {
+                var match = Regex.Match(rawMessage.Content, regex.RegexString);
+                if (match.Success)
+                {
+                    await rawMessage.DeleteAsync();
                 }
             }
         }
