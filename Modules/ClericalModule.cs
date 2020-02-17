@@ -65,6 +65,43 @@ namespace Prima.Modules
             }
         }
 
+        // Check who a user is.
+        [Command("whois", RunMode = RunMode.Async)]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        public async Task WhoIsAsync(IUser member) // Who knows?
+        {
+            if (member == null)
+            {
+                await ReplyAsync(Properties.Resources.MentionNotProvidedError);
+                return;
+            }
+
+            using (var db = new DiscordXIVUserContext())
+            {
+                DiscordXIVUser found;
+                try
+                {
+                    found = db.Users
+                        .Single(user => user.DiscordId == member.Id);
+                }
+                catch (InvalidOperationException)
+                {
+                    await ReplyAsync(Properties.Resources.UserNotInDatabaseError);
+                    return;
+                }
+
+                Embed responseEmbed = new EmbedBuilder()
+                    .WithTitle($"({found.World}) {found.Name}")
+                    .WithUrl($"https://na.finalfantasyxiv.com/lodestone/character/{found.LodestoneId}/")
+                    .WithColor(Color.Blue)
+                    .WithThumbnailUrl(found.Avatar)
+                    .Build();
+
+                await ReplyAsync(embed: responseEmbed);
+                Log.Information("Successfully responded to whoami.");
+            }
+        }
+
         // Check the number of database entries.
         [Command("indexcount")]
         [RequireUserPermission(GuildPermission.KickMembers)]

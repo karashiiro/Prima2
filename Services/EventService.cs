@@ -164,10 +164,13 @@ namespace Prima.Services
                         await ProcessAttachments(rawMessage, guildChannel);
                     }
                 }
-                switch (guildChannel.Id)
+                switch (guildChannel.Guild.Id)
                 {
                     case 550702475112480769:
                         await CEMMessageRecieved(rawMessage, guildChannel);
+                        break;
+                    case 550910482194890781:
+                        await CEMRecoverData(rawMessage, guildChannel);
                         break;
                 }
             }
@@ -261,10 +264,8 @@ namespace Prima.Services
                     return;
                 }
 
-                string world = member.Nickname.Substring(1, member.Nickname.LastIndexOf(')') - 2);
-                Console.WriteLine(world);
+                string world = member.Nickname[1..member.Nickname.LastIndexOf(')')];
                 string name = member.Nickname.Substring(member.Nickname.LastIndexOf(')') + 2);
-                Console.WriteLine(name);
 
                 DiscordXIVUser foundCharacter;
                 try
@@ -273,6 +274,7 @@ namespace Prima.Services
                     foundCharacter.DiscordId = member.Id;
                     db.Users.Add(foundCharacter);
                     await db.SaveChangesAsync();
+                    Log.Information("Recovered data for {User}", $"{member.Username}#{member.Discriminator}");
                 }
                 catch (XIVAPICharacterNotFoundException)
                 {
@@ -304,7 +306,7 @@ namespace Prima.Services
                 switch ((channel as SocketGuildChannel).Id)
                 {
                     case 550702475112480769:
-                        await CEMReactionAdded(message, guildChannel, reaction, guildUser);
+                        //await CEMReactionAdded(message, guildChannel, reaction, guildUser);
                         break;
                 }
             }
@@ -325,7 +327,7 @@ namespace Prima.Services
                 switch ((channel as SocketGuildChannel).Id)
                 {
                     case 550702475112480769:
-                        await CEMReactionRemoved(message, guildChannel, reaction, guildUser);
+                        //await CEMReactionRemoved(message, guildChannel, reaction, guildUser);
                         break;
                 }
             }
