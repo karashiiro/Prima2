@@ -14,14 +14,14 @@ using static Google.Apis.Calendar.v3.EventsResource;
 
 namespace Prima.Services
 {
-    public class SchedulingService
+    public sealed class SchedulingService : IDisposable
     {
-        private ConfigurationService _config;
+        private readonly ConfigurationService _config;
 
-        private static string[] _scopes = { CalendarService.Scope.CalendarEvents };
-        private static string _applicationName = "Prima";
+        private static readonly string[] _scopes = { CalendarService.Scope.CalendarEvents };
+        private const string _applicationName = "Prima";
 
-        private CalendarService _service;
+        private readonly CalendarService _service;
 
         [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "<Pending>")]
         public SchedulingService(ConfigurationService config)
@@ -53,6 +53,34 @@ namespace Prima.Services
             request.SingleEvents = true;
             request.OrderBy = ListRequest.OrderByEnum.StartTime;
             return (await request.ExecuteAsync()).Items;
+        }
+
+        public async Task AddEvent(string calendarId, Event eventItem) {
+            InsertRequest request = _service.Events.Insert(eventItem, calendarId);
+            await request.ExecuteAsync();
+        }
+
+        public async Task DeleteEvent(string calendarId, string eventId)
+        {
+            DeleteRequest request = _service.Events.Delete(calendarId, eventId);
+            await request.ExecuteAsync();
+        }
+
+        public async Task UpdateEvent(string calendarId, string eventId, Event eventItem)
+        {
+            UpdateRequest request = _service.Events.Update(eventItem, calendarId, eventId);
+            await request.ExecuteAsync();
+        }
+
+        public async Task PatchEvent(string calendarId, string eventId, Event partialEventItem)
+        {
+            PatchRequest request = _service.Events.Patch(partialEventItem, calendarId, eventId);
+            await request.ExecuteAsync();
+        }
+
+        public void Dispose()
+        {
+            _service.Dispose();
         }
     }
 }
