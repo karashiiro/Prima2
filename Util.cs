@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Reflection;
 
 namespace Prima
 {
@@ -18,5 +20,11 @@ namespace Prima
         /// </summary>
         public static Func<T2, T3, TResult> Apply<T1, T2, T3, TResult>(Func<T1, T2, T3, TResult> f, T1 arg)
             => (x, y) => f(arg, x, y);
+
+        /// <summary>
+        /// Gets the absolute path of a file from its path relative to the executing assembly.
+        /// </summary>
+        public static string GetAbsolutePath(string relativePath)
+            => Path.Combine(Assembly.GetEntryAssembly().Location, "..", relativePath);
     }
 }
