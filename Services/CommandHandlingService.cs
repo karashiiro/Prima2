@@ -53,11 +53,6 @@ namespace Prima.Services
 
             var argPos = 0;
             char prefix = _services.GetRequiredService<ConfigurationService>().GetSection("Prefix").Value[0];
-            // Check if the guild has a custom command prefix specified.
-            if (_services.GetRequiredService<ConfigurationService>().GetSection($"{context.Guild.Id}").GetSection("Prefix").Exists())
-            {
-                prefix = _services.GetRequiredService<ConfigurationService>().GetSection($"{context.Guild.Id}").GetSection("Prefix").Value[0];
-            }
             if (!message.HasCharPrefix(prefix, ref argPos)) return;
 
             Log.Information("({DiscordID}) {DiscordName}: {MessageContent}", rawMessage.Author.Id, rawMessage.Author.Username + "#" + rawMessage.Author.Discriminator, rawMessage.Content);

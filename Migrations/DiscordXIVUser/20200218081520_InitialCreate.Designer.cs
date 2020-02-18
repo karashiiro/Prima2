@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Prima.Contexts;
 
-namespace Prima.Migrations.TextBlacklist
+namespace Prima.Migrations.DiscordXIVUser
 {
-    [DbContext(typeof(TextBlacklistContext))]
-    [Migration("20200217045955_InitialCreate")]
+    [DbContext(typeof(DiscordXIVUserContext))]
+    [Migration("20200218081520_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -17,18 +17,27 @@ namespace Prima.Migrations.TextBlacklist
             modelBuilder
                 .HasAnnotation("ProductVersion", "3.1.1");
 
-            modelBuilder.Entity("Prima.Contexts.GuildTextBlacklistEntry", b =>
+            modelBuilder.Entity("Prima.Contexts.DiscordXIVUser", b =>
                 {
-                    b.Property<ulong>("GuildId")
+                    b.Property<ulong>("DiscordId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("RegexString")
+                    b.Property<string>("Avatar")
                         .HasColumnType("TEXT");
 
-                    b.HasKey("GuildId");
+                    b.Property<ulong>("LodestoneId")
+                        .HasColumnType("INTEGER");
 
-                    b.ToTable("RegexStrings");
+                    b.Property<string>("Name")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("World")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("DiscordId");
+
+                    b.ToTable("Users");
                 });
 #pragma warning restore 612, 618
         }

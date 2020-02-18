@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Prima.Contexts;
 
-namespace Prima.Migrations.DiscordXIVUser
+namespace Prima.Migrations
 {
-    [DbContext(typeof(DiscordXIVUserContext))]
-    [Migration("20200217045947_InitialCreate")]
+    [DbContext(typeof(ConfigurationContext))]
+    [Migration("20200218081511_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -17,27 +17,21 @@ namespace Prima.Migrations.DiscordXIVUser
             modelBuilder
                 .HasAnnotation("ProductVersion", "3.1.1");
 
-            modelBuilder.Entity("Prima.Contexts.DiscordXIVUser", b =>
+            modelBuilder.Entity("Prima.Contexts.ClockConfiguration", b =>
                 {
-                    b.Property<ulong>("DiscordId")
+                    b.Property<ulong>("ChannelId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Avatar")
-                        .HasColumnType("TEXT");
-
-                    b.Property<ulong>("LodestoneId")
+                    b.Property<ulong>("GuildId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("TzId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("World")
-                        .HasColumnType("TEXT");
+                    b.HasKey("ChannelId");
 
-                    b.HasKey("DiscordId");
-
-                    b.ToTable("Users");
+                    b.ToTable("ClockData");
                 });
 #pragma warning restore 612, 618
         }

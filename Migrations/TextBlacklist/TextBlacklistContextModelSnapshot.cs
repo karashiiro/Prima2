@@ -17,14 +17,13 @@ namespace Prima.Migrations.TextBlacklist
 
             modelBuilder.Entity("Prima.Contexts.GuildTextBlacklistEntry", b =>
                 {
-                    b.Property<ulong>("GuildId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("RegexString")
                         .HasColumnType("TEXT");
 
-                    b.HasKey("GuildId");
+                    b.Property<ulong>("GuildId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("RegexString");
 
                     b.ToTable("RegexStrings");
                 });

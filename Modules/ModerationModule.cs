@@ -6,6 +6,7 @@ using Prima.Contexts;
 using Prima.Services;
 using Serilog;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -36,8 +37,20 @@ namespace Prima.Modules
                 _ = WarnOfPublicReport();
             }
             var responseMessage = await Context.Channel.SendMessageAsync(Properties.Resources.ReportThankYou);
-            SocketGuild guild = Context.Guild ?? Context.Client.GetGuild(Config.GetULong("" + Context.User.MutualGuilds.First().Id));
-            SocketTextChannel postChannel = guild.GetTextChannel(Config.GetULong("" + guild.Id, "Channels", "reports"));
+            SocketGuild guild = Context.Guild;
+            if (guild == null)
+            {
+                foreach (var g in Context.User.MutualGuilds)
+                {
+                    try
+                    {
+                        Config.GetULong(g.Id.ToString(), "Channels", "reports");
+                        guild = g;
+                    }
+                    catch (ArgumentNullException) {}
+                }
+            }
+            SocketTextChannel postChannel = guild.GetTextChannel(Config.GetULong(guild.Id.ToString(), "Channels", "reports"));
             string output = $"<@&{Config.GetSection("" + guild.Id, "Roles", "Moderator").Value}> {Context.User.Username}#{Context.User.Discriminator} just sent a report:{Context.Message.Content.Substring(7)}";
             if (output.Length > 2000) // This can only be the case once, no need for a loop.
             {
@@ -67,17 +80,10 @@ namespace Prima.Modules
         // Check when a user joined Discord.
         [Command("when")]
         [RequireUserPermission(GuildPermission.KickMembers)]
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "<Pending>")]
         public async Task WhenAsync(IUser user)
         {
-            if (user == null)
-            {
-                await ReplyAsync($"That's not a valid member. Usage: `{Config.GetSection("Prefix")}when <mention>`");
-                return;
-            }
-            long timestampFromSnowflake = ((long)user.Id / 4194304) + 1420070400000;
-            DateTime then = new DateTime(timestampFromSnowflake);
-            await ReplyAsync(then.ToString());
-            Log.Information("Successfully responded to whoami.");
+            await ReplyAsync(user.CreatedAt.UtcDateTime.ToString());
         }
 
         // Add a regex to the blacklist.

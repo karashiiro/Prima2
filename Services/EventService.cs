@@ -160,12 +160,16 @@ namespace Prima.Services
                 throw new ArgumentNullException(nameof(rawMessage));
             }
 
+            if (_config.CurrentPreset == Preset.Moderation)
+            {
+                SaveAttachments(rawMessage);
+            }
+
             if (_client.GetChannel(rawMessage.Channel.Id) is SocketGuildChannel)
             {
                 SocketGuildChannel guildChannel = rawMessage.Channel as SocketGuildChannel;
                 if (_config.CurrentPreset == Preset.Moderation && rawMessage.Author.Id != _client.CurrentUser.Id)
                 {
-                    SaveAttachments(rawMessage);
                     if (!rawMessage.Content.StartsWith("~report"))
                     {
                         await ProcessAttachments(rawMessage, guildChannel);

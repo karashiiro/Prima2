@@ -10,13 +10,12 @@ namespace Prima.Migrations.TextBlacklist
                 name: "RegexStrings",
                 columns: table => new
                 {
+                    RegexString = table.Column<string>(nullable: false),
                     GuildId = table.Column<ulong>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    RegexString = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RegexStrings", x => x.GuildId);
+                    table.PrimaryKey("PK_RegexStrings", x => x.RegexString);
                 });
         }
 

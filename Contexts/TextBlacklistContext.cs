@@ -14,8 +14,8 @@ namespace Prima.Contexts
     public class GuildTextBlacklistEntry
     {
         [Key]
-        public ulong GuildId { get; set; }
-
         public string RegexString { get; set; }
+
+        public ulong GuildId { get; set; }
     }
 }
