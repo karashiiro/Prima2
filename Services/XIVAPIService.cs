@@ -44,7 +44,7 @@ namespace Prima.Services
         /// </summary>
         public async Task<Character> GetCharacter(ulong id)
         {
-            HttpResponseMessage xivapiResponse = await _http.GetAsync(new Uri($"{BASE_URL}/character/{id}?data=AC,MiMo"));
+            HttpResponseMessage xivapiResponse = await _http.GetAsync(new Uri($"{BASE_URL}/character/{id}?data=CJ,AC,MiMo"));
             string dataObject = await xivapiResponse.Content.ReadAsStringAsync();
             JObject parsedResponse = JObject.Parse(dataObject);
             return new Character(parsedResponse);
