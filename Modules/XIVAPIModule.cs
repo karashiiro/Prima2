@@ -27,7 +27,7 @@ namespace Prima.Modules
         public DiscordXIVUserContext Users { get; set; }
 
         private readonly int messageDeleteDelay = 10000;
-        private readonly int minimumJobLevel = 60;
+        private readonly int minimumJobLevel = Context.Guild.Id == 550702475112480769 ? 60 : 0;
 
         // Declare yourself as a character.
         [Command("iam", RunMode = RunMode.Async)]
@@ -59,14 +59,22 @@ namespace Prima.Modules
 
             SocketGuild guild = Context.Guild ?? Context.User.MutualGuilds.First();
             SocketGuildUser member = guild.GetUser(Context.User.Id);
-            SocketRole cleared = guild.GetRole(ulong.Parse(Config.GetSection(guild.Id.ToString(), "Roles", "Cleared").Value));
+            SocketRole cleared;
+            try
+            {
+                cleared = guild.GetRole(ulong.Parse(Config.GetSection(guild.Id.ToString(), "Roles", "Cleared").Value));
+            }
+            catch (ArgumentNullException)
+            {
+                cleared = null;
+            }
 
-            IDisposable typing = Context.Channel.EnterTypingState();
+            using IDisposable typing = Context.Channel.EnterTypingState();
 
             DiscordXIVUser foundCharacter;
             try
             {
-                foundCharacter = await XIVAPI.GetDiscordXIVUser(world, name, minimumJobLevel);
+                foundCharacter = await XIVAPI.GetDiscordXIVUser(world, name, Config.GetByte(Context.Guild.Id.ToString(), "MinimumLevel"));
             }
             catch (XIVAPICharacterNotFoundException)
             {
@@ -82,6 +90,10 @@ namespace Prima.Modules
                 await reply.DeleteAsync();
                 return;
             }
+            catch (ArgumentNullException)
+            {
+                return;
+            }
 
             // Add the user and character to the database.
             try
@@ -91,7 +103,7 @@ namespace Prima.Modules
                     .Single(user => user.DiscordId == Context.User.Id);
 
                 // If they're verified and aren't reregistering the same character, return.
-                if (member.Roles.Contains(cleared))
+                if (cleared != null && member.Roles.Contains(cleared))
                 {
                     if (user.LodestoneId != foundCharacter.LodestoneId)
                     {
@@ -145,7 +157,6 @@ namespace Prima.Modules
 
             // Cleanup
             IUserMessage finalReply = await ReplyAsync(embed: responseEmbed);
-            typing.Dispose();
             await Task.Delay(messageDeleteDelay);
             await finalReply.DeleteAsync();
         }

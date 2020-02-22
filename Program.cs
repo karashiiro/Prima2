@@ -90,7 +90,7 @@ namespace Prima
                 await client.StartAsync();
                 Log.Information($"Logged in with configuration preset {preset}.");
                 
-                if (preset == Preset.Clerical)
+                if (preset == Preset.Extra)
                 {
                     await services.GetRequiredService<ServerClockService>().InitializeAsync();
                     services.GetRequiredService<ServerClockService>().Start();

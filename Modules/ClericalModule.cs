@@ -21,7 +21,7 @@ namespace Prima.Modules
     {
         public ConfigurationService Config { get; set; }
         public DiscordSocketClient Client { get; set; }
-        public ServerClockService Clocks { get; set; }
+        
 
         public DiscordXIVUserContext Users { get; set; }
 
@@ -107,54 +107,6 @@ namespace Prima.Modules
             await ReplyAsync(Properties.Resources.DBUserCountInProgress);
             await ReplyAsync($"There are {Users.Users.Count()} users in the database.");
             Log.Information("There are {DBEntryCount} users in the database.", Users.Users.Count());
-        }
-
-        // Add a clock to a voice channel.
-        [Command("addclock")]
-        [RequireUserPermission(GuildPermission.Administrator)]
-        public async Task AddClockAsync(ulong channelId, string tzId)
-        {
-            if (Context.Guild == null)
-            {
-                await ReplyAsync(Properties.Resources.MustBeUsedInGuildError);
-                return;
-            }
-            if (Context.Guild.GetChannel(channelId) is SocketTextChannel)
-            {
-                await ReplyAsync(Properties.Resources.MustBeUsedOnVoiceChannelError);
-                return;
-            }
-            try
-            {
-                await Clocks.AddClock(Context.Guild.Id, channelId, tzId);
-            }
-            catch (ArgumentNullException)
-            {
-                await ReplyAsync(Properties.Resources.NotATimezoneIdError);
-                return;
-            }
-            await ReplyAsync(Properties.Resources.ClockAddSuccess);
-            Log.Information(Properties.Resources.ClockAddSuccess);
-        }
-
-        // Remove a clock from a voice channel.
-        [Command("removeclock")]
-        [RequireUserPermission(GuildPermission.Administrator)]
-        public async Task RemoveClockAsync(ulong channelId)
-        {
-            if (Context.Guild == null)
-            {
-                await ReplyAsync(Properties.Resources.MustBeUsedInGuildError);
-                return;
-            }
-            if (Context.Guild.GetChannel(channelId) is SocketTextChannel)
-            {
-                await ReplyAsync(Properties.Resources.MustBeUsedOnVoiceChannelError);
-                return;
-            }
-            await Clocks.RemoveClock(channelId);
-            await ReplyAsync(Properties.Resources.ClockRemoveSuccess);
-            Log.Information(Properties.Resources.ClockRemoveSuccess);
         }
 
         // DM kara what servers the bot's on.

@@ -86,6 +86,24 @@ namespace Prima.Services
         }
 
         /// <summary>
+        /// Gets a configuration sub-section with the specified key as a <see cref="byte"/>.
+        /// </summary>
+        public byte GetByte(string key)
+        {
+            IConfigurationSection section = GetSection(key);
+            return byte.Parse(section.Value);
+        }
+
+        /// <summary>
+        /// Gets a configuration sub-section with the specified key as a <see cref="byte"/>.
+        /// </summary>
+        public byte GetByte(params string[] keys)
+        {
+            IConfigurationSection section = GetSection(keys);
+            return byte.Parse(section.Value);
+        }
+
+        /// <summary>
         /// Get the stored clock configurations.
         /// </summary>
         public static async Task<IList<ClockConfiguration>> GetClockData()
