@@ -40,6 +40,10 @@ namespace Prima.Modules
                 await reply.DeleteAsync();
                 return;
             }
+            (new Task(async () => {
+                await Task.Delay(messageDeleteDelay);
+                await Context.Message.DeleteAsync();
+            })).Start();
             string world = parameters[0].ToLower();
             string name = parameters[1] + " " + parameters[2];
             world = RegexSearches.NonAlpha.Replace(world, string.Empty);

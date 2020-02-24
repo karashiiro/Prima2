@@ -33,6 +33,7 @@ namespace Prima.Modules
             SocketGuildUser user = Context.Guild.GetUser(Context.User.Id);
             SocketRole memberRole = Context.Guild.GetRole(Config.GetULong(Context.Guild.Id.ToString(), "Roles", "Member"));
             await user.AddRoleAsync(memberRole);
+            await Context.Message.DeleteAsync();
             Log.Information("Added {DiscordName} to {Member}.", $"{Context.User.Username}#{Context.User.Discriminator}", memberRole.Name);
         }
 
