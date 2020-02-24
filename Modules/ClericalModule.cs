@@ -7,7 +7,6 @@ using Prima.Services;
 using Serilog;
 using System;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Prima.Modules

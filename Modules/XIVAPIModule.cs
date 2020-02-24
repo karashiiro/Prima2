@@ -27,7 +27,6 @@ namespace Prima.Modules
         public DiscordXIVUserContext Users { get; set; }
 
         private readonly int messageDeleteDelay = 10000;
-        private readonly int minimumJobLevel = Context.Guild.Id == 550702475112480769 ? 60 : 0;
 
         // Declare yourself as a character.
         [Command("iam", RunMode = RunMode.Async)]
@@ -85,7 +84,7 @@ namespace Prima.Modules
             }
             catch (XIVAPINotMatchingFilterException)
             {
-                IUserMessage reply = await ReplyAsync($"This is a security notice. {Context.User.Mention}, that character does not have any combat jobs at Level {minimumJobLevel}.");
+                IUserMessage reply = await ReplyAsync($"This is a security notice. {Context.User.Mention}, that character does not have any combat jobs at Level {Config.GetByte(Context.Guild.Id.ToString(), "MinimumLevel")}.");
                 await Task.Delay(messageDeleteDelay);
                 await reply.DeleteAsync();
                 return;
@@ -173,6 +172,10 @@ namespace Prima.Modules
                 await reply.DeleteAsync();
                 return;
             }
+            (new Task(async () => {
+                await Task.Delay(messageDeleteDelay);
+                await Context.Message.DeleteAsync();
+            })).Start();
             string world = parameters[0].ToLower();
             string name = parameters[1] + " " + parameters[2];
             world = RegexSearches.NonAlpha.Replace(world, string.Empty);
@@ -193,7 +196,7 @@ namespace Prima.Modules
             SocketGuildUser member = guild.GetUser(userMention.Id);
 
             // Fetch the character.
-            IDisposable typing = Context.Channel.EnterTypingState();
+            using IDisposable typing = Context.Channel.EnterTypingState();
             
             DiscordXIVUser foundCharacter;
             try
@@ -258,7 +261,6 @@ namespace Prima.Modules
 
             // Cleanup
             IUserMessage finalReply = await ReplyAsync(embed: responseEmbed);
-            typing.Dispose();
             await Task.Delay(messageDeleteDelay);
             await finalReply.DeleteAsync();
         }
@@ -278,7 +280,7 @@ namespace Prima.Modules
                 await ReplyAsync(Properties.Resources.MemberAlreadyHasRoleError);
                 return;
             }
-            IDisposable typing = Context.Channel.EnterTypingState();
+            using IDisposable typing = Context.Channel.EnterTypingState();
             DiscordXIVUser user = Users.Users
                 .Single(user => user.DiscordId == Context.User.Id);
             Character character = await XIVAPI.GetCharacter(user.LodestoneId);
@@ -314,8 +316,6 @@ namespace Prima.Modules
 
             if (!hasAchievement && !hasMount)
                 await ReplyAsync(Properties.Resources.LodestoneMountAchievementNotFoundError);
-
-            typing.Dispose();
         }
     }
 }
