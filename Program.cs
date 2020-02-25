@@ -9,6 +9,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -60,11 +61,16 @@ namespace Prima
             using (ServiceProvider services = ConfigureServices(disConfig, preset))
             {
                 // Initialize the static logger from configuration.
+                try
+                {
+                    Directory.CreateDirectory(Properties.Resources.LogDirectory);
+                }
+                catch (IOException) {}
                 Log.Logger = new LoggerConfiguration()
                     .MinimumLevel.Verbose()
                     .Enrich.WithProperty("System", services.GetRequiredService<ConfigurationService>().CurrentPreset)
                     .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3} {System}] {Message:lj}{NewLine}{Exception}")
-                    .WriteTo.SQLite(Properties.Resources.SerilogFilename)
+                    .WriteTo.File(Properties.Resources.SerilogFilename, rollingInterval: RollingInterval.Day)
                     .CreateLogger();
 
                 var client = services.GetRequiredService<DiscordSocketClient>();
@@ -92,7 +98,6 @@ namespace Prima
                 
                 if (preset == Preset.Extra)
                 {
-                    await services.GetRequiredService<ServerClockService>().InitializeAsync();
                     services.GetRequiredService<ServerClockService>().Start();
                 }
                 else if (preset == Preset.Extra)

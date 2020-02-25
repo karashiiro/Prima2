@@ -1,6 +1,6 @@
-﻿using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using NodaTime;
 using Prima.Contexts;
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Prima.Services
 {
-    public class ConfigurationService
+    public sealed class ConfigurationService : IDisposable
     {
         /// <summary>
         /// Gets the current <see cref="Preset"/> of the bot.
@@ -37,10 +37,13 @@ namespace Prima.Services
         /// </summary>
         public string GTokenFile { get => Util.GetAbsolutePath(GetSection("GoogleToken").Value); }
 
+        private readonly ConfigurationContext _configStore;
         private IConfigurationRoot _config;
+
         public ConfigurationService(Preset preset)
         {
             CurrentPreset = preset;
+            _configStore = new ConfigurationContext();
             BuildConfiguration();
             try
             {
@@ -106,48 +109,44 @@ namespace Prima.Services
         /// <summary>
         /// Get the stored clock configurations.
         /// </summary>
-        public static async Task<IList<ClockConfiguration>> GetClockData()
+        public async Task<IList<ClockConfiguration>> GetClockData()
         {
             IList<ClockConfiguration> configurations = new List<ClockConfiguration>();
-            using var db = new ConfigurationContext();
-            try
-            {
-                configurations = await db.ClockData.ToListAsync();
-            }
-            catch (SqliteException) {}
+            configurations = await _configStore.ClockData.ToListAsync();
             return configurations;
         }
 
         /// <summary>
         /// Save a clock configuration.
         /// </summary>
-        public static async Task SaveClock(ulong gid, ulong cid, string tzid)
+        public async Task SaveClock(ulong gid, ulong cid, ZonedClock timezone)
         {
-            using var db = new ConfigurationContext();
-            if (db.ClockData.SingleAsync(clock => clock.GuildId == gid & clock.ChannelId == cid && clock.TzId == tzid) == null)
+            try
             {
-                var clockConfig = new ClockConfiguration
-                {
-                    GuildId = gid,
-                    ChannelId = cid,
-                    TzId = tzid
-                };
-                db.ClockData.Add(clockConfig);
-                await db.SaveChangesAsync();
+                var existing = await _configStore.ClockData.SingleAsync(clock => clock.ChannelId == cid);
+                _configStore.Remove(existing);
             }
+            catch (InvalidOperationException) {}
+            var clockConfig = new ClockConfiguration
+            {
+                GuildId = gid,
+                ChannelId = cid,
+                Timezone = timezone
+            };
+            _configStore.ClockData.Add(clockConfig);
+            await _configStore.SaveChangesAsync();
         }
 
         /// <summary>
         /// Deletes a clock configuration.
         /// </summary>
-        public static async Task DeleteClock(ulong gid, ulong cid)
+        public async Task DeleteClock(ulong cid)
         {
-            using var db = new ConfigurationContext();
             try
             {
-                ClockConfiguration cc = await db.ClockData.SingleAsync(clock => clock.GuildId == gid & clock.ChannelId == cid);
-                db.ClockData.Remove(cc);
-                await db.SaveChangesAsync();
+                ClockConfiguration cc = await _configStore.ClockData.SingleAsync(clock => clock.ChannelId == cid);
+                _configStore.ClockData.Remove(cc);
+                await _configStore.SaveChangesAsync();
             }
             catch (InvalidOperationException) {}
         }
@@ -158,6 +157,11 @@ namespace Prima.Services
                 .SetBasePath(Environment.CurrentDirectory)
                 .AddJsonFile("config.json", false, true)
                 .Build();
+        }
+
+        public void Dispose()
+        {
+            _configStore.Dispose();
         }
     }
 }

@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Prima.Contexts
 {
@@ -8,7 +10,18 @@ namespace Prima.Contexts
         public DbSet<GuildTextBlacklistEntry> RegexStrings { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
-            => options.UseSqlite(Properties.Resources.UWPConnectionStringTextBlacklist);
+            => options.UseNpgsql(
+                $"Host={Environment.GetEnvironmentVariable("PRIMA_DB_HOST")};" +
+                $"Database=TextBlacklistStore;" +
+                $"Username={Environment.GetEnvironmentVariable("PRIMA_DB_USER")};" +
+                $"Password={Environment.GetEnvironmentVariable("PRIMA_DB_PASS")}",
+                npgsqlOpts => npgsqlOpts.EnableRetryOnFailure());
+
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "<Pending>")]
+        protected override void OnModelCreating(ModelBuilder model)
+            => model.Entity<GuildTextBlacklistEntry>()
+                    .HasComment("This table contains regex strings tagged by guild for messages to be deleted immediately.")
+                    .UseXminAsConcurrencyToken();
     }
 
     public class GuildTextBlacklistEntry

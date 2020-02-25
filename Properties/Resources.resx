@@ -162,6 +162,9 @@
   <data name="LodestoneMountAchievementNotFoundError" xml:space="preserve">
     <value>The mount or achievement was not found. Please ensure your achievements and mounts are public for this operation.</value>
   </data>
+  <data name="LogDirectory" xml:space="preserve">
+    <value>logs</value>
+  </data>
   <data name="MemberAlreadyHasRoleError" xml:space="preserve">
     <value>You already have all roles associated with this command!</value>
   </data>
@@ -187,7 +190,7 @@
     <value>Thank you for your report. The moderators will read it as soon as they are available.</value>
   </data>
   <data name="SerilogFilename" xml:space="preserve">
-    <value>Log.db</value>
+    <value>log.log</value>
   </data>
   <data name="UndefinedPresetError" xml:space="preserve">
     <value>Preset Undefined enables all commands, without enabling the corresponding services.\nThis configuration is prohibited.</value>
@@ -200,15 +203,6 @@
   </data>
   <data name="UserNotInDatabaseError" xml:space="preserve">
     <value>That user was not found in the database.</value>
-  </data>
-  <data name="UWPConnectionStringConfiguration" xml:space="preserve">
-    <value>Data Source=Configuration.db</value>
-  </data>
-  <data name="UWPConnectionStringDXIVUsers" xml:space="preserve">
-    <value>Data Source=DiscordXIVUsers.db</value>
-  </data>
-  <data name="UWPConnectionStringTextBlacklist" xml:space="preserve">
-    <value>Data Source=TextBlacklist.db</value>
   </data>
   <data name="VerificationProcess1" xml:space="preserve">
     <value>You have begun the verification process. Your **Discord account ID** is `</value>

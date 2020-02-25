@@ -198,6 +198,11 @@ namespace Prima.Modules
 
             SocketGuild guild = Context.Guild ?? userMention.MutualGuilds.First();
             SocketGuildUser member = guild.GetUser(userMention.Id);
+            if (member == null)
+            {
+                guild = userMention.MutualGuilds.First();
+                member = guild.GetUser(userMention.Id);
+            }
 
             // Fetch the character.
             using IDisposable typing = Context.Channel.EnterTypingState();

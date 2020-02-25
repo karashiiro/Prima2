@@ -1,37 +1,28 @@
 ﻿using Discord.WebSocket;
 using NodaTime;
-using Prima.Contexts;
 using Prima.Resources;
 using Serilog;
 using System;
-using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
 namespace Prima.Services
 {
     public class ServerClockService
     {
+        private readonly ConfigurationService _config;
         private readonly DiscordSocketClient _client;
-        private readonly List<Clock> _clocks;
         private readonly SystemClock _systemClock;
 
         private Task _runningTask;
         private bool _active;
 
-        public ServerClockService(DiscordSocketClient client, SystemClock systemClock)
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "<Pending>")]
+        public ServerClockService(ConfigurationService config, DiscordSocketClient client, SystemClock systemClock)
         {
+            _config = config;
             _client = client;
-            _clocks = new List<Clock>();
             _systemClock = systemClock;
-        }
-
-        public async Task InitializeAsync()
-        {
-            IList<ClockConfiguration> clockConfigurations = await ConfigurationService.GetClockData();
-            foreach (var cc in clockConfigurations)
-            {
-                await AddClock(cc.GuildId, cc.ChannelId, cc.TzId);
-            }
         }
 
         public void Start()
@@ -52,21 +43,10 @@ namespace Prima.Services
         /// <exception cref="ArgumentNullException"></exception>
         public async Task AddClock(ulong guildId, ulong channelId, string tz)
         {
-            if (_clocks.Exists(clock => clock.ChannelId == channelId))
-            {
-                await RemoveClock(channelId);
-            }
-
             var timezone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(tz);
             var newClock = new ZonedClock(_systemClock, timezone, CalendarSystem.Iso);
-            _clocks.Add(new Clock
-            {
-                GuildId = guildId,
-                ChannelId = channelId,
-                Timezone = newClock
-            });
 
-            await ConfigurationService.SaveClock(guildId, channelId, tz);
+            await _config.SaveClock(guildId, channelId, newClock);
         }
 
         /// <summary>
@@ -74,9 +54,7 @@ namespace Prima.Services
         /// </summary>
         public async Task RemoveClock(ulong channelId)
         {
-            Clock c = _clocks.Find(clock => clock.ChannelId == channelId);
-            await ConfigurationService.DeleteClock(c.GuildId, c.ChannelId);
-            _clocks.Remove(c);
+            await _config.DeleteClock(channelId);
         }
 
         public bool IsFaulted() => _runningTask.IsFaulted;
@@ -85,7 +63,8 @@ namespace Prima.Services
         {
             while (_active)
             {
-                foreach (Clock c in _clocks)
+                var clocks = await _config.GetClockData();
+                foreach (var c in clocks)
                 {
                     SocketGuildChannel channel = _client.GetGuild(c.GuildId).GetChannel(c.ChannelId);
                     await channel.ModifyAsync(properties =>
@@ -98,13 +77,6 @@ namespace Prima.Services
                 }
                 await Task.Delay(60000);
             }
-        }
-
-        private struct Clock
-        {
-            public ulong GuildId { get; set; }
-            public ulong ChannelId { get; set; }
-            public ZonedClock Timezone { get; set; }
         }
     }
 }

@@ -196,6 +196,15 @@ namespace Prima.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to logs.
+        /// </summary>
+        internal static string LogDirectory {
+            get {
+                return ResourceManager.GetString("LogDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You already have all roles associated with this command!.
         /// </summary>
         internal static string MemberAlreadyHasRoleError {
@@ -268,7 +277,7 @@ namespace Prima.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Log.db.
+        ///   Looks up a localized string similar to log.log.
         /// </summary>
         internal static string SerilogFilename {
             get {
@@ -309,33 +318,6 @@ namespace Prima.Properties {
         internal static string UserNotInDatabaseError {
             get {
                 return ResourceManager.GetString("UserNotInDatabaseError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Data Source=Configuration.db.
-        /// </summary>
-        internal static string UWPConnectionStringConfiguration {
-            get {
-                return ResourceManager.GetString("UWPConnectionStringConfiguration", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Data Source=DiscordXIVUsers.db.
-        /// </summary>
-        internal static string UWPConnectionStringDXIVUsers {
-            get {
-                return ResourceManager.GetString("UWPConnectionStringDXIVUsers", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Data Source=TextBlacklist.db.
-        /// </summary>
-        internal static string UWPConnectionStringTextBlacklist {
-            get {
-                return ResourceManager.GetString("UWPConnectionStringTextBlacklist", resourceCulture);
             }
         }
         
