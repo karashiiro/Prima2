@@ -18,7 +18,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Prima.Census", "Prima.Cleri
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Prima.Scheduler", "Prima.Scheduler\Prima.Scheduler.csproj", "{98F05AB3-3711-4C54-84FC-FD0A023CE395}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Prima.Moderation", "Prima.Moderation\Prima.Moderation.csproj", "{C8313C61-CC18-4A82-814F-A6D34C85FF3A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Prima.Moderation", "Prima.Moderation\Prima.Moderation.csproj", "{C8313C61-CC18-4A82-814F-A6D34C85FF3A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Prima.Configuration", "Prima.Configuration\Prima.Configuration.csproj", "{39243EF9-834E-4E71-9665-76423969FDAF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -46,6 +48,10 @@ Global
 		{C8313C61-CC18-4A82-814F-A6D34C85FF3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C8313C61-CC18-4A82-814F-A6D34C85FF3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C8313C61-CC18-4A82-814F-A6D34C85FF3A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{39243EF9-834E-4E71-9665-76423969FDAF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{39243EF9-834E-4E71-9665-76423969FDAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{39243EF9-834E-4E71-9665-76423969FDAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{39243EF9-834E-4E71-9665-76423969FDAF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

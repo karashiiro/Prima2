@@ -13,8 +13,6 @@ namespace Prima.Modules
     [RequireOwner]
     public class CommonModule : ModuleBase<SocketCommandContext>
     {
-        public CommandHandlingService CommandHandler { get; set; }
-        public DbService Db { get; set; }
         public DiagnosticService Diagnostics { get; set; }
 
         [Command("ping", RunMode = RunMode.Async)]
