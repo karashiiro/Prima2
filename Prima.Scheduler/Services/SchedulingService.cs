@@ -21,8 +21,12 @@ namespace Prima.Scheduler.Services
 
         private readonly CalendarService _service;
 
-        private string GCredentialsFile { get => Path.Combine(Environment.CurrentDirectory, "..", "credentials.json"); }
-        private string GTokenFile { get => Path.Combine(Environment.CurrentDirectory, "..", "token.json"); }
+        private string GCredentialsFile { get => Environment.OSVersion.Platform == PlatformID.Win32NT
+            ? "credentials.json" // Only use Windows for testing.
+            : Path.Combine(Environment.GetEnvironmentVariable("HOME"), "credentials.json"); }
+        private string GTokenFile { get => Environment.OSVersion.Platform == PlatformID.Win32NT
+            ? "token.json"
+            : Path.Combine(Environment.GetEnvironmentVariable("HOME"), "token.json"); }
 
         [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "<Pending>")]
         public SchedulingService()

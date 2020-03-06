@@ -107,7 +107,7 @@ namespace Prima.Services
         private async Task CEMNamingScheme(SocketGuildUser oldMember, SocketGuildUser newMember)
         {
             DiscordGuildConfiguration guildConfig = _db.Guilds.Single(g => g.Id == newMember.Guild.Id);
-            SocketTextChannel statusChannel = newMember.Guild.GetChannel(guildConfig.Channels.Single(c => c.IsStatusChannel).Id) as SocketTextChannel;
+            SocketTextChannel statusChannel = newMember.Guild.GetChannel(guildConfig.StatusChannel) as SocketTextChannel;
             if (oldMember.Nickname == newMember.Nickname) return; // They might just be editing their avatar or something.
             try
             {

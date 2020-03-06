@@ -7,7 +7,10 @@ namespace Prima.Models
     {
         [BsonId]
         [BsonRequired]
-        [BsonRepresentation(BsonType.ObjectId)]
+        private ObjectId _id;
+
+        [BsonRequired]
+        [BsonRepresentation(BsonType.String)]
         public ulong DiscordId;
 
         [BsonRequired]

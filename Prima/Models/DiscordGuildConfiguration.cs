@@ -8,7 +8,10 @@ namespace Prima.Models
     {
         [BsonId]
         [BsonRequired]
-        [BsonRepresentation(BsonType.ObjectId)]
+        private ObjectId _id;
+
+        [BsonRequired]
+        [BsonRepresentation(BsonType.String)]
         public ulong Id;
 
         [BsonRequired]
@@ -33,6 +36,10 @@ namespace Prima.Models
 
         [BsonRequired]
         [BsonRepresentation(BsonType.String)]
+        public ulong WelcomeChannel = 0;
+
+        [BsonRequired]
+        [BsonRepresentation(BsonType.String)]
         public ulong ReportChannel = 0;
 
         [BsonRequired]
@@ -42,13 +49,16 @@ namespace Prima.Models
         public IList<string> TextBlacklist = new List<string>();
 
         [BsonRequired]
-        public char Prefix = '\u0000';
+        public char Prefix = ' ';
 
         [BsonRequired]
         public int MinimumLevel = 0;
 
         [BsonRequired]
         public string BACalendarId = string.Empty;
+
+        [BsonRequired]
+        public string BACalendarLink = string.Empty;
 
         public DiscordGuildConfiguration(ulong guildId) => Id = guildId;
     }

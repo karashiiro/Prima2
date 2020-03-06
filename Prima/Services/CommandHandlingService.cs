@@ -57,7 +57,8 @@ namespace Prima.Services
             char prefix = _db.Config.Prefix;
             try
             {
-                prefix = _db.Guilds.Single(g => g.Id == (rawMessage.Channel as SocketGuildChannel).Id).Prefix;
+                var guildPrefix = _db.Guilds.Single(g => g.Id == (rawMessage.Channel as SocketGuildChannel).Guild.Id).Prefix;
+                prefix = guildPrefix == ' ' ? prefix : guildPrefix;
             } catch {}
             if (!message.HasCharPrefix(prefix, ref argPos)) return;
 

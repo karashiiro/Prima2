@@ -32,7 +32,7 @@ namespace Prima.Modules
         public async Task IAmAsync(params string[] parameters) // Sure are, huh
         {
             DiscordGuildConfiguration guildConfig = Db.Guilds.Single(g => g.Id == Context.Guild.Id);
-            char prefix = guildConfig.Prefix == '\u0000' ? Db.Config.Prefix : guildConfig.Prefix;
+            char prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
 
             if (parameters.Length != 3)
             {
@@ -331,5 +331,92 @@ namespace Prima.Modules
             if (!hasAchievement && !hasMount)
                 await ReplyAsync(Properties.Resources.LodestoneMountAchievementNotFoundError);
         }
+
+        // If they've registered, this adds them to the Member group.
+        [Command("agree")]
+        [RequireUserInDatabase]
+        public async Task AgreeAsync()
+        {
+            DiscordGuildConfiguration guildConfig = Db.Guilds.Single(g => g.Id == Context.Guild.Id);
+            if (guildConfig.WelcomeChannel != Context.Channel.Id) return;
+            SocketGuildUser user = Context.Guild.GetUser(Context.User.Id);
+            SocketRole memberRole = Context.Guild.Roles.Single(r => r.Id.ToString() == guildConfig.Roles["Member"]);
+            await user.AddRoleAsync(memberRole);
+            await Context.Message.DeleteAsync();
+            Log.Information("Added {DiscordName} to {Member}.", $"{Context.User.Username}#{Context.User.Discriminator}", memberRole.Name);
+        }
+
+        // Check who this user is.
+        [Command("whoami", RunMode = RunMode.Async)]
+        public async Task WhoAmIAsync()
+        {
+            DiscordXIVUser found;
+            try
+            {
+                found = Db.Users
+                    .Single(user => user.DiscordId == Context.User.Id);
+            }
+            catch (InvalidOperationException)
+            {
+                await ReplyAsync(Properties.Resources.UserNotInDatabaseError);
+                return;
+            }
+
+            Embed responseEmbed = new EmbedBuilder()
+                .WithTitle($"({found.World}) {found.Name}")
+                .WithUrl($"https://na.finalfantasyxiv.com/lodestone/character/{found.LodestoneId}/")
+                .WithColor(Color.Blue)
+                .WithThumbnailUrl(found.Avatar)
+                .Build();
+
+            Log.Information("Answered whoami from ({World}) {Name}.", found.World, found.Name);
+
+            await ReplyAsync(embed: responseEmbed);
+        }
+
+        // Check who a user is.
+        [Command("whois", RunMode = RunMode.Async)]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        public async Task WhoIsAsync(IUser member) // Who knows?
+        {
+            if (member == null)
+            {
+                await ReplyAsync(Properties.Resources.MentionNotProvidedError);
+                return;
+            }
+
+            DiscordXIVUser found;
+            try
+            {
+                found = Db.Users
+                    .Single(user => user.DiscordId == member.Id);
+            }
+            catch (InvalidOperationException)
+            {
+                await ReplyAsync(Properties.Resources.UserNotInDatabaseError);
+                return;
+            }
+
+            Embed responseEmbed = new EmbedBuilder()
+                .WithTitle($"({found.World}) {found.Name}")
+                .WithUrl($"https://na.finalfantasyxiv.com/lodestone/character/{found.LodestoneId}/")
+                .WithColor(Color.Blue)
+                .WithThumbnailUrl(found.Avatar)
+                .Build();
+
+            await ReplyAsync(embed: responseEmbed);
+            Log.Information("Successfully responded to whoami.");
+        }
+
+        // Check the number of database entries.
+        [Command("indexcount")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        public async Task IndexCountAsync()
+        {
+            await ReplyAsync(Properties.Resources.DBUserCountInProgress);
+            await ReplyAsync($"There are {Db.Users.Count()} users in the database.");
+            Log.Information("There are {DBEntryCount} users in the database.", Db.Users.Count());
+        }
+
     }
 }

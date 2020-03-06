@@ -1,5 +1,7 @@
 ﻿using MongoDB.Driver;
 using Prima.Models;
+using Serilog;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -8,10 +10,10 @@ namespace Prima.Services
     public class DbService
     {
         // Hide types of the database implementation from callers.
-        public GlobalConfiguration Config { get => (_config as IQueryable<GlobalConfiguration>).First(); }
+        public GlobalConfiguration Config { get; private set; }
 
-        public IQueryable<DiscordGuildConfiguration> Guilds { get => _guildConfig as IQueryable<DiscordGuildConfiguration>; }
-        public IQueryable<DiscordXIVUser> Users { get => _users as IQueryable<DiscordXIVUser>; }
+        public IEnumerable<DiscordGuildConfiguration> Guilds { get; private set; }
+        public IEnumerable<DiscordXIVUser> Users { get; private set; }
 
         private readonly MongoClient _client;
         private readonly IMongoDatabase _database;
@@ -29,8 +31,16 @@ namespace Prima.Services
             _database = _client.GetDatabase(_dbName);
 
             _config = _database.GetCollection<GlobalConfiguration>("GlobalConfiguration");
+            Config = _config.AsQueryable().ToEnumerable().First();
+            Log.Information("Global configuration status: {DbStatus} documents found.", _config.EstimatedDocumentCount());
+
             _guildConfig = _database.GetCollection<DiscordGuildConfiguration>("GuildConfiguration");
+            Guilds = _guildConfig.AsQueryable().ToEnumerable();
+            Log.Information("Guild configuration status: {DbStatus} documents found.", _guildConfig.EstimatedDocumentCount());
+
             _users = _database.GetCollection<DiscordXIVUser>("Users");
+            Users = _users.AsQueryable().ToEnumerable();
+            Log.Information("User database status: {DbStatus} documents found.", _users.EstimatedDocumentCount());
         }
 
         public async Task AddGuild(DiscordGuildConfiguration config)

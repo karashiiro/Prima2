@@ -31,10 +31,17 @@ namespace Prima.Scheduler.Modules
 
             var config = Db.Guilds.Single(g => g.Id == Context.Guild.Id);
 
+            if (parameters.Length < 3)
+            {
+                var prefix = config.Prefix == ' ' ? Db.Config.Prefix : config.Prefix;
+                await ReplyAsync($"{Context.User.Mention}, please enter the scheduling command with the arguments <type>, <day>, and <time>, e.g. `{prefix}schedule oz sun 1:30PM`.");
+                return;
+            }
+
             // Parse arguments.
             if (!Enum.TryParse(parameters[0].ToUpper(), out RunDisplayType runDisplayType))
             {
-                await ReplyAsync($"{parameters[0]} is not a valid run identifier. Valid identifiers include {Enum.GetNames(typeof(RunDisplayType)).Aggregate((str1, str2) => str1 + " " + str2)}.");
+                await ReplyAsync($"{parameters[0]} is not a valid run identifier. Valid identifiers include `{Enum.GetNames(typeof(RunDisplayType)).Aggregate((str1, str2) => str1 + " " + str2)}`.");
                 return;
             }
 

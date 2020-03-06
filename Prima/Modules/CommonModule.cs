@@ -22,12 +22,5 @@ namespace Prima.Modules
         {
             await ReplyAsync($"`{Environment.CurrentDirectory} online, heartbeat {Diagnostics.GetLatency()}ms`");
         }
-        
-        [Command("configureguild", RunMode = RunMode.Async)]
-        public async Task ReloadCommandsAsync()
-        {
-            await Db.AddGuild(new DiscordGuildConfiguration(Context.Guild.Id));
-            await ReplyAsync();
-        }
     }
 }
