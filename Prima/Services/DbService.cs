@@ -43,11 +43,23 @@ namespace Prima.Services
             Log.Information("User database status: {DbStatus} documents found.", _users.EstimatedDocumentCount());
         }
 
+        public async Task SetGlobalConfigurationProperty(string key, string value)
+        {
+            var filter = Builders<GlobalConfiguration>.Filter.Eq(key, key);
+            var update = Builders<GlobalConfiguration>.Update.Set(key, value);
+            await _config.UpdateOneAsync(filter, update);
+        }
+
+        public async Task SetGuildConfigurationProperty(ulong guildId, string key, string value)
+        {
+            var update = Builders<DiscordGuildConfiguration>.Update.Set(key, value);
+            await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
+        }
+
         public async Task AddGuild(DiscordGuildConfiguration config)
         {
             if ((await _guildConfig.FindAsync(guild => guild.Id == config.Id)).Any())
             {
-                var filter = Builders<DiscordGuildConfiguration>.Filter.Eq("Id", config.Id);
                 var update = Builders<DiscordGuildConfiguration>.Update.Set("Id", config.Id);
                 await _guildConfig.UpdateOneAsync(guild => guild.Id == config.Id, update);
             }

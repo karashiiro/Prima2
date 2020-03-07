@@ -1,15 +1,28 @@
-﻿using Discord.Commands;
-using Prima.Services;
+﻿using 命令 = Discord.Commands.CommandAttribute;
+using ソケットなモジュールベース = Discord.Commands.ModuleBase<Discord.Commands.SocketCommandContext>;
+using 名前Attribute = Discord.Commands.NameAttribute;
+using 一遍アドミンAttribute = Discord.Commands.RequireOwnerAttribute;
+using モードエグゼキュート = Discord.Commands.RunMode;
+using データベース = Prima.Services.DbService;
+using ストリング = System.String;
+using タスク = System.Threading.Tasks.Task;
 
 namespace Prima.Configuration.Modules
 {
     /// <summary>
-    /// Includes global configuration commands that only the bot administrator should be able to execute.
+    /// このモジュールは大域的な設定を持って、一遍アドミンを使えます。
     /// </summary>
-    [Name("GlobalConfiguration")]
-    [RequireOwner]
-    public class GlobalConfigurationModule : ModuleBase<SocketCommandContext>
+    [名前("大域的な設定")]
+    [一遍アドミン]
+    public class 大域的な設定のモジュール : ソケットなモジュールベース
     {
-        public DbService Db { get; set; }
+        public データベース Db { get; set; }
+
+        // プリーマの大域的な設定をします。
+        [命令("設定", RunMode = モードエグゼキュート.Async)]
+        public async タスク 設定するAsync(ストリング キー, ストリング ヴァエル)
+        {
+            await Db.SetGlobalConfigurationProperty(キー, ヴァエル);
+        }
     }
 }

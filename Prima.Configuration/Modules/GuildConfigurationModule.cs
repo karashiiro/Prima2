@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Prima.Services;
+using System.Threading.Tasks;
 
 namespace Prima.Configuration.Modules
 {
@@ -12,5 +13,10 @@ namespace Prima.Configuration.Modules
     public class GuildConfigurationModule : ModuleBase<SocketCommandContext>
     {
         public DbService Db { get; set; }
+
+        public async Task ConfigureAsync(string key, string value)
+        {
+            await Db.SetGuildConfigurationProperty(Context.Guild.Id, key, value);
+        }
     }
 }
