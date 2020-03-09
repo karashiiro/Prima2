@@ -8,13 +8,13 @@ namespace Prima.Modules
     /// Includes control commands for the <see cref="PresenceService"/>.
     /// </summary>
     [Name("Presence")]
+    [RequireOwner]
     public class PresenceModule : ModuleBase<SocketCommandContext>
     {
         public PresenceService Presence { get; set; }
 
         // Change the delay time on the SetPresence Task.
         [Command("presencedelay")]
-        [RequireOwner]
         public async Task SetPresenceDelay(string inputTime)
         {
             if (!int.TryParse(inputTime, out int time))
@@ -28,7 +28,6 @@ namespace Prima.Modules
 
         // Switch to a new presence.
         [Command("nextpresence")]
-        [RequireOwner]
         public async Task NextPresenceAsync()
         {
             await Presence.NextPresence();
