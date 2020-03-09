@@ -37,5 +37,12 @@ namespace Prima.Configuration.Modules
             await Db.AddGuild(new DiscordGuildConfiguration(Context.Guild.Id));
             await ReplyAsync("Guild configuration created.");
         }
+
+        [Command("configurerole", RunMode = RunMode.Async)]
+        public async Task ConfigureRoleAsync(params string[] parameters)
+        {
+            await Db.ConfigureRole(Context.Guild.Id, string.Join(' ', parameters[0..^1]), ulong.Parse(parameters[^1]));
+            await ReplyAsync("Role registered.");
+        }
     }
 }

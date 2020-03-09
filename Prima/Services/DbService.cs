@@ -76,29 +76,26 @@ namespace Prima.Services
             }
         }
 
+        public async Task ConfigureRole(ulong guildId, string roleName, ulong roleId)
+        {
+            var update = Builders<DiscordGuildConfiguration>.Update.Set($"Roles.{roleName}", roleId.ToString());
+            await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
+        }
+
         public async Task AddGuildTextBlacklistEntry(ulong guildId, string regexString)
         {
-            using var watch = await _guildConfig.WatchAsync();
-            var filter = Builders<DiscordGuildConfiguration>.Filter.Eq("Id", guildId);
-            _guildConfig
-                .FindAsync(filter)
-                .Result
-                .First()
-                .TextBlacklist
-                .Add(regexString);
-            return;
+            var update = Builders<DiscordGuildConfiguration>.Update.Push("TextBlacklist", regexString);
+            await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
         }
 
         public async Task RemoveGuildTextBlacklistEntry(ulong guildId, string regexString)
         {
-            using var watch = await _guildConfig.WatchAsync();
-            var filter = Builders<DiscordGuildConfiguration>.Filter.Eq("Id", guildId);
-            var blacklist = _guildConfig.FindAsync(filter).Result.First().TextBlacklist;
+            var blacklist = (await _guildConfig.FindAsync(guild => guild.Id == guildId)).First().TextBlacklist;
             if (blacklist.Any())
             {
-                blacklist.Remove(regexString);
+                var update = Builders<DiscordGuildConfiguration>.Update.Pull("TextBlacklist", regexString);
+                await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
             }
-            return;
         }
 
         public async Task AddUser(DiscordXIVUser user)
