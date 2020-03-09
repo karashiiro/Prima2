@@ -82,6 +82,12 @@ namespace Prima.Services
             await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
         }
 
+        public async Task ConfigureRoleEmote(ulong guildId, ulong roleId, string emoteId)
+        {
+            var update = Builders<DiscordGuildConfiguration>.Update.Set($"RoleEmotes.{emoteId}", roleId.ToString());
+            await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
+        }
+
         public async Task AddGuildTextBlacklistEntry(ulong guildId, string regexString)
         {
             var update = Builders<DiscordGuildConfiguration>.Update.Push("TextBlacklist", regexString);

@@ -46,6 +46,9 @@ namespace Prima.Models
         public IDictionary<string, string> Roles = new Dictionary<string, string>();
 
         [BsonRequired]
+        public IDictionary<string, string> RoleEmotes = new Dictionary<string, string>();
+
+        [BsonRequired]
         public IList<string> TextBlacklist = new List<string>();
 
         [BsonRequired]

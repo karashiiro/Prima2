@@ -1,5 +1,6 @@
 ﻿using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
+using Prima.Clerical.Services;
 using Serilog;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
@@ -22,9 +23,18 @@ namespace Prima.Clerical
                 var client = services.GetRequiredService<DiscordSocketClient>();
                 var events = services.GetRequiredService<EventService>();
 
-                client.GuildMemberUpdated += events.GuildMemberUpdated;
+                foreach (var guild in client.Guilds)
+                {
+                    foreach (var channel in guild.TextChannels)
+                    {
+                        channel.GetMessagesAsync();
+                    }
+                }
 
-                Log.Information($"Prima Census logged in!");
+                client.ReactionAdded += events.ReactionAdded;
+                client.ReactionRemoved += events.ReactionRemoved;
+
+                Log.Information($"Prima Clerical logged in!");
                 
                 /*var uptime = services.GetRequiredService<UptimeMessageService>();
                 uptime.Initialize("Prima Clerical", "A lonelier cubicle.");
