@@ -47,6 +47,8 @@ namespace Prima.Moderation.Services
             SocketTextChannel deletedMessageChannel = guild.GetChannel(config.DeletedMessageChannel) as SocketTextChannel;
             SocketTextChannel deletedCommandChannel = guild.GetChannel(config.DeletedCommandChannel) as SocketTextChannel;
 
+            var prefix = config.Prefix == ' ' ? _db.Config.Prefix : config.Prefix;
+
             // Get executor of the deletion.
             var auditLogs = await guild.GetAuditLogsAsync(10).FlattenAsync();
             IUser executor = message.Author; // If no user is listed as the executor, the executor is the author of the message.
@@ -71,7 +73,7 @@ namespace Prima.Moderation.Services
 
             // Send the embed.
             IMessage sentMessage;
-            if (message.Author.Id == _client.CurrentUser.Id || message.Content.StartsWith(config.Prefix))
+            if (message.Author.Id == _client.CurrentUser.Id || message.Content.StartsWith(prefix))
             {
                 sentMessage = await deletedCommandChannel.SendMessageAsync(embed: messageEmbed);
             }
@@ -130,6 +132,25 @@ namespace Prima.Moderation.Services
             var guildConfig = _db.Guilds.Single(g => g.Id == (rawMessage.Channel as SocketGuildChannel).Guild.Id);
 
             SocketGuildChannel guildChannel = rawMessage.Channel as SocketGuildChannel;
+
+            // Keep the welcome channel clean.
+            if (rawMessage.Channel.Id == guildConfig.WelcomeChannel)
+            {
+                var guild = guildChannel.Guild;
+                var prefix = guildConfig.Prefix == ' ' ? _db.Config.Prefix : guildConfig.Prefix;
+                if (!guild.GetUser(rawMessage.Author.Id).GetPermissions(guildChannel).ManageMessages)
+                {
+                    if (!rawMessage.Content.StartsWith($"{prefix}i") && !rawMessage.Content.StartsWith($"{prefix}agree"))
+                    {
+                        try
+                        {
+                            await rawMessage.DeleteAsync();
+                        }
+                        catch (HttpException) {}
+                    }
+                }
+            }
+
             if (!rawMessage.Content.StartsWith("~report"))
             {
                 await ProcessAttachments(rawMessage, guildChannel);

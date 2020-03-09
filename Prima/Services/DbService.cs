@@ -101,15 +101,8 @@ namespace Prima.Services
         public async Task AddUser(DiscordXIVUser user)
         {
             if ((await _users.FindAsync(u => u.DiscordId == user.DiscordId)).Any())
-            {
-                var filter = Builders<DiscordXIVUser>.Filter.Eq("Id", user.DiscordId);
-                var update = Builders<DiscordXIVUser>.Update.Set("Id", user.DiscordId);
-                await _users.UpdateOneAsync(u => u.DiscordId == user.DiscordId, update);
-            }
-            else
-            {
-                await _users.InsertOneAsync(user);
-            }
+                await _users.DeleteOneAsync(u => u.DiscordId == user.DiscordId);
+            await _users.InsertOneAsync(user);
         }
     }
 }

@@ -2,13 +2,14 @@
 using Discord.Net;
 using Discord.WebSocket;
 using Prima.Models;
+using Prima.Services;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Prima.Services
+namespace Prima.Census.Services
 {
     public class EventService
     {
@@ -34,12 +35,16 @@ namespace Prima.Services
                 throw new ArgumentNullException(oldMember == null ? nameof(oldMember) : nameof(newMember));
             }
 
+            // Note: Use EnforcementEnabled or something in DB.
             switch (newMember.Guild.Id)
             {
                 case 550702475112480769:
                     await CEMNamingScheme(oldMember, newMember);
                     break;
                 case 550910482194890781:
+                    await CEMNamingScheme(oldMember, newMember);
+                    break;
+                case 318592736066273280:
                     await CEMNamingScheme(oldMember, newMember);
                     break;
             }
@@ -63,7 +68,7 @@ namespace Prima.Services
             catch (InvalidOperationException)
             {
                 // Skip if not a member anyways.
-                if (!member.Roles.Contains(guild.GetRole(ulong.Parse(guildConfig.Roles.Single(r => r.Key == "Member").Value)))) return;
+                if (!member.Roles.Contains(guild.GetRole(ulong.Parse(guildConfig.Roles["Member"])))) return;
 
                 if (member.Nickname[0] != '(')
                 {
@@ -79,7 +84,7 @@ namespace Prima.Services
                 {
                     foundCharacter = await _XIVAPI.GetDiscordXIVUser(world, name, 0);
                     foundCharacter.DiscordId = member.Id;
-                    _db.AddUser(foundCharacter);
+                    await _db.AddUser(foundCharacter);
                     Log.Information("Recovered data for {User}", $"{member.Username}#{member.Discriminator}");
                 }
                 catch (XIVAPICharacterNotFoundException)
@@ -106,7 +111,15 @@ namespace Prima.Services
         // to "(Absolutely) Nota Realuser".
         private async Task CEMNamingScheme(SocketGuildUser oldMember, SocketGuildUser newMember)
         {
-            DiscordGuildConfiguration guildConfig = _db.Guilds.Single(g => g.Id == newMember.Guild.Id);
+            DiscordGuildConfiguration guildConfig;
+            try
+            {
+                guildConfig= _db.Guilds.Single(g => g.Id == newMember.Guild.Id);
+            }
+            catch (InvalidOperationException)
+            {
+                return;
+            }
             SocketTextChannel statusChannel = newMember.Guild.GetChannel(guildConfig.StatusChannel) as SocketTextChannel;
             if (oldMember.Nickname == newMember.Nickname) return; // They might just be editing their avatar or something.
             try
@@ -117,7 +130,7 @@ namespace Prima.Services
                 {
                     await newMember.ModifyAsync(properties =>
                     {
-                        properties.Nickname = $"{user.Name}";
+                        properties.Nickname = user.Name;
                     });
                     return;
                 }

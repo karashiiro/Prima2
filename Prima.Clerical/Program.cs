@@ -1,12 +1,10 @@
 ﻿using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
-using Prima.Census.Services;
-using Prima.Services;
 using Serilog;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
-namespace Prima.Census
+namespace Prima.Clerical
 {
     class Program
     {
@@ -29,7 +27,7 @@ namespace Prima.Census
                 Log.Information($"Prima Census logged in!");
                 
                 /*var uptime = services.GetRequiredService<UptimeMessageService>();
-                uptime.Initialize("Prima Census", "A lonely cubicle.");
+                uptime.Initialize("Prima Clerical", "A lonelier cubicle.");
                 uptime.StartAsync().Start();*/
                 
                 await Task.Delay(-1);
@@ -39,8 +37,7 @@ namespace Prima.Census
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "<Pending>")]
         private static ServiceProvider ConfigureServices(IServiceCollection sc)
         {
-            sc.AddSingleton<EventService>()
-              .AddSingleton<XIVAPIService>();
+            sc.AddSingleton<EventService>();
             //sc.AddSingleton<UptimeMessageService>();
             return sc.BuildServiceProvider();
         }

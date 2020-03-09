@@ -42,7 +42,11 @@ namespace Prima.Modules
             }
             (new Task(async () => {
                 await Task.Delay(messageDeleteDelay);
-                await Context.Message.DeleteAsync();
+                try
+                {
+                    await Context.Message.DeleteAsync();
+                }
+                catch (HttpException) {} // Message was already deleted.
             })).Start();
             string world = parameters[0].ToLower();
             string name = parameters[1] + " " + parameters[2];
@@ -62,15 +66,7 @@ namespace Prima.Modules
 
             SocketGuild guild = Context.Guild ?? Context.User.MutualGuilds.First();
             SocketGuildUser member = guild.GetUser(Context.User.Id);
-            SocketRole cleared;
-            try
-            {
-                cleared = guild.GetRole(ulong.Parse(guildConfig.Roles.FirstOrDefault(r => r.Key == "Cleared").Value));
-            }
-            catch (ArgumentNullException)
-            {
-                cleared = null;
-            }
+            SocketRole cleared = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared"]));
 
             using IDisposable typing = Context.Channel.EnterTypingState();
 
@@ -102,13 +98,10 @@ namespace Prima.Modules
             try
             {
                 // Update an existing file.
-                DiscordXIVUser user = Db.Users
-                    .Single(user => user.DiscordId == Context.User.Id);
-
                 // If they're verified and aren't reregistering the same character, return.
                 if (cleared != null && member.Roles.Contains(cleared))
                 {
-                    if (user.LodestoneId != foundCharacter.LodestoneId)
+                    if (Db.Users.Single(user => user.DiscordId == Context.User.Id).LodestoneId != foundCharacter.LodestoneId)
                     {
                         var message = await ReplyAsync($"{Context.User.Mention}, you have already verified your character.");
                         await Task.Delay(5000);
@@ -116,17 +109,11 @@ namespace Prima.Modules
                         return;
                     }
                 }
-
-                user.Avatar = foundCharacter.Avatar;
-                user.Name = foundCharacter.Name;
-                user.World = foundCharacter.World;
             }
-            catch (InvalidOperationException)
-            {
-                DiscordXIVUser user = foundCharacter;
-                foundCharacter.DiscordId = Context.User.Id;
-                await Db.AddUser(user);
-            }
+            catch (InvalidOperationException) {}
+            DiscordXIVUser user = foundCharacter;
+            foundCharacter.DiscordId = Context.User.Id;
+            await Db.AddUser(user);
 
             // We use the user-provided parameter because the Lodestone format includes the data center.
             string outputName = $"({world}) {foundCharacter.Name}";
@@ -169,7 +156,7 @@ namespace Prima.Modules
         public async Task TheyAreAsync(SocketUser userMention, params string[] parameters)
         {
             DiscordGuildConfiguration guildConfig = Db.Guilds.Single(g => g.Id == Context.Guild.Id);
-            char prefix = guildConfig.Prefix == '\u0000' ? Db.Config.Prefix : guildConfig.Prefix;
+            char prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
 
             if (userMention == null || parameters.Length != 3)
             {
@@ -180,7 +167,11 @@ namespace Prima.Modules
             }
             (new Task(async () => {
                 await Task.Delay(messageDeleteDelay);
-                await Context.Message.DeleteAsync();
+                try
+                {
+                    await Context.Message.DeleteAsync();
+                }
+                catch (HttpException) {} // Message was already deleted.
             })).Start();
             string world = parameters[0].ToLower();
             string name = parameters[1] + " " + parameters[2];
@@ -223,22 +214,9 @@ namespace Prima.Modules
             }
 
             // Add the user and character to the database.
-            try
-            {
-                DiscordXIVUser user = Db.Users
-                    .Single(user => user.DiscordId == userMention.Id);
-
-                user.LodestoneId = foundCharacter.LodestoneId;
-                user.Avatar = foundCharacter.Avatar;
-                user.Name = foundCharacter.Name;
-                user.World = foundCharacter.World;
-            }
-            catch (InvalidOperationException)
-            {
-                DiscordXIVUser user = foundCharacter;
-                foundCharacter.DiscordId = userMention.Id;
-                await Db.AddUser(user);
-            }
+            DiscordXIVUser user = foundCharacter;
+            foundCharacter.DiscordId = userMention.Id;
+            await Db.AddUser(user);
 
             // We use the user-provided parameter because the Lodestone format includes the data center.
             string outputName = $"({world}) {foundCharacter.Name}";
@@ -285,8 +263,8 @@ namespace Prima.Modules
 
             SocketGuild guild = Context.Guild ?? Context.User.MutualGuilds.First();
             SocketGuildUser member = guild.GetUser(Context.User.Id);
-            SocketRole arsenalMaster = guild.GetRole(ulong.Parse(guildConfig.Roles.FirstOrDefault(r => r.Key == "Arsenal Master").Value));
-            SocketRole cleared = guild.GetRole(ulong.Parse(guildConfig.Roles.FirstOrDefault(r => r.Key == "Cleared").Value));
+            SocketRole arsenalMaster = guild.GetRole(ulong.Parse(guildConfig.Roles["Arsenal Master"]));
+            SocketRole cleared = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared"]));
 
             if (member.Roles.Contains(arsenalMaster))
             {
@@ -299,7 +277,7 @@ namespace Prima.Modules
             Character character = await XIVAPI.GetCharacter(user.LodestoneId);
             bool hasAchievement = false;
             bool hasMount = false;
-            if (!character.GetBio().Contains("" + Context.User.Id))
+            if (!character.GetBio().Contains(Context.User.Id.ToString()))
             {
                 await ReplyAsync(Properties.Resources.LodestoneDiscordIdNotFoundError);
                 return;
@@ -319,7 +297,7 @@ namespace Prima.Modules
             {
                 if (mimo.Name == "Demi-Ozma")
                 {
-                    Log.Information("Added role " + cleared.Name);
+                    Log.Information("Added role {Role} to {DiscordName}.", cleared.Name, Context.User.ToString());
                     await member.AddRoleAsync(cleared);
                     await ReplyAsync(Properties.Resources.LodestoneBAMountSuccess);
                     hasMount = true;
@@ -339,10 +317,10 @@ namespace Prima.Modules
             DiscordGuildConfiguration guildConfig = Db.Guilds.Single(g => g.Id == Context.Guild.Id);
             if (guildConfig.WelcomeChannel != Context.Channel.Id) return;
             SocketGuildUser user = Context.Guild.GetUser(Context.User.Id);
-            SocketRole memberRole = Context.Guild.Roles.Single(r => r.Id.ToString() == guildConfig.Roles["Member"]);
+            SocketRole memberRole = Context.Guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
             await user.AddRoleAsync(memberRole);
             await Context.Message.DeleteAsync();
-            Log.Information("Added {DiscordName} to {Member}.", $"{Context.User.Username}#{Context.User.Discriminator}", memberRole.Name);
+            Log.Information("Added {DiscordName} to {Role}.", Context.User.ToString(), memberRole.Name);
         }
 
         // Check who this user is.

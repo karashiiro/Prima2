@@ -8,6 +8,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Prima.Extra", "Prima.Extra\Prima.Extra.csproj", "{2BA2F71E-46D9-4BD8-B1C6-49E8BBFD6A45}"
@@ -21,6 +22,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Prima.Configuration", "Prima.Configuration\Prima.Configuration.csproj", "{39243EF9-834E-4E71-9665-76423969FDAF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Prima.Census", "Prima.Census\Prima.Census.csproj", "{FCC6BDB0-6AF4-4D75-9A19-10B6C6591CBA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Prima.Clerical", "Prima.Clerical\Prima.Clerical.csproj", "{2B9129D1-5D1A-41CD-B895-FB35ABB69931}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -52,6 +55,10 @@ Global
 		{FCC6BDB0-6AF4-4D75-9A19-10B6C6591CBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FCC6BDB0-6AF4-4D75-9A19-10B6C6591CBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FCC6BDB0-6AF4-4D75-9A19-10B6C6591CBA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B9129D1-5D1A-41CD-B895-FB35ABB69931}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B9129D1-5D1A-41CD-B895-FB35ABB69931}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B9129D1-5D1A-41CD-B895-FB35ABB69931}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B9129D1-5D1A-41CD-B895-FB35ABB69931}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
