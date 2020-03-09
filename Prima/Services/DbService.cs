@@ -1,6 +1,7 @@
 ﻿using MongoDB.Driver;
 using Prima.Models;
 using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,10 +11,9 @@ namespace Prima.Services
     public class DbService
     {
         // Hide types of the database implementation from callers.
-        public GlobalConfiguration Config { get; private set; }
-
-        public IEnumerable<DiscordGuildConfiguration> Guilds { get; private set; }
-        public IEnumerable<DiscordXIVUser> Users { get; private set; }
+        public GlobalConfiguration Config { get => _config.AsQueryable().ToEnumerable().First(); }
+        public IEnumerable<DiscordGuildConfiguration> Guilds { get => _guildConfig.AsQueryable().ToEnumerable(); }
+        public IEnumerable<DiscordXIVUser> Users { get => _users.AsQueryable().ToEnumerable(); }
 
         private readonly MongoClient _client;
         private readonly IMongoDatabase _database;
@@ -31,39 +31,46 @@ namespace Prima.Services
             _database = _client.GetDatabase(_dbName);
 
             _config = _database.GetCollection<GlobalConfiguration>("GlobalConfiguration");
-            Config = _config.AsQueryable().ToEnumerable().First();
             Log.Information("Global configuration status: {DbStatus} documents found.", _config.EstimatedDocumentCount());
 
             _guildConfig = _database.GetCollection<DiscordGuildConfiguration>("GuildConfiguration");
-            Guilds = _guildConfig.AsQueryable().ToEnumerable();
             Log.Information("Guild configuration status: {DbStatus} documents found.", _guildConfig.EstimatedDocumentCount());
 
             _users = _database.GetCollection<DiscordXIVUser>("Users");
-            Users = _users.AsQueryable().ToEnumerable();
             Log.Information("User database status: {DbStatus} documents found.", _users.EstimatedDocumentCount());
         }
 
         public async Task SetGlobalConfigurationProperty(string key, string value)
         {
-            var filter = Builders<GlobalConfiguration>.Filter.Eq(key, key);
+            if (!Config.HasFieldOrProperty(key))
+            {
+                throw new ArgumentException($"Property {key} does not exist on GlobalConfiguration.");
+            }
             var update = Builders<GlobalConfiguration>.Update.Set(key, value);
-            await _config.UpdateOneAsync(filter, update);
+            await _config.UpdateOneAsync(config => true, update);
         }
 
         public async Task SetGuildConfigurationProperty(ulong guildId, string key, string value)
         {
+            if (!new DiscordGuildConfiguration(0).HasFieldOrProperty(key))
+            {
+                throw new ArgumentException($"Property {key} does not exist on DiscordGuildConfiguration.");
+            }
             var update = Builders<DiscordGuildConfiguration>.Update.Set(key, value);
             await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
         }
 
+        public async Task AddGlobalConfiguration()
+        {
+            if (await _config.CountDocumentsAsync(FilterDefinition<GlobalConfiguration>.Empty) == 0)
+            {
+                await _config.InsertOneAsync(new GlobalConfiguration());
+            }
+        }
+
         public async Task AddGuild(DiscordGuildConfiguration config)
         {
-            if ((await _guildConfig.FindAsync(guild => guild.Id == config.Id)).Any())
-            {
-                var update = Builders<DiscordGuildConfiguration>.Update.Set("Id", config.Id);
-                await _guildConfig.UpdateOneAsync(guild => guild.Id == config.Id, update);
-            }
-            else
+            if (!(await _guildConfig.FindAsync(guild => guild.Id == config.Id)).Any())
             {
                 await _guildConfig.InsertOneAsync(config);
             }

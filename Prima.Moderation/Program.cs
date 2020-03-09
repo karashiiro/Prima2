@@ -24,6 +24,14 @@ namespace Prima.Moderation
                 var client = services.GetRequiredService<DiscordSocketClient>();
                 var events = services.GetRequiredService<EventService>();
 
+                foreach (var guild in client.Guilds)
+                {
+                    foreach (var channel in guild.TextChannels)
+                    {
+                        channel.GetMessagesAsync();
+                    }
+                }
+
                 client.MessageDeleted += events.MessageDeleted;
                 client.MessageReceived += events.MessageRecieved;
 

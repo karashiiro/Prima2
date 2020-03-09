@@ -98,5 +98,62 @@ namespace Prima
 
             return date;
         }
+
+        /// <summary>
+        /// Calculate the Levenshtein distance between two strings.
+        /// </summary>
+        public static int Levenshtein(string string1, string string2)
+        {
+            int a = string1.Length;
+            int b = string2.Length;
+            if (a == 0)
+                return b;
+            if (b == 0)
+                return a;
+            int costBonus = Math.Abs(a - b); // If there's a difference between the strings, that means an insert for every extra character.
+            a = Math.Min(a, b); // These then can be equal since we've pulled out the difference already.
+            b = a;
+            int[,] matrix = new int[a, b];
+            for (int k = 0; k < a; k++)
+            {
+                matrix[0, k] = k;
+                matrix[k, 0] = k;
+            }
+            for (int i = 1; i < a; i++)
+            {
+                for (int j = 1; j < b; j++)
+                {
+                    if (string1[i] == string2[j])
+                        matrix[i, j] = Math.Min(matrix[i - 1, j - 1], matrix[i, j - 1]);
+                    else
+                        matrix[i, j] = Math.Min(matrix[i - 1, j - 1], Math.Min(matrix[i, j - 1], matrix[i - 1, j])) + 1;
+                }
+            }
+            return matrix[a - 1,b - 1];
+        }
+
+        /// <summary>
+        /// Get the value of an object property by its string name.
+        /// </summary>
+        public static object GetPropertyValue(this object? obj, string propName)
+            => obj.GetType().GetProperty(propName).GetValue(obj, null);
+
+        /// <summary>
+        /// Returns true if the object has the specified property.
+        /// </summary>
+        public static bool HasProperty(this object? obj, string propName)
+            => obj.GetType().GetProperties().Where(pi => pi.Name == propName).Any();
+
+        /// <summary>
+        /// Returns true if the object has the specified field.
+        /// </summary>
+        public static bool HasField(this object? obj, string fieldName)
+            => obj.GetType().GetFields().Where(pi => pi.Name == fieldName).Any();
+
+        /// <summary>
+        /// Returns true if the object has the specified field or property.
+        /// </summary>
+        public static bool HasFieldOrProperty(this object? obj, string fieldPropName)
+            => obj.HasProperty(fieldPropName) || obj.HasField(fieldPropName);
     }
 }

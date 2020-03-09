@@ -1,6 +1,8 @@
 ﻿using Discord;
 using Discord.Commands;
+using Prima.Models;
 using Prima.Services;
+using System;
 using System.Threading.Tasks;
 
 namespace Prima.Configuration.Modules
@@ -14,9 +16,26 @@ namespace Prima.Configuration.Modules
     {
         public DbService Db { get; set; }
 
-        public async Task ConfigureAsync(string key, string value)
+        [Command("configure", RunMode = RunMode.Async)]
+        [Alias("config")]
+        public async Task ConfigureAsync(string key, [Remainder]string value)
         {
-            await Db.SetGuildConfigurationProperty(Context.Guild.Id, key, value);
+            try
+            {
+                await Db.SetGuildConfigurationProperty(Context.Guild.Id, key, value);
+                await ReplyAsync("Property updated. Please verify your guild configuration change.");
+            }
+            catch (ArgumentException e)
+            {
+                await ReplyAsync($"Error: {e.Message}");
+            }
+        }
+
+        [Command("setupguild", RunMode = RunMode.Async)]
+        public async Task SetupGuildAsync()
+        {
+            await Db.AddGuild(new DiscordGuildConfiguration(Context.Guild.Id));
+            await ReplyAsync("Guild configuration created.");
         }
     }
 }

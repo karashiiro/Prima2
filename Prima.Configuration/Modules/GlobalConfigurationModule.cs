@@ -1,4 +1,5 @@
-﻿using 命令 = Discord.Commands.CommandAttribute;
+﻿using System;
+using 命令 = Discord.Commands.CommandAttribute;
 using ソケットなモジュールベース = Discord.Commands.ModuleBase<Discord.Commands.SocketCommandContext>;
 using 名前Attribute = Discord.Commands.NameAttribute;
 using 一遍アドミンAttribute = Discord.Commands.RequireOwnerAttribute;
@@ -22,7 +23,15 @@ namespace Prima.Configuration.Modules
         [命令("設定", RunMode = モードエグゼキュート.Async)]
         public async タスク 設定するAsync(ストリング キー, ストリング ヴァエル)
         {
-            await Db.SetGlobalConfigurationProperty(キー, ヴァエル);
+            try
+            {
+                await Db.SetGlobalConfigurationProperty(キー, ヴァエル);
+                await ReplyAsync("Property updated. Please verify your global configuration change.");
+            }
+            catch (ArgumentException e)
+            {
+                await ReplyAsync($"Error: {e.Message}");
+            }
         }
     }
 }

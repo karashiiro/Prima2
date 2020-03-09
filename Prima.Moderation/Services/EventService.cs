@@ -53,9 +53,9 @@ namespace Prima.Moderation.Services
             try
             {
                 var thisLog = auditLogs
-                    .Where(log => log.Action == ActionType.MessageDeleted)
+                    .Where(log => log.Action == ActionType.MessageDeleted && DateTime.Now - log.CreatedAt < new TimeSpan(hours: 0, minutes: 5, seconds: 0))
                     .First();
-                executor = thisLog.User ?? message.Author; // If no user is listed as the executor, the executor is the author of the message.
+                executor = thisLog.User ?? message.Author; // See above.
             }
             catch (InvalidOperationException) {}
 

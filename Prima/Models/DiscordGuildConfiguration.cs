@@ -49,9 +49,11 @@ namespace Prima.Models
         public IList<string> TextBlacklist = new List<string>();
 
         [BsonRequired]
+        [BsonRepresentation(BsonType.String)]
         public char Prefix = ' ';
 
         [BsonRequired]
+        [BsonRepresentation(BsonType.String)]
         public int MinimumLevel = 0;
 
         [BsonRequired]

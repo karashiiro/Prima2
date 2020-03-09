@@ -11,13 +11,13 @@ namespace Prima.Models
 
         [BsonRequired]
         [BsonRepresentation(BsonType.String)]
-        public ulong BotMaster;
+        public ulong BotMaster = 128581209109430272;
 
         [BsonRequired]
         [BsonRepresentation(BsonType.String)]
-        public char Prefix;
+        public char Prefix = '~';
 
         [BsonRequired]
-        public string TempDir;
+        public string TempDir = "temp";
     }
 }

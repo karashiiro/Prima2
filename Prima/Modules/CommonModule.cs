@@ -1,7 +1,6 @@
 ﻿using Discord.Commands;
-using Prima.Models;
 using Prima.Services;
-using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Prima.Modules
@@ -18,7 +17,7 @@ namespace Prima.Modules
         [Command("ping", RunMode = RunMode.Async)]
         public async Task PingAsync()
         {
-            await ReplyAsync($"`{Environment.CurrentDirectory} online, heartbeat {Diagnostics.GetLatency()}ms`");
+            await ReplyAsync($"`{Process.GetCurrentProcess().ProcessName} online, heartbeat {Diagnostics.GetLatency()}ms`");
         }
     }
 }
