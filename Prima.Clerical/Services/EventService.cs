@@ -40,7 +40,7 @@ namespace Prima.Clerical.Services
                 {
                     ulong roleId = ulong.Parse(roleIdString);
                     var role = member.Guild.GetRole(roleId);
-                    await member.RemoveRoleAsync(role);
+                    await member.AddRoleAsync(role);
                     Log.Information("Role {Role} was added to {DiscordUser}", role.Name, member.ToString());
                 }
             }
@@ -66,7 +66,7 @@ namespace Prima.Clerical.Services
                 {
                     ulong roleId = ulong.Parse(roleIdString);
                     var role = member.Guild.GetRole(roleId);
-                    await member.AddRoleAsync(role);
+                    await member.RemoveRoleAsync(role);
                     Log.Information("Role {Role} was removed from {DiscordUser}", role.Name, member.ToString());
                 }
             }
