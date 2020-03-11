@@ -40,6 +40,16 @@ namespace Prima.Services
         public XIVAPIService(HttpClient http) => _http = http;
 
         /// <summary>
+        /// Search all of XIVAPI for a piece of data.
+        /// </summary>
+        public async Task<IList<T>> Search<T>(string contentName)
+        {
+            HttpResponseMessage xivapiResponse = await _http.GetAsync(new Uri($"{BASE_URL}/search?string={contentName}"));
+            string dataObject = await xivapiResponse.Content.ReadAsStringAsync();
+            return JObject.Parse(dataObject)["Results"].ToObject<IList<T>>();
+        }
+
+        /// <summary>
         /// Gets a character from the Lodestone by their Lodestone ID.
         /// </summary>
         public async Task<Character> GetCharacter(ulong id)
