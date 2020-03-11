@@ -96,7 +96,7 @@ namespace Prima.Extra.Modules
             await ReplyAsync($"__{listings.Count} results for {worldName} (Showing up to 10):__\n" +
                 trimmedListings.Select(listing => listing.Quantity + " **" + itemName + "** for " +
 					listing.PricePerUnit + " Gil " + (!string.IsNullOrEmpty(listing.WorldName) ? "on " +
-					listing.WorldName + " " : "")));
+					listing.WorldName + " " : "") + (listing.Quantity > 1 ? $" (For a total of {listing.Total} Gil)" : "")));
         }
 
         public struct UniversalisListing
