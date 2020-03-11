@@ -82,9 +82,21 @@ namespace Prima.Services
             await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
         }
 
+        public async Task DeconfigureRole(ulong guildId, string roleName)
+        {
+            var update = Builders<DiscordGuildConfiguration>.Update.Unset($"Roles.{roleName}");
+            await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
+        }
+
         public async Task ConfigureRoleEmote(ulong guildId, ulong roleId, string emoteId)
         {
             var update = Builders<DiscordGuildConfiguration>.Update.Set($"RoleEmotes.{emoteId}", roleId.ToString());
+            await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
+        }
+
+        public async Task DeconfigureRoleEmote(ulong guildId, string emoteId)
+        {
+            var update = Builders<DiscordGuildConfiguration>.Update.Unset($"RoleEmotes.{emoteId}");
             await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
         }
 
