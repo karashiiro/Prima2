@@ -25,7 +25,7 @@ namespace Prima.Clerical.Services
             if (ichannel is SocketGuildChannel)
             {
                 var guild = (ichannel as SocketGuildChannel).Guild;
-                var member = guild.GetUser((await imessage.GetOrDownloadAsync()).Author.Id);
+                var member = guild.GetUser(reaction.UserId);
                 var emote = reaction.Emote as Emote;
                 DiscordGuildConfiguration disConfig;
                 try
@@ -51,7 +51,7 @@ namespace Prima.Clerical.Services
             if (ichannel is SocketGuildChannel)
             {
                 var guild = (ichannel as SocketGuildChannel).Guild;
-                var member = guild.GetUser((await imessage.GetOrDownloadAsync()).Author.Id);
+                var member = guild.GetUser(reaction.UserId);
                 var emote = reaction.Emote as Emote;
                 DiscordGuildConfiguration disConfig;
                 try
