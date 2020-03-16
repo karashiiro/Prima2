@@ -11,16 +11,12 @@ namespace Prima.Clerical.Services
 {
     public class EventService
     {
-        private readonly DiscordSocketClient _client;
         private readonly DbService _db;
 
-        public EventService(DiscordSocketClient client, DbService db)
-        {
-            _client = client;
-            _db = db;
-        }
+        public EventService(DbService db)
+            => _db = db;
 
-        public async Task ReactionAdded(Cacheable<IUserMessage, ulong> imessage, ISocketMessageChannel ichannel, SocketReaction reaction)
+        public async Task ReactionAdded(Cacheable<IUserMessage, ulong> _, ISocketMessageChannel ichannel, SocketReaction reaction)
         {
             if (ichannel is SocketGuildChannel)
             {
@@ -46,7 +42,7 @@ namespace Prima.Clerical.Services
             }
         }
 
-        public async Task ReactionRemoved(Cacheable<IUserMessage, ulong> imessage, ISocketMessageChannel ichannel, SocketReaction reaction)
+        public async Task ReactionRemoved(Cacheable<IUserMessage, ulong> _, ISocketMessageChannel ichannel, SocketReaction reaction)
         {
             if (ichannel is SocketGuildChannel)
             {

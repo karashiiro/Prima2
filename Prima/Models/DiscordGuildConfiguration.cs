@@ -1,6 +1,7 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Prima.Models
 {
@@ -8,6 +9,8 @@ namespace Prima.Models
     {
         [BsonId]
         [BsonRequired]
+        [SuppressMessage("Style", "IDE0044:Add readonly modifier", Justification = "<Pending>")]
+        [SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "<Pending>")]
         private ObjectId _id;
 
         [BsonRequired]

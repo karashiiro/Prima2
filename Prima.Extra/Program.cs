@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Prima.Extra.Services;
+using Prima.Services;
 using Serilog;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
@@ -34,7 +35,8 @@ namespace Prima.Extra
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "<Pending>")]
         private static ServiceProvider ConfigureServices(IServiceCollection sc)
         {
-            sc.AddSingleton<PresenceService>();
+            sc.AddSingleton<PresenceService>()
+              .AddSingleton<XIVAPIService>();
               //.AddSingleton<UptimeMessageService>();
             return sc.BuildServiceProvider();
         }
