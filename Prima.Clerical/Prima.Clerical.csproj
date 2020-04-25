@@ -6,7 +6,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Modules\CommonModule.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Prima\Modules\CommonModule.cs" Link="Modules\CommonModule.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Prima\Prima.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Modules\" />
   </ItemGroup>
 
 </Project>

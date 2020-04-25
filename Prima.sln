@@ -23,7 +23,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Prima.Configuration", "Prim
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Prima.Census", "Prima.Census\Prima.Census.csproj", "{FCC6BDB0-6AF4-4D75-9A19-10B6C6591CBA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Prima.Clerical", "Prima.Clerical\Prima.Clerical.csproj", "{2B9129D1-5D1A-41CD-B895-FB35ABB69931}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Prima.Clerical", "Prima.Clerical\Prima.Clerical.csproj", "{2B9129D1-5D1A-41CD-B895-FB35ABB69931}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Prima.Tests", "Prima.Tests\Prima.Tests.csproj", "{7F4DCEFB-75D4-4386-AFF3-3BCDE1DA755C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -59,6 +61,10 @@ Global
 		{2B9129D1-5D1A-41CD-B895-FB35ABB69931}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2B9129D1-5D1A-41CD-B895-FB35ABB69931}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2B9129D1-5D1A-41CD-B895-FB35ABB69931}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F4DCEFB-75D4-4386-AFF3-3BCDE1DA755C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F4DCEFB-75D4-4386-AFF3-3BCDE1DA755C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F4DCEFB-75D4-4386-AFF3-3BCDE1DA755C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F4DCEFB-75D4-4386-AFF3-3BCDE1DA755C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

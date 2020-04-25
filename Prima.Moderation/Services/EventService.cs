@@ -128,17 +128,18 @@ namespace Prima.Moderation.Services
 
             SaveAttachments(rawMessage);
 
-            if (!_db.Guilds.Any(g => g.Id == (rawMessage.Channel as SocketGuildChannel).Guild.Id)) return;
-            var guildConfig = _db.Guilds.Single(g => g.Id == (rawMessage.Channel as SocketGuildChannel).Guild.Id);
+            if (!(rawMessage.Channel is SocketGuildChannel channel))
+                return;
 
-            SocketGuildChannel guildChannel = rawMessage.Channel as SocketGuildChannel;
+            if (_db.Guilds.All(g => g.Id != channel.Guild.Id)) return;
+            var guildConfig = _db.Guilds.Single(g => g.Id == channel.Guild.Id);
 
             // Keep the welcome channel clean.
             if (rawMessage.Channel.Id == guildConfig.WelcomeChannel)
             {
-                var guild = guildChannel.Guild;
+                var guild = channel.Guild;
                 var prefix = guildConfig.Prefix == ' ' ? _db.Config.Prefix : guildConfig.Prefix;
-                if (!guild.GetUser(rawMessage.Author.Id).GetPermissions(guildChannel).ManageMessages)
+                if (!guild.GetUser(rawMessage.Author.Id).GetPermissions(channel).ManageMessages)
                 {
                     if (!rawMessage.Content.StartsWith($"{prefix}i") && !rawMessage.Content.StartsWith($"{prefix}agree"))
                     {
@@ -153,7 +154,7 @@ namespace Prima.Moderation.Services
 
             if (!rawMessage.Content.StartsWith("~report"))
             {
-                await ProcessAttachments(rawMessage, guildChannel);
+                await ProcessAttachments(rawMessage, channel);
             }
             await CheckTextBlacklist(rawMessage, guildConfig);
         }

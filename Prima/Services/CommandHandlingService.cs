@@ -54,12 +54,19 @@ namespace Prima.Services
             var context = new SocketCommandContext(_discord, message);
 
             var argPos = 0;
-            char prefix = _db.Config.Prefix;
+            var prefix = _db.Config.Prefix;
             try
             {
-                var guildPrefix = _db.Guilds.Single(g => g.Id == (rawMessage.Channel as SocketGuildChannel).Guild.Id).Prefix;
-                prefix = guildPrefix == ' ' ? prefix : guildPrefix;
-            } catch {}
+                if (rawMessage.Channel is SocketGuildChannel channel)
+                {
+                    var guildPrefix = _db.Guilds.Single(g => g.Id == channel.Guild.Id).Prefix;
+                    prefix = guildPrefix == ' ' ? prefix : guildPrefix;
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                Log.Warning("Message received in {GuildName}, but no configuration exists! Message: {MessageContent}", ((SocketGuildChannel) rawMessage.Channel).Name, rawMessage.Content);
+            }
             if (!message.HasCharPrefix(prefix, ref argPos)) return;
 
             Log.Information("({DiscordID}) {DiscordName}: {MessageContent}", rawMessage.Author.Id, rawMessage.Author.Username + "#" + rawMessage.Author.Discriminator, rawMessage.Content);

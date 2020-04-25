@@ -32,6 +32,7 @@ namespace Prima.Scheduler.Services
         public SchedulingService()
         {
             using var stream = new FileStream(GCredentialsFile, FileMode.Open, FileAccess.Read);
+            // ReSharper disable once AsyncConverter.AsyncWait
             UserCredential credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
                 GoogleClientSecrets.Load(stream).Secrets,
                 _scopes,

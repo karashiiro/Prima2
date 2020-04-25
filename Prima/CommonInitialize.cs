@@ -44,11 +44,13 @@ namespace Prima
             await client.StartAsync();
             try
             {
-                foreach (SocketGuild guild in client.Guilds)
+                foreach (var guild in client.Guilds)
                 {
-                    foreach (SocketTextChannel channel in guild.TextChannels)
+                    foreach (var channel in guild.TextChannels)
                     {
+#pragma warning disable 4014
                         channel.GetMessagesAsync();
+#pragma warning restore 4014
                     }
                 }
             } catch {};

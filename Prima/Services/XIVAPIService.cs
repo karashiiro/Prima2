@@ -63,18 +63,29 @@ namespace Prima.Services
         /// <summary>
         /// Searches the Lodestone for a character.
         /// </summary>
-        public async Task<CharacterSearchResult> SearchCharacter(string world, string name)
+        public async Task<CharacterSearchResult> SearchCharacter(string world, string name, string defaultDataCenter = "")
         {
-            HttpResponseMessage xivapiResponse = await _http.GetAsync(new Uri($"{BASE_URL}/character/search?name={name}&server={world}"));
-            string dataObject = await xivapiResponse.Content.ReadAsStringAsync();
-            JObject parsedResponse = JObject.Parse(dataObject);
+            var xivapiResponse = await _http.GetAsync(new Uri($"{BASE_URL}/character/search?name={name}&server={world}"));
+            var dataObject = await xivapiResponse.Content.ReadAsStringAsync();
+            var parsedResponse = JObject.Parse(dataObject);
             IList<JToken> results = parsedResponse["Results"].Children().ToList();
-            foreach (JToken result in results)
+            foreach (var result in results)
             {
-                CharacterSearchResult entry = result.ToObject<CharacterSearchResult>();
-                if (entry.Name.ToLower() == name.ToLower())
-                    return entry;
+                var entry = result.ToObject<CharacterSearchResult>();
+                if (!string.IsNullOrEmpty(world))
+                {
+                    if (entry.Name.ToLower() == name.ToLower())
+                        return entry;
+                }
+                else
+                {
+                    var dcName = entry.Server.Split(' ')[1];
+                    dcName = dcName[1..^1];
+                    if (entry.Name.ToLower() == name.ToLower() && dcName == defaultDataCenter)
+                        return entry;
+                }
             }
+
             return new CharacterSearchResult
             {
                 Avatar = "",

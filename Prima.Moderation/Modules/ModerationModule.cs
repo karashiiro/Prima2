@@ -34,7 +34,7 @@ namespace Prima.Moderation.Modules
             }
             var responseMessage = await Context.Channel.SendMessageAsync(Properties.Resources.ReportThankYou);
 
-            SocketGuild guild = Context.Guild;
+            var guild = Context.Guild;
             if (guild == null)
             {
                 foreach (var otherGuild in Context.User.MutualGuilds)
@@ -48,15 +48,15 @@ namespace Prima.Moderation.Modules
             }
             var guildConfig = Db.Guilds.Single(g => g.Id == guild.Id);
 
-            SocketTextChannel postChannel = guild.GetTextChannel(guildConfig.ReportChannel);
-            string output = $"<@&{guildConfig.Roles["Moderator"]}> {Context.User.Username}#{Context.User.Discriminator} just sent a report:{Context.Message.Content.Substring(7)}";
+            var postChannel = guild.GetTextChannel(guildConfig.ReportChannel);
+            var output = $"<@&{guildConfig.Roles["Moderator"]}> {Context.User.Username}#{Context.User.Discriminator} just sent a report:{Context.Message.Content.Substring(7)}";
             if (output.Length > 2000) // This can only be the case once, no need for a loop.
             {
                 await postChannel.SendMessageAsync(output.Substring(0, 2000));
                 output = output.Substring(2000);
             }
             await postChannel.SendMessageAsync(output);
-            foreach (Attachment attachment in Context.Message.Attachments)
+            foreach (var attachment in Context.Message.Attachments)
             {
                 await postChannel.SendFileAsync(Path.Combine(Db.Config.TempDir, attachment.Filename), string.Empty);
             }
