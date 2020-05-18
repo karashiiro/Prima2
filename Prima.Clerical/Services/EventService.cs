@@ -22,7 +22,6 @@ namespace Prima.Clerical.Services
             {
                 var guild = channel.Guild;
                 var member = guild.GetUser(reaction.UserId);
-                var emote = reaction.Emote as Emote;
                 DiscordGuildConfiguration disConfig;
                 try
                 {
@@ -32,14 +31,14 @@ namespace Prima.Clerical.Services
                 {
                     return;
                 }
-                if (disConfig.RoleEmotes.TryGetValue(emote.Id.ToString(), out string roleIdString))
+                if (reaction.Emote is Emote emote && disConfig.RoleEmotes.TryGetValue(emote.Id.ToString(), out var roleIdString))
                 {
-                    ulong roleId = ulong.Parse(roleIdString);
+                    var roleId = ulong.Parse(roleIdString);
                     var role = member.Guild.GetRole(roleId);
                     await member.AddRoleAsync(role);
                     Log.Information("Role {Role} was added to {DiscordUser}", role.Name, member.ToString());
                 }
-                else if (guild.Id.ToString() == "550702475112480769" && reaction.Emote.Name == "✅")
+                else if (guild.Id == 550702475112480769 && ichannel.Id == 552643167808258060 && reaction.Emote.Name == "✅")
                 {
                     await member.SendMessageAsync($"You have begun the verification process. Your **Discord account ID** is `{member.Id}`.\n"
 			            + "Please add this somewhere in your FFXIV Lodestone account description.\n"

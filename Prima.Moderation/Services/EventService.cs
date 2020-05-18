@@ -40,7 +40,10 @@ namespace Prima.Moderation.Services
 
             SocketGuildChannel channel = ichannel as SocketGuildChannel;
             SocketGuild guild = channel.Guild;
-            SocketUserMessage message = await cmessage.GetOrDownloadAsync() as SocketUserMessage;
+            IMessage imessage = await cmessage.GetOrDownloadAsync();
+            if (imessage == null)
+                return;
+            SocketUserMessage message = imessage as SocketUserMessage;
 
             DiscordGuildConfiguration config = _db.Guilds.Single(g => g.Id == guild.Id);
 
