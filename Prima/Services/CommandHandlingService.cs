@@ -65,16 +65,28 @@ namespace Prima.Services
             }
             catch (InvalidOperationException)
             {
-                Log.Warning("Message received in {GuildName}, but no configuration exists! Message: {MessageContent}", ((SocketGuildChannel) rawMessage.Channel).Name, rawMessage.Content);
+                Log.Warning("Message received in {GuildName}, but no configuration exists! Message: {MessageContent}", ((SocketGuildChannel)rawMessage.Channel).Name, rawMessage.Content);
             }
-            if (!message.HasCharPrefix(prefix, ref argPos)) return;
+
+            if (!message.HasCharPrefix(prefix, ref argPos))
+            {
+                // Hacky bit to get this working with fewer headaches upfront
+                if (rawMessage.Channel is SocketGuildChannel && message.Content.StartsWith("i") || message.Content.StartsWith("agree"))
+                {
+                    argPos = 0;
+                }
+                else
+                {
+                    return;
+                }
+            }
 
             Log.Information("({DiscordID}) {DiscordName}: {MessageContent}", rawMessage.Author.Id, rawMessage.Author.Username + "#" + rawMessage.Author.Discriminator, rawMessage.Content);
 
             // Perform the execution of the command. In this method,
             // the command service will perform precondition and parsing check
             // then execute the command if one is matched.
-            await _commands.ExecuteAsync(context, argPos, _services); 
+            await _commands.ExecuteAsync(context, argPos, _services);
             // Note that normally a result will be returned by this format, but here
             // we will handle the result in CommandExecutedAsync,
         }

@@ -32,7 +32,7 @@ namespace Prima.Scheduler
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "<Pending>")]
         private static ServiceProvider ConfigureServices(IServiceCollection sc)
         {
-            sc.AddSingleton<SchedulingService>();
+            sc.AddSingleton<SheetsService>();
             //sc.AddSingleton<UptimeMessageService>();
             return sc.BuildServiceProvider();
         }

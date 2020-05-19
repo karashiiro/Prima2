@@ -43,8 +43,8 @@ namespace Prima.Clerical.Services
                     await member.SendMessageAsync($"You have begun the verification process. Your **Discord account ID** is `{member.Id}`.\n"
 			            + "Please add this somewhere in your FFXIV Lodestone account description.\n"
 			            + "You can edit your account description here: https://na.finalfantasyxiv.com/lodestone/my/setting/profile/\n\n"
-                        + $"After you have put your Discord account ID in your Lodestone profile, please use {_db.Config.Prefix}verify `Lodestone ID` to tell me your Lodestone ID **(located in your character profile URL)**.\n"
-                        + "The API may not immediately update after you do this, so please wait a couple of minutes and use the command again if that happens.");
+                        + $"After you have put your Discord account ID in your Lodestone profile, please use `{_db.Config.Prefix}verify` to get your clear role.\n"
+                        + "The Lodestone may not immediately update following updates to your achievements, so please wait a few hours and try again if this is the case.");
                 }
             }
         }

@@ -38,17 +38,17 @@ namespace Prima.Moderation.Services
         {
             if (!(ichannel is SocketGuildChannel) || !_db.Guilds.Any(g => g.Id == (ichannel as SocketGuildChannel).Guild.Id)) return;
 
-            SocketGuildChannel channel = ichannel as SocketGuildChannel;
-            SocketGuild guild = channel.Guild;
-            IMessage imessage = await cmessage.GetOrDownloadAsync();
+            var channel = (SocketGuildChannel) ichannel;
+            var guild = channel.Guild;
+            var imessage = await cmessage.GetOrDownloadAsync();
             if (imessage == null)
                 return;
-            SocketUserMessage message = imessage as SocketUserMessage;
+            var message = imessage as SocketUserMessage;
 
-            DiscordGuildConfiguration config = _db.Guilds.Single(g => g.Id == guild.Id);
+            var config = _db.Guilds.Single(g => g.Id == guild.Id);
 
-            SocketTextChannel deletedMessageChannel = guild.GetChannel(config.DeletedMessageChannel) as SocketTextChannel;
-            SocketTextChannel deletedCommandChannel = guild.GetChannel(config.DeletedCommandChannel) as SocketTextChannel;
+            var deletedMessageChannel = guild.GetChannel(config.DeletedMessageChannel) as SocketTextChannel;
+            var deletedCommandChannel = guild.GetChannel(config.DeletedCommandChannel) as SocketTextChannel;
 
             var prefix = config.Prefix == ' ' ? _db.Config.Prefix : config.Prefix;
 
@@ -65,7 +65,7 @@ namespace Prima.Moderation.Services
             catch (InvalidOperationException) {}
 
             // Build the embed.
-            Embed messageEmbed = new EmbedBuilder()
+            var messageEmbed = new EmbedBuilder()
                 .WithTitle("#" + ichannel.Name)
                 .WithColor(Color.Blue)
                 .WithAuthor(message.Author)
@@ -86,8 +86,8 @@ namespace Prima.Moderation.Services
             }
 
             // Attach attachments as well.
-            string unsaved = "";
-            foreach (Attachment attachment in message.Attachments)
+            var unsaved = string.Empty;
+            foreach (var attachment in message.Attachments)
             {
                 try
                 {
@@ -144,10 +144,19 @@ namespace Prima.Moderation.Services
                 var prefix = guildConfig.Prefix == ' ' ? _db.Config.Prefix : guildConfig.Prefix;
                 if (!guild.GetUser(rawMessage.Author.Id).GetPermissions(channel).ManageMessages)
                 {
-                    if (!rawMessage.Content.StartsWith($"{prefix}i") && !rawMessage.Content.StartsWith($"{prefix}agree"))
+                    if (!rawMessage.Content.StartsWith($"{prefix}i") && !rawMessage.Content.ToLower().StartsWith("i") && !rawMessage.Content.StartsWith($"{prefix}agree") && !rawMessage.Content.StartsWith($"agree"))
                     {
                         try
                         {
+                            await rawMessage.DeleteAsync();
+                        }
+                        catch (HttpException) {}
+                    }
+                    else
+                    {
+                        try
+                        {
+                            await Task.Delay(10000);
                             await rawMessage.DeleteAsync();
                         }
                         catch (HttpException) {}
