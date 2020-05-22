@@ -1,16 +1,16 @@
-﻿namespace Prima.Scheduler.Resources
+﻿namespace Prima.Resources
 {
+    public enum RunDisplayType
+    {
+        FR,
+        OP,
+        OZ,
+        RC,
+        EX,
+    }
+
     public static class RunDisplayTypes
     {
-        public enum RunDisplayType
-        {
-            FR,
-            OP,
-            OZ,
-            RC,
-            EX,
-        }
-
         public static Color None = new Color
         {
             RGB = new int[3],

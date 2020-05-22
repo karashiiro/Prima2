@@ -10,39 +10,29 @@ namespace Prima.Moderation
 {
     class Program
     {
-        static void Main(string[] args) => new Program().MainAsync(args).GetAwaiter().GetResult();  
+        static void Main(string[] args) => MainAsync(args).GetAwaiter().GetResult();  
 
-        public async Task MainAsync(string[] args)
+        private static async Task MainAsync(string[] args)
         {
-            IServiceCollection sc = CommonInitialize.Main(args);
+            var sc = CommonInitialize.Main(args);
 
             // Initialize the ASP.NET service provider and freeze this Task indefinitely.
-            using (ServiceProvider services = ConfigureServices(sc))
-            {
-                await CommonInitialize.ConfigureServicesAsync(services);
+            using var services = ConfigureServices(sc);
+            await CommonInitialize.ConfigureServicesAsync(services);
 
-                var client = services.GetRequiredService<DiscordSocketClient>();
-                var events = services.GetRequiredService<EventService>();
+            var client = services.GetRequiredService<DiscordSocketClient>();
+            var events = services.GetRequiredService<EventService>();
 
-                foreach (var guild in client.Guilds)
-                {
-                    foreach (var channel in guild.TextChannels)
-                    {
-                        channel.GetMessagesAsync();
-                    }
-                }
+            client.MessageDeleted += events.MessageDeleted;
+            client.MessageReceived += events.MessageRecieved;
 
-                client.MessageDeleted += events.MessageDeleted;
-                client.MessageReceived += events.MessageRecieved;
-
-                Log.Information($"Prima Moderation logged in!");
+            Log.Information($"Prima Moderation logged in!");
                 
-                /*var uptime = services.GetRequiredService<UptimeMessageService>();
+            /*var uptime = services.GetRequiredService<UptimeMessageService>();
                 uptime.Initialize("Prima Moderation", "Hammertime.");
                 uptime.StartAsync().Start();*/
                 
-                await Task.Delay(-1);
-            }
+            await Task.Delay(-1);
         }
 
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "<Pending>")]

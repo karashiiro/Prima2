@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson;
+﻿using System;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -62,11 +63,15 @@ namespace Prima.Models
         [BsonRepresentation(BsonType.String)]
         public int MinimumLevel = 0;
 
-        [BsonRequired]
+        [Obsolete]
         public string BACalendarId = string.Empty;
 
-        [BsonRequired]
+        [Obsolete]
         public string BACalendarLink = string.Empty;
+
+        public string BASpreadsheetId = string.Empty;
+
+        public string BASpreadsheetLink = string.Empty;
 
         public DiscordGuildConfiguration(ulong guildId) => Id = guildId;
     }

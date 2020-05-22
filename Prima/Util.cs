@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Serilog;
 
 namespace Prima
 {
@@ -41,62 +42,132 @@ namespace Prima
             => (x, y) => f(arg, x, y);
 
         /// <summary>
-        /// Gets the absolute path of a file from its path relative to the executing assembly.
+        /// Gets the absolute path of a file from its path relative to the entry assembly.
         /// </summary>
         public static string GetAbsolutePath(string relativePath)
             => Path.Combine(Assembly.GetEntryAssembly().Location, "..", relativePath);
 
         /// <summary>
-        /// Gets a day of the week and a time from a string.
+        /// Gets a day of the week and a time from a set of strings.
         /// </summary>
-        public static DateTime GetDateTime(string text)
+        public static DateTime GetDateTime(string keywords)
         {
-            DateTime date = DateTime.MinValue;
-            Match dayMatch = RegexSearches.DayOrDate.Match(text);
-            if (dayMatch.Success)
+            // All this is copied from Roo's scheduler (with minor tweaks)
+            var Year = DateTime.Now.Year;
+            var Month = DateTime.Now.Month;
+            var Day = DateTime.Now.Day;
+            var Hour = DateTime.Now.Hour;
+            var Minute = DateTime.Now.Minute;
+            var dayOfWeek = -1;
+
+            //Check to see if it matches a recognized time format
+            var timeResult = RegexSearches.Time.Match(string.Join(' ', keywords));
+            if (timeResult.Success)
             {
-                string dayOrDate = dayMatch.Value.Trim();
-                if (dayOrDate.IndexOf("/") != -1)
+                var time = timeResult.Value.ToLowerInvariant().Replace(" ", "");
+                Hour = int.Parse(RegexSearches.TimeHours.Match(time).Value);
+                Minute = int.Parse(RegexSearches.TimeMinutes.Match(time).Value);
+                var meridiem = RegexSearches.TimeMeridiem.Match(time).Value;
+                if (!meridiem.StartsWith("a"))
                 {
-                    int[] mmddyyyy = dayOrDate.Split("/").Select(term => int.Parse(term)).ToArray();
-                    date = new DateTime(mmddyyyy.Length == 3 ? mmddyyyy[2] : DateTime.Now.Year, mmddyyyy[0], mmddyyyy[1]);
+                    Hour += 12;
                 }
-                else
-                {
-                    var requestedDay = (DayOfWeek)Enum.Parse(typeof(DayOfWeek), dayOrDate);
-                    // https://stackoverflow.com/a/6346190 big fan
-                    int daysUntil = (requestedDay - DateTime.Now.DayOfWeek + 7) % 7;
-                    date = DateTime.Now.AddDays(daysUntil);
-                }
-            }
-            if (date == DateTime.MinValue)
-            {
-                throw new ArgumentException();
-            }
-            Match timeMatch = RegexSearches.Time.Match(text);
-            date.AddSeconds(-date.Second)
-                   .AddMilliseconds(-date.Millisecond);
-            if (timeMatch.Success)
-            {
-                string time = timeMatch.Value.Replace(" ", "").Trim().ToUpper();
-                int hours = int.Parse(RegexSearches.TimeHours.Match(time).Value);
-                int minutes = int.Parse(RegexSearches.TimeMinutes.Match(time).Value);
-                string meridiem = RegexSearches.TimeMeridiem.Match(time).Value;
-                if (meridiem == "PM")
-                {
-                    hours += 12;
-                    hours += 12;
-                }
-                date.AddHours(hours - date.Hour)
-                       .AddMinutes(minutes - date.Minute);
-            }
-            else
-            {
-                date.AddHours(-date.Hour)
-                       .AddMinutes(-date.Minute);
             }
 
-            return date;
+            var splitKeywords = RegexSearches.Whitespace.Split(keywords);
+
+            //Check to see if it matches a recognized date format.
+            foreach (var keyword in splitKeywords)
+            {
+                var dateResult = RegexSearches.Date.Match(keyword);
+                if (dateResult.Success)
+                {
+                    var date = dateResult.Value.Trim();
+                    var mmddyyyy = date.Split("/").Select(int.Parse).ToArray();
+                    Month = mmddyyyy[0];
+                    Day = mmddyyyy[1];
+                    if (mmddyyyy.Length == 3)
+                    {
+                        Year = mmddyyyy[2];
+                    }
+                    continue;
+                }
+ 
+                //Check for days of the week, possibly abbreviated.
+                switch (keyword.ToLowerInvariant())
+                {
+                    //Days of the week.
+                    case "日":
+                    case "日曜日":
+                    case "su":
+                    case "sun":
+                    case "sunday":
+                        dayOfWeek = (int)DayOfWeek.Sunday;
+                        continue;
+                    case "月":
+                    case "月曜日":
+                    case "m":
+                    case "mo":
+                    case "mon":
+                    case "monday":
+                        dayOfWeek = (int)DayOfWeek.Monday;
+                        continue;
+                    case "火":
+                    case "火曜日":
+                    case "t":
+                    case "tu":
+                    case "tue":
+                    case "tuesday":
+                        dayOfWeek = (int)DayOfWeek.Tuesday;
+                        continue;
+                    case "水":
+                    case "水曜日":
+                    case "w":
+                    case "wed":
+                    case "wednesday":
+                        dayOfWeek = (int)DayOfWeek.Wednesday;
+                        continue;
+                    case "木":
+                    case "木曜日":
+                    case "th":
+                    case "thu":
+                    case "thursday":
+                        dayOfWeek = (int)DayOfWeek.Thursday;
+                        continue;
+                    case "金":
+                    case "金曜日":
+                    case "f":
+                    case "fri":
+                    case "friday":
+                        dayOfWeek = (int)DayOfWeek.Friday;
+                        continue;
+                    case "土":
+                    case "土曜日":
+                    case "sa":
+                    case "sat":
+                    case "saturday":
+                        dayOfWeek = (int)DayOfWeek.Saturday;
+                        continue;
+                }
+            } //foreach
+ 
+            //Check to make sure everything got set here, and then...
+            var finalDate = new DateTime(Year, Month, Day, Hour, Minute, 0);
+            if (dayOfWeek >= 0)
+            {
+                finalDate = finalDate.AddDays((dayOfWeek - (int)finalDate.DayOfWeek + 7) % 7);
+            }
+            
+            return finalDate;
+        }
+
+        public static string GetClosestString(string input, IEnumerable<string> options)
+        {
+            var output = options.First();
+            foreach (var option in options)
+                if (Levenshtein(input, output) > Levenshtein(input, option))
+                    output = option;
+            return output;
         }
 
         /// <summary>
@@ -131,6 +202,9 @@ namespace Prima
             }
             return matrix[a - 1,b - 1];
         }
+
+        public static string Capitalize(string input)
+            => char.ToUpperInvariant(input[0]) + input.Substring(1).ToLowerInvariant();
 
         /// <summary>
         /// Get the value of an object property by its string name.

@@ -11,53 +11,55 @@ namespace Prima.Services
     public class DbService
     {
         // Hide types of the database implementation from callers.
-        public GlobalConfiguration Config { get => _config.AsQueryable().ToEnumerable().First(); }
-        public IEnumerable<DiscordGuildConfiguration> Guilds { get => _guildConfig.AsQueryable().ToEnumerable(); }
-        public IEnumerable<DiscordXIVUser> Users { get => _users.AsQueryable().ToEnumerable(); }
+        public GlobalConfiguration Config => _config.AsQueryable().ToEnumerable().First();
+        public IEnumerable<DiscordGuildConfiguration> Guilds => _guildConfig.AsQueryable().ToEnumerable();
+        public IEnumerable<DiscordXIVUser> Users => _users.AsQueryable().ToEnumerable();
+        public IEnumerable<ScheduledEvent> Events => _events.AsQueryable().ToEnumerable();
 
-        private readonly MongoClient _client;
-        private readonly IMongoDatabase _database;
-        
         private readonly IMongoCollection<GlobalConfiguration> _config;
         private readonly IMongoCollection<DiscordGuildConfiguration> _guildConfig;
         private readonly IMongoCollection<DiscordXIVUser> _users;
+        private readonly IMongoCollection<ScheduledEvent> _events;
 
         private const string _connectionString = "mongodb://localhost:27017";
         private const string _dbName = "PrimaDb";
 
         public DbService()
         {
-            _client = new MongoClient(_connectionString);
-            _database = _client.GetDatabase(_dbName);
+            var client = new MongoClient(_connectionString);
+            var database = client.GetDatabase(_dbName);
 
-            _config = _database.GetCollection<GlobalConfiguration>("GlobalConfiguration");
+            _config = database.GetCollection<GlobalConfiguration>("GlobalConfiguration");
             Log.Information("Global configuration status: {DbStatus} documents found.", _config.EstimatedDocumentCount());
 
-            _guildConfig = _database.GetCollection<DiscordGuildConfiguration>("GuildConfiguration");
+            _guildConfig = database.GetCollection<DiscordGuildConfiguration>("GuildConfiguration");
             Log.Information("Guild configuration status: {DbStatus} documents found.", _guildConfig.EstimatedDocumentCount());
 
-            _users = _database.GetCollection<DiscordXIVUser>("Users");
+            _users = database.GetCollection<DiscordXIVUser>("Users");
             Log.Information("User database status: {DbStatus} documents found.", _users.EstimatedDocumentCount());
+
+            _events = database.GetCollection<ScheduledEvent>("ScheduledEvents");
+            Log.Information("Event database status: {DbStatus} documents found.", _events.EstimatedDocumentCount());
         }
 
-        public async Task SetGlobalConfigurationProperty(string key, string value)
+        public Task SetGlobalConfigurationProperty(string key, string value)
         {
             if (!Config.HasFieldOrProperty(key))
             {
                 throw new ArgumentException($"Property {key} does not exist on GlobalConfiguration.");
             }
             var update = Builders<GlobalConfiguration>.Update.Set(key, value);
-            await _config.UpdateOneAsync(config => true, update);
+            return _config.UpdateOneAsync(config => true, update);
         }
 
-        public async Task SetGuildConfigurationProperty(ulong guildId, string key, string value)
+        public Task SetGuildConfigurationProperty(ulong guildId, string key, string value)
         {
             if (!new DiscordGuildConfiguration(0).HasFieldOrProperty(key))
             {
                 throw new ArgumentException($"Property {key} does not exist on DiscordGuildConfiguration.");
             }
             var update = Builders<DiscordGuildConfiguration>.Update.Set(key, value);
-            await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
+            return _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
         }
 
         public async Task AddGlobalConfiguration()
@@ -70,45 +72,45 @@ namespace Prima.Services
 
         public async Task AddGuild(DiscordGuildConfiguration config)
         {
-            if (!(await _guildConfig.FindAsync(guild => guild.Id == config.Id)).Any())
+            if (!await (await _guildConfig.FindAsync(guild => guild.Id == config.Id)).AnyAsync().ConfigureAwait(false))
             {
                 await _guildConfig.InsertOneAsync(config);
             }
         }
 
-        public async Task ConfigureRole(ulong guildId, string roleName, ulong roleId)
+        public Task ConfigureRole(ulong guildId, string roleName, ulong roleId)
         {
             var update = Builders<DiscordGuildConfiguration>.Update.Set($"Roles.{roleName}", roleId.ToString());
-            await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
+            return _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
         }
 
-        public async Task DeconfigureRole(ulong guildId, string roleName)
+        public Task DeconfigureRole(ulong guildId, string roleName)
         {
             var update = Builders<DiscordGuildConfiguration>.Update.Unset($"Roles.{roleName}");
-            await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
+            return _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
         }
 
-        public async Task ConfigureRoleEmote(ulong guildId, ulong roleId, string emoteId)
+        public Task ConfigureRoleEmote(ulong guildId, ulong roleId, string emoteId)
         {
             var update = Builders<DiscordGuildConfiguration>.Update.Set($"RoleEmotes.{emoteId}", roleId.ToString());
-            await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
+            return _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
         }
 
-        public async Task DeconfigureRoleEmote(ulong guildId, string emoteId)
+        public Task DeconfigureRoleEmote(ulong guildId, string emoteId)
         {
             var update = Builders<DiscordGuildConfiguration>.Update.Unset($"RoleEmotes.{emoteId}");
-            await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
+            return _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
         }
 
-        public async Task AddGuildTextBlacklistEntry(ulong guildId, string regexString)
+        public Task AddGuildTextBlacklistEntry(ulong guildId, string regexString)
         {
             var update = Builders<DiscordGuildConfiguration>.Update.Push("TextBlacklist", regexString);
-            await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
+            return _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
         }
 
         public async Task RemoveGuildTextBlacklistEntry(ulong guildId, string regexString)
         {
-            var blacklist = (await _guildConfig.FindAsync(guild => guild.Id == guildId)).First().TextBlacklist;
+            var blacklist = (await (await _guildConfig.FindAsync(guild => guild.Id == guildId)).FirstAsync().ConfigureAwait(false)).TextBlacklist;
             if (blacklist.Any())
             {
                 var update = Builders<DiscordGuildConfiguration>.Update.Pull("TextBlacklist", regexString);
@@ -118,9 +120,56 @@ namespace Prima.Services
 
         public async Task AddUser(DiscordXIVUser user)
         {
-            if ((await _users.FindAsync(u => u.DiscordId == user.DiscordId)).Any())
+            if (await (await _users.FindAsync(u => u.DiscordId == user.DiscordId)).AnyAsync().ConfigureAwait(false))
                 await _users.DeleteOneAsync(u => u.DiscordId == user.DiscordId);
             await _users.InsertOneAsync(user);
+        }
+
+        public Task AddScheduledEvent(ScheduledEvent @event)
+            => _events.InsertOneAsync(@event);
+
+        public async Task UpdateScheduledEvent(ScheduledEvent newEvent)
+        {
+            var existing = await (await _events.FindAsync(e => e.MessageId == newEvent.MessageId)).FirstOrDefaultAsync();
+            if (existing == null)
+            {
+                await AddScheduledEvent(newEvent);
+                return;
+            }
+            await _events.ReplaceOneAsync(e => e.MessageId == newEvent.MessageId, newEvent);
+        }
+
+        public async Task AddMemberToEvent(ScheduledEvent @event, ulong memberId)
+        {
+            var existing = await (await _events.FindAsync(e => e.MessageId == @event.MessageId)).FirstOrDefaultAsync();
+            if (existing == null)
+            {
+                return;
+            }
+            var update = Builders<ScheduledEvent>.Update.Push("SubscribedUsers", memberId);
+            await _events.UpdateOneAsync(e => e.MessageId == @event.MessageId, update);
+        }
+
+        public async Task RemoveMemberToEvent(ScheduledEvent @event, ulong memberId)
+        {
+            var existing = await (await _events.FindAsync(e => e.MessageId == @event.MessageId)).FirstOrDefaultAsync();
+            if (existing == null)
+            {
+                return;
+            }
+            var update = Builders<ScheduledEvent>.Update.Pull("SubscribedUsers", memberId);
+            await _events.UpdateOneAsync(e => e.MessageId == @event.MessageId, update);
+        }
+
+        public async Task<ScheduledEvent> TryRemoveScheduledEvent(DateTime when, ulong userId)
+        {
+            var existing = await _events.FindAsync(e => e.RunTime == when.ToBinary() && e.LeaderId == userId);
+            var @event = await existing.FirstOrDefaultAsync();
+            if (@event != null)
+            {
+                await _events.DeleteOneAsync(e => e.RunTime == when.ToBinary());
+            }
+            return @event;
         }
     }
 }

@@ -8,6 +8,7 @@ using System;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Discord.Net;
 
 namespace Prima
 {
@@ -27,7 +28,7 @@ namespace Prima
             {
                 AlwaysDownloadUsers = true,
                 LargeThreshold = 250,
-                MessageCacheSize = 100,
+                MessageCacheSize = 10000,
             };
 
             return ConfigurePartialServiceCollection(disConfig);
@@ -42,18 +43,22 @@ namespace Prima
                 
             await client.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("DISCORD_BOT_TOKEN"));
             await client.StartAsync();
-            try
+
+            var cachedMessages = 0;
+            foreach (var guild in client.Guilds)
             {
-                foreach (var guild in client.Guilds)
+                foreach (var channel in guild.TextChannels)
                 {
-                    foreach (var channel in guild.TextChannels)
+                    var ichannel = (ITextChannel)channel;
+                    try
                     {
-#pragma warning disable 4014
-                        channel.GetMessagesAsync();
-#pragma warning restore 4014
+                        _ = await ichannel.GetMessagesAsync().FlattenAsync();
+                        cachedMessages += channel.CachedMessages.Count;
                     }
+                    catch (HttpException) {}
                 }
-            } catch {};
+            }
+            Log.Information("Message caching completed, {CachedMessages} messages cached.", cachedMessages);
 
             await services.GetRequiredService<CommandHandlingService>().InitializeAsync();
         }

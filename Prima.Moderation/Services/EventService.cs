@@ -36,19 +36,24 @@ namespace Prima.Moderation.Services
 
         public async Task MessageDeleted(Cacheable<IMessage, ulong> cmessage, ISocketMessageChannel ichannel)
         {
-            if (!(ichannel is SocketGuildChannel) || !_db.Guilds.Any(g => g.Id == (ichannel as SocketGuildChannel).Guild.Id)) return;
+            if (!(ichannel is SocketGuildChannel channel) || _db.Guilds.All(g => g.Id != channel.Guild.Id)) return;
 
-            var channel = (SocketGuildChannel) ichannel;
             var guild = channel.Guild;
-            var imessage = await cmessage.GetOrDownloadAsync();
-            if (imessage == null)
-                return;
-            var message = imessage as SocketUserMessage;
 
             var config = _db.Guilds.Single(g => g.Id == guild.Id);
 
-            var deletedMessageChannel = guild.GetChannel(config.DeletedMessageChannel) as SocketTextChannel;
-            var deletedCommandChannel = guild.GetChannel(config.DeletedCommandChannel) as SocketTextChannel;
+            var deletedMessageChannel = guild.GetChannel(config.DeletedMessageChannel) as SocketTextChannel ?? throw new NullReferenceException();
+            var deletedCommandChannel = guild.GetChannel(config.DeletedCommandChannel) as SocketTextChannel ?? throw new NullReferenceException();
+
+            var imessage = await cmessage.GetOrDownloadAsync(); // Should be cached
+            if (imessage == null)
+            {
+                await deletedMessageChannel.SendMessageAsync($"<@{_db.Config.BotMaster}>, a message was deleted without being cached first!");
+                Log.Warning("Message deleted and not cached!");
+                return;
+            }
+
+            var message = imessage as SocketUserMessage;
 
             var prefix = config.Prefix == ' ' ? _db.Config.Prefix : config.Prefix;
 
@@ -58,11 +63,10 @@ namespace Prima.Moderation.Services
             try
             {
                 var thisLog = auditLogs
-                    .Where(log => log.Action == ActionType.MessageDeleted && DateTime.Now - log.CreatedAt < new TimeSpan(hours: 0, minutes: 5, seconds: 0))
-                    .First();
-                executor = thisLog.User ?? message.Author; // See above.
+                    .FirstOrDefault(log => log.Action == ActionType.MessageDeleted && DateTime.Now - log.CreatedAt < new TimeSpan(0, 5, 0));
+                executor = thisLog?.User ?? message.Author; // See above.
             }
-            catch (InvalidOperationException) {}
+            catch (InvalidOperationException) { }
 
             // Build the embed.
             var messageEmbed = new EmbedBuilder()
@@ -70,7 +74,7 @@ namespace Prima.Moderation.Services
                 .WithColor(Color.Blue)
                 .WithAuthor(message.Author)
                 .WithDescription(message.Content)
-                .WithFooter($"Deleted by {executor.Username}#{executor.Discriminator}", executor.GetAvatarUrl())
+                .WithFooter($"Deleted by {executor}", executor.GetAvatarUrl())
                 .WithCurrentTimestamp()
                 .Build();
 
@@ -150,7 +154,7 @@ namespace Prima.Moderation.Services
                         {
                             await rawMessage.DeleteAsync();
                         }
-                        catch (HttpException) {}
+                        catch (HttpException) { }
                     }
                     else
                     {
@@ -159,7 +163,7 @@ namespace Prima.Moderation.Services
                             await Task.Delay(10000);
                             await rawMessage.DeleteAsync();
                         }
-                        catch (HttpException) {}
+                        catch (HttpException) { }
                     }
                 }
             }

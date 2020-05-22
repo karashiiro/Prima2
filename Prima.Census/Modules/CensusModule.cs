@@ -11,6 +11,7 @@ using Serilog;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Color = Discord.Color;
 
 namespace Prima.Modules
 {
