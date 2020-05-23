@@ -143,6 +143,86 @@ namespace Prima.Scheduler.Services
             await _db.UpdateScheduledEvent(@event);
         }
 
+        public async Task RemoveEvent(ScheduledEvent @event, string spreadsheetId)
+        {
+            var dateObj = DateTime.FromBinary(@event.RunTime);
+
+            var constants = await GetSpreadsheet(spreadsheetId, "Constants!B1:B3");
+
+            var timeslotsPerDay = int.Parse((string)constants.Values[1][0]);
+            var dateRow = int.Parse((string)constants.Values[2][0]);
+
+            var range = $"Timetable!{dateRow}:{dateRow + timeslotsPerDay}";
+            var timetable = await GetSpreadsheet(spreadsheetId, range);
+
+            var row = dateRow + dateObj.Hour * 2 + (dateObj.Minute == 30 ? 1 : 0);
+            var column = -1;
+
+            var dateRowContents = timetable.Values[0];
+            for (var i = 0; i < dateRowContents.Count; i++)
+            {
+                if (((string)dateRowContents[i]).Contains(dateObj.Day.ToString()))
+                {
+                    column = i;
+                    break;
+                }
+            }
+
+            var batchRequest = new BatchUpdateSpreadsheetRequest
+            {
+                Requests = new List<Request>
+                {
+                    new Request
+                    {
+                        UpdateCells = new UpdateCellsRequest
+                        {
+                            Rows = new List<RowData>
+                            {
+                                new RowData
+                                {
+                                    Values = new List<CellData>
+                                    {
+                                        new CellData
+                                        {
+                                            UserEnteredFormat = new CellFormat
+                                            {
+                                                BackgroundColor = row % 2 == 0 ? new Color
+                                                {
+                                                    Red = 1.0f,
+                                                    Green = 1.0f,
+                                                    Blue = 1.0f,
+                                                } : new Color
+                                                {
+                                                    Red = 243 / 255.0f,
+                                                    Green = 243 / 255.0f,
+                                                    Blue = 243 / 255.0f,
+                                                },
+                                            },
+                                            UserEnteredValue = new ExtendedValue
+                                            {
+                                                StringValue = "",
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                            Range = new GridRange
+                            {
+                                SheetId = 0,
+                                StartRowIndex = row,
+                                EndRowIndex = row + 1,
+                                StartColumnIndex = column,
+                                EndColumnIndex = column + 1,
+                            },
+                            Fields = "userEnteredFormat(backgroundColor), userEnteredValue",
+                        },
+                    },
+                },
+            };
+            var request = _service.Spreadsheets.BatchUpdate(batchRequest, spreadsheetId);
+            _ = await request.ExecuteAsync();
+        }
+
         private async Task AddFutureRunLoop(CancellationToken token)
         {
             while (true)

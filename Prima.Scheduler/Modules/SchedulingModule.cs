@@ -205,6 +205,8 @@ namespace Prima.Scheduler.Modules
             }
 
             await ReplyAsync($"{Context.User.Mention}, the run has been unscheduled.");
+
+            await Sheets.RemoveEvent(result, guildConfig.BASpreadsheetId);
         }
     }
 }
