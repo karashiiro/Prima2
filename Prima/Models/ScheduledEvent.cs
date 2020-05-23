@@ -27,5 +27,7 @@ namespace Prima.Models
         public IList<ulong> SubscribedUsers { get; set; }
 
         public bool Notified { get; set; }
+
+        public bool Listed { get; set; }
     }
 }

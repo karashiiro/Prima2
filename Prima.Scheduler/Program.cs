@@ -42,6 +42,7 @@ namespace Prima.Scheduler
         {
             sc.AddSingleton<EventService>();
             sc.AddSingleton<RunNotiferService>();
+            sc.AddSingleton<SpreadsheetService>();
             //sc.AddSingleton<UptimeMessageService>();
             return sc.BuildServiceProvider();
         }

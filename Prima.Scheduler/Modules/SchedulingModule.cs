@@ -7,6 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Prima.Scheduler.Services;
+using Serilog;
 using Color = Discord.Color;
 
 namespace Prima.Scheduler.Modules
@@ -21,6 +23,7 @@ namespace Prima.Scheduler.Modules
         private const long Threshold = 10800000;
 
         public DbService Db { get; set; }
+        public SpreadsheetService Sheets { get; set; }
 
         [Command("schedule")]
         public async Task ScheduleAsync([Remainder] string content) // Schedules a sink.
@@ -44,7 +47,16 @@ namespace Prima.Scheduler.Modules
 
             var coolParameters = RegexSearches.Whitespace.Split(parameters);
 
-            var runTime = Util.GetDateTime(parameters);
+            DateTime runTime;
+            try
+            {
+                runTime = Util.GetDateTime(parameters);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                await ReplyAsync($"{Context.User.Mention}, that time is invalid.");
+                return;
+            }
             var @event = new ScheduledEvent
             {
                 Description = description,
@@ -74,7 +86,9 @@ namespace Prima.Scheduler.Modules
                 return;
             }
 
-            if (Db.Events.Any(sr => runTime > DateTime.Now && Math.Abs(runTime.ToBinary() - runTime.ToBinary()) < Threshold))
+            if (Db.Events.Any(sr => runTime > DateTime.Now &&
+                                    Math.Abs((DateTime.FromBinary(sr.RunTime) - runTime).TotalMilliseconds) <
+                                    Threshold))
             {
                 await ReplyAsync($"{Context.User.Mention}, a run is already scheduled within 3 hours of that time! " +
                                  "Please check the schedule and try again.");
@@ -97,6 +111,7 @@ namespace Prima.Scheduler.Modules
                     if (string.Equals(coolParameter, runType, StringComparison.InvariantCultureIgnoreCase))
                     {
                         @event.RunKind = Enum.Parse<RunDisplayType>(runType, true);
+                        break;
                     }
                 }
             }
@@ -119,7 +134,7 @@ namespace Prima.Scheduler.Modules
                 .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
                 .WithDescription("React to the :vibration_mode: on their message to be notified 30 minutes before it begins!\n\n" +
                                  $"**{Context.User.Mention}'s full message: {Context.Message.GetJumpUrl()}**\n\n" +
-                                 $"{new string(@event.Description.Take(1900).ToArray())}{(@event.Description.Length > 1900 ? "..." : "")}\n\n" +
+                                 $"{new string(@event.Description.Take(1850).ToArray())}{(@event.Description.Length > 1850 ? "..." : "")}\n\n" +
                                  $"**Schedule Overview: <{guildConfig.BASpreadsheetLink}>**")
                 .Build();
 
@@ -129,6 +144,8 @@ namespace Prima.Scheduler.Modules
             @event.EmbedMessageId = embedMessage.Id;
 
             await Db.AddScheduledEvent(@event);
+
+            await Sheets.AddEvent(@event, guildConfig.BASpreadsheetId);
         }
 
         [Command("unschedule")]
@@ -138,7 +155,16 @@ namespace Prima.Scheduler.Modules
             if (guildConfig == null) return;
             if (Context.Channel.Id != guildConfig.ScheduleInputChannel) return;
 
-            var when = Util.GetDateTime(content);
+            DateTime when;
+            try
+            {
+                when = Util.GetDateTime(content);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                await ReplyAsync($"{Context.User.Mention}, that time is invalid.");
+                return;
+            }
             if (when.Minute >= 45)
             {
                 when = when.AddMinutes(-when.Minute);

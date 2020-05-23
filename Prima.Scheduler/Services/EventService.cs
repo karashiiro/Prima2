@@ -47,12 +47,13 @@ namespace Prima.Scheduler.Services
             await _db.UpdateScheduledEvent(run);
 
             var embedChannel = guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
-            var message = await embedChannel.GetMessageAsync(run.EmbedMessageId) as IUserMessage;
+            if (!(await embedChannel.GetMessageAsync(run.EmbedMessageId) is IUserMessage message))
+                return;
 
-            var embed = message?.Embeds.FirstOrDefault()?.ToEmbedBuilder()
+            var embed = message.Embeds.FirstOrDefault()?.ToEmbedBuilder()
                 .WithDescription("React to the :vibration_mode: on their message to be notified 30 minutes before it begins!\n\n" +
                                  $"**{guild.GetUser(run.LeaderId).Mention}'s full message: {newMessage.GetJumpUrl()}**\n\n" +
-                                 $"{new string(run.Description.Take(1900).ToArray())}{(run.Description.Length > 1900 ? "..." : "")}\n\n" +
+                                 $"{new string(run.Description.Take(1850).ToArray())}{(run.Description.Length > 1850 ? "..." : "")}\n\n" +
                                  $"**Schedule Overview: <{guildConfig.BASpreadsheetLink}>**")
                 .Build();
 
