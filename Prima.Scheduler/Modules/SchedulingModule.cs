@@ -213,12 +213,17 @@ namespace Prima.Scheduler.Modules
         public Task GetRunDstAsync(params string[] args)
         {
             var runKind = (RunDisplayType)(-1);
+            var color = new Color();
             if (args.Length != 0)
-                runKind = (RunDisplayType)Enum.Parse(typeof(RunDisplayType), args[0], true);
+            {
+                runKind = (RunDisplayType) Enum.Parse(typeof(RunDisplayType), args[0], true);
+                var runKindColor = RunDisplayTypes.GetColor(runKind);
+                color = new Color(runKindColor.RGB[0], runKindColor.RGB[1], runKindColor.RGB[2]);
+            }
 
             var embed = new EmbedBuilder()
                 .WithTitle($"Historical Scheduled Runs by Hour {(Enum.IsDefined(typeof(RunDisplayType), runKind) ? $"({runKind})" : string.Empty)}")
-                .WithColor(Color.DarkTeal)
+                .WithColor(Enum.IsDefined(typeof(RunDisplayType), runKind) ? color : Color.DarkTeal)
                 .WithFooter("RSVP'd users may not be reflective of users who actually took part in a run.");
 
             var runsByHour = Db.Events
