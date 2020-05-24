@@ -231,7 +231,7 @@ namespace Prima.Scheduler.Modules
                 .WithFooter("RSVP'd users may not be reflective of users who actually took part in a run.");
 
             var runsByHour = Db.Events
-                .Where(@event => !Enum.IsDefined(typeof(RunDisplayType), runKind) || @event.RunKind == runKind)
+                .Where(@event => @event.Notified && !Enum.IsDefined(typeof(RunDisplayType), runKind) || @event.RunKind == runKind)
                 .Select(@event =>
                 {
                     var runTime = DateTime.FromBinary(@event.RunTime);
