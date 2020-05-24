@@ -216,9 +216,13 @@ namespace Prima.Scheduler.Modules
             var color = new Color();
             if (args.Length != 0)
             {
-                runKind = (RunDisplayType) Enum.Parse(typeof(RunDisplayType), args[0], true);
-                var runKindColor = RunDisplayTypes.GetColor(runKind);
-                color = new Color(runKindColor.RGB[0], runKindColor.RGB[1], runKindColor.RGB[2]);
+                try
+                {
+                    runKind = (RunDisplayType)Enum.Parse(typeof(RunDisplayType), args[0], true);
+                    var runKindColor = RunDisplayTypes.GetColor(runKind);
+                    color = new Color(runKindColor.RGB[0], runKindColor.RGB[1], runKindColor.RGB[2]);
+                }
+                catch (ArgumentException) { /* Nothing to do */ }
             }
 
             var embed = new EmbedBuilder()
