@@ -2,13 +2,12 @@
 using Discord.Commands;
 using Prima.Models;
 using Prima.Resources;
+using Prima.Scheduler.Services;
 using Prima.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Prima.Scheduler.Services;
-using Serilog;
 using Color = Discord.Color;
 
 namespace Prima.Scheduler.Modules
@@ -207,6 +206,35 @@ namespace Prima.Scheduler.Modules
             await ReplyAsync($"{Context.User.Mention}, the run has been unscheduled.");
 
             await Sheets.RemoveEvent(result, guildConfig.BASpreadsheetId);
+        }
+
+        [Command("rundst")]
+        [Alias("rundistribution", "rundstr")]
+        public Task GetRunDstAsync()
+        {
+            var embed = new EmbedBuilder()
+                .WithTitle("Historical Scheduled Runs by Hour")
+                .WithColor(Color.DarkTeal)
+                .WithFooter("RSVP'd users may not be reflective of users who actually took part in a run.");
+
+            var runsByHour = Db.Events
+                .Select(@event =>
+                {
+                    var runTime = DateTime.FromBinary(@event.RunTime);
+                    return new { Value = @event, Hour = runTime.Hour * 2 + (runTime.Minute == 30 ? 1 : 0) };
+                })
+                .GroupBy(kvp => kvp.Hour, kvp => kvp.Value)
+                .OrderBy(bucket => bucket.Key);
+
+            foreach (var runBucket in runsByHour)
+            {
+                var hour = runBucket.Key / 2;
+                if (hour > 12) hour -= 12;
+                var label = $"{hour}:{(runBucket.Key % 2 == 0 ? "00" : "30")} {(runBucket.Key > 24 ? "PM" : "AM")}";
+                embed = embed.AddField(label, $"{runBucket.Count()} runs (Average {Math.Round(runBucket.Aggregate(0, (i, @event) => i += @event.SubscribedUsers.Count) / (double)runBucket.Count(), 2)} users per run)");
+            }
+
+            return ReplyAsync(embed: embed.Build());
         }
     }
 }
