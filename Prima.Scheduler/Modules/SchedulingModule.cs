@@ -210,14 +210,27 @@ namespace Prima.Scheduler.Modules
 
         [Command("rundst")]
         [Alias("rundistribution", "rundstr")]
-        public Task GetRunDstAsync()
+        public Task GetRunDstAsync(params string[] args)
         {
+            var runKind = (RunDisplayType)(-1);
+            if (args.Length != 0)
+                runKind = (RunDisplayType)Enum.Parse(typeof(RunDisplayType), args[0], true);
+
             var embed = new EmbedBuilder()
-                .WithTitle("Historical Scheduled Runs by Hour")
+                .WithTitle($"Historical Scheduled Runs by Hour {(Enum.IsDefined(typeof(RunDisplayType), runKind) ? $"({runKind})" : string.Empty)}")
                 .WithColor(Color.DarkTeal)
                 .WithFooter("RSVP'd users may not be reflective of users who actually took part in a run.");
 
             var runsByHour = Db.Events
+                .Where(@event =>
+                {
+                    if (!Enum.IsDefined(typeof(RunDisplayType), runKind))
+                        return true;
+
+                    if (@event.RunKind == runKind)
+                        return true;
+                    return false;
+                })
                 .Select(@event =>
                 {
                     var runTime = DateTime.FromBinary(@event.RunTime);
