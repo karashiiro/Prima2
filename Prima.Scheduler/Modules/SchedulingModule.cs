@@ -297,6 +297,12 @@ namespace Prima.Scheduler.Modules
                 newRunTime = newRunTime.AddMinutes(-newRunTime.Minute);
             }
 
+            if (newRunTime == currentRunTime)
+            {
+                await ReplyAsync($"{Context.User.Mention}, you can't reschedule a run to the same time!");
+                return;
+            }
+
             if (newRunTime < DateTime.Now)
             {
                 await ReplyAsync($"{Context.User.Mention}, you can't schedule a run in the past!");

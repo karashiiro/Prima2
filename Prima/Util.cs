@@ -118,6 +118,7 @@ namespace Prima
                         case "t":
                         case "tu":
                         case "tue":
+                        case "tues":
                         case "tuesday":
                             dayOfWeek = (int)DayOfWeek.Tuesday;
                             continue;
