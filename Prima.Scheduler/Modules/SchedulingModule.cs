@@ -44,6 +44,12 @@ namespace Prima.Scheduler.Modules
             var parameters = content.Substring(0, splitIndex).Trim();
             var description = content.Substring(splitIndex + 1).Trim();
 
+            if (parameters.IndexOf(":", StringComparison.Ordinal) == -1)
+            {
+                await ReplyAsync($"{Context.User.Mention}, please specify a time for your run in your command!");
+                return;
+            }
+
             var coolParameters = RegexSearches.Whitespace.Split(parameters);
 
             DateTime runTime;
