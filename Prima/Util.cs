@@ -94,61 +94,62 @@ namespace Prima
                 }
  
                 //Check for days of the week, possibly abbreviated.
-                switch (keyword.ToLowerInvariant())
-                {
-                    //Days of the week.
-                    case "日":
-                    case "日曜日":
-                    case "su":
-                    case "sun":
-                    case "sunday":
-                        dayOfWeek = (int)DayOfWeek.Sunday;
-                        continue;
-                    case "月":
-                    case "月曜日":
-                    case "m":
-                    case "mo":
-                    case "mon":
-                    case "monday":
-                        dayOfWeek = (int)DayOfWeek.Monday;
-                        continue;
-                    case "火":
-                    case "火曜日":
-                    case "t":
-                    case "tu":
-                    case "tue":
-                    case "tuesday":
-                        dayOfWeek = (int)DayOfWeek.Tuesday;
-                        continue;
-                    case "水":
-                    case "水曜日":
-                    case "w":
-                    case "wed":
-                    case "wednesday":
-                        dayOfWeek = (int)DayOfWeek.Wednesday;
-                        continue;
-                    case "木":
-                    case "木曜日":
-                    case "th":
-                    case "thu":
-                    case "thursday":
-                        dayOfWeek = (int)DayOfWeek.Thursday;
-                        continue;
-                    case "金":
-                    case "金曜日":
-                    case "f":
-                    case "fri":
-                    case "friday":
-                        dayOfWeek = (int)DayOfWeek.Friday;
-                        continue;
-                    case "土":
-                    case "土曜日":
-                    case "sa":
-                    case "sat":
-                    case "saturday":
-                        dayOfWeek = (int)DayOfWeek.Saturday;
-                        continue;
-                }
+                if (dayOfWeek == -1)
+                    switch (keyword.ToLowerInvariant())
+                    {
+                        //Days of the week.
+                        case "日":
+                        case "日曜日":
+                        case "su":
+                        case "sun":
+                        case "sunday":
+                            dayOfWeek = (int)DayOfWeek.Sunday;
+                            continue;
+                        case "月":
+                        case "月曜日":
+                        case "m":
+                        case "mo":
+                        case "mon":
+                        case "monday":
+                            dayOfWeek = (int)DayOfWeek.Monday;
+                            continue;
+                        case "火":
+                        case "火曜日":
+                        case "t":
+                        case "tu":
+                        case "tue":
+                        case "tuesday":
+                            dayOfWeek = (int)DayOfWeek.Tuesday;
+                            continue;
+                        case "水":
+                        case "水曜日":
+                        case "w":
+                        case "wed":
+                        case "wednesday":
+                            dayOfWeek = (int)DayOfWeek.Wednesday;
+                            continue;
+                        case "木":
+                        case "木曜日":
+                        case "th":
+                        case "thu":
+                        case "thursday":
+                            dayOfWeek = (int)DayOfWeek.Thursday;
+                            continue;
+                        case "金":
+                        case "金曜日":
+                        case "f":
+                        case "fri":
+                        case "friday":
+                            dayOfWeek = (int)DayOfWeek.Friday;
+                            continue;
+                        case "土":
+                        case "土曜日":
+                        case "sa":
+                        case "sat":
+                        case "saturday":
+                            dayOfWeek = (int)DayOfWeek.Saturday;
+                            continue;
+                    }
             } //foreach
  
             //Check to make sure everything got set here, and then...

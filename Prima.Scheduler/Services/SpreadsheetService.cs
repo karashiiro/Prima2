@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Discord.WebSocket;
 using Prima.Services;
 using Color = Google.Apis.Sheets.v4.Data.Color;
 
@@ -32,12 +33,14 @@ namespace Prima.Scheduler.Services
             : Path.Combine(Environment.GetEnvironmentVariable("HOME"), "token.json");
 
         private readonly DbService _db;
+        private readonly DiscordSocketClient _client;
         private readonly SheetsService _service;
         private readonly CancellationTokenSource _tokenSource;
 
-        public SpreadsheetService(DbService db)
+        public SpreadsheetService(DbService db, DiscordSocketClient client)
         {
             _db = db;
+            _client = client;
             _tokenSource = new CancellationTokenSource();
 
             using var stream = new FileStream(GCredentialsFile, FileMode.Open, FileAccess.Read);
@@ -117,7 +120,7 @@ namespace Prima.Scheduler.Services
                                             },
                                             UserEnteredValue = new ExtendedValue
                                             {
-                                                StringValue = @event.Description,
+                                                StringValue = @event.Description + $"\n[{_client.GetUser(@event.LeaderId)}]",
                                             },
                                         },
                                     },
