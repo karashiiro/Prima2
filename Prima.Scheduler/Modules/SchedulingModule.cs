@@ -19,6 +19,7 @@ namespace Prima.Scheduler.Modules
     [RequireContext(ContextType.Guild)]
     public class SchedulingModule : ModuleBase<SocketCommandContext>
     {
+        private const string TimezoneAbbr = "PDT";
         private const long Threshold = 10800000;
 
         public DbService Db { get; set; }
@@ -91,6 +92,13 @@ namespace Prima.Scheduler.Modules
                 return;
             }
 
+            if (runTime > DateTime.Now.AddDays(28))
+            {
+                await ReplyAsync($"{Context.User.Mention}, runs are limited to being scheduled within the next 28 days.\n" +
+                                 "Please choose an earlier day to schedule your run.");
+                return;
+            }
+
             if (Db.Events.Any(sr => runTime > DateTime.Now &&
                                     Math.Abs((DateTime.FromBinary(sr.RunTime) - runTime).TotalMilliseconds) <
                                     Threshold))
@@ -127,7 +135,7 @@ namespace Prima.Scheduler.Modules
                 return;
             }
 
-            await Context.Channel.SendMessageAsync($"{Context.User.Mention} has just scheduled a run on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} (PDT)!\n" +
+            await Context.Channel.SendMessageAsync($"{Context.User.Mention} has just scheduled a run on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({TimezoneAbbr})!\n" +
                                                    $"React to the 📳 on their message to be notified 30 minutes before it begins!");
             await Context.Message.AddReactionAsync(new Emoji("📳"));
 
@@ -187,7 +195,7 @@ namespace Prima.Scheduler.Modules
             var result = when < DateTime.Now ? null : await Db.TryRemoveScheduledEvent(when, Context.User.Id);
             if (result == null)
             {
-                await ReplyAsync("You don't seem to have a run scheduled at that day and time (or that time has passed)!");
+                await ReplyAsync($"{Context.User.Mention}, you don't seem to have a run scheduled at that day and time (or that time has passed)!");
                 return;
             }
 
@@ -212,6 +220,125 @@ namespace Prima.Scheduler.Modules
             await ReplyAsync($"{Context.User.Mention}, the run has been unscheduled.");
 
             await Sheets.RemoveEvent(result, guildConfig.BASpreadsheetId);
+        }
+
+        [Command("reschedule")]
+        public async Task RescheduleAsync([Remainder] string parameters)
+        {
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return;
+            if (Context.Channel.Id != guildConfig.ScheduleInputChannel) return;
+            var prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
+
+            var splitIndex = parameters.IndexOf("|", StringComparison.Ordinal);
+            if (splitIndex == -1)
+            {
+                await ReplyAsync($"{Context.User.Mention}, please provide parameters with that command.\n" +
+                                 "A well-formed command would look something like:\n" +
+                                 $"`{prefix}reschedule Tuesday 5:00PM | Wednesday 6:30PM`");
+                return;
+            }
+
+            var currentRunTimeParameters = parameters.Substring(0, splitIndex).Trim();
+            var newRunTimeParameters = parameters.Substring(splitIndex + 1).Trim();
+
+            DateTime currentRunTime;
+            try
+            {
+                currentRunTime = Util.GetDateTime(currentRunTimeParameters);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                await ReplyAsync($"{Context.User.Mention}, the first time is invalid.");
+                return;
+            }
+            if (currentRunTime.Minute >= 45)
+            {
+                currentRunTime = currentRunTime.AddMinutes(-currentRunTime.Minute);
+                currentRunTime = currentRunTime.AddHours(1);
+            }
+            else if (currentRunTime.Minute >= 15)
+            {
+                currentRunTime = currentRunTime.AddMinutes(-currentRunTime.Minute + 30);
+            }
+            else
+            {
+                currentRunTime = currentRunTime.AddMinutes(-currentRunTime.Minute);
+            }
+
+            var @event = currentRunTime < DateTime.Now ? null : Db.Events.FirstOrDefault(run => run.RunTime == currentRunTime.ToBinary() && run.LeaderId == Context.User.Id);
+            if (@event == null)
+            {
+                await ReplyAsync($"{Context.User.Mention}, you don't seem to have a run scheduled at that day and time (or that time has passed)!");
+                return;
+            }
+
+            DateTime newRunTime;
+            try
+            {
+                newRunTime = Util.GetDateTime(newRunTimeParameters);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                await ReplyAsync($"{Context.User.Mention}, the second time is invalid.");
+                return;
+            }
+            if (newRunTime.Minute >= 45)
+            {
+                newRunTime = newRunTime.AddMinutes(-newRunTime.Minute);
+                newRunTime = newRunTime.AddHours(1);
+            }
+            else if (newRunTime.Minute >= 15)
+            {
+                newRunTime = newRunTime.AddMinutes(-newRunTime.Minute + 30);
+            }
+            else
+            {
+                newRunTime = newRunTime.AddMinutes(-newRunTime.Minute);
+            }
+
+            if (newRunTime < DateTime.Now)
+            {
+                await ReplyAsync($"{Context.User.Mention}, you can't schedule a run in the past!");
+                return;
+            }
+
+            if (newRunTime > DateTime.Now.AddDays(28))
+            {
+                await ReplyAsync($"{Context.User.Mention}, runs are limited to being scheduled within the next 28 days.\n" +
+                                 "Please choose an earlier day to schedule your run.");
+                return;
+            }
+
+            if (Db.Events
+                .Where(sr => sr.MessageId != @event.MessageId)
+                .Any(sr => newRunTime > DateTime.Now &&
+                                    Math.Abs((DateTime.FromBinary(sr.RunTime) - newRunTime).TotalMilliseconds) <
+                                    Threshold))
+            {
+                await ReplyAsync($"{Context.User.Mention}, a run is already scheduled within 3 hours of that time! " +
+                                 "Please check the schedule and try again.");
+                return;
+            }
+
+            await Sheets.RemoveEvent(@event, guildConfig.BASpreadsheetId);
+
+            @event.RunTime = newRunTime.ToBinary();
+            await Db.UpdateScheduledEvent(@event);
+
+            var leaderName = (Context.User as IGuildUser)?.Nickname ?? Context.User.Username;
+            var embedChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
+            var embedMessage = await embedChannel.GetMessageAsync(@event.EmbedMessageId) as IUserMessage;
+            // ReSharper disable once PossibleNullReferenceException
+            var embed = embedMessage.Embeds.FirstOrDefault()?.ToEmbedBuilder()
+                .WithTitle($"Run scheduled by {leaderName} on {newRunTime.DayOfWeek} at {newRunTime.ToShortTimeString()} ({TimezoneAbbr}) " +
+                           $"[{newRunTime.DayOfWeek}, {(Month)newRunTime.Month} {newRunTime.Day}]!")
+                .Build();
+            await embedMessage.ModifyAsync(properties => properties.Embed = embed);
+
+            await Sheets.AddEvent(@event, guildConfig.BASpreadsheetId);
+
+            await ReplyAsync("Run rescheduled successfully.");
         }
 
         [Command("rundst")]

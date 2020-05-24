@@ -9,7 +9,6 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord.WebSocket;
@@ -18,10 +17,9 @@ using Color = Google.Apis.Sheets.v4.Data.Color;
 
 namespace Prima.Scheduler.Services
 {
-    public class SpreadsheetService : IDisposable
+    public class SpreadsheetService
     {
         private const string ApplicationName = "Prima";
-        private const int Delay = 1800000;
 
         private static readonly string[] Scopes = { SheetsService.Scope.Spreadsheets };
 
@@ -35,13 +33,11 @@ namespace Prima.Scheduler.Services
         private readonly DbService _db;
         private readonly DiscordSocketClient _client;
         private readonly SheetsService _service;
-        private readonly CancellationTokenSource _tokenSource;
 
         public SpreadsheetService(DbService db, DiscordSocketClient client)
         {
             _db = db;
             _client = client;
-            _tokenSource = new CancellationTokenSource();
 
             using var stream = new FileStream(GCredentialsFile, FileMode.Open, FileAccess.Read);
             // ReSharper disable once AsyncConverter.AsyncWait
@@ -60,8 +56,6 @@ namespace Prima.Scheduler.Services
                 HttpClientInitializer = credential,
                 ApplicationName = ApplicationName,
             });
-
-            _ = Task.Run(() => AddFutureRunLoop(_tokenSource.Token));
         }
 
         public async Task AddEvent(ScheduledEvent @event, string spreadsheetId)
@@ -226,39 +220,10 @@ namespace Prima.Scheduler.Services
             _ = await request.ExecuteAsync();
         }
 
-        private async Task AddFutureRunLoop(CancellationToken token)
-        {
-            while (true)
-            {
-                if (token.IsCancellationRequested)
-                    token.ThrowIfCancellationRequested();
-
-                Log.Information("Trying to add runs previously past the end of the spreadsheet.");
-
-                var runs = _db.Events.Where(e => e.RunTime > DateTime.Now.ToBinary() && !e.Notified && !e.Listed);
-                foreach (var run in runs)
-                {
-                    var guildConfig = _db.Guilds.FirstOrDefault(g => g.Id == run.GuildId);
-                    if (guildConfig == null)
-                        continue;
-                    await AddEvent(run, guildConfig.BASpreadsheetId);
-                    await Task.Delay(1000, token);
-                }
-
-                await Task.Delay(Delay, token);
-            }
-        }
-
         private Task<ValueRange> GetSpreadsheet(string spreadSheetId, string range)
         {
             var request = _service.Spreadsheets.Values.Get(spreadSheetId, range);
             return request.ExecuteAsync();
-        }
-
-        public void Dispose()
-        {
-            _tokenSource.Cancel();
-            _tokenSource.Dispose();
         }
     }
 }
