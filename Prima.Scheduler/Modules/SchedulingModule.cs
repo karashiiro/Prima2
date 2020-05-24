@@ -134,7 +134,7 @@ namespace Prima.Scheduler.Modules
                 .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
                 .WithDescription("React to the :vibration_mode: on their message to be notified 30 minutes before it begins!\n\n" +
                                  $"**{Context.User.Mention}'s full message: {Context.Message.GetJumpUrl()}**\n\n" +
-                                 $"{new string(@event.Description.Take(1850).ToArray())}{(@event.Description.Length > 1850 ? "..." : "")}\n\n" +
+                                 $"{new string(@event.Description.Take(1650).ToArray())}{(@event.Description.Length > 1650 ? "..." : "")}\n\n" +
                                  $"**Schedule Overview: <{guildConfig.BASpreadsheetLink}>**")
                 .Build();
 
@@ -199,7 +199,7 @@ namespace Prima.Scheduler.Modules
                 await embedMessage.ModifyAsync(properties => properties.Embed = cancelledEmbed);
                 _ = Task.Run(async () =>
                 {
-                    await Task.Delay(9000000);
+                    await Task.Delay(1800000);
                     await embedMessage.DeleteAsync();
                 });
             }

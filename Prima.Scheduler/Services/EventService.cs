@@ -13,11 +13,13 @@ namespace Prima.Scheduler.Services
     {
         private readonly DbService _db;
         private readonly DiscordSocketClient _client;
+        private readonly SpreadsheetService _sheets;
 
-        public EventService(DbService db, DiscordSocketClient client)
+        public EventService(DbService db, DiscordSocketClient client, SpreadsheetService sheets)
         {
             _db = db;
             _client = client;
+            _sheets = sheets;
         }
 
         public async Task OnMessageEdit(Cacheable<IMessage, ulong> cmessage, SocketMessage smessage, ISocketMessageChannel ichannel)
@@ -53,7 +55,7 @@ namespace Prima.Scheduler.Services
             var embed = message.Embeds.FirstOrDefault()?.ToEmbedBuilder()
                 .WithDescription("React to the :vibration_mode: on their message to be notified 30 minutes before it begins!\n\n" +
                                  $"**{guild.GetUser(run.LeaderId).Mention}'s full message: {newMessage.GetJumpUrl()}**\n\n" +
-                                 $"{new string(run.Description.Take(1850).ToArray())}{(run.Description.Length > 1850 ? "..." : "")}\n\n" +
+                                 $"{new string(run.Description.Take(1650).ToArray())}{(run.Description.Length > 1650 ? "..." : "")}\n\n" +
                                  $"**Schedule Overview: <{guildConfig.BASpreadsheetLink}>**")
                 .Build();
 
@@ -62,6 +64,8 @@ namespace Prima.Scheduler.Services
             if (embed == null)
                 return;
             await message.ModifyAsync(properties => properties.Embed = embed);
+
+            await _sheets.AddEvent(run, guildConfig.BASpreadsheetId);
         }
 
         public async Task OnReactionAdd(Cacheable<IUserMessage, ulong> cmessage, ISocketMessageChannel ichannel, SocketReaction reaction)

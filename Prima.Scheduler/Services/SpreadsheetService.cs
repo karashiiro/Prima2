@@ -230,6 +230,8 @@ namespace Prima.Scheduler.Services
                 if (token.IsCancellationRequested)
                     token.ThrowIfCancellationRequested();
 
+                Log.Information("Trying to add runs previously past the end of the spreadsheet.");
+
                 var runs = _db.Events.Where(e => e.RunTime > DateTime.Now.ToBinary() && !e.Notified && !e.Listed);
                 foreach (var run in runs)
                 {

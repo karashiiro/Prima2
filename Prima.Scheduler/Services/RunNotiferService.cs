@@ -87,7 +87,7 @@ namespace Prima.Scheduler.Services
                         var embedMessage = await outputChannel.GetMessageAsync(run.EmbedMessageId);
                         _ = Task.Run(async () => // Delete embed 30 minutes later
                         {
-                            await Task.Delay(1800000, token);
+                            await Task.Delay((int)Threshold, token);
                             await embedMessage.DeleteAsync();
                         }, token);
                     }
