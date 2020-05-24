@@ -53,7 +53,7 @@ namespace Prima.Scheduler.Modules
             }
             catch (ArgumentOutOfRangeException)
             {
-                await ReplyAsync($"{Context.User.Mention}, that time is invalid.");
+                await ReplyAsync($"{Context.User.Mention}, that date or time is invalid.");
                 return;
             }
             var @event = new ScheduledEvent
