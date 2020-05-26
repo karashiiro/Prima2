@@ -345,6 +345,13 @@ namespace Prima.Scheduler.Modules
             await Sheets.AddEvent(@event, guildConfig.BASpreadsheetId);
 
             await ReplyAsync("Run rescheduled successfully.");
+            foreach (var uid in @event.SubscribedUsers)
+            {
+                var user = Context.Guild.GetUser(uid);
+                if (user == null)
+                    continue;
+                await user.SendMessageAsync($"The run for reacted to, scheduled by {leaderName} on {currentRunTime.DayOfWeek} at {currentRunTime.ToShortTimeString()}, has been rescheduled to {newRunTime.DayOfWeek} at {newRunTime.ToShortTimeString()}");
+            }
         }
 
         [Command("rundst")]

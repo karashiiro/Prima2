@@ -45,12 +45,29 @@ namespace Prima.Moderation.Services
             var deletedMessageChannel = guild.GetChannel(config.DeletedMessageChannel) as SocketTextChannel ?? throw new NullReferenceException();
             var deletedCommandChannel = guild.GetChannel(config.DeletedCommandChannel) as SocketTextChannel ?? throw new NullReferenceException();
 
-            var imessage = await cmessage.GetOrDownloadAsync(); // Should be cached
+            CachedMessage cachedMessage;
+            var imessage = await cmessage.GetOrDownloadAsync();
             if (imessage == null)
             {
-                await deletedMessageChannel.SendMessageAsync($"<@{_db.Config.BotMaster}>, a message was deleted without being cached first!");
-                Log.Warning("Message deleted and not cached!");
-                return;
+                cachedMessage = _db.CachedMessages.FirstOrDefault(m => m.MessageId == cmessage.Id);
+                if (cachedMessage == null)
+                {
+                    await deletedMessageChannel.SendMessageAsync(
+                        $"<@{_db.Config.BotMaster}>, a message was deleted without being cached first!");
+                    Log.Warning("Message deleted and not cached!");
+                    return;
+                }
+            }
+            else
+            {
+                cachedMessage = new CachedMessage
+                {
+                    AuthorId = imessage.Author.Id,
+                    ChannelId = imessage.Channel.Id,
+                    Content = imessage.Content,
+                    MessageId = cmessage.Id,
+                    UnixMs = imessage.Timestamp.ToUnixTimeMilliseconds(),
+                };
             }
 
             var message = imessage as SocketUserMessage;
@@ -59,12 +76,13 @@ namespace Prima.Moderation.Services
 
             // Get executor of the deletion.
             var auditLogs = await guild.GetAuditLogsAsync(10).FlattenAsync();
-            IUser executor = message.Author; // If no user is listed as the executor, the executor is the author of the message.
+            var author = _client.GetUser(cachedMessage.AuthorId);
+            IUser executor = author; // If no user is listed as the executor, the executor is the author of the message.
             try
             {
                 var thisLog = auditLogs
                     .FirstOrDefault(log => log.Action == ActionType.MessageDeleted && DateTime.Now - log.CreatedAt < new TimeSpan(0, 5, 0));
-                executor = thisLog?.User ?? message.Author; // See above.
+                executor = thisLog?.User ?? executor; // See above.
             }
             catch (InvalidOperationException) { }
 
@@ -72,25 +90,24 @@ namespace Prima.Moderation.Services
             var messageEmbed = new EmbedBuilder()
                 .WithTitle("#" + ichannel.Name)
                 .WithColor(Color.Blue)
-                .WithAuthor(message.Author)
-                .WithDescription(message.Content)
+                .WithAuthor(author)
+                .WithDescription(cachedMessage.Content)
                 .WithFooter($"Deleted by {executor}", executor.GetAvatarUrl())
                 .WithCurrentTimestamp()
                 .Build();
 
             // Send the embed.
-            IMessage sentMessage;
-            if (message.Author.Id == _client.CurrentUser.Id || message.Content.StartsWith(prefix))
+            if (author.Id == _client.CurrentUser.Id || cachedMessage.Content.StartsWith(prefix))
             {
-                sentMessage = await deletedCommandChannel.SendMessageAsync(embed: messageEmbed);
+                await deletedCommandChannel.SendMessageAsync(embed: messageEmbed);
             }
             else
             {
-                sentMessage = await deletedMessageChannel.SendMessageAsync(embed: messageEmbed);
+                await deletedMessageChannel.SendMessageAsync(embed: messageEmbed);
             }
 
-            // Attach attachments as well.
-            var unsaved = string.Empty;
+            // TODO Attach attachments as well.
+            /*var unsaved = string.Empty;
             foreach (var attachment in message.Attachments)
             {
                 try
@@ -105,7 +122,7 @@ namespace Prima.Moderation.Services
             if (!string.IsNullOrEmpty(unsaved))
             {
                 await deletedMessageChannel.SendMessageAsync(Properties.Resources.UnsavedMessageAttachmentsWarning + unsaved);
-            }
+            }*/
 
             // Copy reactions and send those, too.
             /*
@@ -197,7 +214,7 @@ namespace Prima.Moderation.Services
         private void SaveAttachments(SocketMessage rawMessage)
         {
             if (!rawMessage.Attachments.Any()) return;
-            foreach (Attachment a in rawMessage.Attachments)
+            foreach (var a in rawMessage.Attachments)
             {
                 _wc.DownloadFile(new Uri(a.Url), Path.Combine(_db.Config.TempDir, a.Filename));
                 Log.Information("Saved attachment {Filename}", Path.Combine(_db.Config.TempDir, a.Filename));

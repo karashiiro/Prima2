@@ -17,14 +17,16 @@ namespace Prima.Moderation
             var sc = CommonInitialize.Main(args);
 
             // Initialize the ASP.NET service provider and freeze this Task indefinitely.
-            using var services = ConfigureServices(sc);
+            await using var services = ConfigureServices(sc);
             await CommonInitialize.ConfigureServicesAsync(services);
 
             var client = services.GetRequiredService<DiscordSocketClient>();
             var events = services.GetRequiredService<EventService>();
+            var messageCache = services.GetRequiredService<MessageCacheService>();
 
             client.MessageDeleted += events.MessageDeleted;
             client.MessageReceived += events.MessageRecieved;
+            client.MessageReceived += messageCache.CacheMessage;
 
             Log.Information($"Prima Moderation logged in!");
                 
@@ -39,7 +41,8 @@ namespace Prima.Moderation
         private static ServiceProvider ConfigureServices(IServiceCollection sc)
         {
             sc.AddSingleton<WebClient>()
-              .AddSingleton<EventService>();
+              .AddSingleton<EventService>()
+              .AddSingleton<MessageCacheService>();
             //sc.AddSingleton<UptimeMessageService>();
             return sc.BuildServiceProvider();
         }

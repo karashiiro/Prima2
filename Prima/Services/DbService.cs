@@ -15,11 +15,13 @@ namespace Prima.Services
         public IEnumerable<DiscordGuildConfiguration> Guilds => _guildConfig.AsQueryable().ToEnumerable();
         public IEnumerable<DiscordXIVUser> Users => _users.AsQueryable().ToEnumerable();
         public IEnumerable<ScheduledEvent> Events => _events.AsQueryable().ToEnumerable();
+        public IEnumerable<CachedMessage> CachedMessages => _messageCache.AsQueryable().ToEnumerable();
 
         private readonly IMongoCollection<GlobalConfiguration> _config;
         private readonly IMongoCollection<DiscordGuildConfiguration> _guildConfig;
         private readonly IMongoCollection<DiscordXIVUser> _users;
         private readonly IMongoCollection<ScheduledEvent> _events;
+        private readonly IMongoCollection<CachedMessage> _messageCache;
 
         private const string _connectionString = "mongodb://localhost:27017";
         private const string _dbName = "PrimaDb";
@@ -40,6 +42,9 @@ namespace Prima.Services
 
             _events = database.GetCollection<ScheduledEvent>("ScheduledEvents");
             Log.Information("Event database status: {DbStatus} documents found.", _events.EstimatedDocumentCount());
+
+            _messageCache = database.GetCollection<CachedMessage>("CachedMessages");
+            Log.Information("Message cache database status: {DbStatus} documents found.", _messageCache.EstimatedDocumentCount());
         }
 
         public Task SetGlobalConfigurationProperty(string key, string value)
@@ -170,6 +175,25 @@ namespace Prima.Services
                 await _events.DeleteOneAsync(e => e.RunTime == when.ToBinary());
             }
             return @event;
+        }
+
+        public Task CacheMessage(CachedMessage message)
+            => _messageCache.InsertOneAsync(message);
+
+        public async Task DeleteMessage(ulong messageId)
+        {
+            var existing = await _messageCache.FindAsync(cm => cm.MessageId == messageId);
+            var message = await existing.FirstOrDefaultAsync();
+            if (message != null)
+            {
+                await _events.DeleteOneAsync(cm => cm.MessageId == messageId);
+            }
+        }
+
+        public async Task UpdateCachedMessage(CachedMessage message)
+        {
+            await DeleteMessage(message.MessageId);
+            await CacheMessage(message);
         }
     }
 }

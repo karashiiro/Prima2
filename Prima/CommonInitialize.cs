@@ -44,22 +44,6 @@ namespace Prima
             await client.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("DISCORD_BOT_TOKEN"));
             await client.StartAsync();
 
-            var cachedMessages = 0;
-            foreach (var guild in client.Guilds)
-            {
-                foreach (var channel in guild.TextChannels)
-                {
-                    var ichannel = (ITextChannel)channel;
-                    try
-                    {
-                        _ = await ichannel.GetMessagesAsync().FlattenAsync();
-                        cachedMessages += channel.CachedMessages.Count;
-                    }
-                    catch (HttpException) {}
-                }
-            }
-            Log.Information("Message caching completed, {CachedMessages} messages cached.", cachedMessages);
-
             await services.GetRequiredService<CommandHandlingService>().InitializeAsync();
         }
 
