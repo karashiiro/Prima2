@@ -61,6 +61,7 @@ namespace Prima.Scheduler.Modules
                 return;
             }
 
+            ScheduledEvent firstEvent = null;
             IUserMessage message = Context.Message;
             var multiplier = 1;
             for (var i = 0; i < multiplier; i++)
@@ -78,6 +79,8 @@ namespace Prima.Scheduler.Modules
                     MessageId = message.Id,
                     SubscribedUsers = new List<ulong>(),
                 };
+
+                if (i == 0) firstEvent = @event;
 
                 foreach (var coolParameter in coolParameters)
                 {
@@ -145,9 +148,9 @@ namespace Prima.Scheduler.Modules
                 @event.EmbedMessageId = embedMessage.Id;
 
                 await Db.AddScheduledEvent(@event);
-
-                await Sheets.AddEvent(@event, guildConfig.BASpreadsheetId);
             }
+
+            await Sheets.AddEvent(firstEvent, guildConfig.BASpreadsheetId);
         }
 
         [Command("unschedule")]

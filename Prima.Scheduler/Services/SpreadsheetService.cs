@@ -103,15 +103,6 @@ namespace Prima.Scheduler.Services
                                     {
                                         new CellData
                                         {
-                                            UserEnteredFormat = new CellFormat
-                                            {
-                                                BackgroundColor = new Color
-                                                {
-                                                    Red = color.RGB[0] / 255.0f,
-                                                    Green = color.RGB[1] / 255.0f,
-                                                    Blue = color.RGB[2] / 255.0f,
-                                                },
-                                            },
                                             UserEnteredValue = new ExtendedValue
                                             {
                                                 StringValue = @event.Description + $"\n[{_client.GetUser(@event.LeaderId)}]",
@@ -128,7 +119,43 @@ namespace Prima.Scheduler.Services
                                 StartColumnIndex = column,
                                 EndColumnIndex = column + 1,
                             },
-                            Fields = "userEnteredFormat(backgroundColor), userEnteredValue",
+                            Fields = "userEnteredValue",
+                        },
+                    },
+                    new Request
+                    {
+                        UpdateCells = new UpdateCellsRequest
+                        {
+                            Rows = new List<RowData>
+                            {
+                                new RowData
+                                {
+                                    Values = new List<CellData>
+                                    {
+                                        new CellData
+                                        {
+                                            UserEnteredFormat = new CellFormat
+                                            {
+                                                BackgroundColor = new Color
+                                                {
+                                                    Red = color.RGB[0] / 255.0f,
+                                                    Green = color.RGB[1] / 255.0f,
+                                                    Blue = color.RGB[2] / 255.0f,
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                            Range = new GridRange
+                            {
+                                SheetId = 0,
+                                StartRowIndex = row,
+                                EndRowIndex = row + 3,
+                                StartColumnIndex = column,
+                                EndColumnIndex = column + 1,
+                            },
+                            Fields = "userEnteredFormat(backgroundColor)",
                         },
                     },
                 },
@@ -181,20 +208,6 @@ namespace Prima.Scheduler.Services
                                     {
                                         new CellData
                                         {
-                                            UserEnteredFormat = new CellFormat
-                                            {
-                                                BackgroundColor = row % 2 == 0 ? new Color
-                                                {
-                                                    Red = 1.0f,
-                                                    Green = 1.0f,
-                                                    Blue = 1.0f,
-                                                } : new Color
-                                                {
-                                                    Red = 243 / 255.0f,
-                                                    Green = 243 / 255.0f,
-                                                    Blue = 243 / 255.0f,
-                                                },
-                                            },
                                             UserEnteredValue = new ExtendedValue
                                             {
                                                 StringValue = "",
@@ -211,7 +224,48 @@ namespace Prima.Scheduler.Services
                                 StartColumnIndex = column,
                                 EndColumnIndex = column + 1,
                             },
-                            Fields = "userEnteredFormat(backgroundColor), userEnteredValue",
+                            Fields = "userEnteredValue",
+                        },
+                    },
+                    new Request
+                    {
+                        UpdateCells = new UpdateCellsRequest
+                        {
+                            Rows = new List<RowData>
+                            {
+                                new RowData
+                                {
+                                    Values = new List<CellData>
+                                    {
+                                        new CellData
+                                        {
+                                            UserEnteredFormat = new CellFormat
+                                            {
+                                                BackgroundColor = row % 2 == 0 ? new Color
+                                                {
+                                                    Red = 1.0f,
+                                                    Green = 1.0f,
+                                                    Blue = 1.0f,
+                                                } : new Color
+                                                {
+                                                    Red = 243 / 255.0f,
+                                                    Green = 243 / 255.0f,
+                                                    Blue = 243 / 255.0f,
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                            Range = new GridRange
+                            {
+                                SheetId = 0,
+                                StartRowIndex = row,
+                                EndRowIndex = row + 3,
+                                StartColumnIndex = column,
+                                EndColumnIndex = column + 1,
+                            },
+                            Fields = "userEnteredFormat(backgroundColor)",
                         },
                     },
                 },
