@@ -53,63 +53,6 @@ namespace Prima.Scheduler.Modules
 
             var coolParameters = RegexSearches.Whitespace.Split(parameters);
 
-            DateTime runTime;
-            try
-            {
-                runTime = Util.GetDateTime(parameters);
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                await ReplyAsync($"{Context.User.Mention}, that date or time is invalid.");
-                return;
-            }
-            var @event = new ScheduledEvent
-            {
-                Description = description,
-                LeaderId = Context.User.Id,
-                GuildId = Context.Guild.Id,
-                MessageId = Context.Message.Id,
-                SubscribedUsers = new List<ulong>(),
-            };
-
-            if (runTime.Minute >= 45)
-            {
-                runTime = runTime.AddMinutes(-runTime.Minute);
-                runTime = runTime.AddHours(1);
-            }
-            else if (runTime.Minute >= 15)
-            {
-                runTime = runTime.AddMinutes(-runTime.Minute + 30);
-            }
-            else
-            {
-                runTime = runTime.AddMinutes(-runTime.Minute);
-            }
-
-            if (runTime < DateTime.Now)
-            {
-                await ReplyAsync($"{Context.User.Mention}, you can't schedule a run in the past!");
-                return;
-            }
-
-            if (runTime > DateTime.Now.AddDays(28))
-            {
-                await ReplyAsync($"{Context.User.Mention}, runs are limited to being scheduled within the next 28 days.\n" +
-                                 "Please choose an earlier day to schedule your run.");
-                return;
-            }
-
-            if (Db.Events.Any(sr => runTime > DateTime.Now &&
-                                    Math.Abs((DateTime.FromBinary(sr.RunTime) - runTime).TotalMilliseconds) <
-                                    Threshold))
-            {
-                await ReplyAsync($"{Context.User.Mention}, a run is already scheduled within 3 hours of that time! " +
-                                 "Please check the schedule and try again.");
-                return;
-            }
-
-            @event.RunTime = runTime.ToBinary();
-
             if (coolParameters.Length == 0)
             {
                 await ReplyAsync($"{Context.User.Mention}, please provide parameters with that command.\n" +
@@ -117,48 +60,94 @@ namespace Prima.Scheduler.Modules
                                  $"`{prefix}schedule OZ Tuesday 5:00PM | This is a fancy description!`");
                 return;
             }
-            foreach (var coolParameter in coolParameters)
+
+            IUserMessage message = Context.Message;
+            var multiplier = 1;
+            for (var i = 0; i < multiplier; i++)
             {
-                foreach (var runType in Enum.GetNames(typeof(RunDisplayType)))
+                if (i != 0)
                 {
-                    if (string.Equals(coolParameter, runType, StringComparison.InvariantCultureIgnoreCase))
+                    message = await ReplyAsync($"This message carries the RSVPs for run {i + 1} of this sequence.");
+                }
+
+                var @event = new ScheduledEvent
+                {
+                    Description = description,
+                    LeaderId = Context.User.Id,
+                    GuildId = Context.Guild.Id,
+                    MessageId = message.Id,
+                    SubscribedUsers = new List<ulong>(),
+                };
+
+                foreach (var coolParameter in coolParameters)
+                {
+                    if (RegexSearches.Multiplier.Match(coolParameter).Success)
                     {
-                        @event.RunKind = Enum.Parse<RunDisplayType>(runType, true);
-                        break;
+                        multiplier = int.Parse(RegexSearches.NonNumbers.Replace(coolParameter, string.Empty));
+                        if (multiplier > 12)
+                        {
+                            await ReplyAsync($"{Context.User.Mention}, for your own sake, you cannot schedule more than 36 hours-worth of runs at a time.");
+                            return;
+                        }
+                    }
+
+                    foreach (var runType in Enum.GetNames(typeof(RunDisplayType)))
+                    {
+                        if (string.Equals(coolParameter, runType, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            @event.RunKind = Enum.Parse<RunDisplayType>(runType, true);
+                            break;
+                        }
                     }
                 }
+                if (!Enum.IsDefined(typeof(RunDisplayType), @event.RunKind))
+                {
+                    await ReplyAsync($"{Context.User.Mention}, please specify a kind of run in your parameter list.\n" +
+                                     $"Run kinds include: `[{string.Join(' ', Enum.GetNames(typeof(RunDisplayType)))}]`");
+                    return;
+                }
+
+                DateTime runTime;
+                try
+                {
+                    runTime = Util.GetDateTime(parameters).AddHours(3 * (multiplier - 1));
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    await ReplyAsync($"{Context.User.Mention}, that date or time is invalid.");
+                    return;
+                }
+
+                if (!await RuntimeIsValid(runTime))
+                    return;
+
+                @event.RunTime = runTime.ToBinary();
+
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} has just scheduled a run on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({TimezoneAbbr})!\n" +
+                                                       $"React to the 📳 on their message to be notified 30 minutes before it begins!");
+                await message.AddReactionAsync(new Emoji("📳"));
+
+                var color = RunDisplayTypes.GetColor(@event.RunKind);
+                var leaderName = (Context.User as IGuildUser)?.Nickname ?? Context.User.Username;
+                var embed = new EmbedBuilder()
+                    .WithTitle($"Run scheduled by {leaderName} on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} (PDT) " +
+                               $"[{runTime.DayOfWeek}, {(Month)runTime.Month} {runTime.Day}]!")
+                    .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
+                    .WithDescription("React to the :vibration_mode: on their message to be notified 30 minutes before it begins!\n\n" +
+                                     $"**{Context.User.Mention}'s full message: {message.GetJumpUrl()}**\n\n" +
+                                     $"{new string(@event.Description.Take(1650).ToArray())}{(@event.Description.Length > 1650 ? "..." : "")}\n\n" +
+                                     $"**Schedule Overview: <{guildConfig.BASpreadsheetLink}>**")
+                    .Build();
+
+                var scheduleOutputChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
+                var embedMessage = await scheduleOutputChannel.SendMessageAsync(embed: embed);
+
+                @event.EmbedMessageId = embedMessage.Id;
+
+                await Db.AddScheduledEvent(@event);
+
+                await Sheets.AddEvent(@event, guildConfig.BASpreadsheetId);
             }
-            if (!Enum.IsDefined(typeof(RunDisplayType), @event.RunKind))
-            {
-                await ReplyAsync($"{Context.User.Mention}, please specify a kind of run in your parameter list.\n" +
-                                 $"Run kinds include: `[{string.Join(' ', Enum.GetNames(typeof(RunDisplayType)))}]`");
-                return;
-            }
-
-            await Context.Channel.SendMessageAsync($"{Context.User.Mention} has just scheduled a run on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({TimezoneAbbr})!\n" +
-                                                   $"React to the 📳 on their message to be notified 30 minutes before it begins!");
-            await Context.Message.AddReactionAsync(new Emoji("📳"));
-
-            var color = RunDisplayTypes.GetColor(@event.RunKind);
-            var leaderName = (Context.User as IGuildUser)?.Nickname ?? Context.User.Username;
-            var embed = new EmbedBuilder()
-                .WithTitle($"Run scheduled by {leaderName} on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} (PDT) " +
-                           $"[{runTime.DayOfWeek}, {(Month)runTime.Month} {runTime.Day}]!")
-                .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
-                .WithDescription("React to the :vibration_mode: on their message to be notified 30 minutes before it begins!\n\n" +
-                                 $"**{Context.User.Mention}'s full message: {Context.Message.GetJumpUrl()}**\n\n" +
-                                 $"{new string(@event.Description.Take(1650).ToArray())}{(@event.Description.Length > 1650 ? "..." : "")}\n\n" +
-                                 $"**Schedule Overview: <{guildConfig.BASpreadsheetLink}>**")
-                .Build();
-
-            var scheduleOutputChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
-            var embedMessage = await scheduleOutputChannel.SendMessageAsync(embed: embed);
-
-            @event.EmbedMessageId = embedMessage.Id;
-
-            await Db.AddScheduledEvent(@event);
-
-            await Sheets.AddEvent(@event, guildConfig.BASpreadsheetId);
         }
 
         [Command("unschedule")]
@@ -395,6 +384,47 @@ namespace Prima.Scheduler.Modules
             }
 
             return ReplyAsync(embed: embed.Build());
+        }
+
+        private async Task<bool> RuntimeIsValid(DateTime runTime)
+        {
+            if (runTime.Minute >= 45)
+            {
+                runTime = runTime.AddMinutes(-runTime.Minute);
+                runTime = runTime.AddHours(1);
+            }
+            else if (runTime.Minute >= 15)
+            {
+                runTime = runTime.AddMinutes(-runTime.Minute + 30);
+            }
+            else
+            {
+                runTime = runTime.AddMinutes(-runTime.Minute);
+            }
+
+            if (runTime < DateTime.Now)
+            {
+                await ReplyAsync($"{Context.User.Mention}, you can't schedule a run in the past!");
+                return false;
+            }
+
+            if (runTime > DateTime.Now.AddDays(28))
+            {
+                await ReplyAsync($"{Context.User.Mention}, runs are limited to being scheduled within the next 28 days.\n" +
+                                 "Please choose an earlier day to schedule your run.");
+                return false;
+            }
+
+            if (Db.Events.Any(sr => runTime > DateTime.Now &&
+                                    Math.Abs((DateTime.FromBinary(sr.RunTime) - runTime).TotalMilliseconds) <
+                                    Threshold))
+            {
+                await ReplyAsync($"{Context.User.Mention}, a run is already scheduled within 3 hours of that time! " +
+                                 "Please check the schedule and try again.");
+                return false;
+            }
+
+            return true;
         }
     }
 }

@@ -10,6 +10,8 @@ namespace Prima.Resources
         public static readonly Regex UnicodeApostrophe = new Regex(@"[‘’]", RegexOptions.Compiled);
         public static readonly Regex Whitespace = new Regex(@"\s+", RegexOptions.Compiled);
 
+        public static readonly Regex Multiplier = new Regex(@"x\d", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
         public static readonly Regex Time = new Regex(@"\d+:\d+\s?(?:(?:a|p))?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         public static readonly Regex TimeHours = new Regex(@"\d+(?=:)", RegexOptions.Compiled);
         public static readonly Regex TimeMinutes = new Regex(@"\d+(?=(?:$|a|p))", RegexOptions.IgnoreCase | RegexOptions.Compiled);
