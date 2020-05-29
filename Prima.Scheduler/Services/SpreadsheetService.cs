@@ -137,7 +137,7 @@ namespace Prima.Scheduler.Services
                     },
                 },
             };
-            for (var i = 0; i < (row + 6 > dateRow + timeslotsPerDay ? row - dateRow - timeslotsPerDay : 6); i++) // TODO feex
+            for (var i = 0; i < (row + 6 > dateRow + timeslotsPerDay ? 6 - (row + 6 - dateRow - timeslotsPerDay) : 6); i++)
             {
                 batchRequest.Requests[1].UpdateCells.Rows.Add(new RowData
                 {
@@ -277,7 +277,7 @@ namespace Prima.Scheduler.Services
                     },
                 },
             };
-            for (var i = 0; i < (row + 6 > dateRow + timeslotsPerDay ? row - dateRow - timeslotsPerDay : 6); i++)
+            for (var i = 0; i < (row + 6 > dateRow + timeslotsPerDay ? 6 - (row + 6 - dateRow - timeslotsPerDay) : 6); i++)
             {
                 batchRequest.Requests[1].UpdateCells.Rows.Add(new RowData
                 {
