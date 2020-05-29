@@ -9,6 +9,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord.WebSocket;
@@ -76,7 +77,7 @@ namespace Prima.Scheduler.Services
             var dateRowContents = timetable.Values[0];
             for (var i = 0; i < dateRowContents.Count; i++)
             {
-                if (((string)dateRowContents[i]).Contains(dateObj.Day.ToString()))
+                if (Regex.Match((string)dateRowContents[i], @$"\s{dateObj.Day}$").Success)
                 {
                     column = i;
                     break;
@@ -85,7 +86,7 @@ namespace Prima.Scheduler.Services
 
             if (column == -1)
                 return; // Try again later.
-
+            
             var color = RunDisplayTypes.GetColor(@event.RunKind);
             var batchRequest = new BatchUpdateSpreadsheetRequest
             {
@@ -115,9 +116,7 @@ namespace Prima.Scheduler.Services
                             {
                                 SheetId = 0,
                                 StartRowIndex = row,
-                                EndRowIndex = row + 1,
                                 StartColumnIndex = column,
-                                EndColumnIndex = column + 1,
                             },
                             Fields = "userEnteredValue",
                         },
@@ -126,40 +125,77 @@ namespace Prima.Scheduler.Services
                     {
                         UpdateCells = new UpdateCellsRequest
                         {
-                            Rows = new List<RowData>
-                            {
-                                new RowData
-                                {
-                                    Values = new List<CellData>
-                                    {
-                                        new CellData
-                                        {
-                                            UserEnteredFormat = new CellFormat
-                                            {
-                                                BackgroundColor = new Color
-                                                {
-                                                    Red = color.RGB[0] / 255.0f,
-                                                    Green = color.RGB[1] / 255.0f,
-                                                    Blue = color.RGB[2] / 255.0f,
-                                                },
-                                            },
-                                        },
-                                    },
-                                },
-                            },
+                            Rows = new List<RowData>(),
                             Range = new GridRange
                             {
                                 SheetId = 0,
                                 StartRowIndex = row,
-                                EndRowIndex = row + 3,
                                 StartColumnIndex = column,
-                                EndColumnIndex = column + 1,
                             },
                             Fields = "userEnteredFormat(backgroundColor)",
                         },
                     },
                 },
             };
+            for (var i = 0; i < (row + 6 > dateRow + timeslotsPerDay ? row - dateRow - timeslotsPerDay : 6); i++) // TODO feex
+            {
+                batchRequest.Requests[1].UpdateCells.Rows.Add(new RowData
+                {
+                    Values = new List<CellData>
+                    {
+                        new CellData
+                        {
+                            UserEnteredFormat = new CellFormat
+                            {
+                                BackgroundColor = new Color
+                                {
+                                    Red = color.RGB[0] / 255.0f,
+                                    Green = color.RGB[1] / 255.0f,
+                                    Blue = color.RGB[2] / 255.0f,
+                                },
+                            },
+                        },
+                    },
+                });
+            }
+            if (row + 6 > dateRow + timeslotsPerDay)
+            {
+                batchRequest.Requests.Add(new Request
+                {
+                    UpdateCells = new UpdateCellsRequest
+                    {
+                        Rows = new List<RowData>(),
+                        Range = new GridRange
+                        {
+                            SheetId = 0,
+                            StartRowIndex = dateRow,
+                            StartColumnIndex = column + 1,
+                        },
+                        Fields = "userEnteredFormat(backgroundColor)",
+                    },
+                });
+                for (var i = 0; i < 6 - (dateRow + timeslotsPerDay - row); i++)
+                {
+                    batchRequest.Requests[2].UpdateCells.Rows.Add(new RowData
+                    {
+                        Values = new List<CellData>
+                        {
+                            new CellData
+                            {
+                                UserEnteredFormat = new CellFormat
+                                {
+                                    BackgroundColor = new Color
+                                    {
+                                        Red = color.RGB[0] / 255.0f,
+                                        Green = color.RGB[1] / 255.0f,
+                                        Blue = color.RGB[2] / 255.0f,
+                                    },
+                                },
+                            },
+                        },
+                    });
+                }
+            }
             var request = _service.Spreadsheets.BatchUpdate(batchRequest, spreadsheetId);
             _ = await request.ExecuteAsync();
 
@@ -185,13 +221,13 @@ namespace Prima.Scheduler.Services
             var dateRowContents = timetable.Values[0];
             for (var i = 0; i < dateRowContents.Count; i++)
             {
-                if (((string)dateRowContents[i]).Contains(dateObj.Day.ToString()))
+                if (Regex.Match((string)dateRowContents[i], @$"\s{dateObj.Day}$").Success)
                 {
                     column = i;
                     break;
                 }
             }
-
+            
             var batchRequest = new BatchUpdateSpreadsheetRequest
             {
                 Requests = new List<Request>
@@ -220,9 +256,7 @@ namespace Prima.Scheduler.Services
                             {
                                 SheetId = 0,
                                 StartRowIndex = row,
-                                EndRowIndex = row + 1,
                                 StartColumnIndex = column,
-                                EndColumnIndex = column + 1,
                             },
                             Fields = "userEnteredValue",
                         },
@@ -231,45 +265,87 @@ namespace Prima.Scheduler.Services
                     {
                         UpdateCells = new UpdateCellsRequest
                         {
-                            Rows = new List<RowData>
-                            {
-                                new RowData
-                                {
-                                    Values = new List<CellData>
-                                    {
-                                        new CellData
-                                        {
-                                            UserEnteredFormat = new CellFormat
-                                            {
-                                                BackgroundColor = row % 2 == 0 ? new Color
-                                                {
-                                                    Red = 1.0f,
-                                                    Green = 1.0f,
-                                                    Blue = 1.0f,
-                                                } : new Color
-                                                {
-                                                    Red = 243 / 255.0f,
-                                                    Green = 243 / 255.0f,
-                                                    Blue = 243 / 255.0f,
-                                                },
-                                            },
-                                        },
-                                    },
-                                },
-                            },
+                            Rows = new List<RowData>(),
                             Range = new GridRange
                             {
                                 SheetId = 0,
                                 StartRowIndex = row,
-                                EndRowIndex = row + 3,
                                 StartColumnIndex = column,
-                                EndColumnIndex = column + 1,
                             },
                             Fields = "userEnteredFormat(backgroundColor)",
                         },
                     },
                 },
             };
+            for (var i = 0; i < (row + 6 > dateRow + timeslotsPerDay ? row - dateRow - timeslotsPerDay : 6); i++)
+            {
+                batchRequest.Requests[1].UpdateCells.Rows.Add(new RowData
+                {
+                    Values = new List<CellData>
+                    {
+                        new CellData
+                        {
+                            UserEnteredFormat = new CellFormat
+                            {
+                                BackgroundColor = (row + i) % 2 == 0 ? new Color
+                                {
+                                    Red = 1.0f,
+                                    Green = 1.0f,
+                                    Blue = 1.0f,
+                                } : new Color
+                                {
+                                    Red = 243 / 255.0f,
+                                    Green = 243 / 255.0f,
+                                    Blue = 243 / 255.0f,
+                                },
+                            },
+                        },
+                    },
+                });
+            }
+            if (row + 6 > dateRow + timeslotsPerDay)
+            {
+                batchRequest.Requests.Add(new Request
+                {
+                    UpdateCells = new UpdateCellsRequest
+                    {
+                        Rows = new List<RowData>(),
+                        Range = new GridRange
+                        {
+                            SheetId = 0,
+                            StartRowIndex = dateRow,
+                            StartColumnIndex = column + 1,
+                        },
+                        Fields = "userEnteredFormat(backgroundColor)",
+                    },
+                });
+                for (var i = 0; i < 6 - (dateRow + timeslotsPerDay - row); i++)
+                {
+                    batchRequest.Requests[2].UpdateCells.Rows.Add(new RowData
+                    {
+                        Values = new List<CellData>
+                        {
+                            new CellData
+                            {
+                                UserEnteredFormat = new CellFormat
+                                {
+                                    BackgroundColor = (row + i) % 2 == 0 ? new Color
+                                    {
+                                        Red = 1.0f,
+                                        Green = 1.0f,
+                                        Blue = 1.0f,
+                                    } : new Color
+                                    {
+                                        Red = 243 / 255.0f,
+                                        Green = 243 / 255.0f,
+                                        Blue = 243 / 255.0f,
+                                    },
+                                },
+                            },
+                        },
+                    });
+                }
+            }
             var request = _service.Spreadsheets.BatchUpdate(batchRequest, spreadsheetId);
             _ = await request.ExecuteAsync();
         }
