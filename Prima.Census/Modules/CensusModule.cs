@@ -31,12 +31,12 @@ namespace Prima.Modules
         [Alias("i am")]
         public async Task IAmAsync(params string[] parameters) // Sure are, huh
         {
-            DiscordGuildConfiguration guildConfig = Db.Guilds.Single(g => g.Id == Context.Guild.Id);
-            char prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
+            var guildConfig = Db.Guilds.Single(g => g.Id == Context.Guild.Id);
+            var prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
 
             if (parameters.Length != 3)
             {
-                IUserMessage reply = await ReplyAsync($"{Context.User.Mention}, please enter that command in the format `{prefix}iam World Name Surname`.");
+                var reply = await ReplyAsync($"{Context.User.Mention}, please enter that command in the format `{prefix}iam World Name Surname`.");
                 await Task.Delay(messageDeleteDelay);
                 await reply.DeleteAsync();
                 return;
@@ -49,8 +49,8 @@ namespace Prima.Modules
                 }
                 catch (HttpException) {} // Message was already deleted.
             })).Start();
-            string world = parameters[0].ToLower();
-            string name = parameters[1] + " " + parameters[2];
+            var world = parameters[0].ToLower();
+            var name = parameters[1] + " " + parameters[2];
             world = RegexSearches.NonAlpha.Replace(world, string.Empty);
             name = RegexSearches.AngleBrackets.Replace(name, string.Empty);
             name = RegexSearches.UnicodeApostrophe.Replace(name, string.Empty);
@@ -65,11 +65,16 @@ namespace Prima.Modules
                 world = "Diabolos";
             }
 
-            SocketGuild guild = Context.Guild ?? Context.User.MutualGuilds.First();
-            SocketGuildUser member = guild.GetUser(Context.User.Id);
-            SocketRole cleared = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared"]));
+            var guild = Context.Guild ?? Context.User.MutualGuilds.First();
+            var member = guild.GetUser(Context.User.Id);
+            if (member.Roles.Any(r => r.Name == "Time Out"))
+            {
+                return;
+            }
 
-            using IDisposable typing = Context.Channel.EnterTypingState();
+            var cleared = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared"]));
+
+            using var typing = Context.Channel.EnterTypingState();
 
             DiscordXIVUser foundCharacter;
             try
@@ -78,14 +83,14 @@ namespace Prima.Modules
             }
             catch (XIVAPICharacterNotFoundException)
             {
-                IUserMessage reply = await ReplyAsync($"{Context.User.Mention}, no character matching that name and world was found. Are you sure you typed your world name correctly?");
+                var reply = await ReplyAsync($"{Context.User.Mention}, no character matching that name and world was found. Are you sure you typed your world name correctly?");
                 await Task.Delay(messageDeleteDelay);
                 await reply.DeleteAsync();
                 return;
             }
             catch (XIVAPINotMatchingFilterException)
             {
-                IUserMessage reply = await ReplyAsync($"This is a security notice. {Context.User.Mention}, that character does not have any combat jobs at Level {guildConfig.MinimumLevel}.");
+                var reply = await ReplyAsync($"This is a security notice. {Context.User.Mention}, that character does not have any combat jobs at Level {guildConfig.MinimumLevel}.");
                 await Task.Delay(messageDeleteDelay);
                 await reply.DeleteAsync();
                 return;
@@ -112,13 +117,13 @@ namespace Prima.Modules
                 }
             }
             catch (InvalidOperationException) {}
-            DiscordXIVUser user = foundCharacter;
+            var user = foundCharacter;
             foundCharacter.DiscordId = Context.User.Id;
             await Db.AddUser(user);
 
             // We use the user-provided parameter because the Lodestone format includes the data center.
-            string outputName = $"({world}) {foundCharacter.Name}";
-            Embed responseEmbed = new EmbedBuilder()
+            var outputName = $"({world}) {foundCharacter.Name}";
+            var responseEmbed = new EmbedBuilder()
                 .WithTitle(outputName)
                 .WithUrl($"https://na.finalfantasyxiv.com/lodestone/character/{foundCharacter.LodestoneId}/")
                 .WithColor(Color.Blue)
@@ -156,12 +161,12 @@ namespace Prima.Modules
         [RequireUserPermission(GuildPermission.KickMembers)]
         public async Task TheyAreAsync(SocketUser userMention, params string[] parameters)
         {
-            DiscordGuildConfiguration guildConfig = Db.Guilds.Single(g => g.Id == Context.Guild.Id);
-            char prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
+            var guildConfig = Db.Guilds.Single(g => g.Id == Context.Guild.Id);
+            var prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
 
             if (userMention == null || parameters.Length != 3)
             {
-                IUserMessage reply = await ReplyAsync($"{Context.User.Mention}, please enter that command in the format `{prefix}iam Mention World Name Surname`.");
+                var reply = await ReplyAsync($"{Context.User.Mention}, please enter that command in the format `{prefix}iam Mention World Name Surname`.");
                 await Task.Delay(messageDeleteDelay);
                 await reply.DeleteAsync();
                 return;
@@ -174,8 +179,8 @@ namespace Prima.Modules
                 }
                 catch (HttpException) {} // Message was already deleted.
             })).Start();
-            string world = parameters[0].ToLower();
-            string name = parameters[1] + " " + parameters[2];
+            var world = parameters[0].ToLower();
+            var name = parameters[1] + " " + parameters[2];
             world = RegexSearches.NonAlpha.Replace(world, string.Empty);
             name = RegexSearches.AngleBrackets.Replace(name, string.Empty);
             name = RegexSearches.UnicodeApostrophe.Replace(name, string.Empty);

@@ -4,6 +4,7 @@ using Prima.Clerical.Services;
 using Serilog;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
+using Prima.Extra.Services;
 
 namespace Prima.Clerical
 {
@@ -47,7 +48,8 @@ namespace Prima.Clerical
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "<Pending>")]
         private static ServiceProvider ConfigureServices(IServiceCollection sc)
         {
-            sc.AddSingleton<EventService>();
+            sc.AddSingleton<EventService>()
+              .AddSingleton<PresenceService>();
             //sc.AddSingleton<UptimeMessageService>();
             return sc.BuildServiceProvider();
         }
