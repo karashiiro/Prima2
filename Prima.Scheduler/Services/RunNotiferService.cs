@@ -45,7 +45,7 @@ namespace Prima.Scheduler.Services
                 {
                     if ((DateTime.FromBinary(run.RunTime) - DateTime.Now).TotalMilliseconds < Threshold) // I have no clue why this is necessary to do this way
                     {
-                        Log.Information("Run {MessageId}, notifications started.", run.MessageId);
+                        Log.Information("Run {MessageId}, notifications started.", run.MessageId2);
 
                         var guild = _client.Guilds.FirstOrDefault(g => g.Id == run.GuildId);
                         if (guild == null)
@@ -77,7 +77,7 @@ namespace Prima.Scheduler.Services
 
                         foreach (var userId in run.SubscribedUsers)
                         {
-                            var member = guild.GetUser(userId);
+                            var member = guild.GetUser(ulong.Parse(userId));
                             await TryNotifyMember(member, leader, commandChannel);
                         }
 

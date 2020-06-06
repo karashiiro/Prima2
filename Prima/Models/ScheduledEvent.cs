@@ -10,21 +10,27 @@ namespace Prima.Models
         [BsonId]
         private ObjectId _id { get; set; }
 
+        [BsonRepresentation(BsonType.String)]
         public ulong GuildId { get; set; }
 
-        public ulong MessageId { get; set; }
+        [BsonRepresentation(BsonType.String)]
+        public ulong MessageId2 { get; set; }
 
+        [BsonRepresentation(BsonType.String)]
         public ulong EmbedMessageId { get; set; }
 
+        [BsonRepresentation(BsonType.String)]
         public ulong LeaderId { get; set; }
 
+        [BsonRepresentation(BsonType.String)]
         public long RunTime { get; set; }
 
+        [BsonRepresentation(BsonType.String)]
         public string Description { get; set; }
 
         public RunDisplayType RunKind { get; set; }
 
-        public IList<ulong> SubscribedUsers { get; set; }
+        public IList<string> SubscribedUsers { get; set; }
 
         public bool Notified { get; set; }
 

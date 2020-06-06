@@ -8,6 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Serilog;
 using Color = Discord.Color;
 
 namespace Prima.Scheduler.Modules
@@ -75,8 +77,8 @@ namespace Prima.Scheduler.Modules
                     Description = description,
                     LeaderId = Context.User.Id,
                     GuildId = Context.Guild.Id,
-                    MessageId = message.Id,
-                    SubscribedUsers = new List<ulong>(),
+                    MessageId2 = message.Id,
+                    SubscribedUsers = new List<string>(),
                 };
 
                 foreach (var coolParameter in coolParameters)
@@ -305,7 +307,7 @@ namespace Prima.Scheduler.Modules
             }
 
             if (Db.Events
-                .Where(sr => sr.MessageId != @event.MessageId)
+                .Where(sr => sr.MessageId2 != @event.MessageId2)
                 .Any(sr => newRunTime > DateTime.Now &&
                                     Math.Abs((DateTime.FromBinary(sr.RunTime) - newRunTime).TotalMilliseconds) <
                                     Threshold))
@@ -335,7 +337,7 @@ namespace Prima.Scheduler.Modules
             await ReplyAsync("Run rescheduled successfully.");
             foreach (var uid in @event.SubscribedUsers)
             {
-                var user = Context.Guild.GetUser(uid);
+                var user = Context.Guild.GetUser(ulong.Parse(uid));
                 if (user == null)
                     continue;
                 await user.SendMessageAsync($"The run for reacted to, scheduled by {leaderName} on {currentRunTime.DayOfWeek} at {currentRunTime.ToShortTimeString()}, has been rescheduled to {newRunTime.DayOfWeek} at {newRunTime.ToShortTimeString()}");
@@ -383,6 +385,69 @@ namespace Prima.Scheduler.Modules
             }
 
             return ReplyAsync(embed: embed.Build());
+        }
+
+        [Command("restoreevent")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task RestoreEvent(params string[] args)
+        {
+            var messageId = ulong.Parse(args[0]);
+            var embedId = ulong.Parse(args[1]);
+            var notified = args.Length == 3;
+
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return;
+            var channel = Context.Guild.GetTextChannel(guildConfig.ScheduleInputChannel);
+
+            var message = await channel.GetMessageAsync(messageId);
+            if (message == null)
+            {
+                await ReplyAsync("x");
+                return;
+            }
+
+            var splitIndex = message.Content.IndexOf("|", StringComparison.Ordinal);
+
+            var parameters = message.Content.Substring(0, splitIndex).Trim();
+            var description = message.Content.Substring(splitIndex + 1).Trim();
+
+            var coolParameters = RegexSearches.Whitespace.Split(parameters);
+
+            var reactors = await message.GetReactionUsersAsync(new Emoji("📳"), 100).FlattenAsync();
+            var @event = new ScheduledEvent
+            {
+                Description = description,
+                LeaderId = message.Author.Id,
+                GuildId = Context.Guild.Id,
+                MessageId2 = message.Id,
+                EmbedMessageId = embedId,
+                SubscribedUsers = reactors
+                    .Where(user => user.Id != message.Author.Id && !user.IsBot)
+                    .Select(user => user.Id.ToString())
+                    .ToList(),
+                Notified = true,
+                Listed = true,
+            };
+            
+            foreach (var coolParameter in coolParameters)
+            {
+                foreach (var runType in Enum.GetNames(typeof(RunDisplayType)))
+                {
+                    if (string.Equals(coolParameter, runType, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        @event.RunKind = Enum.Parse<RunDisplayType>(runType, true);
+                        break;
+                    }
+                }
+            }
+
+            var runTime = Util.GetDateTime(parameters);
+            
+            @event.RunTime = runTime.ToBinary();
+            
+            await Db.AddScheduledEvent(@event);
+
+            await ReplyAsync($"success, new count: {Db.Events.Count()}");
         }
 
         private async Task<bool> RuntimeIsValid(DateTime runTime)

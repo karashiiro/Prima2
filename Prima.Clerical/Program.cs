@@ -5,6 +5,7 @@ using Serilog;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Prima.Extra.Services;
+using Prima.Services;
 
 namespace Prima.Clerical
 {
@@ -49,7 +50,8 @@ namespace Prima.Clerical
         private static ServiceProvider ConfigureServices(IServiceCollection sc)
         {
             sc.AddSingleton<EventService>()
-              .AddSingleton<PresenceService>();
+              .AddSingleton<PresenceService>()
+              .AddSingleton<XIVAPIService>();
             //sc.AddSingleton<UptimeMessageService>();
             return sc.BuildServiceProvider();
         }
