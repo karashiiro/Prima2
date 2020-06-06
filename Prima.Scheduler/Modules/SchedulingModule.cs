@@ -210,6 +210,15 @@ namespace Prima.Scheduler.Modules
             await ReplyAsync($"{Context.User.Mention}, the run has been unscheduled.");
 
             await Sheets.RemoveEvent(result, guildConfig.BASpreadsheetId);
+
+            var leaderName = (Context.User as IGuildUser)?.Nickname ?? Context.User.Username;
+            foreach (var uid in result.SubscribedUsers)
+            {
+                var user = Context.Guild.GetUser(ulong.Parse(uid));
+                if (user == null)
+                    continue;
+                await user.SendMessageAsync($"The run for reacted to, scheduled by {leaderName} on {when.DayOfWeek} at {when.ToShortTimeString()}, has been cancelled.");
+            }
         }
 
         [Command("reschedule")]
