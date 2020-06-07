@@ -29,7 +29,7 @@ namespace Prima.Modules
         // Declare yourself as a character.
         [Command("iam", RunMode = RunMode.Async)]
         [Alias("i am")]
-        public async Task IAmAsync(params string[] parameters) // Sure are, huh
+        public async Task IAmAsync(params string[] parameters)
         {
             var guild = Context.Guild ?? Context.User.MutualGuilds.First(g => Db.Guilds.Any(gc => gc.Id == g.Id));
             Log.Information("Mututal guild ID: {GuildId}", guild.Id);
@@ -374,7 +374,7 @@ namespace Prima.Modules
         // Check who a user is.
         [Command("whois", RunMode = RunMode.Async)]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        public async Task WhoIsAsync(IUser member) // Who knows?
+        public async Task WhoIsAsync(IUser member)
         {
             if (member == null)
             {
