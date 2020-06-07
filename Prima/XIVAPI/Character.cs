@@ -6,40 +6,28 @@ namespace Prima.XIVAPI
 {
     public class Character
     {
-        private readonly JObject _xivapiResponse;
+        public JObject XivapiResponse { get; }
 
-        public Character(JObject xivapiResponse) => _xivapiResponse = xivapiResponse;
+        public Character(JObject xivapiResponse) => XivapiResponse = xivapiResponse;
 
         /// <summary>
         /// Get the <see cref="Character"/>'s achievements.
         /// </summary>
-        public IList<AchievementListEntry> GetAchievements()
+        public IEnumerable<AchievementListEntry> GetAchievements()
         {
-            IList<JToken> results = _xivapiResponse["Achievements"]["List"].Children().ToList();
-            IList<AchievementListEntry> achievements = new List<AchievementListEntry>();
-            foreach (JToken result in results)
-            {
-                AchievementListEntry entry = result.ToObject<AchievementListEntry>();
-                achievements.Add(entry);
-            }
-            return achievements;
+            IList<JToken> results = XivapiResponse["Achievements"]["List"].Children().ToList();
+            return results.Select(result => result.ToObject<AchievementListEntry>()).ToList();
         }
 
         /// <summary>
         /// Get the <see cref="Character"/>'s minions and mounts.
         /// </summary>
-        public IList<MinionMount> GetMiMo()
+        public IEnumerable<MinionMount> GetMiMo()
         {
-            JEnumerable<JToken> minions = _xivapiResponse["Minions"].Children();
-            JEnumerable<JToken> mounts = _xivapiResponse["Mounts"].Children();
+            var minions = XivapiResponse["Minions"].Children();
+            var mounts = XivapiResponse["Mounts"].Children();
             IList<JToken> results = minions.Concat(mounts).ToList();
-            IList<MinionMount> mimo = new List<MinionMount>();
-            foreach (JToken result in results)
-            {
-                MinionMount entry = result.ToObject<MinionMount>();
-                mimo.Add(entry);
-            }
-            return mimo;
+            return results.Select(result => result.ToObject<MinionMount>()).ToList();
         }
 
         /// <summary>
@@ -47,22 +35,16 @@ namespace Prima.XIVAPI
         /// </summary>
         public string GetBio()
         {
-            return _xivapiResponse["Character"]["Bio"].ToObject<string>();
+            return XivapiResponse["Character"]["Bio"].ToObject<string>();
         }
 
         /// <summary>
         /// Get the <see cref="Character"/>'s <see cref="ClassJob"/> information.
         /// </summary>
-        public IList<ClassJob> GetClassJobs()
+        public IEnumerable<ClassJob> GetClassJobs()
         {
-            IList<JToken> results = _xivapiResponse["Character"]["ClassJobs"].Children().ToList();
-            IList<ClassJob> classJobs = new List<ClassJob>();
-            foreach (JToken result in results)
-            {
-                ClassJob entry = result.ToObject<ClassJob>();
-                classJobs.Add(entry);
-            }
-            return classJobs;
+            IList<JToken> results = XivapiResponse["Character"]["ClassJobs"].Children().ToList();
+            return results.Select(result => result.ToObject<ClassJob>()).ToList();
         }
     }
 

@@ -24,7 +24,7 @@ namespace Prima.Modules
         public DbService Db { get; set; }
         public XIVAPIService XIVAPI { get; set; }
 
-        private readonly int messageDeleteDelay = 10000;
+        private const int MessageDeleteDelay = 10000;
 
         // Declare yourself as a character.
         [Command("iam", RunMode = RunMode.Async)]
@@ -37,12 +37,12 @@ namespace Prima.Modules
             if (parameters.Length != 3)
             {
                 var reply = await ReplyAsync($"{Context.User.Mention}, please enter that command in the format `{prefix}iam World Name Surname`.");
-                await Task.Delay(messageDeleteDelay);
+                await Task.Delay(MessageDeleteDelay);
                 await reply.DeleteAsync();
                 return;
             }
             (new Task(async () => {
-                await Task.Delay(messageDeleteDelay);
+                await Task.Delay(MessageDeleteDelay);
                 try
                 {
                     await Context.Message.DeleteAsync();
@@ -84,14 +84,14 @@ namespace Prima.Modules
             catch (XIVAPICharacterNotFoundException)
             {
                 var reply = await ReplyAsync($"{Context.User.Mention}, no character matching that name and world was found. Are you sure you typed your world name correctly?");
-                await Task.Delay(messageDeleteDelay);
+                await Task.Delay(MessageDeleteDelay);
                 await reply.DeleteAsync();
                 return;
             }
             catch (XIVAPINotMatchingFilterException)
             {
                 var reply = await ReplyAsync($"This is a security notice. {Context.User.Mention}, that character does not have any combat jobs at Level {guildConfig.MinimumLevel}.");
-                await Task.Delay(messageDeleteDelay);
+                await Task.Delay(MessageDeleteDelay);
                 await reply.DeleteAsync();
                 return;
             }
@@ -151,8 +151,8 @@ namespace Prima.Modules
             Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
 
             // Cleanup
-            IUserMessage finalReply = await ReplyAsync(embed: responseEmbed);
-            await Task.Delay(messageDeleteDelay);
+            var finalReply = await ReplyAsync(embed: responseEmbed);
+            await Task.Delay(MessageDeleteDelay);
             await finalReply.DeleteAsync();
         }
 
@@ -167,12 +167,12 @@ namespace Prima.Modules
             if (userMention == null || parameters.Length != 3)
             {
                 var reply = await ReplyAsync($"{Context.User.Mention}, please enter that command in the format `{prefix}iam Mention World Name Surname`.");
-                await Task.Delay(messageDeleteDelay);
+                await Task.Delay(MessageDeleteDelay);
                 await reply.DeleteAsync();
                 return;
             }
             (new Task(async () => {
-                await Task.Delay(messageDeleteDelay);
+                await Task.Delay(MessageDeleteDelay);
                 try
                 {
                     await Context.Message.DeleteAsync();
@@ -195,8 +195,8 @@ namespace Prima.Modules
                 world = "Diabolos";
             }
 
-            SocketGuild guild = Context.Guild ?? userMention.MutualGuilds.First();
-            SocketGuildUser member = guild.GetUser(userMention.Id);
+            var guild = Context.Guild ?? userMention.MutualGuilds.First();
+            var member = guild.GetUser(userMention.Id);
             if (member == null)
             {
                 guild = userMention.MutualGuilds.First();
@@ -204,7 +204,7 @@ namespace Prima.Modules
             }
 
             // Fetch the character.
-            using IDisposable typing = Context.Channel.EnterTypingState();
+            using var typing = Context.Channel.EnterTypingState();
             
             DiscordXIVUser foundCharacter;
             try
@@ -213,20 +213,20 @@ namespace Prima.Modules
             }
             catch (XIVAPICharacterNotFoundException)
             {
-                IUserMessage reply = await ReplyAsync($"{Context.User.Mention}, no character matching that name and world was found. Are you sure you typed your world name correctly?");
-                await Task.Delay(messageDeleteDelay);
+                var reply = await ReplyAsync($"{Context.User.Mention}, no character matching that name and world was found. Are you sure you typed your world name correctly?");
+                await Task.Delay(MessageDeleteDelay);
                 await reply.DeleteAsync();
                 return;
             }
 
             // Add the user and character to the database.
-            DiscordXIVUser user = foundCharacter;
+            var user = foundCharacter;
             foundCharacter.DiscordId = userMention.Id;
             await Db.AddUser(user);
 
             // We use the user-provided parameter because the Lodestone format includes the data center.
-            string outputName = $"({world}) {foundCharacter.Name}";
-            Embed responseEmbed = new EmbedBuilder()
+            var outputName = $"({world}) {foundCharacter.Name}";
+            var responseEmbed = new EmbedBuilder()
                 .WithTitle(outputName)
                 .WithUrl($"https://na.finalfantasyxiv.com/lodestone/character/{foundCharacter.LodestoneId}/")
                 .WithColor(Color.Blue)
@@ -254,20 +254,21 @@ namespace Prima.Modules
             Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
 
             // Cleanup
-            IUserMessage finalReply = await ReplyAsync(embed: responseEmbed);
-            await Task.Delay(messageDeleteDelay);
+            var finalReply = await ReplyAsync(embed: responseEmbed);
+            await Task.Delay(MessageDeleteDelay);
             await finalReply.DeleteAsync();
         }
 
         // Verify BA clear status.
         [Command("verify", RunMode = RunMode.Async)]
         [RequireUserInDatabase]
-        public async Task VerifyAsync()
+        public async Task VerifyAsync(params string[] args)
         {
             var guild = Context.Guild ?? Context.User.MutualGuilds.First(g => Db.Guilds.Any(gc => gc.Id == g.Id));
             Log.Information("Mututal guild ID: {GuildId}", guild.Id);
 
             var guildConfig = Db.Guilds.First(g => g.Id == guild.Id);
+            var prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
 
             var member = guild.GetUser(Context.User.Id);
             var arsenalMaster = guild.GetRole(ulong.Parse(guildConfig.Roles["Arsenal Master"]));
@@ -278,9 +279,17 @@ namespace Prima.Modules
                 await ReplyAsync(Properties.Resources.MemberAlreadyHasRoleError);
                 return;
             }
+
             using var typing = Context.Channel.EnterTypingState();
-            var user = Db.Users.First(u => u.DiscordId == Context.User.Id);
-            var character = await XIVAPI.GetCharacter(user.LodestoneId);
+
+            var user = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id);
+            if (args.Length == 0 && user == null)
+            {
+                await ReplyAsync($"Your Lodestone information doesn't seem to be stored. Please register it again with `{prefix}iam`.");
+                return;
+            }
+
+            var character = await XIVAPI.GetCharacter(user?.LodestoneId ?? ulong.Parse(args[0]));
             var hasAchievement = false;
             var hasMount = false;
             if (!character.GetBio().Contains(Context.User.Id.ToString()))
@@ -305,6 +314,18 @@ namespace Prima.Modules
 
             if (!hasAchievement && !hasMount)
                 await ReplyAsync(Properties.Resources.LodestoneMountAchievementNotFoundError);
+
+            if (user == null)
+            {
+                await Db.AddUser(new DiscordXIVUser
+                {
+                    DiscordId = Context.User.Id,
+                    LodestoneId = ulong.Parse(args[0]),
+                    Avatar = character.XivapiResponse["Character"]["Avatar"].ToObject<string>(),
+                    Name = character.XivapiResponse["Character"]["Name"].ToObject<string>(),
+                    World = character.XivapiResponse["Character"]["Server"].ToObject<string>(),
+                });
+            }
         }
 
         // If they've registered, this adds them to the Member group.

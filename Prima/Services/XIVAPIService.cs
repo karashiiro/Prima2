@@ -44,8 +44,8 @@ namespace Prima.Services
         /// </summary>
         public async Task<IList<T>> Search<T>(string contentName)
         {
-            HttpResponseMessage xivapiResponse = await _http.GetAsync(new Uri($"{BASE_URL}/search?string={contentName}"));
-            string dataObject = await xivapiResponse.Content.ReadAsStringAsync();
+            var xivapiResponse = await _http.GetAsync(new Uri($"{BASE_URL}/search?string={contentName}"));
+            var dataObject = await xivapiResponse.Content.ReadAsStringAsync();
             return JObject.Parse(dataObject)["Results"].ToObject<IList<T>>();
         }
 
@@ -54,9 +54,9 @@ namespace Prima.Services
         /// </summary>
         public async Task<Character> GetCharacter(ulong id)
         {
-            HttpResponseMessage xivapiResponse = await _http.GetAsync(new Uri($"{BASE_URL}/character/{id}?data=CJ,AC,MiMo"));
-            string dataObject = await xivapiResponse.Content.ReadAsStringAsync();
-            JObject parsedResponse = JObject.Parse(dataObject);
+            var xivapiResponse = await _http.GetAsync(new Uri($"{BASE_URL}/character/{id}?data=CJ,AC,MiMo"));
+            var dataObject = await xivapiResponse.Content.ReadAsStringAsync();
+            var parsedResponse = JObject.Parse(dataObject);
             return new Character(parsedResponse);
         }
 
