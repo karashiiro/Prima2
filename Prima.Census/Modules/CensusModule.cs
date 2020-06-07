@@ -31,7 +31,10 @@ namespace Prima.Modules
         [Alias("i am")]
         public async Task IAmAsync(params string[] parameters) // Sure are, huh
         {
-            var guildConfig = Db.Guilds.Single(g => g.Id == Context.Guild.Id);
+            var guild = Context.Guild ?? Context.User.MutualGuilds.First(g => Db.Guilds.Any(gc => gc.Id == g.Id));
+            Log.Information("Mututal guild ID: {GuildId}", guild.Id);
+
+            var guildConfig = Db.Guilds.Single(g => g.Id == guild.Id);
             var prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
 
             if (parameters.Length != 3)
@@ -65,7 +68,6 @@ namespace Prima.Modules
                 world = "Diabolos";
             }
 
-            var guild = Context.Guild ?? Context.User.MutualGuilds.First();
             var member = guild.GetUser(Context.User.Id);
             if (member.Roles.Any(r => r.Name == "Time Out"))
             {
@@ -261,7 +263,6 @@ namespace Prima.Modules
 
         // Verify BA clear status.
         [Command("verify", RunMode = RunMode.Async)]
-        [RequireUserInDatabase]
         public async Task VerifyAsync(params string[] args)
         {
             var guild = Context.Guild ?? Context.User.MutualGuilds.First(g => Db.Guilds.Any(gc => gc.Id == g.Id));
