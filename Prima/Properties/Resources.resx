@@ -148,7 +148,7 @@
     <value>The mount has been found, and you have been given the Cleared role.</value>
   </data>
   <data name="LodestoneDiscordIdNotFoundError" xml:space="preserve">
-    <value>Discord ID not found. Please ensure your Discord ID is located somewhere in your Lodestone bio.</value>
+    <value>Discord ID not found. Please ensure your Discord ID is located somewhere in your character profile.</value>
   </data>
   <data name="LodestoneMountAchievementNotFoundError" xml:space="preserve">
     <value>The mount or achievement was not found. Please ensure your achievements and mounts are public for this operation.</value>

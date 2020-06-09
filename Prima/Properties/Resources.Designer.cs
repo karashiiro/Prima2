@@ -151,7 +151,7 @@ namespace Prima.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Discord ID not found. Please ensure your Discord ID is located somewhere in your Lodestone bio..
+        ///   Looks up a localized string similar to Discord ID not found. Please ensure your Discord ID is located somewhere in your character profile..
         /// </summary>
         public static string LodestoneDiscordIdNotFoundError {
             get {
