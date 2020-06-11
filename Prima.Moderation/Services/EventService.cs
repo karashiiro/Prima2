@@ -228,15 +228,15 @@ namespace Prima.Moderation.Services
         {
             if (!rawMessage.Attachments.Any()) return;
 
-            foreach (Attachment attachment in rawMessage.Attachments)
+            foreach (var attachment in rawMessage.Attachments)
             {
-                string justFileName = attachment.Filename.Substring(0, attachment.Filename.LastIndexOf("."));
+                var justFileName = attachment.Filename.Substring(0, attachment.Filename.LastIndexOf("."));
                 if (attachment.Filename.ToLower().EndsWith(".bmp") || attachment.Filename.ToLower().EndsWith(".dib"))
                 {
                     try
                     {
-                        Stopwatch timer = new Stopwatch();
-                        using Bitmap bitmap = new Bitmap(Path.Combine(_db.Config.TempDir, attachment.Filename));
+                        var timer = new Stopwatch();
+                        using var bitmap = new Bitmap(Path.Combine(_db.Config.TempDir, attachment.Filename));
                         bitmap.Save(Path.Combine(_db.Config.TempDir, justFileName + ".png"), ImageFormat.Png);
                         timer.Stop();
                         Log.Information("Processed BMP from {DiscordName}, ({Time}ms)!", $"{rawMessage.Author.Username}#{rawMessage.Author.Discriminator}", timer.ElapsedMilliseconds);

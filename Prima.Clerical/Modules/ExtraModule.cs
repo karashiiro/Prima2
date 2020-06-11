@@ -22,14 +22,14 @@ namespace Prima.Extra.Modules
         [Command("roll", RunMode = RunMode.Async)]
         public async Task RollAsync()
         {
-            int res = (int)Math.Floor(new Random().NextDouble() * 4);
+            var res = (int)Math.Floor(new Random().NextDouble() * 4);
             switch (res)
             {
                 case 0:
                     await ReplyAsync($"BINGO! You matched {(int)Math.Floor(new Random().NextDouble() * 11) + 1} lines! Congratulations!");
                     break;
                 case 1:
-                    int opt = (int)Math.Floor(new Random().NextDouble() * 2598960) + 1;
+                    var opt = (int)Math.Floor(new Random().NextDouble() * 2598960) + 1;
                     if (opt <= 4)
                         await ReplyAsync("JACK**P**O*T!* Roya**l flush!** You __won__ [%#*(!@] credits*!*");
                     else if (opt > 4 && opt <= 40)
@@ -88,8 +88,8 @@ namespace Prima.Extra.Modules
             var itemId = item.ID;
             itemName = item.Name;
 
-            HttpResponseMessage uniResponse = await Http.GetAsync(new Uri($"https://universalis.app/api/{worldId}/{itemId}"));
-            string dataObject = await uniResponse.Content.ReadAsStringAsync();
+            var uniResponse = await Http.GetAsync(new Uri($"https://universalis.app/api/{worldId}/{itemId}"));
+            var dataObject = await uniResponse.Content.ReadAsStringAsync();
             var listings = JObject.Parse(dataObject)["Results"].ToObject<IList<UniversalisListing>>();
             var trimmedListings = listings.Take(Math.Min(10, listings.Count())).ToList();
 
@@ -107,6 +107,14 @@ namespace Prima.Extra.Modules
             public string RetainerName;
             public int Total;
             public string WorldName;
+        }
+
+        [Command("portals", RunMode = RunMode.Async)]
+        public async Task PortalsAsync()
+        {
+            using var http = new HttpClient();
+            var fileStream = await http.GetStreamAsync(new Uri("https://i.imgur.com/XcXACQp.png"));
+            await Context.Channel.SendFileAsync(fileStream, "XcXACQp.png");
         }
     }
 }

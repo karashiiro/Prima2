@@ -70,7 +70,7 @@ namespace Prima.Moderation.Modules
 
         private async Task WarnOfPublicReport()
         {
-            IUserMessage warning = await ReplyAsync(Context.User.Mention + ", " + Properties.Resources.ReportInGuildWarning);
+            var warning = await ReplyAsync(Context.User.Mention + ", " + Properties.Resources.ReportInGuildWarning);
             await Task.Delay(5000);
             await warning.DeleteAsync();
         }

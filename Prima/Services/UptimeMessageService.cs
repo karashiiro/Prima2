@@ -36,8 +36,8 @@ namespace Prima.Services
         public async Task StartAsync()
         {
             // Send the process's configuration info to the uptime monitor.
-            int timeout = 1000;
-            bool sent = false;
+            var timeout = 1000;
+            var sent = false;
             while (!sent)
             {
                 var meta = new ServiceMetadata

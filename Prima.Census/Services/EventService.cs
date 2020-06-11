@@ -57,12 +57,12 @@ namespace Prima.Census.Services
 
         private async Task CEMRecoverData(SocketMessage rawMessage, SocketGuildChannel guildChannel)
         {
-            SocketGuild guild = guildChannel.Guild;
-            SocketGuildUser member = guildChannel.Guild.GetUser(rawMessage.Author.Id);
-            DiscordGuildConfiguration guildConfig = _db.Guilds.Single(g => g.Id == guild.Id);
+            var guild = guildChannel.Guild;
+            var member = guildChannel.Guild.GetUser(rawMessage.Author.Id);
+            var guildConfig = _db.Guilds.Single(g => g.Id == guild.Id);
             try
             {
-                DiscordXIVUser user = _db.Users
+                var user = _db.Users
                     .Single(user => user.DiscordId == member.Id);
             }
             catch (InvalidOperationException)
@@ -76,8 +76,8 @@ namespace Prima.Census.Services
                     return;
                 }
 
-                string world = member.Nickname[1..member.Nickname.LastIndexOf(')')];
-                string name = member.Nickname.Substring(member.Nickname.LastIndexOf(')') + 2);
+                var world = member.Nickname[1..member.Nickname.LastIndexOf(')')];
+                var name = member.Nickname.Substring(member.Nickname.LastIndexOf(')') + 2);
 
                 DiscordXIVUser foundCharacter;
                 try
@@ -120,11 +120,11 @@ namespace Prima.Census.Services
             {
                 return;
             }
-            SocketTextChannel statusChannel = newMember.Guild.GetChannel(guildConfig.StatusChannel) as SocketTextChannel;
+            var statusChannel = newMember.Guild.GetChannel(guildConfig.StatusChannel) as SocketTextChannel;
             if (oldMember.Nickname == newMember.Nickname) return; // They might just be editing their avatar or something.
             try
             {
-                DiscordXIVUser user = _db.Users.Single(user => user.DiscordId == newMember.Id);
+                var user = _db.Users.Single(user => user.DiscordId == newMember.Id);
 
                 if (string.IsNullOrEmpty(newMember.Nickname)) // They want no flair.
                 {
@@ -151,10 +151,10 @@ namespace Prima.Census.Services
                     return; // Nothing to do; their nickname is fine.
                 }
 
-                string nickname = $"({newMember.Nickname}) {user.Name}";
+                var nickname = $"({newMember.Nickname}) {user.Name}";
                 if (nickname.Length > 32) // Throws an exception otherwise
                 {
-                    IDMChannel userDm = await newMember.GetOrCreateDMChannelAsync();
+                    var userDm = await newMember.GetOrCreateDMChannelAsync();
                     await userDm.SendMessageAsync(Properties.Resources.DiscordNicknameTooLongError);
                     await newMember.ModifyAsync(properties =>
                     {
@@ -176,7 +176,7 @@ namespace Prima.Census.Services
 
         private static string GetDefaultNickname(DiscordXIVUser user)
         {
-            string nickname = $"({user.World}) {user.Name}";
+            var nickname = $"({user.World}) {user.Name}";
             if (nickname.Length > 32)
             {
                 nickname = user.Name;

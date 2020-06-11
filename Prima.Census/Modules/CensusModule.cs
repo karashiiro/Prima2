@@ -394,7 +394,7 @@ namespace Prima.Modules
                 return;
             }
 
-            Embed responseEmbed = new EmbedBuilder()
+            var responseEmbed = new EmbedBuilder()
                 .WithTitle($"({found.World}) {found.Name}")
                 .WithUrl($"https://na.finalfantasyxiv.com/lodestone/character/{found.LodestoneId}/")
                 .WithColor(Color.Blue)

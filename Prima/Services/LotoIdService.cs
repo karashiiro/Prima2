@@ -13,7 +13,7 @@ namespace Prima.Services
         [Cron("0 0 * * * *")]
         public void NextDraw()
         {
-            Random generator = new Random();
+            var generator = new Random();
             CurrentByte = (byte)generator.Next();
             CurrentUShort = (ushort)generator.Next();
             CurrentUInt = (uint)generator.Next();

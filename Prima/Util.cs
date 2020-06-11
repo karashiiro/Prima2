@@ -177,24 +177,24 @@ namespace Prima
         /// </summary>
         public static int Levenshtein(string string1, string string2)
         {
-            int a = string1.Length;
-            int b = string2.Length;
+            var a = string1.Length;
+            var b = string2.Length;
             if (a == 0)
                 return b;
             if (b == 0)
                 return a;
-            int costBonus = Math.Abs(a - b); // If there's a difference between the strings, that means an insert for every extra character.
+            var costBonus = Math.Abs(a - b); // If there's a difference between the strings, that means an insert for every extra character.
             a = Math.Min(a, b); // These then can be equal since we've pulled out the difference already.
             b = a;
-            int[,] matrix = new int[a, b];
-            for (int k = 0; k < a; k++)
+            var matrix = new int[a, b];
+            for (var k = 0; k < a; k++)
             {
                 matrix[0, k] = k;
                 matrix[k, 0] = k;
             }
-            for (int i = 1; i < a; i++)
+            for (var i = 1; i < a; i++)
             {
-                for (int j = 1; j < b; j++)
+                for (var j = 1; j < b; j++)
                 {
                     if (string1[i] == string2[j])
                         matrix[i, j] = Math.Min(matrix[i - 1, j - 1], matrix[i, j - 1]);

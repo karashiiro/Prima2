@@ -14,10 +14,10 @@ namespace Prima.Census
 
         public async Task MainAsync(string[] args)
         {
-            IServiceCollection sc = CommonInitialize.Main(args);
+            var sc = CommonInitialize.Main(args);
 
             // Initialize the ASP.NET service provider and freeze this Task indefinitely.
-            using (ServiceProvider services = ConfigureServices(sc))
+            using (var services = ConfigureServices(sc))
             {
                 await CommonInitialize.ConfigureServicesAsync(services);
 

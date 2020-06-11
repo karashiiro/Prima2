@@ -43,7 +43,7 @@ namespace Prima.Extra.Services
 
         public async Task NextPresence()
         {
-            Activity presence = Presences.List[(new Random()).Next(0, Presences.List.Length)];
+            var presence = Presences.List[(new Random()).Next(0, Presences.List.Length)];
             await _client.SetGameAsync(presence.Key, null, presence.Value);
         }
 

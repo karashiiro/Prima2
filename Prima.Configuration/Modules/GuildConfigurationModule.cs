@@ -58,7 +58,7 @@ namespace Prima.Configuration.Modules
         [Alias("configroleemote", "configemote")]
         public async Task ConfigureRoleEmoteAsync(params string[] parameters)
         {
-            if (!ulong.TryParse(parameters[0], out ulong roleId))
+            if (!ulong.TryParse(parameters[0], out var roleId))
                 await ReplyAsync("The role ID is misformatted. Please ensure that it only contains numbers.");
             await Db.ConfigureRoleEmote(Context.Guild.Id, roleId, parameters[1]);
             await ReplyAsync("Emote registered.");

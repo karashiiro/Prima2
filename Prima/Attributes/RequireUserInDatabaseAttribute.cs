@@ -15,7 +15,7 @@ namespace Prima.Attributes
             var db = services.GetRequiredService<DbService>();
             try
             {
-                DiscordXIVUser user = db.Users
+                var user = db.Users
                     .Single(user => user.DiscordId == context.User.Id);
                 return Task.FromResult(PreconditionResult.FromSuccess());
             }

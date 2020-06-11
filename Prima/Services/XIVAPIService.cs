@@ -107,16 +107,16 @@ namespace Prima.Services
         public async Task<DiscordXIVUser> GetDiscordXIVUser(string world, string name, int minimumJobLevel)
         {
             // Fetch the character.
-            CharacterSearchResult result = await SearchCharacter(world, name);
+            var result = await SearchCharacter(world, name);
             if (result.Name.Length == 0)
             {
                 throw new XIVAPICharacterNotFoundException();
             }
-            Character character = await GetCharacter(result.ID);
+            var character = await GetCharacter(result.ID);
 
             // Make sure one of their job levels meet some value.
-            bool meetsLevel = false;
-            foreach (ClassJob classJob in character.GetClassJobs())
+            var meetsLevel = false;
+            foreach (var classJob in character.GetClassJobs())
             {
                 if (classJob.JobID < 8 || classJob.JobID > 18)
                 {

@@ -17,7 +17,7 @@ namespace Prima.Modules
         [Command("presencedelay")]
         public async Task SetPresenceDelay(string inputTime)
         {
-            if (!int.TryParse(inputTime, out int time))
+            if (!int.TryParse(inputTime, out var time))
             {
                 await ReplyAsync(Properties.Resources.InvalidNumberError);
                 return;
