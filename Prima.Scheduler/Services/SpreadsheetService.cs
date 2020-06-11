@@ -107,7 +107,14 @@ namespace Prima.Scheduler.Services
                                         {
                                             UserEnteredValue = new ExtendedValue
                                             {
-                                                StringValue = @event.Description + $"\n[{_client.GetUser(@event.LeaderId)}]",
+                                                StringValue = $"({@event.RunKind})",
+                                            },
+                                        },
+                                        new CellData
+                                        {
+                                            UserEnteredValue = new ExtendedValue
+                                            {
+                                                StringValue = $"[{_client.GetUser(@event.LeaderId)}]",
                                             },
                                         },
                                     },
@@ -252,6 +259,13 @@ namespace Prima.Scheduler.Services
                                 {
                                     Values = new List<CellData>
                                     {
+                                        new CellData
+                                        {
+                                            UserEnteredValue = new ExtendedValue
+                                            {
+                                                StringValue = "",
+                                            },
+                                        },
                                         new CellData
                                         {
                                             UserEnteredValue = new ExtendedValue
