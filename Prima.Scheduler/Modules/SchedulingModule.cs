@@ -77,7 +77,7 @@ namespace Prima.Scheduler.Modules
                     Description = description,
                     LeaderId = Context.User.Id,
                     GuildId = Context.Guild.Id,
-                    MessageId2 = message.Id,
+                    MessageId3 = message.Id,
                     SubscribedUsers = new List<string>(),
                 };
 
@@ -316,7 +316,7 @@ namespace Prima.Scheduler.Modules
             }
 
             if (Db.Events
-                .Where(sr => sr.MessageId2 != @event.MessageId2)
+                .Where(sr => sr.MessageId3 != @event.MessageId3)
                 .Any(sr => newRunTime > DateTime.Now &&
                                     Math.Abs((DateTime.FromBinary(sr.RunTime) - newRunTime).TotalMilliseconds) <
                                     Threshold))
@@ -428,7 +428,7 @@ namespace Prima.Scheduler.Modules
                 Description = description,
                 LeaderId = message.Author.Id,
                 GuildId = Context.Guild.Id,
-                MessageId2 = message.Id,
+                MessageId3 = message.Id,
                 EmbedMessageId = embedId,
                 SubscribedUsers = reactors
                     .Where(user => user.Id != message.Author.Id && !user.IsBot)

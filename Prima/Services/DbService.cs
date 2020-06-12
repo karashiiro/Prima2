@@ -135,35 +135,35 @@ namespace Prima.Services
 
         public async Task UpdateScheduledEvent(ScheduledEvent newEvent)
         {
-            var existing = await (await _events.FindAsync(e => e.MessageId2 == newEvent.MessageId2)).FirstOrDefaultAsync();
+            var existing = await (await _events.FindAsync(e => e.MessageId3 == newEvent.MessageId3)).FirstOrDefaultAsync();
             if (existing == null)
             {
                 await AddScheduledEvent(newEvent);
                 return;
             }
-            await _events.ReplaceOneAsync(e => e.MessageId2 == newEvent.MessageId2, newEvent);
+            await _events.ReplaceOneAsync(e => e.MessageId3 == newEvent.MessageId3, newEvent);
         }
 
         public async Task AddMemberToEvent(ScheduledEvent @event, ulong memberId)
         {
-            var existing = await (await _events.FindAsync(e => e.MessageId2 == @event.MessageId2)).FirstOrDefaultAsync();
+            var existing = await (await _events.FindAsync(e => e.MessageId3 == @event.MessageId3)).FirstOrDefaultAsync();
             if (existing == null)
             {
                 return;
             }
             var update = Builders<ScheduledEvent>.Update.Push("SubscribedUsers", memberId);
-            await _events.UpdateOneAsync(e => e.MessageId2 == @event.MessageId2, update);
+            await _events.UpdateOneAsync(e => e.MessageId3 == @event.MessageId3, update);
         }
 
         public async Task RemoveMemberToEvent(ScheduledEvent @event, ulong memberId)
         {
-            var existing = await (await _events.FindAsync(e => e.MessageId2 == @event.MessageId2)).FirstOrDefaultAsync();
+            var existing = await (await _events.FindAsync(e => e.MessageId3 == @event.MessageId3)).FirstOrDefaultAsync();
             if (existing == null)
             {
                 return;
             }
             var update = Builders<ScheduledEvent>.Update.Pull("SubscribedUsers", memberId);
-            await _events.UpdateOneAsync(e => e.MessageId2 == @event.MessageId2, update);
+            await _events.UpdateOneAsync(e => e.MessageId3 == @event.MessageId3, update);
         }
 
         public async Task<ScheduledEvent> TryRemoveScheduledEvent(DateTime when, ulong userId)
@@ -186,7 +186,7 @@ namespace Prima.Services
             var message = await existing.FirstOrDefaultAsync();
             if (message != null)
             {
-                await _events.DeleteOneAsync(cm => cm.MessageId2 == messageId);
+                await _events.DeleteOneAsync(cm => cm.MessageId3 == messageId);
             }
         }
 

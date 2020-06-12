@@ -45,7 +45,7 @@ namespace Prima.Scheduler.Services
                 {
                     if ((DateTime.FromBinary(run.RunTime) - DateTime.Now).TotalMilliseconds < Threshold) // I have no clue why this is necessary to do this way
                     {
-                        Log.Information("Run {MessageId}, notifications started.", run.MessageId2);
+                        Log.Information("Run {MessageId}, notifications started.", run.MessageId3);
 
                         var guild = _client.Guilds.FirstOrDefault(g => g.Id == run.GuildId);
                         if (guild == null)

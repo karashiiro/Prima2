@@ -14,7 +14,7 @@ namespace Prima.Models
         public ulong GuildId { get; set; }
 
         [BsonRepresentation(BsonType.String)]
-        public ulong MessageId2 { get; set; } // Just calling this MessageId makes it not write to the database for some reason
+        public ulong MessageId3 { get; set; } // Just calling this MessageId makes it not write to the database for some reason
 
         [BsonRepresentation(BsonType.String)]
         public ulong EmbedMessageId { get; set; }

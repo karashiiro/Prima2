@@ -34,7 +34,7 @@ namespace Prima.Scheduler.Services
             if (guildConfig == null)
                 return;
 
-            var run = _db.Events.FirstOrDefault(sr => sr.MessageId2 == newMessage.Id);
+            var run = _db.Events.FirstOrDefault(sr => sr.MessageId3 == newMessage.Id);
             if (run == null || run.RunTime < DateTime.Now.ToBinary())
                 return;
 
@@ -59,7 +59,7 @@ namespace Prima.Scheduler.Services
                                  $"**Schedule Overview: <{guildConfig.BASpreadsheetLink}>**")
                 .Build();
 
-            Log.Information("Updated description for run {MessageId} to:\n{RunDescription}", run.MessageId2, new string(run.Description.Take(1800).ToArray()));
+            Log.Information("Updated description for run {MessageId} to:\n{RunDescription}", run.MessageId3, new string(run.Description.Take(1800).ToArray()));
 
             if (embed == null)
                 return;
@@ -73,7 +73,7 @@ namespace Prima.Scheduler.Services
             if (!(reaction.Emote is Emoji emoji) || emoji.Name != "📳" || !(ichannel is SocketGuildChannel channel))
                 return;
 
-            var run = _db.Events.FirstOrDefault(e => e.MessageId2 == cmessage.Id);
+            var run = _db.Events.FirstOrDefault(e => e.MessageId3 == cmessage.Id);
             if (run == null || run.Notified || run.RunTime < DateTime.Now.ToBinary() || run.SubscribedUsers.Contains(reaction.UserId.ToString()) || reaction.UserId == run.LeaderId || reaction.UserId == _client.CurrentUser.Id)
                 return;
 
@@ -84,7 +84,7 @@ namespace Prima.Scheduler.Services
             var runTime = DateTime.FromBinary(run.RunTime);
             await member.SendMessageAsync($"You have RSVP'd for {leader.Nickname ?? leader.Username}'s run on on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} (PDT) [{runTime.DayOfWeek}, {(Month)runTime.Month} {runTime.Day}]! :thumbsup:");
 
-            Log.Information("Added member {MemberId} to run {MessageId}.", reaction.UserId, run.MessageId2);
+            Log.Information("Added member {MemberId} to run {MessageId}.", reaction.UserId, run.MessageId3);
         }
 
         public async Task OnReactionRemove(Cacheable<IUserMessage, ulong> cmessage, ISocketMessageChannel ichannel, SocketReaction reaction)
@@ -92,7 +92,7 @@ namespace Prima.Scheduler.Services
             if (!(reaction.Emote is Emoji emoji) || emoji.Name != "📳" || !(ichannel is SocketGuildChannel channel))
                 return;
 
-            var run = _db.Events.FirstOrDefault(e => e.MessageId2 == cmessage.Id);
+            var run = _db.Events.FirstOrDefault(e => e.MessageId3 == cmessage.Id);
             if (run == null || run.Notified || run.RunTime < DateTime.Now.ToBinary() || !run.SubscribedUsers.Contains(reaction.UserId.ToString()) || reaction.UserId == run.LeaderId || reaction.UserId == _client.CurrentUser.Id)
                 return;
 
@@ -102,7 +102,7 @@ namespace Prima.Scheduler.Services
             var member = _client.GetUser(reaction.UserId);
             await member.SendMessageAsync($"You have un-RSVP'd for {leader.Nickname ?? leader.Username}'s run.");
 
-            Log.Information("Removed member {MemberId} from run {MessageId}.", reaction.UserId, run.MessageId2);
+            Log.Information("Removed member {MemberId} from run {MessageId}.", reaction.UserId, run.MessageId3);
         }
     }
 }
