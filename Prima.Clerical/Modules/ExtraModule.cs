@@ -163,5 +163,14 @@ namespace Prima.Extra.Modules
             var fileStream = await http.GetStreamAsync(new Uri("https://cdn.discordapp.com/attachments/588592729609469952/721522648949063730/unknown.png"));
             await Context.Channel.SendFileAsync(fileStream, "unknown.png");
         }
+
+        [Command("accel", RunMode = RunMode.Async)]
+        [RateLimit(TimeSeconds = 120, Global = true)]
+        public async Task AccelBombAsync()
+        {
+            using var http = new HttpClient();
+            var fileStream = await http.GetStreamAsync(new Uri("https://cdn.discordapp.com/attachments/550709673104375818/721527266441560064/unknown.png"));
+            await Context.Channel.SendFileAsync(fileStream, "unknown.png");
+        }
     }
 }
