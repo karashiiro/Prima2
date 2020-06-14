@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Prima.Attributes;
 
 namespace Prima.Extra.Modules
 {
@@ -110,6 +111,7 @@ namespace Prima.Extra.Modules
         }
 
         [Command("portals", RunMode = RunMode.Async)]
+        [RateLimit(TimeSeconds = 30, Global = true)]
         public async Task PortalsAsync()
         {
             using var http = new HttpClient();
@@ -118,6 +120,7 @@ namespace Prima.Extra.Modules
         }
 
         [Command("owain", RunMode = RunMode.Async)]
+        [RateLimit(TimeSeconds = 120, Global = true)]
         public async Task OwainAsync()
         {
             using var http = new HttpClient();
@@ -126,6 +129,7 @@ namespace Prima.Extra.Modules
         }
 
         [Command("art", RunMode = RunMode.Async)]
+        [RateLimit(TimeSeconds = 120, Global = true)]
         public async Task ArtAsync()
         {
             using var http = new HttpClient();
@@ -134,6 +138,7 @@ namespace Prima.Extra.Modules
         }
 
         [Command("raiden", RunMode = RunMode.Async)]
+        [RateLimit(TimeSeconds = 120, Global = true)]
         public async Task RaidenAsync()
         {
             using var http = new HttpClient();
@@ -142,6 +147,7 @@ namespace Prima.Extra.Modules
         }
 
         [Command("av", RunMode = RunMode.Async)]
+        [RateLimit(TimeSeconds = 120, Global = true)]
         public async Task AbsoluteVirtueAsync()
         {
             using var http = new HttpClient();
@@ -150,6 +156,7 @@ namespace Prima.Extra.Modules
         }
 
         [Command("ozma", RunMode = RunMode.Async)]
+        [RateLimit(TimeSeconds = 120, Global = true)]
         public async Task OzmaAsync()
         {
             using var http = new HttpClient();
