@@ -116,5 +116,45 @@ namespace Prima.Extra.Modules
             var fileStream = await http.GetStreamAsync(new Uri("https://i.imgur.com/XcXACQp.png"));
             await Context.Channel.SendFileAsync(fileStream, "XcXACQp.png");
         }
+
+        [Command("owain", RunMode = RunMode.Async)]
+        public async Task OwainAsync()
+        {
+            using var http = new HttpClient();
+            var fileStream = await http.GetStreamAsync(new Uri("https://cdn.discordapp.com/attachments/715548578684207134/716812557851295815/unknown-2.png"));
+            await Context.Channel.SendFileAsync(fileStream, "unknown-2.png");
+        }
+
+        [Command("art", RunMode = RunMode.Async)]
+        public async Task ArtAsync()
+        {
+            using var http = new HttpClient();
+            var fileStream = await http.GetStreamAsync(new Uri("https://cdn.discordapp.com/attachments/715548578684207134/716812588029182033/unknown-1.png"));
+            await Context.Channel.SendFileAsync(fileStream, "unknown-1.png");
+        }
+
+        [Command("raiden", RunMode = RunMode.Async)]
+        public async Task RaidenAsync()
+        {
+            using var http = new HttpClient();
+            var fileStream = await http.GetStreamAsync(new Uri("https://cdn.discordapp.com/attachments/588592729609469952/721522493197779035/unknown.png"));
+            await Context.Channel.SendFileAsync(fileStream, "unknown.png");
+        }
+
+        [Command("av", RunMode = RunMode.Async)]
+        public async Task AbsoluteVirtueAsync()
+        {
+            using var http = new HttpClient();
+            var fileStream = await http.GetStreamAsync(new Uri("https://cdn.discordapp.com/attachments/588592729609469952/721522585866731580/unknown.png"));
+            await Context.Channel.SendFileAsync(fileStream, "unknown.png");
+        }
+
+        [Command("ozma", RunMode = RunMode.Async)]
+        public async Task OzmaAsync()
+        {
+            using var http = new HttpClient();
+            var fileStream = await http.GetStreamAsync(new Uri("https://cdn.discordapp.com/attachments/588592729609469952/721522648949063730/unknown.png"));
+            await Context.Channel.SendFileAsync(fileStream, "unknown.png");
+        }
     }
 }
