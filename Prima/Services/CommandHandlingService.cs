@@ -94,8 +94,6 @@ namespace Prima.Services
             {
                 if (command.Attributes.FirstOrDefault(a => a is RateLimitAttribute) is RateLimitAttribute rateLimitInfo)
                 {
-                    Log.Information("{0}", !_commandTimeouts.ContainsKey(commandName));
-                    Log.Information("{0}", !_commandTimeouts.ContainsKey(commandName) || _commandTimeouts[commandName] < DateTimeOffset.Now.ToUnixTimeSeconds());
                     // TODO handle non-global rate limits
                     if (!_commandTimeouts.ContainsKey(commandName) || _commandTimeouts[commandName] < DateTimeOffset.Now.ToUnixTimeSeconds())
                     {
