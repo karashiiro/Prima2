@@ -11,32 +11,32 @@
 
     public static class RunDisplayTypes
     {
-        public static Color None = new Color
+        private static readonly Color None = new Color
         {
             RGB = new int[3],
             Hex = "#FFFFFF",
         };
-        public static Color FR = new Color
+        private static readonly Color FR = new Color
         {
             RGB = new int[3] { 159, 197, 232 },
             Hex = "#9fc5e8",
         };
-        public static Color OP = new Color
+        private static readonly Color OP = new Color
         {
             RGB = new int[3] { 255, 229, 153 },
             Hex = "#ffe599",
         };
-        public static Color OZ = new Color
+        private static readonly Color OZ = new Color
         {
             RGB = new int[3] { 249, 203, 156 },
             Hex = "#f9cb9c",
         };
-        public static Color RC = new Color
+        private static readonly Color RC = new Color
         {
             RGB = new int[3] { 234, 153, 153 },
             Hex = "#ea9999",
         };
-        public static Color EX = new Color
+        private static readonly Color EX = new Color
         {
             RGB = new int[3] { 204, 102, 255 },
             Hex = "#cc66ff",
