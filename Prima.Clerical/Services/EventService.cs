@@ -22,12 +22,8 @@ namespace Prima.Clerical.Services
             {
                 var guild = channel.Guild;
                 var member = guild.GetUser(reaction.UserId);
-                DiscordGuildConfiguration disConfig;
-                try
-                {
-                    disConfig = _db.Guilds.Single(g => g.Id == guild.Id);
-                }
-                catch (InvalidOperationException)
+                var disConfig = _db.Guilds.FirstOrDefault(g => g.Id == guild.Id);
+                if (disConfig == null)
                 {
                     return;
                 }

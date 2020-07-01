@@ -18,7 +18,7 @@ namespace Prima
         {
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
-                .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+                .WriteTo.Console()
                 .WriteTo.SQLite(Environment.OSVersion.Platform == PlatformID.Win32NT
                     ? "Log.db" // Only use Windows for testing.
                     : Path.Combine(Environment.GetEnvironmentVariable("HOME"), "log/Log.db"))

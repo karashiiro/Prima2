@@ -19,8 +19,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Prima.Moderation", "Prima.M
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Prima.Configuration", "Prima.Configuration\Prima.Configuration.csproj", "{39243EF9-834E-4E71-9665-76423969FDAF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Prima.Census", "Prima.Census\Prima.Census.csproj", "{FCC6BDB0-6AF4-4D75-9A19-10B6C6591CBA}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Prima.Clerical", "Prima.Clerical\Prima.Clerical.csproj", "{2B9129D1-5D1A-41CD-B895-FB35ABB69931}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Prima.Tests", "Prima.Tests\Prima.Tests.csproj", "{7F4DCEFB-75D4-4386-AFF3-3BCDE1DA755C}"
@@ -47,10 +45,6 @@ Global
 		{39243EF9-834E-4E71-9665-76423969FDAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39243EF9-834E-4E71-9665-76423969FDAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39243EF9-834E-4E71-9665-76423969FDAF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FCC6BDB0-6AF4-4D75-9A19-10B6C6591CBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FCC6BDB0-6AF4-4D75-9A19-10B6C6591CBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FCC6BDB0-6AF4-4D75-9A19-10B6C6591CBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FCC6BDB0-6AF4-4D75-9A19-10B6C6591CBA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2B9129D1-5D1A-41CD-B895-FB35ABB69931}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2B9129D1-5D1A-41CD-B895-FB35ABB69931}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2B9129D1-5D1A-41CD-B895-FB35ABB69931}.Release|Any CPU.ActiveCfg = Release|Any CPU

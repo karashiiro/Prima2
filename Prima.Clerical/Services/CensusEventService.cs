@@ -9,9 +9,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Prima.Census.Services
+namespace Prima.Clerical.Services
 {
-    public class EventService
+    public class CensusEventService
     {
         private readonly DiscordSocketClient _client;
         private readonly DbService _db;
@@ -19,7 +19,7 @@ namespace Prima.Census.Services
 
         private readonly List<ulong> _cemUnverifiedMembers;
 
-        public EventService(DiscordSocketClient client, XIVAPIService XIVAPI, DbService db)
+        public CensusEventService(DiscordSocketClient client, XIVAPIService XIVAPI, DbService db)
         {
             _client = client;
             _db = db;

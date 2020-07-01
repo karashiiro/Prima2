@@ -9,47 +9,42 @@ using Prima.Services;
 
 namespace Prima.Clerical
 {
-    class Program
+    static class Program
     {
-        static void Main(string[] args) => new Program().MainAsync(args).GetAwaiter().GetResult();  
+        static void Main(string[] args) => MainAsync(args).GetAwaiter().GetResult();
 
-        public async Task MainAsync(string[] args)
+        private static async Task MainAsync(string[] args)
         {
             var sc = CommonInitialize.Main(args);
 
             // Initialize the ASP.NET service provider and freeze this Task indefinitely.
-            using (var services = ConfigureServices(sc))
-            {
-                await CommonInitialize.ConfigureServicesAsync(services);
+            await using var services = ConfigureServices(sc);
+            await CommonInitialize.ConfigureServicesAsync(services);
 
-                var client = services.GetRequiredService<DiscordSocketClient>();
-                var events = services.GetRequiredService<EventService>();
+            var client = services.GetRequiredService<DiscordSocketClient>();
+            var events = services.GetRequiredService<EventService>();
 
-                foreach (var guild in client.Guilds)
-                {
-                    foreach (var channel in guild.TextChannels)
-                    {
-                        channel.GetMessagesAsync();
-                    }
-                }
+            var censusEvents = services.GetRequiredService<CensusEventService>();
 
-                client.ReactionAdded += events.ReactionAdded;
-                client.ReactionRemoved += events.ReactionRemoved;
+            client.ReactionAdded += events.ReactionAdded;
+            client.ReactionRemoved += events.ReactionRemoved;
 
-                Log.Information($"Prima Clerical logged in!");
+            client.GuildMemberUpdated += censusEvents.GuildMemberUpdated;
+
+            Log.Information("Prima Clerical logged in!");
                 
-                /*var uptime = services.GetRequiredService<UptimeMessageService>();
+            /*var uptime = services.GetRequiredService<UptimeMessageService>();
                 uptime.Initialize("Prima Clerical", "A lonelier cubicle.");
                 uptime.StartAsync().Start();*/
                 
-                await Task.Delay(-1);
-            }
+            await Task.Delay(-1);
         }
 
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "<Pending>")]
         private static ServiceProvider ConfigureServices(IServiceCollection sc)
         {
-            sc.AddSingleton<EventService>()
+            sc.AddSingleton<CensusEventService>()
+              .AddSingleton<EventService>()
               .AddSingleton<PresenceService>()
               .AddSingleton<XIVAPIService>();
             //sc.AddSingleton<UptimeMessageService>();
