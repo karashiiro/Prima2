@@ -1,6 +1,6 @@
 ﻿using Activity = System.Collections.Generic.KeyValuePair<string, Discord.ActivityType>;
 
-namespace Prima.Resources
+namespace Prima.Clerical.Resources
 {
     public static class Presences
     {
@@ -9,6 +9,7 @@ namespace Prima.Resources
             new Activity("FINAL FANTASY XIV", Discord.ActivityType.Playing),
             new Activity("FINAL FANTASY XIII", Discord.ActivityType.Playing),
             new Activity("FINAL FANTASY XI", Discord.ActivityType.Playing),
+            new Activity("FINAL FANTASY XXVI", Discord.ActivityType.Playing),
             new Activity("PHANTASY STAR ONLINE 2", Discord.ActivityType.Playing),
             new Activity("Fate/Extella", Discord.ActivityType.Playing),
             new Activity("Arknights", Discord.ActivityType.Playing),
@@ -42,13 +43,16 @@ namespace Prima.Resources
             new Activity("太鼓の達人", Discord.ActivityType.Playing),
             new Activity("Pokémon Tretta", Discord.ActivityType.Playing),
             new Activity("Maimai", Discord.ActivityType.Playing),
+            new Activity("Destiny 2", Discord.ActivityType.Playing),
+            new Activity("Pokémon Café", Discord.ActivityType.Playing),
+            new Activity("NieR: Reincarnation", Discord.ActivityType.Playing),
             // Listening
             new Activity("Dorime 10-Hour Loop", Discord.ActivityType.Listening),
             new Activity("Pokémon ~ Jazz/Orchestra Mix", Discord.ActivityType.Listening),
             new Activity("Vaporwave Furret 10 Hours", Discord.ActivityType.Listening),
-            new Activity("VA-11 HALL-A - Second Round [Full Album]", Discord.ActivityType.Listening),
-            new Activity("DORIME🙏🏻 (loli cover)", Discord.ActivityType.Listening),
             new Activity("Super Touhou Eurobeat Mix", Discord.ActivityType.Listening),
+            new Activity("エヌ", Discord.ActivityType.Listening),
+            new Activity("アブジェ", Discord.ActivityType.Listening),
             // Streaming gets turned into "Playing" if there's no actual stream.
             // Watching
             new Activity("Live Vana'diel", Discord.ActivityType.Watching),

@@ -1,11 +1,9 @@
-﻿using Discord.WebSocket;
-using Prima.Resources;
-using System;
+﻿using System;
 using System.Threading.Tasks;
+using Discord.WebSocket;
+using Prima.Clerical.Resources;
 
-using Activity = System.Collections.Generic.KeyValuePair<string, Discord.ActivityType>;
-
-namespace Prima.Extra.Services
+namespace Prima.Clerical.Services
 {
     public class PresenceService
     {
@@ -41,10 +39,10 @@ namespace Prima.Extra.Services
 
         public bool IsFaulted() => _runningTask.IsFaulted;
 
-        public async Task NextPresence()
+        public Task NextPresence()
         {
-            var presence = Presences.List[(new Random()).Next(0, Presences.List.Length)];
-            await _client.SetGameAsync(presence.Key, null, presence.Value);
+            var (name, activityType) = Presences.List[(new Random()).Next(0, Presences.List.Length)];
+            return _client.SetGameAsync(name, null, activityType);
         }
 
         private async Task StartPresenceTask()

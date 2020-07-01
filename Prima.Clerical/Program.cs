@@ -4,7 +4,6 @@ using Prima.Clerical.Services;
 using Serilog;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
-using Prima.Extra.Services;
 using Prima.Services;
 
 namespace Prima.Clerical
