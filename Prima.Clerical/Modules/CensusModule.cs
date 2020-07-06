@@ -6,7 +6,6 @@ using Prima.Attributes;
 using Prima.Models;
 using Prima.Resources;
 using Prima.Services;
-using Prima.XIVAPI;
 using Serilog;
 using System;
 using System.Linq;

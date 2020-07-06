@@ -151,7 +151,7 @@ namespace Prima.Services
             {
                 return;
             }
-            var update = Builders<ScheduledEvent>.Update.Push("SubscribedUsers", memberId);
+            var update = Builders<ScheduledEvent>.Update.Push("SubscribedUsers", memberId.ToString());
             await _events.UpdateOneAsync(e => e.MessageId3 == @event.MessageId3, update);
         }
 
@@ -162,7 +162,7 @@ namespace Prima.Services
             {
                 return;
             }
-            var update = Builders<ScheduledEvent>.Update.Pull("SubscribedUsers", memberId);
+            var update = Builders<ScheduledEvent>.Update.Pull("SubscribedUsers", memberId.ToString());
             await _events.UpdateOneAsync(e => e.MessageId3 == @event.MessageId3, update);
         }
 

@@ -66,8 +66,15 @@ namespace Prima.Scheduler.Services
                         {
                             try
                             {
-                                await commandChannel.SendMessageAsync(
-                                    $"{leader.Mention}, the run you scheduled is set to begin in 30 minutes!");
+                                var message = await commandChannel.SendMessageAsync($"{leader.Mention}, the run you scheduled is set to begin in 30 minutes!");
+                                (new Task(async () => {
+                                    await Task.Delay((int)Threshold, token);
+                                    try
+                                    {
+                                        await message.DeleteAsync();
+                                    }
+                                    catch (HttpException) {} // Message was already deleted.
+                                })).Start();
                             }
                             catch (HttpException)
                             {
@@ -78,7 +85,7 @@ namespace Prima.Scheduler.Services
                         foreach (var userId in run.SubscribedUsers)
                         {
                             var member = guild.GetUser(ulong.Parse(userId));
-                            await TryNotifyMember(member, leader, commandChannel);
+                            await TryNotifyMember(member, leader, commandChannel, token);
                         }
 
                         run.Notified = true;
@@ -97,7 +104,7 @@ namespace Prima.Scheduler.Services
             }
         }
 
-        private static async Task TryNotifyMember(IUser member, IGuildUser leader, ISocketMessageChannel commandChannel)
+        private static async Task TryNotifyMember(IUser member, IGuildUser leader, ISocketMessageChannel commandChannel, CancellationToken token)
         {
             var success = false;
             try
@@ -110,7 +117,15 @@ namespace Prima.Scheduler.Services
             {
                 try
                 {
-                    await commandChannel.SendMessageAsync($"{member.Mention}, the run you reacted to (hosted by {leader.Nickname ?? leader.Username}) is beginning in 30 minutes!");
+                    var message = await commandChannel.SendMessageAsync($"{member.Mention}, the run you reacted to (hosted by {leader.Nickname ?? leader.Username}) is beginning in 30 minutes!");
+                    (new Task(async () => {
+                        await Task.Delay((int)Threshold, token);
+                        try
+                        {
+                            await message.DeleteAsync();
+                        }
+                        catch (HttpException) {} // Message was already deleted.
+                    })).Start();
                     success = true;
                 }
                 catch (HttpException)
