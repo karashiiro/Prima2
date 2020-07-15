@@ -41,7 +41,7 @@ namespace Prima
             client.Log += LogAsync;
             services.GetRequiredService<CommandService>().Log += LogAsync;
                 
-            await client.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("DISCORD_BOT_TOKEN"));
+            await client.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("PRIMA_BOT_TOKEN"));
             await client.StartAsync();
 
             await services.GetRequiredService<CommandHandlingService>().InitializeAsync();
