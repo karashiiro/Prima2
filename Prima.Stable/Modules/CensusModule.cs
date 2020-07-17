@@ -6,6 +6,7 @@ using Prima.Attributes;
 using Prima.Models;
 using Prima.Resources;
 using Prima.Services;
+using Prima.XIVAPI;
 using Serilog;
 using System;
 using System.Linq;
@@ -289,7 +290,12 @@ namespace Prima.Modules
                 return;
             }
 
-            var character = await XIVAPI.GetCharacter(user?.LodestoneId ?? ulong.Parse(args[0]));
+            Character character;
+            if (user == null)
+            {
+                character = await XIVAPI.GetCharacter(ulong.Parse(args[0]));
+            }
+            character = await XIVAPI.GetCharacter(ulong.Parse(user?.LodestoneId));
             var hasAchievement = false;
             var hasMount = false;
             if (!character.GetBio().Contains(Context.User.Id.ToString()))
@@ -320,7 +326,7 @@ namespace Prima.Modules
                 await Db.AddUser(new DiscordXIVUser
                 {
                     DiscordId = Context.User.Id,
-                    LodestoneId = ulong.Parse(args[0]),
+                    LodestoneId = args[0],
                     Avatar = character.XivapiResponse["Character"]["Avatar"].ToObject<string>(),
                     Name = character.XivapiResponse["Character"]["Name"].ToObject<string>(),
                     World = character.XivapiResponse["Character"]["Server"].ToObject<string>(),

@@ -1,6 +1,6 @@
 ﻿using Discord.Commands;
 using System.Threading.Tasks;
-using Prima.Clerical.Services;
+using Prima.Stable.Services;
 
 namespace Prima.Modules
 {

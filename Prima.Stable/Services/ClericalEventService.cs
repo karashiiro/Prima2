@@ -7,13 +7,13 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Prima.Clerical.Services
+namespace Prima.Stable.Services
 {
-    public class EventService
+    public class ClericalEventService
     {
         private readonly DbService _db;
 
-        public EventService(DbService db)
+        public ClericalEventService(DbService db)
             => _db = db;
 
         public async Task ReactionAdded(Cacheable<IUserMessage, ulong> _, ISocketMessageChannel ichannel, SocketReaction reaction)

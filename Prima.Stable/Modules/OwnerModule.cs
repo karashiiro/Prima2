@@ -2,7 +2,7 @@
 using Discord.Commands;
 using System.Threading.Tasks;
 
-namespace Prima.Clerical.Modules
+namespace Prima.Stable.Modules
 {
     public class OwnerModule : ModuleBase<SocketCommandContext>
     {

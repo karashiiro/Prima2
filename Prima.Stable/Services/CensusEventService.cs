@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Prima.Clerical.Services
+namespace Prima.Stable.Services
 {
     public class CensusEventService
     {

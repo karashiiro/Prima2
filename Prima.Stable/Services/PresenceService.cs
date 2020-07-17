@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Discord.WebSocket;
-using Prima.Clerical.Resources;
+using Prima.Stable.Resources;
 
-namespace Prima.Clerical.Services
+namespace Prima.Stable.Services
 {
     public class PresenceService
     {

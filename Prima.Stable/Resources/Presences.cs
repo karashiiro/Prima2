@@ -1,6 +1,6 @@
 ﻿using Activity = System.Collections.Generic.KeyValuePair<string, Discord.ActivityType>;
 
-namespace Prima.Clerical.Resources
+namespace Prima.Stable.Resources
 {
     public static class Presences
     {

@@ -1,8 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
 using Prima.Models;
-using Prima.Moderation.Services;
+using Prima.Stable.Services;
 using Prima.Services;
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -21,7 +20,7 @@ namespace Prima.Moderation.Modules
     public class ModerationModule : ModuleBase<SocketCommandContext>
     {
         public DbService Db { get; set; }
-        public EventService Events { get; set; }
+        public ModerationEventService Events { get; set; }
         public HttpClient Http { get; set; }
 
         // Submit a report.

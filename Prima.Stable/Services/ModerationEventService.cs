@@ -15,9 +15,9 @@ using System.Threading.Tasks;
 using Color = Discord.Color;
 using ImageFormat = System.Drawing.Imaging.ImageFormat;
 
-namespace Prima.Moderation.Services
+namespace Prima.Stable.Services
 {
-    public class EventService
+    public class ModerationEventService
     {
         private readonly DbService _db;
         private readonly DiscordSocketClient _client;
@@ -25,7 +25,7 @@ namespace Prima.Moderation.Services
 
         public string LastCaughtRegex { get; private set; }
 
-        public EventService(DbService db, DiscordSocketClient client, WebClient wc)
+        public ModerationEventService(DbService db, DiscordSocketClient client, WebClient wc)
         {
             _db = db;
             _client = client;

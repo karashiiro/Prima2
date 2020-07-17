@@ -134,7 +134,7 @@ namespace Prima.Services
             return new DiscordXIVUser
             {
                 DiscordId = 0,
-                LodestoneId = result.ID,
+                LodestoneId = result.ID.ToString(),
                 Avatar = result.Avatar,
                 Name = result.Name,
                 World = world,

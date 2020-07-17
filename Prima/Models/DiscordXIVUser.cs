@@ -15,7 +15,7 @@ namespace Prima.Models
 
         [BsonRequired]
         [BsonRepresentation(BsonType.String)]
-        public ulong LodestoneId;
+        public string LodestoneId;
 
         [BsonRequired]
         public string World;

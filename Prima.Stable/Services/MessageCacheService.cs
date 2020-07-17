@@ -5,7 +5,7 @@ using Discord;
 using Prima.Models;
 using Prima.Services;
 
-namespace Prima.Moderation.Services
+namespace Prima.Stable.Services
 {
     // Caches the last week's worth of messages manually, since the built-in cache is apparently awful.
     public class MessageCacheService

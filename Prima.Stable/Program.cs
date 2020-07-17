@@ -1,12 +1,13 @@
 ﻿using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
-using Prima.Clerical.Services;
+using Prima.Stable.Services;
 using Serilog;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Prima.Services;
+using System.Net;
 
-namespace Prima.Clerical
+namespace Prima.Stable
 {
     static class Program
     {
@@ -21,16 +22,19 @@ namespace Prima.Clerical
             await CommonInitialize.ConfigureServicesAsync(services);
 
             var client = services.GetRequiredService<DiscordSocketClient>();
-            var events = services.GetRequiredService<EventService>();
-
+            var clericalEvents = services.GetRequiredService<ClericalEventService>();
+            var moderationEvents = services.GetRequiredService<ModerationEventService>();
             var censusEvents = services.GetRequiredService<CensusEventService>();
 
-            client.ReactionAdded += events.ReactionAdded;
-            client.ReactionRemoved += events.ReactionRemoved;
+            client.ReactionAdded += clericalEvents.ReactionAdded;
+            client.ReactionRemoved += clericalEvents.ReactionRemoved;
+
+            client.MessageDeleted += moderationEvents.MessageDeleted;
+            client.MessageReceived += moderationEvents.MessageRecieved;
 
             client.GuildMemberUpdated += censusEvents.GuildMemberUpdated;
 
-            Log.Information("Prima Clerical logged in!");
+            Log.Information("Prima.Stable logged in!");
                 
             /*var uptime = services.GetRequiredService<UptimeMessageService>();
                 uptime.Initialize("Prima Clerical", "A lonelier cubicle.");
@@ -42,8 +46,11 @@ namespace Prima.Clerical
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "<Pending>")]
         private static ServiceProvider ConfigureServices(IServiceCollection sc)
         {
-            sc.AddSingleton<CensusEventService>()
-              .AddSingleton<EventService>()
+            sc.AddSingleton<WebClient>()
+              .AddSingleton<ModerationEventService>()
+              .AddSingleton<MessageCacheService>()
+              .AddSingleton<CensusEventService>()
+              .AddSingleton<ClericalEventService>()
               .AddSingleton<PresenceService>()
               .AddSingleton<XIVAPIService>();
             //sc.AddSingleton<UptimeMessageService>();
