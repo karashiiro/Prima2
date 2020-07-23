@@ -41,7 +41,7 @@ namespace Prima.Unstable.Modules
 
             var embed = new EmbedBuilder()
                 .WithAuthor(new EmbedAuthorBuilder()
-                    .WithIconUrl("https://www.garlandtools.org/files/icons/weather/{weather}.png")
+                    .WithIconUrl($"https://www.garlandtools.org/files/icons/weather/{currentWeather}.png")
                     .WithName($"Current weather for {Util.JadenCase(zone)}"))
                 .WithTitle($"Next weather starts in {(new DateTime() - forecast[1].Item2).TotalMinutes} minutes.")
                 .WithColor(Color.LightOrange)
