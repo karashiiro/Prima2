@@ -53,11 +53,11 @@ namespace Prima
         public static DateTime GetDateTime(string keywords)
         {
             // All this is copied from Roo's scheduler (with minor tweaks)
-            var Year = DateTime.Now.Year;
-            var Month = DateTime.Now.Month;
-            var Day = DateTime.Now.Day;
-            var Hour = DateTime.Now.Hour;
-            var Minute = DateTime.Now.Minute;
+            var year = DateTime.Now.Year;
+            var month = DateTime.Now.Month;
+            var day = DateTime.Now.Day;
+            var hour = DateTime.Now.Hour;
+            var minute = DateTime.Now.Minute;
             var dayOfWeek = -1;
 
             //Check to see if it matches a recognized time format
@@ -65,12 +65,12 @@ namespace Prima
             if (timeResult.Success)
             {
                 var time = timeResult.Value.ToLowerInvariant().Replace(" ", "");
-                Hour = int.Parse(RegexSearches.TimeHours.Match(time).Value);
-                Minute = int.Parse(RegexSearches.TimeMinutes.Match(time).Value);
+                hour = int.Parse(RegexSearches.TimeHours.Match(time).Value);
+                minute = int.Parse(RegexSearches.TimeMinutes.Match(time).Value);
                 var meridiem = RegexSearches.TimeMeridiem.Match(time).Value;
-                if (!meridiem.StartsWith("a"))
+                if (!meridiem.StartsWith("a") && hour != 12)
                 {
-                    Hour += 12;
+                    hour += 12;
                 }
             }
 
@@ -84,11 +84,11 @@ namespace Prima
                 {
                     var date = dateResult.Value.Trim();
                     var mmddyyyy = date.Split("/").Select(int.Parse).ToArray();
-                    Month = mmddyyyy[0];
-                    Day = mmddyyyy[1];
+                    month = mmddyyyy[0];
+                    day = mmddyyyy[1];
                     if (mmddyyyy.Length == 3)
                     {
-                        Year = mmddyyyy[2];
+                        year = mmddyyyy[2];
                     }
                     continue;
                 }
@@ -152,9 +152,9 @@ namespace Prima
                             continue;
                     }
             } //foreach
- 
+            
             //Check to make sure everything got set here, and then...
-            var finalDate = new DateTime(Year, Month, Day, Hour, Minute, 0);
+            var finalDate = new DateTime(year, month, day, hour, minute, 0);
             if (dayOfWeek >= 0)
             {
                 finalDate = finalDate.AddDays((dayOfWeek - (int)finalDate.DayOfWeek + 7) % 7);
