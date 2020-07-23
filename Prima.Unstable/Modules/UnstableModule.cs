@@ -2,11 +2,9 @@
 using Discord.Commands;
 using FFXIVWeather;
 using FFXIVWeather.Models;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Prima.Unstable.Modules
@@ -18,7 +16,6 @@ namespace Prima.Unstable.Modules
     public class UnstableModule : ModuleBase<SocketCommandContext>
     {
         public FFXIVWeatherService Weather { get; set; }
-        public HttpClient Http { get; set; }
 
         [Command("weather")]
         public async Task WeatherAsync([Remainder]string zone)
@@ -44,7 +41,7 @@ namespace Prima.Unstable.Modules
 
             var embed = new EmbedBuilder()
                 .WithAuthor(new EmbedAuthorBuilder()
-                    .WithIconUrl(await GetWeatherIconUrl(currentWeather.Id))
+                    .WithIconUrl("https://www.garlandtools.org/files/icons/weather/{weather}.png")
                     .WithName($"Current weather for {Util.JadenCase(zone)}"))
                 .WithTitle($"Next weather starts in {(new DateTime() - forecast[1].Item2).TotalMinutes} minutes.")
                 .WithColor(Color.LightOrange)
@@ -52,13 +49,6 @@ namespace Prima.Unstable.Modules
                 .Build();
 
             await ReplyAsync(embed: embed);
-        }
-
-        private async Task<string> GetWeatherIconUrl(int weatherId)
-        {
-            var data = JObject.Parse(await Http.GetStringAsync($"https://xivapi.com/Weather/weatherId"));
-            var urlPartial = data["Icon"].ToObject<string>();
-            return $"https://xivapi.com{urlPartial}";
         }
     }
 }
