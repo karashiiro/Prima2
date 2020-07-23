@@ -46,7 +46,7 @@ namespace Prima.Unstable.Modules
                 .WithAuthor(new EmbedAuthorBuilder()
                     .WithIconUrl($"https://www.garlandtools.org/files/icons/weather/{currentWeather.GetName().Replace(" ", "%20")}.png")
                     .WithName($"Current weather for {Util.JadenCase(zone)}:"))
-                .WithTitle($"Next weather starts in {(forecast[1].Item2 - DateTime.UtcNow).TotalMinutes} minutes.")
+                .WithTitle($"Next weather starts in {Math.Truncate((forecast[1].Item2 - DateTime.UtcNow).TotalMinutes)} minutes.")
                 .WithColor(Color.LightOrange)
                 .WithDescription(formattedForecast)
                 .Build();
