@@ -211,6 +211,9 @@ namespace Prima
         public static string JadenCase(string input)
             => input.Split(" ").Select(Capitalize).Aggregate((workingSentence, nextWord) => workingSentence + " " + nextWord);
 
+        public static string ToAbbreviation(string input)
+            => input.Split(" ").Select(word => char.ToUpperInvariant(word[0]).ToString()).Aggregate((str, c) => str + c);
+
         /// <summary>
         /// Get the value of an object property by its string name.
         /// </summary>
