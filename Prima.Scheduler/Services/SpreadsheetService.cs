@@ -110,6 +110,28 @@ namespace Prima.Scheduler.Services
                                                 StringValue = $"({@event.RunKind})",
                                             },
                                         },
+                                    },
+                                },
+                            },
+                            Range = new GridRange
+                            {
+                                SheetId = 0,
+                                StartRowIndex = row,
+                                StartColumnIndex = column,
+                            },
+                            Fields = "userEnteredValue",
+                        },
+                    },
+                    new Request
+                    {
+                        UpdateCells = new UpdateCellsRequest
+                        {
+                            Rows = new List<RowData>
+                            {
+                                new RowData
+                                {
+                                    Values = new List<CellData>
+                                    {
                                         new CellData
                                         {
                                             UserEnteredValue = new ExtendedValue
@@ -123,7 +145,7 @@ namespace Prima.Scheduler.Services
                             Range = new GridRange
                             {
                                 SheetId = 0,
-                                StartRowIndex = row,
+                                StartRowIndex = row + (row + 6 > dateRow + timeslotsPerDay ? 6 - (row + 6 - dateRow - timeslotsPerDay) : 6),
                                 StartColumnIndex = column,
                             },
                             Fields = "userEnteredValue",
