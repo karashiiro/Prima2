@@ -8,6 +8,9 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Prima.Attributes;
+using FFXIVWeather;
+using FFXIVWeather.Models;
+using Discord;
 
 namespace Prima.Extra.Modules
 {
@@ -17,8 +20,46 @@ namespace Prima.Extra.Modules
     [Name("Extra")]
     public class ExtraModule : ModuleBase<SocketCommandContext>
     {
+        public FFXIVWeatherService Weather { get; set; }
         public HttpClient Http { get; set; }
         public XIVAPIService Xivapi { get; set; }
+
+        [Command("weather")]
+        public async Task WeatherAsync([Remainder] string zone)
+        {
+            IList<(Weather, DateTime)> forecast;
+            try
+            {
+                forecast = Weather.GetForecast(zone, count: 10);
+            }
+            catch (ArgumentException)
+            {
+                await ReplyAsync("The specified zone could not be found.");
+                return;
+            }
+
+            var (currentWeather, currentWeatherStartTime) = forecast[0];
+
+            var tzi = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
+            var formattedForecast = $"**Current:** {currentWeather} (Began at {TimeZoneInfo.ConvertTimeFromUtc(currentWeatherStartTime, tzi).ToShortTimeString()} PDT)";
+            foreach (var (weather, startTime) in forecast.Skip(1))
+            {
+                var zonedTime = TimeZoneInfo.ConvertTimeFromUtc(startTime, tzi);
+
+                formattedForecast += $"\n{zonedTime.ToShortTimeString()}: {weather}";
+            }
+
+            var embed = new EmbedBuilder()
+                .WithAuthor(new EmbedAuthorBuilder()
+                    .WithIconUrl($"https://www.garlandtools.org/files/icons/weather/{currentWeather.GetName().Replace(" ", "%20")}.png")
+                    .WithName($"Current weather for {Util.JadenCase(zone)}:"))
+                .WithTitle($"Next weather starts in {Math.Truncate((forecast[1].Item2 - DateTime.UtcNow).TotalMinutes)} minutes.")
+                .WithColor(Color.LightOrange)
+                .WithDescription(formattedForecast)
+                .Build();
+
+            await ReplyAsync(embed: embed);
+        }
 
         [Command("roll", RunMode = RunMode.Async)]
         public async Task RollAsync()
