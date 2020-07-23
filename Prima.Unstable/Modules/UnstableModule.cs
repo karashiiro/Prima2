@@ -33,8 +33,8 @@ namespace Prima.Unstable.Modules
 
             var (currentWeather, currentWeatherStartTime) = forecast[0];
 
-            var tzi = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
-            var formattedForecast = $"**Current:** {currentWeather} (Began at {currentWeatherStartTime.ToShortTimeString()} {Util.ToAbbreviation(tzi.DisplayName)})";
+            var tzi = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
+            var formattedForecast = $"**Current:** {currentWeather} (Began at {currentWeatherStartTime.ToShortTimeString()} (PDT))";
             foreach (var (weather, startTime) in forecast.Skip(1))
             {
                 var zonedTime = TimeZoneInfo.ConvertTimeFromUtc(startTime, tzi);
