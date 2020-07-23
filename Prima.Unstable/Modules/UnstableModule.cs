@@ -34,7 +34,7 @@ namespace Prima.Unstable.Modules
             var (currentWeather, currentWeatherStartTime) = forecast[0];
 
             var tzi = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
-            var formattedForecast = $"**Current:** {currentWeather} (Began at {currentWeatherStartTime.ToShortTimeString()} (PDT))";
+            var formattedForecast = $"**Current:** {currentWeather} (Began at {TimeZoneInfo.ConvertTimeFromUtc(currentWeatherStartTime, tzi).ToShortTimeString()} PDT)";
             foreach (var (weather, startTime) in forecast.Skip(1))
             {
                 var zonedTime = TimeZoneInfo.ConvertTimeFromUtc(startTime, tzi);
@@ -46,7 +46,7 @@ namespace Prima.Unstable.Modules
                 .WithAuthor(new EmbedAuthorBuilder()
                     .WithIconUrl($"https://www.garlandtools.org/files/icons/weather/{currentWeather.GetName().Replace(" ", "%20")}.png")
                     .WithName($"Current weather for {Util.JadenCase(zone)}:"))
-                .WithTitle($"Next weather starts in {(forecast[1].Item2 - new DateTime()).TotalMinutes} minutes.")
+                .WithTitle($"Next weather starts in {(forecast[1].Item2 - DateTime.UtcNow).TotalMinutes} minutes.")
                 .WithColor(Color.LightOrange)
                 .WithDescription(formattedForecast)
                 .Build();
