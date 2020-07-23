@@ -13,7 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Prima.Configuration\Prima.Configuration.csproj" />
     <ProjectReference Include="..\Prima.Scheduler\Prima.Scheduler.csproj" />
     <ProjectReference Include="..\Prima.Stable\Prima.Stable.csproj" />
     <ProjectReference Include="..\Prima\Prima.csproj" />

@@ -8,7 +8,7 @@ using データベース = Prima.Services.DbService;
 using ストリング = System.String;
 using タスク = System.Threading.Tasks.Task;
 
-namespace Prima.Configuration.Modules
+namespace Prima.Stable.Modules
 {
     /// <summary>
     /// このモジュールは大域的な設定を持って、一遍アドミンを使えます。

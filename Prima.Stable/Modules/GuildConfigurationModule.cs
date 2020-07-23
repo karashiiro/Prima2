@@ -5,7 +5,7 @@ using Prima.Services;
 using System;
 using System.Threading.Tasks;
 
-namespace Prima.Configuration.Modules
+namespace Prima.Stable.Modules
 {
     /// <summary>
     /// Includes guild configuration commands that only guild administrators should be able to execute.

@@ -208,6 +208,9 @@ namespace Prima
         public static string Capitalize(string input)
             => char.ToUpperInvariant(input[0]) + input.Substring(1).ToLowerInvariant();
 
+        public static string JadenCase(string input)
+            => input.Split(" ").Select(Capitalize).Aggregate((workingSentence, nextWord) => workingSentence + " " + nextWord);
+
         /// <summary>
         /// Get the value of an object property by its string name.
         /// </summary>
