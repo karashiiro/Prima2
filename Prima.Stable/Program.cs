@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Prima.Services;
 using System.Net;
+using FFXIVWeather;
 
 namespace Prima.Stable
 {
@@ -52,7 +53,8 @@ namespace Prima.Stable
               .AddSingleton<CensusEventService>()
               .AddSingleton<ClericalEventService>()
               .AddSingleton<PresenceService>()
-              .AddSingleton<XIVAPIService>();
+              .AddSingleton<XIVAPIService>()
+              .AddSingleton<FFXIVWeatherService>();
             //sc.AddSingleton<UptimeMessageService>();
             return sc.BuildServiceProvider();
         }
