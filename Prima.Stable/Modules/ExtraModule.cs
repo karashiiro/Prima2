@@ -11,6 +11,8 @@ using Prima.Attributes;
 using FFXIVWeather;
 using FFXIVWeather.Models;
 using Discord;
+using Prima.Resources;
+using Color = Discord.Color;
 
 namespace Prima.Extra.Modules
 {
@@ -25,6 +27,7 @@ namespace Prima.Extra.Modules
         public XIVAPIService Xivapi { get; set; }
 
         [Command("weather")]
+        [Description("[FFXIV] Shows the current weather for the specified zone.")]
         public async Task WeatherAsync([Remainder] string zone)
         {
             IList<(Weather, DateTime)> forecast;
@@ -62,6 +65,7 @@ namespace Prima.Extra.Modules
         }
 
         [Command("roll", RunMode = RunMode.Async)]
+        [Description("T̵̪͖̎̈̍ḛ̷̤͑̚ș̴̔͑̾ͅͅt̸͔͜͝ ̶̡̨̪͌̉͠ỷ̵̺̕o̴̞̍ū̴͚̣̤r̵͚͎͔͘ ̴̨̬̿ḷ̷͖̀̚u̴͖̲͌́c̴̲̣͙͑̈͝k̸͍͖̿̆̓!̶̢̅̀")]
         public async Task RollAsync()
         {
             var res = (int)Math.Floor(new Random().NextDouble() * 4);
@@ -101,6 +105,7 @@ namespace Prima.Extra.Modules
         }
 
         [Command("market", RunMode = RunMode.Async)]
+        [Description("[FFXIV] Look up market data for an item. Usage: `~market <item name> <world>`")]
         public async Task MarketAsync(params string[] args)
         {
             if (args.Length < 2)
@@ -152,7 +157,9 @@ namespace Prima.Extra.Modules
         }
 
         [Command("portals", RunMode = RunMode.Async)]
+        [Description("Shows the portal map.")]
         [RateLimit(TimeSeconds = 30, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task PortalsAsync()
         {
             using var http = new HttpClient();
@@ -161,7 +168,9 @@ namespace Prima.Extra.Modules
         }
 
         [Command("owain", RunMode = RunMode.Async)]
+        [Description("Shows the Owain guide.")]
         [RateLimit(TimeSeconds = 120, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task OwainAsync()
         {
             using var http = new HttpClient();
@@ -170,7 +179,9 @@ namespace Prima.Extra.Modules
         }
 
         [Command("art", RunMode = RunMode.Async)]
+        [Description("Shows the Art guide.")]
         [RateLimit(TimeSeconds = 120, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task ArtAsync()
         {
             using var http = new HttpClient();
@@ -179,7 +190,9 @@ namespace Prima.Extra.Modules
         }
 
         [Command("raiden", RunMode = RunMode.Async)]
+        [Description("Shows the Raiden guide.")]
         [RateLimit(TimeSeconds = 120, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task RaidenAsync()
         {
             using var http = new HttpClient();
@@ -188,7 +201,9 @@ namespace Prima.Extra.Modules
         }
 
         [Command("av", RunMode = RunMode.Async)]
+        [Description("Shows the Absolute Virtue guide.")]
         [RateLimit(TimeSeconds = 120, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task AbsoluteVirtueAsync()
         {
             using var http = new HttpClient();
@@ -197,7 +212,9 @@ namespace Prima.Extra.Modules
         }
 
         [Command("ozma", RunMode = RunMode.Async)]
+        [Description("Shows the Ozma guide.")]
         [RateLimit(TimeSeconds = 120, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task OzmaAsync()
         {
             using var http = new HttpClient();
@@ -206,7 +223,9 @@ namespace Prima.Extra.Modules
         }
 
         [Command("accel", RunMode = RunMode.Async)]
+        [Description("Shows the Acceleration Bomb guide.")]
         [RateLimit(TimeSeconds = 120, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task AccelBombAsync()
         {
             using var http = new HttpClient();

@@ -145,7 +145,7 @@ namespace Prima.Scheduler.Services
                             Range = new GridRange
                             {
                                 SheetId = 0,
-                                StartRowIndex = row + (row + 6 > dateRow + timeslotsPerDay ? 6 - (row + 6 - dateRow - timeslotsPerDay) : 6),
+                                StartRowIndex = row + (row + 6 > dateRow + timeslotsPerDay ? 6 - (row + 6 - dateRow - timeslotsPerDay) : 6) - 1,
                                 StartColumnIndex = column,
                             },
                             Fields = "userEnteredValue",

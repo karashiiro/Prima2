@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using Prima.Attributes;
 using Prima.Models;
 using Prima.Resources;
 using Prima.Scheduler.Services;
@@ -8,8 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Serilog;
 using Color = Discord.Color;
 
 namespace Prima.Scheduler.Modules
@@ -28,6 +27,7 @@ namespace Prima.Scheduler.Modules
         public SpreadsheetService Sheets { get; set; }
 
         [Command("schedule")]
+        [Description("Schedule an event. See the commands channel for more detailed information.")]
         public async Task ScheduleAsync([Remainder] string content) // Schedules a sink.
         {
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
@@ -152,6 +152,7 @@ namespace Prima.Scheduler.Modules
         }
 
         [Command("unschedule")]
+        [Description("Unschedule an event.")]
         public async Task UnscheduleAsync([Remainder] string content)
         {
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
@@ -222,6 +223,7 @@ namespace Prima.Scheduler.Modules
         }
 
         [Command("reschedule")]
+        [Description("Reschedule an event.")]
         public async Task RescheduleAsync([Remainder] string parameters)
         {
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
@@ -355,6 +357,7 @@ namespace Prima.Scheduler.Modules
 
         [Command("rundst")]
         [Alias("rundistribution", "rundstr")]
+        [Description("See the historical distribution of runs across the day.")]
         public Task GetRunDstAsync(params string[] args)
         {
             var runKind = (RunDisplayType)(-1);

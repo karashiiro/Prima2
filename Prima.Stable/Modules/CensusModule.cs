@@ -29,6 +29,7 @@ namespace Prima.Modules
         // Declare yourself as a character.
         [Command("iam", RunMode = RunMode.Async)]
         [Alias("i am")]
+        [Description("[FFXIV] Register a character to yourself.")]
         public async Task IAmAsync(params string[] parameters)
         {
             var guild = Context.Guild ?? Context.User.MutualGuilds.First(g => Db.Guilds.Any(gc => gc.Id == g.Id));
@@ -263,6 +264,8 @@ namespace Prima.Modules
 
         // Verify BA clear status.
         [Command("verify", RunMode = RunMode.Async)]
+        [Description("Verify that you've completed the Baldesion Arsenal on your registered character 1 or 10 times.")]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task VerifyAsync(params string[] args)
         {
             var guild = Context.Guild ?? Context.User.MutualGuilds.First(g => Db.Guilds.Any(gc => gc.Id == g.Id));
@@ -350,6 +353,7 @@ namespace Prima.Modules
 
         // Check who this user is.
         [Command("whoami", RunMode = RunMode.Async)]
+        [Description("[FFXIV] Check what character you have registered.")]
         public async Task WhoAmIAsync()
         {
             DiscordXIVUser found;

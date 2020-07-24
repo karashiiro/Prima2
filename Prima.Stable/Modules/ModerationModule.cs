@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Prima.Attributes;
 
 namespace Prima.Moderation.Modules
 {
@@ -25,6 +26,7 @@ namespace Prima.Moderation.Modules
 
         // Submit a report.
         [Command("report", RunMode = RunMode.Async)]
+        [Description("Privately report information to the administration.")]
         public async Task ReportAsync(params string[] p)
         {
             if (Context.Guild != null)

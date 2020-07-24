@@ -84,7 +84,7 @@ namespace Prima.Services
 
             Log.Information("({DiscordID}) {DiscordName}: {MessageContent}", rawMessage.Author.Id, rawMessage.Author.Username + "#" + rawMessage.Author.Discriminator, rawMessage.Content);
 
-            // Check timeout info
+            // Attribute stuff
             var endOfCommandNameIndex = context.Message.Content.IndexOf(' ');
             if (endOfCommandNameIndex == -1) endOfCommandNameIndex = context.Message.Content.Length - 1;
             var commandName = context.Message.Content.Substring(argPos, endOfCommandNameIndex);
@@ -92,18 +92,23 @@ namespace Prima.Services
             var command = commands.FirstOrDefault(c => c.Name == commandName);
             if (command != null)
             {
-                if (command.Attributes.FirstOrDefault(a => a is RateLimitAttribute) is RateLimitAttribute rateLimitInfo)
+                var restrictedToAttr = (RestrictToGuildsAttribute)command.Attributes.FirstOrDefault(attr => attr is RestrictToGuildsAttribute);
+                if (restrictedToAttr != null && (context.Guild == null || !restrictedToAttr.GuildIds.Contains(context.Guild.Id)))
+                    return;
+
+                var restrictedFromAttr = (RestrictFromGuildsAttribute)command.Attributes.FirstOrDefault(attr => attr is RestrictFromGuildsAttribute);
+                if (restrictedFromAttr != null && (context.Guild != null && restrictedFromAttr.GuildIds.Contains(context.Guild.Id)))
+                    return;
+
+                var rateLimitInfo = (RateLimitAttribute)command.Attributes.FirstOrDefault(attr => attr is RateLimitAttribute);
+                if (rateLimitInfo != null)
                 {
                     // TODO handle non-global rate limits
-                    if (!_commandTimeouts.ContainsKey(commandName) || _commandTimeouts[commandName] < DateTimeOffset.Now.ToUnixTimeSeconds())
-                    {
-                        _commandTimeouts.Remove(commandName);
-                        _commandTimeouts.Add(commandName, DateTimeOffset.Now.ToUnixTimeSeconds() + rateLimitInfo.TimeSeconds);
-                    }
-                    else
-                    {
+                    if (_commandTimeouts.ContainsKey(commandName) && _commandTimeouts[commandName] >= DateTimeOffset.Now.ToUnixTimeSeconds())
                         return;
-                    }
+
+                    _commandTimeouts.Remove(commandName);
+                    _commandTimeouts.Add(commandName, DateTimeOffset.Now.ToUnixTimeSeconds() + rateLimitInfo.TimeSeconds);
                 }
             }
 
