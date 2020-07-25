@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Prima.Services;
 
 namespace Prima.Unstable
 {
@@ -25,6 +26,7 @@ namespace Prima.Unstable
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "<Pending>")]
         private static ServiceProvider ConfigureServices(IServiceCollection sc)
         {
+            sc.AddSingleton<FFXIV3RoleQueueService>();
             return sc.BuildServiceProvider();
         }
     }

@@ -264,8 +264,7 @@ namespace Prima.Modules
 
         // Verify BA clear status.
         [Command("verify", RunMode = RunMode.Async)]
-        [Description("Verify that you've completed the Baldesion Arsenal on your registered character 1 or 10 times.")]
-        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        [Description("[FFXIV] Verify that you've completed the Baldesion Arsenal on your registered character 1 or 10 times.")]
         public async Task VerifyAsync(params string[] args)
         {
             var guild = Context.Guild ?? Context.User.MutualGuilds.First(g => Db.Guilds.Any(gc => gc.Id == g.Id));
