@@ -16,7 +16,7 @@ namespace Prima.Services
 
         public FFXIV3RoleQueueService()
         {
-            if (File.Exists(QueuePath))
+            if (!File.Exists(QueuePath))
                 Queues = new Dictionary<string, FFXIV3RoleQueue>();
             else Load();
         }

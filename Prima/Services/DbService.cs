@@ -16,12 +16,14 @@ namespace Prima.Services
         public IEnumerable<DiscordXIVUser> Users => _users.AsQueryable().ToEnumerable();
         public IEnumerable<ScheduledEvent> Events => _events.AsQueryable().ToEnumerable();
         public IEnumerable<CachedMessage> CachedMessages => _messageCache.AsQueryable().ToEnumerable();
+        public IEnumerable<ChannelDescription> ChannelDescriptions => _channelDescriptions.AsQueryable().ToEnumerable();
 
         private readonly IMongoCollection<GlobalConfiguration> _config;
         private readonly IMongoCollection<DiscordGuildConfiguration> _guildConfig;
         private readonly IMongoCollection<DiscordXIVUser> _users;
         private readonly IMongoCollection<ScheduledEvent> _events;
         private readonly IMongoCollection<CachedMessage> _messageCache;
+        private readonly IMongoCollection<ChannelDescription> _channelDescriptions;
 
         private const string _connectionString = "mongodb://localhost:27017";
         private const string _dbName = "PrimaDb";
@@ -45,6 +47,9 @@ namespace Prima.Services
 
             _messageCache = database.GetCollection<CachedMessage>("CachedMessages");
             Log.Information("Message cache database status: {DbStatus} documents found.", _messageCache.EstimatedDocumentCount());
+
+            _channelDescriptions = database.GetCollection<ChannelDescription>("ChannelDescriptions");
+            Log.Information("Channel description database status: {DbStatus} documents found.", _channelDescriptions.EstimatedDocumentCount());
         }
 
         public Task SetGlobalConfigurationProperty(string key, string value)
@@ -186,7 +191,7 @@ namespace Prima.Services
             var message = await existing.FirstOrDefaultAsync();
             if (message != null)
             {
-                await _events.DeleteOneAsync(cm => cm.MessageId3 == messageId);
+                await _messageCache.DeleteOneAsync(cm => cm.MessageId == messageId);
             }
         }
 
@@ -194,6 +199,23 @@ namespace Prima.Services
         {
             await DeleteMessage(message.MessageId);
             await CacheMessage(message);
+        }
+
+        public async Task AddChannelDescription(ulong channelId, string description)
+        {
+            if (await (await _channelDescriptions.FindAsync(cd => cd.ChannelId == channelId)).AnyAsync().ConfigureAwait(false))
+                await _channelDescriptions.DeleteOneAsync(cd => cd.ChannelId == channelId);
+            await _channelDescriptions.InsertOneAsync(new ChannelDescription { ChannelId = channelId, Description = description });
+        }
+
+        public async Task DeleteChannelDescription(ulong channelId)
+        {
+            var existing = await _channelDescriptions.FindAsync(cd => cd.ChannelId == channelId);
+            var message = await existing.FirstOrDefaultAsync();
+            if (message != null)
+            {
+                await _channelDescriptions.DeleteOneAsync(cd => cd.ChannelId == channelId);
+            }
         }
     }
 }

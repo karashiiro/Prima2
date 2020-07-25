@@ -22,6 +22,7 @@ namespace Prima.Extra.Modules
     [Name("Extra")]
     public class ExtraModule : ModuleBase<SocketCommandContext>
     {
+        public DbService Db { get; set; }
         public FFXIVWeatherService Weather { get; set; }
         public HttpClient Http { get; set; }
         public XIVAPIService Xivapi { get; set; }
@@ -154,6 +155,30 @@ namespace Prima.Extra.Modules
             public string RetainerName;
             public int Total;
             public string WorldName;
+        }
+
+        [Command("setdescription")]
+        [RequireUserPermission(GuildPermission.BanMembers)]
+        public async Task SetDescriptionAsync([Remainder] string description)
+        {
+            await Db.DeleteChannelDescription(Context.Channel.Id);
+            await Db.AddChannelDescription(Context.Channel.Id, description);
+            await ReplyAsync($"{Context.User.Mention}, the help message has been updated!");
+        }
+
+        [Command("whatisthis")]
+        [Description("Explains what the channel you use it in is for, if such information is available.")]
+        public Task WhatIsThisAsync()
+        {
+            var cd = Db.ChannelDescriptions.FirstOrDefault(cd => cd.ChannelId == Context.Channel.Id);
+            if (cd == null) return Task.CompletedTask;
+            var embed = new EmbedBuilder()
+                .WithTitle($"#{Context.Channel.Name}")
+                .WithColor(new Color(0x00, 0x80, 0xFF))
+                .WithThumbnailUrl("http://www.newdesignfile.com/postpic/2016/05/windows-8-help-icon_398417.png")
+                .WithDescription(cd.Description)
+                .Build();
+            return ReplyAsync(embed: embed);
         }
 
         [Command("portals", RunMode = RunMode.Async)]
