@@ -30,7 +30,7 @@ namespace Prima.Unstable.Modules
         [Command("lfm", RunMode = RunMode.Async)]
         [Description("Group leaders can use this to pull up to 7 members from the queue in a particular channel. Usage: `~lfm <#d/#h/#t>`")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task LfmAsync([Remainder] string args)
+        public async Task LfmAsync([Remainder] string args = "")
         {
             if (!LfgChannels.ContainsKey(Context.Guild.Id)) // Don't use this outside of LFG channels
                 return;
@@ -341,7 +341,7 @@ namespace Prima.Unstable.Modules
         [Command("lfg")]
         [Description("Enter the queue in a queue channel. Takes a role as its first argument, e.g. `~lfg dps`")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task LfgAsync([Remainder] string args)
+        public async Task LfgAsync([Remainder] string args = "")
         {
             if (!LfgChannels.ContainsKey(Context.Guild.Id))
                 return;
@@ -393,7 +393,7 @@ namespace Prima.Unstable.Modules
         [Alias("unqueue", "leave")]
         [Description("Leaves one or more roles in a channel's queue. Using this with no roles specified removes you from all roles in the channel.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task LeaveQueueAsync([Remainder] string args)
+        public async Task LeaveQueueAsync([Remainder] string args = "")
         {
             if (!LfgChannels.ContainsKey(Context.Guild.Id))
                 return;
@@ -448,7 +448,7 @@ namespace Prima.Unstable.Modules
         [Command("queue")]
         [Description("Checks your position in the queues of the channel you enter it in.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task QueueAsync([Remainder] string args)
+        public async Task QueueAsync([Remainder] string args = "")
         {
             if (args.StartsWith("leave")) // See below
             {

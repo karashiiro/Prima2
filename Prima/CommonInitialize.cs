@@ -53,12 +53,10 @@ namespace Prima
                 .AddSingleton(new DiscordSocketClient(disConfig))
                 .AddSingleton<CommandService>()
                 .AddSingleton<CommandHandlingService>()
-                
                 .AddSingleton<DiagnosticService>()
-
                 .AddSingleton<HttpClient>()
-
-                .AddSingleton<DbService>();
+                .AddSingleton<DbService>()
+                .AddSingleton<FFXIVSheetService>();
                 //.AddSingleton(new HttpServer(Log.Information))
         }
 
