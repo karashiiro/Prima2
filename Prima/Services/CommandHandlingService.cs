@@ -76,7 +76,7 @@ namespace Prima.Services
             if (!message.HasCharPrefix(prefix, ref argPos))
             {
                 // Hacky bit to get this working with fewer headaches upfront for new users
-                if (rawMessage.Channel is SocketGuildChannel && message.Content.StartsWith("i") || message.Content.StartsWith("agree"))
+                if (rawMessage.Channel is SocketGuildChannel channel && channel.Name == "welcome" && message.Content.StartsWith("i") || message.Content.StartsWith("agree"))
                     argPos = 0;
                 else
                     return;
