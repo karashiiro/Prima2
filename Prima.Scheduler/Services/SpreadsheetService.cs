@@ -84,9 +84,8 @@ namespace Prima.Scheduler.Services
                     break;
                 }
             }
-
             if (column == -1)
-                return; // Try again later.
+                return; // Avoid breaking things
             
             var color = RunDisplayTypes.GetColor(@event.RunKind);
             var batchRequest1 = new BatchUpdateSpreadsheetRequest
@@ -117,7 +116,9 @@ namespace Prima.Scheduler.Services
                             {
                                 SheetId = 0,
                                 StartRowIndex = row,
+                                EndRowIndex = row + 1,
                                 StartColumnIndex = column,
+                                EndColumnIndex = column + 1,
                             },
                             Fields = "userEnteredValue",
                         },
@@ -145,8 +146,10 @@ namespace Prima.Scheduler.Services
                             Range = new GridRange
                             {
                                 SheetId = 0,
-                                StartRowIndex = row + (row + 6 > dateRow + timeslotsPerDay ? 6 - (row + 6 - dateRow - timeslotsPerDay) : 6) - 1,
-                                StartColumnIndex = column,
+                                StartRowIndex = row + (row + 6 > dateRow + timeslotsPerDay ? -row + dateRow + 6 - (dateRow + timeslotsPerDay - row) : 6) - 1,
+                                EndRowIndex = row + (row + 6 > dateRow + timeslotsPerDay ? -row + dateRow + 6 - (dateRow + timeslotsPerDay - row) : 6),
+                                StartColumnIndex = column == daysAvailable ? 1 : column + 1,
+                                EndColumnIndex = column == daysAvailable ? 2 : column + 2,
                             },
                             Fields = "userEnteredValue",
                         },
@@ -160,7 +163,9 @@ namespace Prima.Scheduler.Services
                             {
                                 SheetId = 0,
                                 StartRowIndex = row,
+                                EndRowIndex = row + (row + 6 > dateRow + timeslotsPerDay ? 6 - (row + 6 - dateRow - timeslotsPerDay) : 6) + 1,
                                 StartColumnIndex = column,
+                                EndColumnIndex = column + 1,
                             },
                             Fields = "userEnteredFormat(backgroundColor)",
                         },
@@ -169,7 +174,7 @@ namespace Prima.Scheduler.Services
             };
             for (var i = 0; i < (row + 6 > dateRow + timeslotsPerDay ? 6 - (row + 6 - dateRow - timeslotsPerDay) : 6); i++)
             {
-                batchRequest1.Requests[1].UpdateCells.Rows.Add(new RowData
+                batchRequest1.Requests[2].UpdateCells.Rows.Add(new RowData
                 {
                     Values = new List<CellData>
                     {
@@ -203,7 +208,9 @@ namespace Prima.Scheduler.Services
                                 {
                                     SheetId = 0,
                                     StartRowIndex = dateRow,
+                                    EndRowIndex = dateRow + 6 - (dateRow + timeslotsPerDay - row),
                                     StartColumnIndex = column == daysAvailable ? 1 : column + 1,
+                                    EndColumnIndex = column == daysAvailable ? 2 : column + 2,
                                 },
                                 Fields = "userEnteredFormat(backgroundColor)",
                             },
@@ -288,6 +295,30 @@ namespace Prima.Scheduler.Services
                                                 StringValue = "",
                                             },
                                         },
+                                    },
+                                },
+                            },
+                            Range = new GridRange
+                            {
+                                SheetId = 0,
+                                StartRowIndex = row,
+                                EndRowIndex = row + 1,
+                                StartColumnIndex = column,
+                                EndColumnIndex = column + 1,
+                            },
+                            Fields = "userEnteredValue",
+                        },
+                    },
+                    new Request
+                    {
+                        UpdateCells = new UpdateCellsRequest
+                        {
+                            Rows = new List<RowData>
+                            {
+                                new RowData
+                                {
+                                    Values = new List<CellData>
+                                    {
                                         new CellData
                                         {
                                             UserEnteredValue = new ExtendedValue
@@ -301,8 +332,10 @@ namespace Prima.Scheduler.Services
                             Range = new GridRange
                             {
                                 SheetId = 0,
-                                StartRowIndex = row,
-                                StartColumnIndex = column,
+                                StartRowIndex = row + (row + 6 > dateRow + timeslotsPerDay ? 6 - timeslotsPerDay : 6) - 1,
+                                EndRowIndex = row + (row + 6 > dateRow + timeslotsPerDay ? 6 - timeslotsPerDay : 6),
+                                StartColumnIndex = column == daysAvailable ? 1 : column + 1,
+                                EndColumnIndex = column == daysAvailable ? 2 : column + 2,
                             },
                             Fields = "userEnteredValue",
                         },
@@ -316,7 +349,9 @@ namespace Prima.Scheduler.Services
                             {
                                 SheetId = 0,
                                 StartRowIndex = row,
+                                EndRowIndex = row + (row + 6 > dateRow + timeslotsPerDay ? 6 - (row + 6 - dateRow - timeslotsPerDay) : 6) + 1,
                                 StartColumnIndex = column,
+                                EndColumnIndex = column + 1,
                             },
                             Fields = "userEnteredFormat(backgroundColor)",
                         },
@@ -325,7 +360,7 @@ namespace Prima.Scheduler.Services
             };
             for (var i = 0; i < (row + 6 > dateRow + timeslotsPerDay ? 6 - (row + 6 - dateRow - timeslotsPerDay) : 6); i++)
             {
-                batchRequest1.Requests[1].UpdateCells.Rows.Add(new RowData
+                batchRequest1.Requests[2].UpdateCells.Rows.Add(new RowData
                 {
                     Values = new List<CellData>
                     {
@@ -333,7 +368,7 @@ namespace Prima.Scheduler.Services
                         {
                             UserEnteredFormat = new CellFormat
                             {
-                                BackgroundColor = (row + i) % 2 == 0 ? new Color
+                                BackgroundColor = i % 2 == (row % 2) ? new Color
                                 {
                                     Red = 1.0f,
                                     Green = 1.0f,
@@ -364,7 +399,9 @@ namespace Prima.Scheduler.Services
                                 {
                                     SheetId = 0,
                                     StartRowIndex = dateRow,
+                                    EndRowIndex = dateRow + 6 - (dateRow + timeslotsPerDay - row),
                                     StartColumnIndex = column == daysAvailable ? 1 : column + 1,
+                                    EndColumnIndex = column == daysAvailable ? 2 : column + 2,
                                 },
                                 Fields = "userEnteredFormat(backgroundColor)",
                             },
@@ -381,7 +418,7 @@ namespace Prima.Scheduler.Services
                             {
                                 UserEnteredFormat = new CellFormat
                                 {
-                                    BackgroundColor = (row + i) % 2 == 1 ? new Color
+                                    BackgroundColor = (row + i) % 2 == 0 ? new Color
                                     {
                                         Red = 1.0f,
                                         Green = 1.0f,

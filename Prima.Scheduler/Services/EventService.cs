@@ -64,8 +64,6 @@ namespace Prima.Scheduler.Services
             if (embed == null)
                 return;
             await message.ModifyAsync(properties => properties.Embed = embed);
-
-            await _sheets.AddEvent(run, guildConfig.BASpreadsheetId);
         }
 
         public async Task OnReactionAdd(Cacheable<IUserMessage, ulong> cmessage, ISocketMessageChannel ichannel, SocketReaction reaction)
