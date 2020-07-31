@@ -183,10 +183,26 @@ namespace Prima.Scheduler.Modules
                 when = when.AddMinutes(-when.Minute);
             }
 
-            var result = when < DateTime.Now ? null : await Db.TryRemoveScheduledEvent(when, Context.User.Id);
+            if (when < DateTime.Now)
+            {
+                await ReplyAsync($"{Context.User.Mention}, that time has already passed!");
+                return;
+            }
+
+            ScheduledEvent result;
+            try
+            {
+                result = await Db.TryRemoveScheduledEvent(when, Context.User.Id);
+            }
+            catch
+            {
+                var botMaster = Context.Client.GetUser(Db.Config.BotMaster);
+                await ReplyAsync($"An error occurred. The run may or may not have been deleted, pinging {(botMaster != null ? botMaster.Mention : "undefined")}.");
+                return;
+            }
             if (result == null)
             {
-                await ReplyAsync($"{Context.User.Mention}, you don't seem to have a run scheduled at that day and time (or that time has passed)!");
+                await ReplyAsync($"{Context.User.Mention}, you don't seem to have a run scheduled at that day and time!");
                 return;
             }
 
