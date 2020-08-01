@@ -199,7 +199,7 @@ namespace Prima.Extra.Modules
         public async Task OwainAsync()
         {
             using var http = new HttpClient();
-            var fileStream = await http.GetStreamAsync(new Uri("https://cdn.discordapp.com/attachments/715548578684207134/716812557851295815/unknown-2.png"));
+            var fileStream = await http.GetStreamAsync(new Uri("https://i.imgur.com/ADwopqC.jpg"));
             await Context.Channel.SendFileAsync(fileStream, "unknown-2.png");
         }
 
@@ -210,7 +210,7 @@ namespace Prima.Extra.Modules
         public async Task ArtAsync()
         {
             using var http = new HttpClient();
-            var fileStream = await http.GetStreamAsync(new Uri("https://cdn.discordapp.com/attachments/715548578684207134/716812588029182033/unknown-1.png"));
+            var fileStream = await http.GetStreamAsync(new Uri("https://i.imgur.com/sehs4Tw.jpg"));
             await Context.Channel.SendFileAsync(fileStream, "unknown-1.png");
         }
 

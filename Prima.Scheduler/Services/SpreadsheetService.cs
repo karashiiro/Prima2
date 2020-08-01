@@ -15,6 +15,8 @@ using System.Threading.Tasks;
 using Discord.WebSocket;
 using Prima.Services;
 using Color = Google.Apis.Sheets.v4.Data.Color;
+using System.Linq;
+using Discord;
 
 namespace Prima.Scheduler.Services
 {
@@ -86,7 +88,10 @@ namespace Prima.Scheduler.Services
             }
             if (column == -1)
                 return; // Avoid breaking things
-            
+
+            var guildConfig = _db.Guilds.FirstOrDefault(g => g.Id == @event.GuildId);
+            if (guildConfig == null) return;
+
             var color = RunDisplayTypes.GetColor(@event.RunKind);
             var batchRequest1 = new BatchUpdateSpreadsheetRequest
             {
@@ -137,7 +142,7 @@ namespace Prima.Scheduler.Services
                                         {
                                             UserEnteredValue = new ExtendedValue
                                             {
-                                                StringValue = $"[{_client.GetUser(@event.LeaderId)}]",
+                                                FormulaValue = $"=HYPERLINK(\"{(await _client.GetGuild(@event.GuildId).GetTextChannel(guildConfig.ScheduleInputChannel).GetMessageAsync(@event.MessageId3)).GetJumpUrl()}\",\"[{_client.GetUser(@event.LeaderId)}]\")",
                                             },
                                         },
                                     },
