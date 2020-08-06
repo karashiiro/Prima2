@@ -60,13 +60,15 @@ namespace Prima.Scheduler.Services
                         var leader = guild.GetUser(run.LeaderId);
                         try
                         {
-                            await leader.SendMessageAsync("The run you scheduled is set to begin in 30 minutes!");
+                            await leader.SendMessageAsync("The run you scheduled is set to begin in 30 minutes!\n\n" +
+                                $"Message link: <{(await _client.GetGuild(run.GuildId).GetTextChannel(guildConfig.ScheduleInputChannel).GetMessageAsync(run.MessageId3)).GetJumpUrl()}>");
                         }
                         catch (HttpException)
                         {
                             try
                             {
-                                var message = await commandChannel.SendMessageAsync($"{leader.Mention}, the run you scheduled is set to begin in 30 minutes!");
+                                var message = await commandChannel.SendMessageAsync($"{leader.Mention}, the run you scheduled is set to begin in 30 minutes!\n\n" +
+                                    $"Message link: <{(await _client.GetGuild(run.GuildId).GetTextChannel(guildConfig.ScheduleInputChannel).GetMessageAsync(run.MessageId3)).GetJumpUrl()}>");
                                 (new Task(async () => {
                                     await Task.Delay((int)Threshold, token);
                                     try
@@ -85,7 +87,7 @@ namespace Prima.Scheduler.Services
                         foreach (var userId in run.SubscribedUsers)
                         {
                             var member = guild.GetUser(ulong.Parse(userId));
-                            await TryNotifyMember(member, leader, commandChannel, token);
+                            await TryNotifyMember(member, leader, commandChannel, run, guildConfig, token);
                         }
 
                         run.Notified = true;
@@ -104,20 +106,22 @@ namespace Prima.Scheduler.Services
             }
         }
 
-        private static async Task TryNotifyMember(IUser member, IGuildUser leader, ISocketMessageChannel commandChannel, CancellationToken token)
+        private async Task TryNotifyMember(IUser member, IGuildUser leader, ISocketMessageChannel commandChannel, ScheduledEvent @event, DiscordGuildConfiguration guildConfig, CancellationToken token)
         {
             var success = false;
             try
             {
                 await member.SendMessageAsync(
-                    $"The run you reacted to (hosted by {leader.Nickname ?? leader.Username}) is beginning in 30 minutes!");
+                    $"The run you reacted to (hosted by {leader.Nickname ?? leader.Username}) is beginning in 30 minutes!\n\n" +
+                    $"Message link: <{(await _client.GetGuild(@event.GuildId).GetTextChannel(guildConfig.ScheduleInputChannel).GetMessageAsync(@event.MessageId3)).GetJumpUrl()}>");
                 success = true;
             }
             catch (HttpException)
             {
                 try
                 {
-                    var message = await commandChannel.SendMessageAsync($"{member.Mention}, the run you reacted to (hosted by {leader.Nickname ?? leader.Username}) is beginning in 30 minutes!");
+                    var message = await commandChannel.SendMessageAsync($"{member.Mention}, the run you reacted to (hosted by {leader.Nickname ?? leader.Username}) is beginning in 30 minutes!\n\n" +
+                        $"Message link: <{(await _client.GetGuild(@event.GuildId).GetTextChannel(guildConfig.ScheduleInputChannel).GetMessageAsync(@event.MessageId3)).GetJumpUrl()}>");
                     (new Task(async () => {
                         await Task.Delay((int)Threshold, token);
                         try
