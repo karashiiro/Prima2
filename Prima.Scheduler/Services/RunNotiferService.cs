@@ -43,8 +43,17 @@ namespace Prima.Scheduler.Services
                 var runs = _db.Events.Where(e => e.RunTime > DateTime.Now.ToBinary() && !e.Notified);
                 foreach (var run in runs)
                 {
-                    if ((DateTime.FromBinary(run.RunTime) - DateTime.Now).TotalMilliseconds < Threshold) // I have no clue why this is necessary to do this way
+                    var timeDiff = (DateTime.FromBinary(run.RunTime) - DateTime.Now).TotalMilliseconds;
+
+                    if (timeDiff < Threshold)
                     {
+                        if (timeDiff < 0)
+                        {
+                            run.Notified = true;
+                            await _db.UpdateScheduledEvent(run);
+                            continue;
+                        }
+
                         Log.Information("Run {MessageId}, notifications started.", run.MessageId3);
 
                         var guild = _client.Guilds.FirstOrDefault(g => g.Id == run.GuildId);
