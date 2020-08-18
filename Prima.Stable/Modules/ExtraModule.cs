@@ -16,9 +16,6 @@ using Color = Discord.Color;
 
 namespace Prima.Extra.Modules
 {
-    /// <summary>
-    /// Includes extra, unimportant commands.
-    /// </summary>
     [Name("Extra")]
     public class ExtraModule : ModuleBase<SocketCommandContext>
     {

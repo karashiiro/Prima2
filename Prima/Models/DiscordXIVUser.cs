@@ -25,5 +25,7 @@ namespace Prima.Models
 
         [BsonRequired]
         public string Avatar;
+
+        public string Timezone;
     }
 }

@@ -135,6 +135,8 @@ namespace Prima.Services
             await _users.InsertOneAsync(user);
         }
 
+        public Task UpdateUser(DiscordXIVUser user) => AddUser(user);
+
         public Task AddScheduledEvent(ScheduledEvent @event)
             => _events.InsertOneAsync(@event);
 

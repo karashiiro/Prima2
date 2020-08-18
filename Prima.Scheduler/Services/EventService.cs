@@ -1,11 +1,12 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Prima.Resources;
 using Prima.Services;
 using Serilog;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Prima.Resources;
+using Prima.Models;
 
 namespace Prima.Scheduler.Services
 {
@@ -79,8 +80,18 @@ namespace Prima.Scheduler.Services
 
             var leader = channel.GetUser(run.LeaderId);
             var member = _client.GetUser(reaction.UserId);
+            var dbUser = _db.Users.FirstOrDefault(u => u.DiscordId == member.Id);
             var runTime = DateTime.FromBinary(run.RunTime);
-            await member.SendMessageAsync($"You have RSVP'd for {leader.Nickname ?? leader.Username}'s run on on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} (PDT) [{runTime.DayOfWeek}, {(Month)runTime.Month} {runTime.Day}]! :thumbsup:");
+            var tzi = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
+
+            var (customTzi, localizedRunTime) = GetLocalizedTimeForUser(dbUser, runTime);
+            if (customTzi != null)
+            {
+                tzi = customTzi;
+                runTime = localizedRunTime;
+            }
+
+            await member.SendMessageAsync($"You have RSVP'd for {leader.Nickname ?? leader.Username}'s run on on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({GetTzAbbreviation(tzi.DisplayName)}) [{runTime.DayOfWeek}, {(Month)runTime.Month} {runTime.Day}]! :thumbsup:");
 
             Log.Information("Added member {MemberId} to run {MessageId}.", reaction.UserId, run.MessageId3);
         }
@@ -101,6 +112,32 @@ namespace Prima.Scheduler.Services
             await member.SendMessageAsync($"You have un-RSVP'd for {leader.Nickname ?? leader.Username}'s run.");
 
             Log.Information("Removed member {MemberId} from run {MessageId}.", reaction.UserId, run.MessageId3);
+        }
+
+        private static string GetTzAbbreviation(string timezone)
+        {
+            return timezone.Split(" ").Select(word => word[0])
+                .Aggregate(string.Empty, (word, workingString) => workingString + word);
+        }
+
+        private static (TimeZoneInfo, DateTime) GetLocalizedTimeForUser(DiscordXIVUser user, DateTime time)
+        {
+            TimeZoneInfo tzi = null;
+            DateTime outTime = default;
+
+            // ReSharper disable once InvertIf
+            if (user != null)
+            {
+                try
+                {
+                    tzi = TimeZoneInfo.FindSystemTimeZoneById(user.Timezone);
+                    outTime = TimeZoneInfo.ConvertTimeFromUtc(time, tzi);
+                }
+                catch (TimeZoneNotFoundException) { }
+                catch (InvalidTimeZoneException) { }
+            }
+
+            return (tzi, outTime);
         }
     }
 }
