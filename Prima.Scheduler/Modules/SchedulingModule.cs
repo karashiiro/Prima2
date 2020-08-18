@@ -139,8 +139,9 @@ namespace Prima.Scheduler.Modules
                                      $"**{Context.User.Mention}'s full message: {message.GetJumpUrl()}**\n\n" +
                                      $"{new string(@event.Description.Take(1650).ToArray())}{(@event.Description.Length > 1650 ? "..." : "")}\n\n" +
                                      $"**Schedule Overview: <{guildConfig.BASpreadsheetLink}>**")
+                    .WithTimestamp(runTime)
                     .Build();
-
+                
                 var scheduleOutputChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
                 var embedMessage = await scheduleOutputChannel.SendMessageAsync(embed: embed);
 
@@ -356,6 +357,7 @@ namespace Prima.Scheduler.Modules
             var embed = embedMessage.Embeds.FirstOrDefault()?.ToEmbedBuilder()
                 .WithTitle($"Run scheduled by {leaderName} on {newRunTime.DayOfWeek} at {newRunTime.ToShortTimeString()} ({TimezoneAbbr}) " +
                            $"[{newRunTime.DayOfWeek}, {(Month)newRunTime.Month} {newRunTime.Day}]!")
+                .WithTimestamp(newRunTime)
                 .Build();
             await embedMessage.ModifyAsync(properties => properties.Embed = embed);
 
