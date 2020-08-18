@@ -139,6 +139,10 @@ namespace Prima.Scheduler.Modules
                                      $"**{Context.User.Mention}'s full message: {message.GetJumpUrl()}**\n\n" +
                                      $"{new string(@event.Description.Take(1650).ToArray())}{(@event.Description.Length > 1650 ? "..." : "")}\n\n" +
                                      $"**Schedule Overview: <{guildConfig.BASpreadsheetLink}>**")
+                    .WithFooter(footer =>
+                    {
+                        footer.Text = "Localized time:";
+                    })
                     .WithTimestamp(runTime)
                     .Build();
                 
