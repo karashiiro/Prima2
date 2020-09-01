@@ -13,6 +13,7 @@ using FFXIVWeather;
 using FFXIVWeather.Models;
 using Discord;
 using Prima.Resources;
+using Serilog;
 using TimeZoneNames;
 using Color = Discord.Color;
 
@@ -49,7 +50,7 @@ namespace Prima.Extra.Modules
             var (customTzi, _) = Util.GetLocalizedTimeForUser(dbUser, DateTime.Now);
             tzi = customTzi ?? TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
 
-            var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, CultureInfo.CurrentCulture.Name);
+            var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
             var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
 
             var formattedForecast = $"**Current:** {currentWeather} (Began at {TimeZoneInfo.ConvertTimeFromUtc(currentWeatherStartTime, tzi).ToShortTimeString()} {tzAbbr})";
