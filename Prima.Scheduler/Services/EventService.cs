@@ -82,18 +82,20 @@ namespace Prima.Scheduler.Services
 
             var leader = channel.GetUser(run.LeaderId);
             var member = _client.GetUser(reaction.UserId);
-            var dbUser = _db.Users.FirstOrDefault(u => u.DiscordId == member.Id);
-            var runTime = DateTime.FromBinary(run.RunTime);
-            var tzi = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
 
+            var runTime = DateTime.FromBinary(run.RunTime);
+
+            var dbUser = _db.Users.FirstOrDefault(u => u.DiscordId == member.Id);
+            // ReSharper disable once JoinDeclarationAndInitializer
+            TimeZoneInfo tzi;
             var (customTzi, localizedRunTime) = Util.GetLocalizedTimeForUser(dbUser, runTime);
-            if (customTzi != null)
+            tzi = customTzi ?? TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
+            if (localizedRunTime != default)
             {
-                tzi = customTzi;
                 runTime = localizedRunTime;
             }
 
-            var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, CultureInfo.CurrentCulture.Name);
+            var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
             var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
 
             await member.SendMessageAsync($"You have RSVP'd for {leader.Nickname ?? leader.Username}'s run on on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({tzAbbr}) [{runTime.DayOfWeek}, {(Month)runTime.Month} {runTime.Day}]! :thumbsup:");
