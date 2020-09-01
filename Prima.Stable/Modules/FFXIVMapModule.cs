@@ -2,7 +2,6 @@
 using Newtonsoft.Json.Linq;
 using Prima.Attributes;
 using Prima.Models;
-using Prima.Resources;
 using Prima.Services;
 using System;
 using System.Drawing;
@@ -23,7 +22,7 @@ namespace Prima.Stable.Modules
         [Description("[FFXIV] Displays a map of the specified zone.")]
         public async Task MapAsync([Remainder] string zone = "")
         {
-            var mapFile = await GetMap(zone);
+            var (mapFile, _) = await GetMapAndSizeFactor(zone);
             if (mapFile == null)
             {
                 await ReplyAsync($"{Context.User.Mention}, no map was found with that name!");
@@ -43,7 +42,7 @@ namespace Prima.Stable.Modules
             }
 
             var zone = string.Join(' ', args[2..^0]);
-            var mapFile = await GetMap(zone);
+            var (mapFile, sizeFactor) = await GetMapAndSizeFactor(zone);
             if (mapFile == null)
             {
                 await ReplyAsync($"{Context.User.Mention}, no map was found with that name!");
@@ -54,12 +53,12 @@ namespace Prima.Stable.Modules
             using var redFlag = Image.FromStream(await Http.GetStreamAsync(new Uri("http://heavenswhere.com/icons/redflag.png")));
             var flagWidth = map.Width / 18f;
             var flagHeight = map.Height / 18f;
-            var mapScale = GetMapScale(zone, map.Width);
+            var mapScale = GetMapScale(map.Width, sizeFactor);
 
             using var drawing = new Bitmap(map.Width, map.Height, PixelFormat.Format32bppArgb);
             using var g = Graphics.FromImage(drawing);
             g.DrawImage(map, 0, 0);
-            g.DrawImage(redFlag, (x * mapScale) - (flagWidth / 2), (y * mapScale) - (flagHeight / 2), flagWidth, flagHeight);
+            g.DrawImage(redFlag, x * mapScale - flagWidth / 2, y * mapScale - flagHeight / 2, flagWidth, flagHeight);
             using var mapToSend = new MemoryStream();
             drawing.Save(mapToSend, ImageFormat.Jpeg);
             mapToSend.Seek(0, SeekOrigin.Begin);
@@ -67,37 +66,27 @@ namespace Prima.Stable.Modules
             await Context.Channel.SendFileAsync(mapToSend, $"{zone}.jpg");
         }
 
-        private async Task<Stream> GetMap(string zoneName)
+        private async Task<(Stream, int)> GetMapAndSizeFactor(string zoneName)
         {
-            if (string.IsNullOrEmpty(zoneName)) return null;
+            if (string.IsNullOrEmpty(zoneName)) return (null, default);
 
             zoneName = zoneName.ToLowerInvariant();
 
             var place = Sheets.GetSheet<PlaceName>().FirstOrDefault(pn => pn.Name.ToLowerInvariant() == zoneName);
-            if (place == null) return null;
+            if (place == null) return (null, default);
             var terriType = Sheets.GetSheet<TerritoryType>().FirstOrDefault(tt => tt.PlaceName == place.RowId);
-            if (terriType == null) return null;
+            if (terriType == null) return (null, default);
 
             var xivapiTTRaw = JObject.Parse(await Http.GetStringAsync(new Uri($"https://xivapi.com/TerritoryType/{terriType.RowId}")));
             var mapFilename = xivapiTTRaw["Map"]["MapFilename"].ToObject<string>();
 
-            return await Http.GetStreamAsync(new Uri($"https://xivapi.com{mapFilename}"));
+            var mapStream = await Http.GetStreamAsync(new Uri($"https://xivapi.com{mapFilename}"));
+            var mapScale = xivapiTTRaw["Map"]["SizeFactor"].ToObject<int>();
+
+            return (mapStream, mapScale);
         }
 
-        // idk if this data is in a sheet, can't find it though
-        private static float GetMapScale(string zoneName, int pxWidth)
-        {
-            zoneName = zoneName.ToLowerInvariant();
-            var mapScale = pxWidth / 41f;
-            if (ZoneScales.HeavenswardZones.Any(z => z.StartsWith(zoneName)))
-                mapScale = pxWidth / 43f;
-            if (ZoneScales.SmallZones.Any(z => z.StartsWith(zoneName)))
-                mapScale = pxWidth / 20.5f;
-            if (ZoneScales.TinyZones.Any(z => z.StartsWith(zoneName)))
-                mapScale = pxWidth / 11f;
-            if (ZoneScales.SmallZones.Any(z => z.StartsWith(zoneName)))
-                mapScale = pxWidth / 8.7f;
-            return mapScale;
-        }
+        private static float GetMapScale(int pxWidth, int sizeFactor)
+            => pxWidth / (43f * (100f / sizeFactor));
     }
 }
