@@ -87,6 +87,6 @@ namespace Prima.Stable.Modules
         }
 
         private static float GetMapScale(int pxWidth, int sizeFactor)
-            => pxWidth / (43f * (sizeFactor / 100f));
+            => pxWidth / (float)Math.Floor(41f / (sizeFactor / 100f));
     }
 }
