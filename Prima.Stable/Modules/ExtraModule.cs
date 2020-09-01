@@ -44,12 +44,10 @@ namespace Prima.Extra.Modules
             var (currentWeather, currentWeatherStartTime) = forecast[0];
 
             var dbUser = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id);
-            var tzi = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
+            // ReSharper disable once JoinDeclarationAndInitializer
+            TimeZoneInfo tzi;
             var (customTzi, _) = Util.GetLocalizedTimeForUser(dbUser, DateTime.Now);
-            if (customTzi != null)
-            {
-                tzi = customTzi;
-            }
+            tzi = customTzi ?? TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
 
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, CultureInfo.CurrentCulture.Name);
             var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;

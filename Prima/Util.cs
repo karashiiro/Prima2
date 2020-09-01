@@ -217,7 +217,7 @@ namespace Prima
                 try
                 {
                     tzi = TimeZoneInfo.FindSystemTimeZoneById(user.Timezone);
-                    outTime = TimeZoneInfo.ConvertTimeFromUtc(time, tzi);
+                    outTime = TimeZoneInfo.ConvertTime(time, time.Kind == DateTimeKind.Utc ? TimeZoneInfo.Utc : TimeZoneInfo.Local, tzi);
                 }
                 catch (TimeZoneNotFoundException) { }
                 catch (InvalidTimeZoneException) { }
