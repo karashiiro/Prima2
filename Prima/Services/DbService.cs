@@ -10,8 +10,20 @@ namespace Prima.Services
 {
     public class DbService
     {
+        private const string ConnectionString = "mongodb://localhost:27017";
+        private const string DbName = "PrimaDb";
+
         // Hide types of the database implementation from callers.
-        public GlobalConfiguration Config => _config.AsQueryable().ToEnumerable().First();
+        public GlobalConfiguration Config
+        {
+            get
+            {
+                if (!_config.AsQueryable().Any())
+                    AddGlobalConfiguration().GetAwaiter().GetResult();
+                return _config.AsQueryable().ToEnumerable().First();
+            }
+        }
+
         public IEnumerable<DiscordGuildConfiguration> Guilds => _guildConfig.AsQueryable().ToEnumerable();
         public IEnumerable<DiscordXIVUser> Users => _users.AsQueryable().ToEnumerable();
         public IEnumerable<ScheduledEvent> Events => _events.AsQueryable().ToEnumerable();
@@ -25,13 +37,10 @@ namespace Prima.Services
         private readonly IMongoCollection<CachedMessage> _messageCache;
         private readonly IMongoCollection<ChannelDescription> _channelDescriptions;
 
-        private const string _connectionString = "mongodb://localhost:27017";
-        private const string _dbName = "PrimaDb";
-
         public DbService()
         {
-            var client = new MongoClient(_connectionString);
-            var database = client.GetDatabase(_dbName);
+            var client = new MongoClient(ConnectionString);
+            var database = client.GetDatabase(DbName);
 
             _config = database.GetCollection<GlobalConfiguration>("GlobalConfiguration");
             Log.Information("Global configuration status: {DbStatus} documents found.", _config.EstimatedDocumentCount());
@@ -52,27 +61,29 @@ namespace Prima.Services
             Log.Information("Channel description database status: {DbStatus} documents found.", _channelDescriptions.EstimatedDocumentCount());
         }
 
-        public Task SetGlobalConfigurationProperty(string key, string value)
+        public async Task SetGlobalConfigurationProperty(string key, string value)
         {
+            await AddGlobalConfiguration();
             if (!Config.HasFieldOrProperty(key))
             {
                 throw new ArgumentException($"Property {key} does not exist on GlobalConfiguration.");
             }
             var update = Builders<GlobalConfiguration>.Update.Set(key, value);
-            return _config.UpdateOneAsync(config => true, update);
+            await _config.UpdateOneAsync(config => true, update);
         }
 
-        public Task SetGuildConfigurationProperty(ulong guildId, string key, string value)
+        public async Task SetGuildConfigurationProperty(ulong guildId, string key, string value)
         {
+            await AddGuildIfAbsent(guildId);
             if (!new DiscordGuildConfiguration(0).HasFieldOrProperty(key))
             {
                 throw new ArgumentException($"Property {key} does not exist on DiscordGuildConfiguration.");
             }
             var update = Builders<DiscordGuildConfiguration>.Update.Set(key, value);
-            return _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
+            await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
         }
 
-        public async Task AddGlobalConfiguration()
+        private async Task AddGlobalConfiguration()
         {
             if (await _config.CountDocumentsAsync(FilterDefinition<GlobalConfiguration>.Empty) == 0)
             {
@@ -85,6 +96,14 @@ namespace Prima.Services
             if (!await (await _guildConfig.FindAsync(guild => guild.Id == config.Id)).AnyAsync().ConfigureAwait(false))
             {
                 await _guildConfig.InsertOneAsync(config);
+            }
+        }
+
+        private async Task AddGuildIfAbsent(ulong guildId)
+        {
+            if (!await (await _guildConfig.FindAsync(guild => guild.Id == guildId)).AnyAsync().ConfigureAwait(false))
+            {
+                await _guildConfig.InsertOneAsync(new DiscordGuildConfiguration(guildId));
             }
         }
 

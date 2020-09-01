@@ -7,7 +7,7 @@ namespace Prima.Models
     {
         [BsonId]
         [BsonRequired]
-        private readonly ObjectId _id;
+        private ObjectId _id;
 
         [BsonRequired]
         [BsonRepresentation(BsonType.String)]

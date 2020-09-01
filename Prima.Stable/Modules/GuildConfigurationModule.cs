@@ -42,7 +42,7 @@ namespace Prima.Stable.Modules
         [Alias("configrole")]
         public async Task ConfigureRoleAsync(params string[] parameters)
         {
-            await Db.ConfigureRole(Context.Guild.Id, string.Join(' ', parameters[0..^1]), ulong.Parse(parameters[^1]));
+            await Db.ConfigureRole(Context.Guild.Id, string.Join(' ', parameters[..^1]), ulong.Parse(parameters[^1]));
             await ReplyAsync("Role registered.");
         }
 

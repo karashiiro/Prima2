@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Prima.Models;
 using Serilog;
 
 namespace Prima
@@ -203,6 +204,26 @@ namespace Prima
                 }
             }
             return matrix[a - 1,b - 1];
+        }
+
+        public static (TimeZoneInfo, DateTime) GetLocalizedTimeForUser(DiscordXIVUser user, DateTime time)
+        {
+            TimeZoneInfo tzi = null;
+            DateTime outTime = default;
+
+            // ReSharper disable once InvertIf
+            if (user != null)
+            {
+                try
+                {
+                    tzi = TimeZoneInfo.FindSystemTimeZoneById(user.Timezone);
+                    outTime = TimeZoneInfo.ConvertTimeFromUtc(time, tzi);
+                }
+                catch (TimeZoneNotFoundException) { }
+                catch (InvalidTimeZoneException) { }
+            }
+
+            return (tzi, outTime);
         }
 
         public static string Capitalize(string input)

@@ -1,9 +1,9 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Discord.Commands;
+﻿using Discord.Commands;
 using Prima.Attributes;
 using Prima.Services;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Prima.Stable.Modules
 {
@@ -14,7 +14,7 @@ namespace Prima.Stable.Modules
 
         [Command("settimezone")]
         [Description("Sets your own timezone for localized DMs and personal messages.")]
-        public async Task SetTimezone(string timezone)
+        public async Task SetTimezone([Remainder] string timezone)
         {
             var dbUser = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id);
             if (dbUser == null)

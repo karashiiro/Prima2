@@ -4,6 +4,7 @@ using Prima.Services;
 using Prima.XIVAPI;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ using FFXIVWeather;
 using FFXIVWeather.Models;
 using Discord;
 using Prima.Resources;
+using TimeZoneNames;
 using Color = Discord.Color;
 
 namespace Prima.Extra.Modules
@@ -41,8 +43,18 @@ namespace Prima.Extra.Modules
 
             var (currentWeather, currentWeatherStartTime) = forecast[0];
 
+            var dbUser = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id);
             var tzi = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
-            var formattedForecast = $"**Current:** {currentWeather} (Began at {TimeZoneInfo.ConvertTimeFromUtc(currentWeatherStartTime, tzi).ToShortTimeString()} PDT)";
+            var (customTzi, _) = Util.GetLocalizedTimeForUser(dbUser, DateTime.Now);
+            if (customTzi != null)
+            {
+                tzi = customTzi;
+            }
+
+            var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, CultureInfo.CurrentCulture.Name);
+            var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
+
+            var formattedForecast = $"**Current:** {currentWeather} (Began at {TimeZoneInfo.ConvertTimeFromUtc(currentWeatherStartTime, tzi).ToShortTimeString()} {tzAbbr})";
             foreach (var (weather, startTime) in forecast.Skip(1))
             {
                 var zonedTime = TimeZoneInfo.ConvertTimeFromUtc(startTime, tzi);
@@ -115,7 +127,6 @@ namespace Prima.Extra.Modules
             var itemName = string.Join(' ', args[0..^2]);
             var worldName = args[^1];
             worldName = char.ToUpper(worldName[0]) + worldName.Substring(1);
-            var worldId = 0;
 
             var searchResults = await Xivapi.Search<Item>(itemName);
             if (searchResults.Count == 0)
@@ -124,16 +135,12 @@ namespace Prima.Extra.Modules
                 return;
             }
             var searchData = searchResults.Where(result => result.Name.ToLower() == itemName.ToLower());
-            var item = new Item();
-            if (searchData.Count() == 0)
-                item = searchResults.First();
-            else
-                item = searchData.First();
+            var item = !searchData.Any() ? searchResults.First() : searchData.First();
 
             var itemId = item.ID;
             itemName = item.Name;
 
-            var uniResponse = await Http.GetAsync(new Uri($"https://universalis.app/api/{worldId}/{itemId}"));
+            var uniResponse = await Http.GetAsync(new Uri($"https://universalis.app/api/{worldName}/{itemId}"));
             var dataObject = await uniResponse.Content.ReadAsStringAsync();
             var listings = JObject.Parse(dataObject)["Results"].ToObject<IList<UniversalisListing>>();
             var trimmedListings = listings.Take(Math.Min(10, listings.Count())).ToList();
@@ -144,14 +151,14 @@ namespace Prima.Extra.Modules
 					listing.WorldName + " " : "") + (listing.Quantity > 1 ? $" (For a total of {listing.Total} Gil)" : "")));
         }
 
-        public struct UniversalisListing
+        public class UniversalisListing
         {
-            public bool Hq;
-            public int PricePerUnit;
-            public int Quantity;
-            public string RetainerName;
-            public int Total;
-            public string WorldName;
+            public bool Hq { get; set; }
+            public int PricePerUnit { get; set; }
+            public int Quantity { get; set; }
+            public string RetainerName { get; set; }
+            public int Total { get; set; }
+            public string WorldName { get; set; }
         }
 
         [Command("setdescription")]
