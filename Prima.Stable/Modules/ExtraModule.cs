@@ -47,7 +47,7 @@ namespace Prima.Extra.Modules
             // ReSharper disable once JoinDeclarationAndInitializer
             TimeZoneInfo tzi;
             var (customTzi, _) = Util.GetLocalizedTimeForUser(dbUser, DateTime.Now);
-            tzi = customTzi ?? TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
+            tzi = customTzi ?? TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
 
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, CultureInfo.CurrentCulture.Name);
             var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
