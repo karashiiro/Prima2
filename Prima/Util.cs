@@ -73,6 +73,11 @@ namespace Prima
                 {
                     hour += 12;
                 }
+
+                if (meridiem.StartsWith("a") && hour == 12)
+                {
+                    hour = 0;
+                }
             }
 
             var splitKeywords = RegexSearches.Whitespace.Split(keywords);
