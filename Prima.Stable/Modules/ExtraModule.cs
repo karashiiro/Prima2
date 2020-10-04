@@ -4,7 +4,6 @@ using Prima.Services;
 using Prima.XIVAPI;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -13,7 +12,6 @@ using FFXIVWeather;
 using FFXIVWeather.Models;
 using Discord;
 using Prima.Resources;
-using Serilog;
 using TimeZoneNames;
 using Color = Discord.Color;
 

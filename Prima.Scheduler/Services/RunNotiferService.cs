@@ -103,10 +103,16 @@ namespace Prima.Scheduler.Services
                         await _db.UpdateScheduledEvent(run);
 
                         var embedMessage = await outputChannel.GetMessageAsync(run.EmbedMessageId);
-                        _ = Task.Run(async () => // Delete embed 30 minutes later
+                        _ = Task.Run(async () =>
                         {
                             await Task.Delay((int)Threshold, token);
+                            await AssignHost(leader);
                             await embedMessage.DeleteAsync();
+                        }, token);
+                        _ = Task.Run(async () =>
+                        {
+                            await Task.Delay((int)Threshold * 7, token);
+                            await UnassignHost(leader);
                         }, token);
                     }
                 }
@@ -147,6 +153,26 @@ namespace Prima.Scheduler.Services
                 }
             }
             if (success) Log.Information($"Info sent to {member} about {leader}'s run.");
+        }
+
+        private static async Task AssignHost(IGuildUser host)
+        {
+            var hostRole = host.Guild.GetRole(762072215356702741);
+            await host.AddRoleAsync(hostRole);
+        }
+
+        private static async Task UnassignHost(IGuildUser host)
+        {
+            var hostRole = host.Guild.GetRole(762072215356702741);
+            try
+            {
+                await host.RemoveRoleAsync(hostRole);
+            }
+            catch
+            {
+                await Task.Delay(5000);
+                await host.RemoveRoleAsync(hostRole);
+            }
         }
 
         private bool _disposed;
