@@ -23,6 +23,8 @@ namespace Prima.Stable.Services
 
         public async Task OnVoiceJoin(SocketUser user, SocketVoiceState prev, SocketVoiceState cur)
         {
+            if (cur.VoiceChannel == null) return; // Disconnecting
+
             var guild = cur.VoiceChannel.Guild;
             var member = guild.GetUser(user.Id);
             if (_usersToUnmute.Contains(member.Id))

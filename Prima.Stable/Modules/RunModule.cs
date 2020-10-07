@@ -45,7 +45,7 @@ namespace Prima.Stable.Modules
             if (Context.Guild == null) return;
 
             var senderMember = Context.Guild.GetUser(Context.User.Id);
-            var hostRole = Context.Guild.GetRole(762858063928885269); // 762072215356702741
+            var hostRole = Context.Guild.GetRole(762072215356702741);
             if (senderMember.Roles.All(r => r.Id != hostRole.Id)) return;
 
             var otherMember = Context.Guild.GetUser(other.Id);
@@ -53,7 +53,7 @@ namespace Prima.Stable.Modules
 
             _ = Task.Run(async () =>
             {
-                await Task.Delay(10000);
+                await Task.Delay(1000 * 60 * 60 * 3);
                 try
                 {
                     await otherMember.ModifyAsync(props => { props.Mute = false; });
