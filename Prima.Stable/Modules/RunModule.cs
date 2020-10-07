@@ -3,9 +3,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Discord.Net;
 using Prima.Attributes;
 using Prima.Resources;
+using Prima.Stable.Services;
 using Serilog;
 
 namespace Prima.Stable.Modules
@@ -13,6 +13,8 @@ namespace Prima.Stable.Modules
     [Name("Run")]
     public class RunModule : ModuleBase<SocketCommandContext>
     {
+        public MuteService Mute { get; set; }
+
         [Command("setpriority")]
         [Description("A command for BA hosts to use that sets a priority speaker for 3 hours.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
@@ -25,7 +27,6 @@ namespace Prima.Stable.Modules
             if (senderMember.Roles.All(r => r.Id != hostRole.Id)) return;
 
             var prioritySpeakerRole = Context.Guild.GetRole(762071904273432628);
-
             var member = Context.Guild.GetUser(other.Id);
             await member.AddRoleAsync(prioritySpeakerRole);
             await ReplyAsync("Priority speaker permissions set!");
@@ -44,30 +45,23 @@ namespace Prima.Stable.Modules
             if (Context.Guild == null) return;
 
             var senderMember = Context.Guild.GetUser(Context.User.Id);
-            var hostRole = Context.Guild.GetRole(762072215356702741);
+            var hostRole = Context.Guild.GetRole(762858063928885269); // 762072215356702741
             if (senderMember.Roles.All(r => r.Id != hostRole.Id)) return;
 
             var otherMember = Context.Guild.GetUser(other.Id);
-            try
-            {
-                await otherMember.ModifyAsync(props => { props.Mute = true; });
-            }
-            catch
-            {
-                await ReplyAsync("Failed to mute user. Are they already muted?");
-                return;
-            }
+            await otherMember.ModifyAsync(props => { props.Mute = true; });
 
             _ = Task.Run(async () =>
             {
-                await Task.Delay(10800000);
+                await Task.Delay(10000);
                 try
                 {
                     await otherMember.ModifyAsync(props => { props.Mute = false; });
                 }
                 catch (Exception e)
                 {
-                    Log.Error(e, "Unmuting failed. Has this user been manually unmuted?");
+                    Log.Error(e, "Unmuting failed. Deferring unmute until next connection.");
+                    Mute.DeferUnmute(otherMember);
                 }
             });
 
@@ -93,7 +87,8 @@ namespace Prima.Stable.Modules
             }
             catch
             {
-                await ReplyAsync("Failed to unmute user. Are they already unmuted?");
+                await ReplyAsync("Failed to unmute user; deferring unmute until the next time they connect.");
+                Mute.DeferUnmute(otherMember);
                 return;
             }
 

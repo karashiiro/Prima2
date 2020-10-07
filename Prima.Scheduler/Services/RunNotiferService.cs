@@ -111,7 +111,7 @@ namespace Prima.Scheduler.Services
                         }, token);
                         _ = Task.Run(async () =>
                         {
-                            await Task.Delay((int)Threshold * 7, token);
+                            await Task.Delay(1000 * 60 * 60 * 3, token);
                             await UnassignHost(leader);
                         }, token);
                     }

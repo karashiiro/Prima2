@@ -26,6 +26,7 @@ namespace Prima.Stable
             var clericalEvents = services.GetRequiredService<ClericalEventService>();
             var moderationEvents = services.GetRequiredService<ModerationEventService>();
             var censusEvents = services.GetRequiredService<CensusEventService>();
+            var mute = services.GetRequiredService<MuteService>();
 
             client.ReactionAdded += clericalEvents.ReactionAdded;
             client.ReactionRemoved += clericalEvents.ReactionRemoved;
@@ -34,6 +35,8 @@ namespace Prima.Stable
             client.MessageReceived += moderationEvents.MessageRecieved;
 
             client.GuildMemberUpdated += censusEvents.GuildMemberUpdated;
+
+            client.UserVoiceStateUpdated += mute.OnVoiceJoin;
 
             Log.Information("Prima.Stable logged in!");
                 
@@ -54,7 +57,8 @@ namespace Prima.Stable
               .AddSingleton<ClericalEventService>()
               .AddSingleton<PresenceService>()
               .AddSingleton<XIVAPIService>()
-              .AddSingleton<FFXIVWeatherService>();
+              .AddSingleton<FFXIVWeatherService>()
+              .AddSingleton<MuteService>();
             //sc.AddSingleton<UptimeMessageService>();
             return sc.BuildServiceProvider();
         }
