@@ -54,6 +54,8 @@ namespace Prima.Stable.Modules
             var prioritySpeakerRole = Context.Guild.GetRole(PrioritySpeakerRoleId);
             var member = Context.Guild.GetUser(other.Id);
             await member.RemoveRoleAsync(prioritySpeakerRole);
+
+            await ReplyAsync("Priority speaker permissions removed!");
         }
 
         [Command("mute")]
