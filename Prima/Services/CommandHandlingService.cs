@@ -76,10 +76,18 @@ namespace Prima.Services
             if (!message.HasCharPrefix(prefix, ref argPos))
             {
                 // Hacky bit to get this working with fewer headaches upfront for new users
-                if (rawMessage.Channel is SocketGuildChannel channel && channel.Name == "welcome" && message.Content.StartsWith("i") || message.Content.StartsWith("agree"))
-                    argPos = 0;
-                else
-                    return;
+                if (rawMessage.Channel is SocketGuildChannel channel && channel.Name == "welcome")
+                {
+                    if (message.Content.StartsWith("i") || message.Content.StartsWith("agree"))
+                    {
+                        argPos = 0;
+                    }
+                    else if (message.Content.StartsWith("-"))
+                    {
+                        argPos = 1;
+                    }
+                }
+                else return;
             }
 
             Log.Information("({DiscordID}) {DiscordName}: {MessageContent}", rawMessage.Author.Id, rawMessage.Author.Username + "#" + rawMessage.Author.Discriminator, rawMessage.Content);
