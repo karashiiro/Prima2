@@ -15,6 +15,9 @@ namespace Prima.Stable.Modules
     {
         public MuteService Mute { get; set; }
 
+        private const ulong HostSpeakerRoleId = 762072215356702741;
+        private const ulong PrioritySpeakerRoleId = 762071904273432628;
+
         [Command("setpriority")]
         [Description("A command for BA hosts to use that sets a priority speaker for 3 hours.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
@@ -23,10 +26,10 @@ namespace Prima.Stable.Modules
             if (Context.Guild == null) return;
 
             var senderMember = Context.Guild.GetUser(Context.User.Id);
-            var hostRole = Context.Guild.GetRole(762072215356702741);
+            var hostRole = Context.Guild.GetRole(HostSpeakerRoleId);
             if (senderMember.Roles.All(r => r.Id != hostRole.Id)) return;
 
-            var prioritySpeakerRole = Context.Guild.GetRole(762071904273432628);
+            var prioritySpeakerRole = Context.Guild.GetRole(PrioritySpeakerRoleId);
             var member = Context.Guild.GetUser(other.Id);
             await member.AddRoleAsync(prioritySpeakerRole);
             await ReplyAsync("Priority speaker permissions set!");
@@ -37,6 +40,22 @@ namespace Prima.Stable.Modules
             });
         }
 
+        [Command("removepriority")]
+        [Description("A command for BA hosts to use that removes the priority speaker role from someone.")]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public async Task RemovePrioritySpeaker(IUser other)
+        {
+            if (Context.Guild == null) return;
+
+            var senderMember = Context.Guild.GetUser(Context.User.Id);
+            var hostRole = Context.Guild.GetRole(HostSpeakerRoleId);
+            if (senderMember.Roles.All(r => r.Id != hostRole.Id)) return;
+
+            var prioritySpeakerRole = Context.Guild.GetRole(PrioritySpeakerRoleId);
+            var member = Context.Guild.GetUser(other.Id);
+            await member.RemoveRoleAsync(prioritySpeakerRole);
+        }
+
         [Command("mute")]
         [Description("A command for BA hosts to use that VC-mutes a user until unmuted, or for 3 hours.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
@@ -45,7 +64,7 @@ namespace Prima.Stable.Modules
             if (Context.Guild == null) return;
 
             var senderMember = Context.Guild.GetUser(Context.User.Id);
-            var hostRole = Context.Guild.GetRole(762072215356702741);
+            var hostRole = Context.Guild.GetRole(HostSpeakerRoleId);
             if (senderMember.Roles.All(r => r.Id != hostRole.Id)) return;
 
             var otherMember = Context.Guild.GetUser(other.Id);
@@ -77,7 +96,7 @@ namespace Prima.Stable.Modules
             if (Context.Guild == null) return;
 
             var senderMember = Context.Guild.GetUser(Context.User.Id);
-            var hostRole = Context.Guild.GetRole(762072215356702741);
+            var hostRole = Context.Guild.GetRole(HostSpeakerRoleId);
             if (senderMember.Roles.All(r => r.Id != hostRole.Id)) return;
 
             var otherMember = Context.Guild.GetUser(other.Id);
