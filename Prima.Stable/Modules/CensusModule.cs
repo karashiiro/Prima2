@@ -45,14 +45,14 @@ namespace Prima.Modules
                 await reply.DeleteAsync();
                 return;
             }
-            (new Task(async () => {
+            new Task(async () => {
                 await Task.Delay(MessageDeleteDelay);
                 try
                 {
                     await Context.Message.DeleteAsync();
                 }
                 catch (HttpException) {} // Message was already deleted.
-            })).Start();
+            }).Start();
             var world = parameters[0].ToLower();
             var name = parameters[1] + " " + parameters[2];
             world = RegexSearches.NonAlpha.Replace(world, string.Empty);
@@ -133,20 +133,16 @@ namespace Prima.Modules
                 .WithDescription("Query matched!")
                 .WithThumbnailUrl(foundCharacter.Avatar)
                 .Build();
-            
+            var finalReply = await ReplyAsync(embed: responseEmbed);
+
             // Set their nickname.
             try
             {
                 await member.ModifyAsync(properties =>
                 {
-                    if (outputName.Length <= 32) // Coincidentally both the maximum name length in XIV and on Discord.
-                    {
-                        properties.Nickname = outputName;
-                    }
-                    else
-                    {
-                        properties.Nickname = foundCharacter.Name;
-                    }
+                    properties.Nickname = outputName.Length <= 32
+                        ? outputName
+                        : foundCharacter.Name;
                 });
             }
             catch (HttpException) {}
@@ -154,7 +150,6 @@ namespace Prima.Modules
             Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
 
             // Cleanup
-            var finalReply = await ReplyAsync(embed: responseEmbed);
             await Task.Delay(MessageDeleteDelay);
             await finalReply.DeleteAsync();
         }
