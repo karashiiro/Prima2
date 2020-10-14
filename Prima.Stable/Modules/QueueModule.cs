@@ -507,7 +507,7 @@ namespace Prima.Stable.Modules
             var healerPos = queue.GetPosition(uid, FFXIVRole.Healer);
             var tankPos = queue.GetPosition(uid, FFXIVRole.Tank);
 
-            var output = "You are number ";
+            var output = "you are number ";
             if (tankPos > 0)
             {
                 output += $"{tankPos}/{tankCount} in the Tank queue";
@@ -544,7 +544,7 @@ namespace Prima.Stable.Modules
             }
             output += ".";
 
-            return output;
+            return output == "you are number ." ? $"<@{uid}>, you are not in any queues. If you meant to join the queue, use ~lfg <role>." : $"<@{uid}>, {output}";
         }
 
         private static FFXIVRole ParseRoles(string roleString)
