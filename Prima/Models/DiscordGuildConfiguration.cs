@@ -26,6 +26,12 @@ namespace Prima.Models
         [BsonRepresentation(BsonType.String)]
         public ulong ScheduleOutputChannel = 0;
 
+        [BsonRepresentation(BsonType.String)]
+        public ulong CastrumScheduleInputChannel = 0;
+
+        [BsonRepresentation(BsonType.String)]
+        public ulong CastrumScheduleOutputChannel = 0;
+
         [BsonRequired]
         [BsonRepresentation(BsonType.String)]
         public ulong StatusChannel = 0;
