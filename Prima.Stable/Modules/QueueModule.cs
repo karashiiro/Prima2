@@ -237,7 +237,7 @@ namespace Prima.Stable.Modules
             await leader.SendMessageAsync(embed: leaderEmbed);
 
             // Send member embeds
-            var baseParams = new LfgEmbedParameters
+            var userParams = new LfgEmbedParameters
             {
                 InArsenalCategory = inArsenalCategory,
                 InElementalChannel = inEleChannel,
@@ -250,7 +250,6 @@ namespace Prima.Stable.Modules
 
             foreach (var user in fetchedDps)
             {
-                var userParams = baseParams as LfgEmbedVarParameters;
                 userParams.TargetUser = user;
                 userParams.Role = FFXIVRole.DPS;
 
@@ -259,7 +258,6 @@ namespace Prima.Stable.Modules
 
             foreach (var user in fetchedHealers)
             {
-                var userParams = baseParams as LfgEmbedVarParameters;
                 userParams.TargetUser = user;
                 userParams.Role = FFXIVRole.Healer;
 
@@ -268,7 +266,6 @@ namespace Prima.Stable.Modules
 
             foreach (var user in fetchedTanks)
             {
-                var userParams = baseParams as LfgEmbedVarParameters;
                 userParams.TargetUser = user;
                 userParams.Role = FFXIVRole.Tank;
 
@@ -278,6 +275,9 @@ namespace Prima.Stable.Modules
 
         private class LfgEmbedParameters
         {
+            public ulong TargetUser { get; set; }
+            public FFXIVRole Role { get; set; }
+
             public bool InArsenalCategory { get; set; }
             public bool InElementalChannel { get; set; }
             public string VoiceChannelName { get; set; }
@@ -287,13 +287,7 @@ namespace Prima.Stable.Modules
             public string Password { get; set; }
         }
 
-        private class LfgEmbedVarParameters : LfgEmbedParameters
-        {
-            public ulong TargetUser { get; set; }
-            public FFXIVRole Role { get; set; }
-        }
-
-        private Task SendLfgEmbed(LfgEmbedVarParameters args)
+        private Task SendLfgEmbed(LfgEmbedParameters args)
         {
             var inviteeFields = new List<EmbedFieldBuilder>
             {
