@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
-using Yisoft.Crontab;
 
 namespace Prima.Services
 {
@@ -28,7 +27,6 @@ namespace Prima.Services
             return Queues[name];
         }
 
-        [Cron("0 0 * * * *")]
         public void Save()
         {
             File.WriteAllText(QueuePath, JsonConvert.SerializeObject(Queues));

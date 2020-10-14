@@ -168,6 +168,8 @@ namespace Prima.Stable.Modules
                 fetchedTanks.Add(nextTank.Value);
             }
 
+            QueueService.Save();
+
             var fetchedSum = fetchedDps.Count + fetchedHealers.Count + fetchedTanks.Count;
             if (fetchedSum == 0)
             {
@@ -389,6 +391,8 @@ namespace Prima.Stable.Modules
                 response += extra;
             }
 
+            QueueService.Save();
+
             await ReplyAsync(response);
         }
 
@@ -445,6 +449,9 @@ namespace Prima.Stable.Modules
                     response += removedCommon + string.Format(removed3, removedRolesList[0], removedRolesList[1], removedRolesList[2]);
                     break;
             }
+
+            QueueService.Save();
+
             await ReplyAsync(response);
         }
 
@@ -458,7 +465,8 @@ namespace Prima.Stable.Modules
                 await LeaveQueueAsync(args.Substring(5));
                 return;
             }
-            else if (args.Length != 0) // Because people always try to type "~queue dps" etc., just give it to them.
+            
+            if (args.Length != 0) // Because people always try to type "~queue dps" etc., just give it to them.
             {
                 await LfgAsync(args);
                 return;
@@ -470,6 +478,8 @@ namespace Prima.Stable.Modules
 
             var queueName = LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
+
+            QueueService.Save();
 
             await ReplyAsync(GetPositionString(queue, Context.User.Id));
         }
