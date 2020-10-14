@@ -6,6 +6,7 @@ using Discord;
 using Discord.Net;
 using Discord.WebSocket;
 using Prima.Models;
+using Prima.Resources;
 using Prima.Services;
 using Serilog;
 
@@ -63,21 +64,21 @@ namespace Prima.Scheduler.Services
 
                         var guildConfig = _db.Guilds.FirstOrDefault(gc => gc.Id == guild.Id);
                         if (guildConfig == null) continue;
-                        var commandChannel = guild.GetTextChannel(guildConfig.ScheduleInputChannel);
-                        var outputChannel = guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
+                        var commandChannel = guild.GetTextChannel(run.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.ScheduleInputChannel : guildConfig.CastrumScheduleInputChannel);
+                        var outputChannel = guild.GetTextChannel(run.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.ScheduleOutputChannel : guildConfig.CastrumScheduleOutputChannel);
 
                         var leader = guild.GetUser(run.LeaderId);
                         try
                         {
                             await leader.SendMessageAsync("The run you scheduled is set to begin in 30 minutes!\n\n" +
-                                $"Message link: <{(await _client.GetGuild(run.GuildId).GetTextChannel(guildConfig.ScheduleInputChannel).GetMessageAsync(run.MessageId3)).GetJumpUrl()}>");
+                                $"Message link: <{(await commandChannel.GetMessageAsync(run.MessageId3)).GetJumpUrl()}>");
                         }
                         catch (HttpException)
                         {
                             try
                             {
                                 var message = await commandChannel.SendMessageAsync($"{leader.Mention}, the run you scheduled is set to begin in 30 minutes!\n\n" +
-                                    $"Message link: <{(await _client.GetGuild(run.GuildId).GetTextChannel(guildConfig.ScheduleInputChannel).GetMessageAsync(run.MessageId3)).GetJumpUrl()}>");
+                                    $"Message link: <{(await commandChannel.GetMessageAsync(run.MessageId3)).GetJumpUrl()}>");
                                 (new Task(async () => {
                                     await Task.Delay((int)Threshold, token);
                                     try
@@ -128,7 +129,7 @@ namespace Prima.Scheduler.Services
             {
                 await member.SendMessageAsync(
                     $"The run you reacted to (hosted by {leader.Nickname ?? leader.Username}) is beginning in 30 minutes!\n\n" +
-                    $"Message link: <{(await _client.GetGuild(@event.GuildId).GetTextChannel(guildConfig.ScheduleInputChannel).GetMessageAsync(@event.MessageId3)).GetJumpUrl()}>");
+                    $"Message link: <{(await commandChannel.GetMessageAsync(@event.MessageId3)).GetJumpUrl()}>");
                 success = true;
             }
             catch (HttpException)
@@ -136,7 +137,7 @@ namespace Prima.Scheduler.Services
                 try
                 {
                     var message = await commandChannel.SendMessageAsync($"{member.Mention}, the run you reacted to (hosted by {leader.Nickname ?? leader.Username}) is beginning in 30 minutes!\n\n" +
-                        $"Message link: <{(await _client.GetGuild(@event.GuildId).GetTextChannel(guildConfig.ScheduleInputChannel).GetMessageAsync(@event.MessageId3)).GetJumpUrl()}>");
+                        $"Message link: <{(await commandChannel.GetMessageAsync(@event.MessageId3)).GetJumpUrl()}>");
                     (new Task(async () => {
                         await Task.Delay((int)Threshold, token);
                         try

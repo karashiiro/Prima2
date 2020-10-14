@@ -92,7 +92,7 @@ namespace Prima.Scheduler.Services
             var guildConfig = _db.Guilds.FirstOrDefault(g => g.Id == @event.GuildId);
             if (guildConfig == null) return;
 
-            var color = RunDisplayTypes.GetColor(@event.RunKind);
+            var color = @event.RunKindCastrum == RunDisplayTypeCastrum.None ? RunDisplayTypes.GetColor(@event.RunKind) : RunDisplayTypes.GetColorCastrum();
             var batchRequest1 = new BatchUpdateSpreadsheetRequest
             {
                 Requests = new List<Request>
@@ -111,7 +111,7 @@ namespace Prima.Scheduler.Services
                                         {
                                             UserEnteredValue = new ExtendedValue
                                             {
-                                                StringValue = $"({@event.RunKind})",
+                                                StringValue = $"({(@event.RunKindCastrum == RunDisplayTypeCastrum.None ? @event.RunKind.ToString() : @event.RunKindCastrum.ToString())})",
                                             },
                                         },
                                     },

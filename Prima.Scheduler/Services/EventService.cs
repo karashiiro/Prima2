@@ -4,10 +4,8 @@ using Prima.Resources;
 using Prima.Services;
 using Serilog;
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using Prima.Models;
 using TimeZoneNames;
 
 namespace Prima.Scheduler.Services
@@ -51,7 +49,7 @@ namespace Prima.Scheduler.Services
             run.Description = newMessage.Content.Substring(splitIndex + 1).Trim();
             await _db.UpdateScheduledEvent(run);
 
-            var embedChannel = guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
+            var embedChannel = guild.GetTextChannel(run.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.ScheduleOutputChannel : guildConfig.CastrumScheduleOutputChannel);
             if (!(await embedChannel.GetMessageAsync(run.EmbedMessageId) is IUserMessage message))
                 return;
 
@@ -59,7 +57,7 @@ namespace Prima.Scheduler.Services
                 .WithDescription("React to the :vibration_mode: on their message to be notified 30 minutes before it begins!\n\n" +
                                  $"**{guild.GetUser(run.LeaderId).Mention}'s full message: {newMessage.GetJumpUrl()}**\n\n" +
                                  $"{new string(run.Description.Take(1650).ToArray())}{(run.Description.Length > 1650 ? "..." : "")}\n\n" +
-                                 $"**Schedule Overview: <{guildConfig.BASpreadsheetLink}>**")
+                                 $"**Schedule Overview: <{(run.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.BASpreadsheetLink : guildConfig.CastrumSpreadsheetLink)}>**")
                 .Build();
 
             Log.Information("Updated description for run {MessageId} to:\n{RunDescription}", run.MessageId3, new string(run.Description.Take(1800).ToArray()));

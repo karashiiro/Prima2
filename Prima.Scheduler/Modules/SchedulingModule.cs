@@ -32,7 +32,8 @@ namespace Prima.Scheduler.Modules
         {
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
             if (guildConfig == null) return;
-            if (Context.Channel.Id != guildConfig.ScheduleInputChannel) return;
+            if (Context.Channel.Id == guildConfig.ScheduleInputChannel &&
+                Context.Channel.Id == guildConfig.CastrumScheduleInputChannel) return;
             var prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
 
             var splitIndex = content.IndexOf("|", StringComparison.Ordinal);
@@ -88,25 +89,35 @@ namespace Prima.Scheduler.Modules
                         multiplier = int.Parse(RegexSearches.NonNumbers.Replace(coolParameter, string.Empty));
                         if (multiplier > 12)
                         {
-                            await ReplyAsync($"{Context.User.Mention}, for your own sake, you cannot schedule more than 36 hours-worth of runs at a time.");
+                            await ReplyAsync(
+                                $"{Context.User.Mention}, for your own sake, you cannot schedule more than 36 hours-worth of runs at a time.");
                             return;
                         }
                     }
 
-                    foreach (var runType in Enum.GetNames(typeof(RunDisplayType)))
+                    foreach (var runType in Enum.GetNames(typeof(RunDisplayTypeBA)))
                     {
                         if (string.Equals(coolParameter, runType, StringComparison.InvariantCultureIgnoreCase))
                         {
-                            @event.RunKind = Enum.Parse<RunDisplayType>(runType, true);
+                            @event.RunKind = Enum.Parse<RunDisplayTypeBA>(runType, true);
                             break;
                         }
                     }
                 }
-                if (!Enum.IsDefined(typeof(RunDisplayType), @event.RunKind))
+
+                if (Context.Channel.Id == guildConfig.ScheduleInputChannel)
                 {
-                    await ReplyAsync($"{Context.User.Mention}, please specify a kind of run in your parameter list.\n" +
-                                     $"Run kinds include: `[{string.Join(' ', Enum.GetNames(typeof(RunDisplayType)))}]`");
-                    return;
+                    if (!Enum.IsDefined(typeof(RunDisplayTypeBA), @event.RunKind))
+                    {
+                        await ReplyAsync(
+                            $"{Context.User.Mention}, please specify a kind of run in your parameter list.\n" +
+                            $"Run kinds include: `[{string.Join(' ', Enum.GetNames(typeof(RunDisplayTypeBA)))}]`");
+                        return;
+                    }
+                }
+                else
+                {
+                    @event.RunKindCastrum = RunDisplayTypeCastrum.LL;
                 }
 
                 DateTime runTime;
@@ -125,34 +136,62 @@ namespace Prima.Scheduler.Modules
 
                 @event.RunTime = runTime.ToBinary();
 
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} has just scheduled a run on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({TimezoneAbbr})!\n" +
-                                                       $"React to the 📳 on their message to be notified 30 minutes before it begins!");
+                await Context.Channel.SendMessageAsync(
+                    $"{Context.User.Mention} has just scheduled a run on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({TimezoneAbbr})!\n" +
+                    $"React to the 📳 on their message to be notified 30 minutes before it begins!");
                 await message.AddReactionAsync(new Emoji("📳"));
 
-                var color = RunDisplayTypes.GetColor(@event.RunKind);
+                var color = @event.RunKindCastrum == RunDisplayTypeCastrum.None ? RunDisplayTypes.GetColor(@event.RunKind) : RunDisplayTypes.GetColorCastrum();
                 var leaderName = (Context.User as IGuildUser)?.Nickname ?? Context.User.Username;
-                var embed = new EmbedBuilder()
-                    .WithTitle($"Run scheduled by {leaderName} on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} (PDT) " +
-                               $"[{runTime.DayOfWeek}, {(Month)runTime.Month} {runTime.Day}]!")
-                    .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
-                    .WithDescription("React to the :vibration_mode: on their message to be notified 30 minutes before it begins!\n\n" +
-                                     $"**{Context.User.Mention}'s full message: {message.GetJumpUrl()}**\n\n" +
-                                     $"{new string(@event.Description.Take(1650).ToArray())}{(@event.Description.Length > 1650 ? "..." : "")}\n\n" +
-                                     $"**Schedule Overview: <{guildConfig.BASpreadsheetLink}>**")
-                    .WithFooter(footer =>
-                    {
-                        footer.Text = "Localized time:";
-                    })
-                    .WithTimestamp(runTime)
-                    .Build();
-                
-                var scheduleOutputChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
-                var embedMessage = await scheduleOutputChannel.SendMessageAsync(embed: embed);
 
-                @event.EmbedMessageId = embedMessage.Id;
+                if (Context.Channel.Id == guildConfig.ScheduleInputChannel)
+                {
+                    var embed = new EmbedBuilder()
+                        .WithTitle(
+                            $"Run scheduled by {leaderName} on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} (PDT) " +
+                            $"[{runTime.DayOfWeek}, {(Month) runTime.Month} {runTime.Day}]!")
+                        .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
+                        .WithDescription(
+                            "React to the :vibration_mode: on their message to be notified 30 minutes before it begins!\n\n" +
+                            $"**{Context.User.Mention}'s full message: {message.GetJumpUrl()}**\n\n" +
+                            $"{new string(@event.Description.Take(1650).ToArray())}{(@event.Description.Length > 1650 ? "..." : "")}\n\n" +
+                            $"**Schedule Overview: <{guildConfig.BASpreadsheetLink}>**")
+                        .WithFooter(footer => { footer.Text = "Localized time:"; })
+                        .WithTimestamp(runTime)
+                        .Build();
 
-                await Db.AddScheduledEvent(@event);
-                await Sheets.AddEvent(@event, guildConfig.BASpreadsheetId);
+                    var scheduleOutputChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
+                    var embedMessage = await scheduleOutputChannel.SendMessageAsync(embed: embed);
+
+                    @event.EmbedMessageId = embedMessage.Id;
+
+                    await Db.AddScheduledEvent(@event);
+                    await Sheets.AddEvent(@event, guildConfig.BASpreadsheetId);
+                }
+                else if (Context.Channel.Id != guildConfig.CastrumScheduleInputChannel)
+                {
+                    var embed = new EmbedBuilder()
+                        .WithTitle(
+                            $"Run scheduled by {leaderName} on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} (PDT) " +
+                            $"[{runTime.DayOfWeek}, {(Month)runTime.Month} {runTime.Day}]!")
+                        .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
+                        .WithDescription(
+                            "React to the :vibration_mode: on their message to be notified 30 minutes before it begins!\n\n" +
+                            $"**{Context.User.Mention}'s full message: {message.GetJumpUrl()}**\n\n" +
+                            $"{new string(@event.Description.Take(1650).ToArray())}{(@event.Description.Length > 1650 ? "..." : "")}\n\n" +
+                            $"**Schedule Overview: <{guildConfig.CastrumSpreadsheetLink}>**")
+                        .WithFooter(footer => { footer.Text = "Localized time:"; })
+                        .WithTimestamp(runTime)
+                        .Build();
+
+                    var scheduleOutputChannel = Context.Guild.GetTextChannel(guildConfig.CastrumScheduleOutputChannel);
+                    var embedMessage = await scheduleOutputChannel.SendMessageAsync(embed: embed);
+
+                    @event.EmbedMessageId = embedMessage.Id;
+
+                    await Db.AddScheduledEvent(@event);
+                    await Sheets.AddEvent(@event, guildConfig.CastrumSpreadsheetId);
+                }
             }
         }
 
@@ -162,7 +201,8 @@ namespace Prima.Scheduler.Modules
         {
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
             if (guildConfig == null) return;
-            if (Context.Channel.Id != guildConfig.ScheduleInputChannel) return;
+            if (Context.Channel.Id == guildConfig.ScheduleInputChannel &&
+                Context.Channel.Id == guildConfig.CastrumScheduleInputChannel) return;
 
             DateTime when;
             try
@@ -231,7 +271,7 @@ namespace Prima.Scheduler.Modules
 
             await ReplyAsync($"{Context.User.Mention}, the run has been unscheduled.");
 
-            await Sheets.RemoveEvent(result, guildConfig.BASpreadsheetId);
+            await Sheets.RemoveEvent(result, result.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.BASpreadsheetId : guildConfig.CastrumSpreadsheetId);
 
             var leaderName = (Context.User as IGuildUser)?.Nickname ?? Context.User.Username;
             foreach (var uid in result.SubscribedUsers)
@@ -249,7 +289,8 @@ namespace Prima.Scheduler.Modules
         {
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
             if (guildConfig == null) return;
-            if (Context.Channel.Id != guildConfig.ScheduleInputChannel) return;
+            if (Context.Channel.Id == guildConfig.ScheduleInputChannel &&
+                Context.Channel.Id == guildConfig.CastrumScheduleInputChannel) return;
             var prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
 
             var splitIndex = parameters.IndexOf("|", StringComparison.Ordinal);
@@ -349,13 +390,13 @@ namespace Prima.Scheduler.Modules
                 return;
             }
 
-            await Sheets.RemoveEvent(@event, guildConfig.BASpreadsheetId);
+            await Sheets.RemoveEvent(@event, @event.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.BASpreadsheetId : guildConfig.CastrumSpreadsheetId);
 
             @event.RunTime = newRunTime.ToBinary();
             await Db.UpdateScheduledEvent(@event);
 
             var leaderName = (Context.User as IGuildUser)?.Nickname ?? Context.User.Username;
-            var embedChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
+            var embedChannel = Context.Guild.GetTextChannel(@event.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.ScheduleOutputChannel : guildConfig.CastrumScheduleOutputChannel);
             var embedMessage = await embedChannel.GetMessageAsync(@event.EmbedMessageId) as IUserMessage;
             // ReSharper disable once PossibleNullReferenceException
             var embed = embedMessage.Embeds.FirstOrDefault()?.ToEmbedBuilder()
@@ -365,7 +406,7 @@ namespace Prima.Scheduler.Modules
                 .Build();
             await embedMessage.ModifyAsync(properties => properties.Embed = embed);
 
-            await Sheets.AddEvent(@event, guildConfig.BASpreadsheetId);
+            await Sheets.AddEvent(@event, @event.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.BASpreadsheetId : guildConfig.CastrumSpreadsheetId);
 
             await ReplyAsync("Run rescheduled successfully.");
             foreach (var uid in @event.SubscribedUsers)
@@ -382,13 +423,13 @@ namespace Prima.Scheduler.Modules
         [Description("See the historical distribution of runs across the day.")]
         public Task GetRunDstAsync(params string[] args)
         {
-            var runKind = (RunDisplayType)(-1);
+            var runKind = (RunDisplayTypeBA)(-1);
             var color = new Color();
             if (args.Length != 0)
             {
                 try
                 {
-                    runKind = (RunDisplayType)Enum.Parse(typeof(RunDisplayType), args[0], true);
+                    runKind = (RunDisplayTypeBA)Enum.Parse(typeof(RunDisplayTypeBA), args[0], true);
                     var runKindColor = RunDisplayTypes.GetColor(runKind);
                     color = new Color(runKindColor.RGB[0], runKindColor.RGB[1], runKindColor.RGB[2]);
                 }
@@ -396,12 +437,12 @@ namespace Prima.Scheduler.Modules
             }
 
             var embed = new EmbedBuilder()
-                .WithTitle($"Historical Scheduled Runs by Hour {(Enum.IsDefined(typeof(RunDisplayType), runKind) ? $"({runKind})" : string.Empty)}")
-                .WithColor(Enum.IsDefined(typeof(RunDisplayType), runKind) ? color : Color.DarkTeal)
+                .WithTitle($"Historical Scheduled Runs by Hour {(Enum.IsDefined(typeof(RunDisplayTypeBA), runKind) ? $"({runKind})" : string.Empty)}")
+                .WithColor(Enum.IsDefined(typeof(RunDisplayTypeBA), runKind) ? color : Color.DarkTeal)
                 .WithFooter("RSVP'd users may not be reflective of users who actually took part in a run.");
 
             var runsByHour = Db.Events
-                .Where(@event => @event.Notified && !Enum.IsDefined(typeof(RunDisplayType), runKind) || @event.RunKind == runKind)
+                .Where(@event => @event.Notified && !Enum.IsDefined(typeof(RunDisplayTypeBA), runKind) || @event.RunKind == runKind)
                 .Select(@event =>
                 {
                     var runTime = DateTime.FromBinary(@event.RunTime);
@@ -462,23 +503,23 @@ namespace Prima.Scheduler.Modules
                 Notified = true,
                 Listed = true,
             };
-            
+
             foreach (var coolParameter in coolParameters)
             {
-                foreach (var runType in Enum.GetNames(typeof(RunDisplayType)))
+                foreach (var runType in Enum.GetNames(typeof(RunDisplayTypeBA)))
                 {
                     if (string.Equals(coolParameter, runType, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        @event.RunKind = Enum.Parse<RunDisplayType>(runType, true);
+                        @event.RunKind = Enum.Parse<RunDisplayTypeBA>(runType, true);
                         break;
                     }
                 }
             }
 
             var runTime = Util.GetDateTime(parameters);
-            
+
             @event.RunTime = runTime.ToBinary();
-            
+
             await Db.AddScheduledEvent(@event);
 
             await ReplyAsync($"success, new count: {Db.Events.Count()}");

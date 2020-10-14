@@ -28,7 +28,9 @@ namespace Prima.Models
         [BsonRepresentation(BsonType.String)]
         public string Description { get; set; }
 
-        public RunDisplayType RunKind { get; set; }
+        public RunDisplayTypeBA RunKind { get; set; }
+
+        public RunDisplayTypeCastrum RunKindCastrum { get; set; }
 
         public IList<string> SubscribedUsers { get; set; }
 
