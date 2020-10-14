@@ -144,10 +144,7 @@ namespace Prima.Stable.Modules
             var leaderDisplayName = leader.Nickname ?? leader.ToString();
 
             // Queue stuff now
-            // Remove the leader from all queues
-            queue.Remove(leader.Id, FFXIVRole.DPS);
-            queue.Remove(leader.Id, FFXIVRole.Healer);
-            queue.Remove(leader.Id, FFXIVRole.Tank);
+            queue.RemoveAll(leader.Id);
 
             var fetchedDps = new List<ulong>();
             for (var i = 0; i < dpsWanted; i++)

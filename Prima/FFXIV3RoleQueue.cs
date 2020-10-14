@@ -64,9 +64,7 @@ namespace Prima
                     throw new NotImplementedException();
             }
 
-            Remove(user, FFXIVRole.DPS);
-            Remove(user, FFXIVRole.Healer);
-            Remove(user, FFXIVRole.Tank);
+            RemoveAll(user);
 
             return user;
         }
@@ -80,6 +78,13 @@ namespace Prima
                 FFXIVRole.Tank => _tankQueue.Remove(tuple => tuple.Item1 == userId),
                 _ => throw new NotImplementedException(),
             };
+        }
+
+        public void RemoveAll(ulong user)
+        {
+            Remove(user, FFXIVRole.DPS);
+            Remove(user, FFXIVRole.Healer);
+            Remove(user, FFXIVRole.Tank);
         }
 
         public int Count(FFXIVRole role)
