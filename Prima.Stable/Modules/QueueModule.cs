@@ -517,7 +517,7 @@ namespace Prima.Stable.Modules
                 }
                 else
                 { // Only healer
-                    output += $"{healerPos}/${healerCount} in the Healer queue";
+                    output += $"{healerPos}/{healerCount} in the Healer queue";
                 }
             }
             if (dpsPos > 0)
