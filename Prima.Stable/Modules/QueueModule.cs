@@ -371,17 +371,22 @@ namespace Prima.Stable.Modules
             switch (enqueuedRolesList.Count)
             {
                 case 0:
-                    response += queued0 + extra;
+                    response += queued0;
                     break;
                 case 1:
-                    response += string.Format(queued1, enqueuedRolesList[0]) + GetPositionString(queue, Context.User.Id) + extra;
+                    response += string.Format(queued1, enqueuedRolesList[0]) + GetPositionString(queue, Context.User.Id);
                     break;
                 case 2:
-                    response += string.Format(queued2, enqueuedRolesList[0], enqueuedRolesList[1]) + GetPositionString(queue, Context.User.Id) + extra;
+                    response += string.Format(queued2, enqueuedRolesList[0], enqueuedRolesList[1]) + GetPositionString(queue, Context.User.Id);
                     break;
                 case 3:
-                    response += string.Format(queued3, enqueuedRolesList[0], enqueuedRolesList[1], enqueuedRolesList[2]) + GetPositionString(queue, Context.User.Id) + extra;
+                    response += string.Format(queued3, enqueuedRolesList[0], enqueuedRolesList[1], enqueuedRolesList[2]) + GetPositionString(queue, Context.User.Id);
                     break;
+            }
+
+            if (Context.Channel.Id != 765994301850779709)
+            {
+                response += extra;
             }
 
             await ReplyAsync(response);
