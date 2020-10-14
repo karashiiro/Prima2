@@ -250,7 +250,7 @@ namespace Prima.Stable.Modules
 
             foreach (var user in fetchedDps)
             {
-                var userParams = (LfgEmbedVarParameters)baseParams;
+                var userParams = baseParams as LfgEmbedVarParameters;
                 userParams.TargetUser = user;
                 userParams.Role = FFXIVRole.DPS;
 
@@ -259,7 +259,7 @@ namespace Prima.Stable.Modules
 
             foreach (var user in fetchedHealers)
             {
-                var userParams = (LfgEmbedVarParameters)baseParams;
+                var userParams = baseParams as LfgEmbedVarParameters;
                 userParams.TargetUser = user;
                 userParams.Role = FFXIVRole.Healer;
 
@@ -268,7 +268,7 @@ namespace Prima.Stable.Modules
 
             foreach (var user in fetchedTanks)
             {
-                var userParams = (LfgEmbedVarParameters)baseParams;
+                var userParams = baseParams as LfgEmbedVarParameters;
                 userParams.TargetUser = user;
                 userParams.Role = FFXIVRole.Tank;
 
