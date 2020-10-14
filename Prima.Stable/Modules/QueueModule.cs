@@ -39,9 +39,6 @@ namespace Prima.Stable.Modules
             if (!LfgChannels.ContainsKey(Context.Channel.Id)) // Don't use this outside of LFG channels
                 return;
 
-            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
-            if (guildConfig == null) return;
-
             var queueName = LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
@@ -101,7 +98,7 @@ namespace Prima.Stable.Modules
             try
             {
                 await leader.SendMessageAsync($"Your Party Finder password is {pw}.\n" +
-                    $"Please join {(Context.Channel.Id == guildConfig.CastrumScheduleInputChannel ? "a Castrum" : "an elemental")} voice channel within the next 30 seconds to continue matching.\n" +
+                    $"Please join {(Context.Channel.Id == 765994301850779709 ? "a Castrum" : "an elemental")} voice channel within the next 30 seconds to continue matching.\n" +
                     "Create the listing in Party Finder now; matching will begin in 30 seconds.");
             }
             catch (HttpException)
