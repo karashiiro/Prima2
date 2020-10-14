@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Prima.Unstable.Modules
+namespace Prima.Stable.Modules
 {
     public class QueueModule : ModuleBase<SocketCommandContext>
     {
@@ -21,6 +21,7 @@ namespace Prima.Unstable.Modules
             { 550708765490675773, "learning-and-frag-farm" },
             { 550708833412972544, "av-and-ozma-prog" },
             { 550708866497773599, "clears-and-farming" },
+            { 765994301850779709, "lfg-castrum" },
         };
         private static readonly IList<(ulong, DateTime)> LfmPullTimeLog = new List<(ulong, DateTime)>();
         private static readonly string[] Elements = new string[] { "Earth", "Wind", "Water", "Fire", "Lightning", "Ice" };
@@ -67,6 +68,7 @@ namespace Prima.Unstable.Modules
                 550708765490675773 => "learning/frag farming",
                 550708833412972544 => "Absolute Virtue or Ozma prog",
                 550708866497773599 => "Ozma clears or farms",
+                765994301850779709 => "Castrum Lacus Litore",
                 _ => throw new NotSupportedException(),
             };
 
@@ -109,7 +111,7 @@ namespace Prima.Unstable.Modules
             for (var i = 0; i < 30; i++)
             {
                 var newMessages = await Context.Channel.GetMessagesAsync(limit: 10).FlattenAsync();
-                if (newMessages.Where(m => m.Author.Id == leader.Id && m.Content.StartsWith("~stop")).Any())
+                if (newMessages.Any(m => m.Author.Id == leader.Id && m.Content.StartsWith("~stop")))
                 {
                     await ReplyAsync($"{Context.User.Mention}, your matchmaking attempt has been cancelled.");
                     await RemoveLfm(leader);
@@ -129,12 +131,11 @@ namespace Prima.Unstable.Modules
             {
                 foreach (var element in Elements)
                 {
-                    if (leader.VoiceChannel.Name.Contains(element))
-                    {
-                        vcName = leader.VoiceChannel.Name;
-                        inEleChannel = true;
-                        break;
-                    }
+                    if (!leader.VoiceChannel.Name.Contains(element)) continue;
+
+                    vcName = leader.VoiceChannel.Name;
+                    inEleChannel = true;
+                    break;
                 }
             }
 
@@ -231,101 +232,106 @@ namespace Prima.Unstable.Modules
             await leader.SendMessageAsync(embed: leaderEmbed);
 
             // Send member embeds
+            var baseParams = new LfgEmbedParameters
+            {
+                InArsenalCategory = inArsenalCategory,
+                InElementalChannel = inEleChannel,
+                VoiceChannelName = vcName,
+                LeaderDisplayName = leaderDisplayName,
+                Leader = leader,
+                PartyType = partyType,
+                Password = pw,
+            };
+
             foreach (var user in fetchedDps)
             {
-                var inviteeFields = new List<EmbedFieldBuilder>();
-                inviteeFields.Add(new EmbedFieldBuilder()
-                    .WithIsInline(true)
-                    .WithName("Group")
-                    .WithValue(inArsenalCategory ? leader.VoiceChannel.Category.Name : "Ask your party leader!"));
-                inviteeFields.Add(new EmbedFieldBuilder()
-                    .WithIsInline(true)
-                    .WithName("Voice Channel")
-                    .WithValue(inEleChannel ? vcName : "Ask your party leader!"));
-                inviteeFields.Add(new EmbedFieldBuilder()
-                    .WithIsInline(true)
-                    .WithName("Your Role")
-                    .WithValue("DPS"));
-                var inviteeEmbed = new EmbedBuilder()
-                    .WithTitle("Your queue has popped!")
-                    .WithColor(new Discord.Color(0x00, 0x80, 0xFF))
-                    .WithThumbnailUrl("https://i.imgur.com/4ogfA2S.png")
-                    .WithDescription($"Your queue for {partyType} has popped! Check the PF for a party under `{leaderDisplayName}` (or something similar) and use the password `{pw}` to join! " +
-                        $"Please DM them ({leader}) if you have issues with joining or cannot find the party. " +
-                        "Additionally, the map used to find your portal location can be found here: https://i.imgur.com/Gao2rzI.jpg")
-                    .WithFields(inviteeFields)
-                    .Build();
-                await Context.Guild.GetUser(user).SendMessageAsync(embed: inviteeEmbed);
+                var userParams = (LfgEmbedVarParameters)baseParams;
+                userParams.TargetUser = user;
+                userParams.Role = FFXIVRole.DPS;
+
+                await SendLfgEmbed(userParams);
             }
 
             foreach (var user in fetchedHealers)
             {
-                var inviteeFields = new List<EmbedFieldBuilder>();
-                inviteeFields.Add(new EmbedFieldBuilder()
-                    .WithIsInline(true)
-                    .WithName("Group")
-                    .WithValue(inArsenalCategory ? leader.VoiceChannel.Category.Name : "Ask your party leader!"));
-                inviteeFields.Add(new EmbedFieldBuilder()
-                    .WithIsInline(true)
-                    .WithName("Voice Channel")
-                    .WithValue(inEleChannel ? vcName : "Ask your party leader!"));
-                inviteeFields.Add(new EmbedFieldBuilder()
-                    .WithIsInline(true)
-                    .WithName("Your Role")
-                    .WithValue("Healer"));
-                var inviteeEmbed = new EmbedBuilder()
-                    .WithTitle("Your queue has popped!")
-                    .WithColor(new Discord.Color(0x00, 0x80, 0xFF))
-                    .WithThumbnailUrl("https://i.imgur.com/4ogfA2S.png")
-                    .WithDescription($"Your queue for {partyType} has popped! Check the PF for a party under `{leaderDisplayName}` (or something similar) and use the password `{pw}` to join! " +
-                        $"Please DM them ({leader}) if you have issues with joining or cannot find the party. " +
-                        "Additionally, the map used to find your portal location can be found here: https://i.imgur.com/Gao2rzI.jpg")
-                    .WithFields(inviteeFields)
-                    .Build();
-                await Context.Guild.GetUser(user).SendMessageAsync(embed: inviteeEmbed);
+                var userParams = (LfgEmbedVarParameters)baseParams;
+                userParams.TargetUser = user;
+                userParams.Role = FFXIVRole.Healer;
+
+                await SendLfgEmbed(userParams);
             }
 
             foreach (var user in fetchedTanks)
             {
-                var inviteeFields = new List<EmbedFieldBuilder>();
-                inviteeFields.Add(new EmbedFieldBuilder()
-                    .WithIsInline(true)
-                    .WithName("Group")
-                    .WithValue(inArsenalCategory ? leader.VoiceChannel.Category.Name : "Ask your party leader!"));
-                inviteeFields.Add(new EmbedFieldBuilder()
-                    .WithIsInline(true)
-                    .WithName("Voice Channel")
-                    .WithValue(inEleChannel ? vcName : "Ask your party leader!"));
-                inviteeFields.Add(new EmbedFieldBuilder()
-                    .WithIsInline(true)
-                    .WithName("Your Role")
-                    .WithValue("Tank"));
-                var inviteeEmbed = new EmbedBuilder()
-                    .WithTitle("Your queue has popped!")
-                    .WithColor(new Discord.Color(0x00, 0x80, 0xFF))
-                    .WithThumbnailUrl("https://i.imgur.com/4ogfA2S.png")
-                    .WithDescription($"Your queue for {partyType} has popped! Check the PF for a party under `{leaderDisplayName}` (or something similar) and use the password `{pw}` to join! " +
-                        $"Please DM them ({leader}) if you have issues with joining or cannot find the party. " +
-                        "Additionally, the map used to find your portal location can be found here: https://i.imgur.com/Gao2rzI.jpg")
-                    .WithFields(inviteeFields)
-                    .Build();
-                await Context.Guild.GetUser(user).SendMessageAsync(embed: inviteeEmbed);
+                var userParams = (LfgEmbedVarParameters)baseParams;
+                userParams.TargetUser = user;
+                userParams.Role = FFXIVRole.Tank;
+
+                await SendLfgEmbed(userParams);
             }
         }
 
-        private Task AddLfm(SocketGuildUser member)
+        private class LfgEmbedParameters
+        {
+            public bool InArsenalCategory { get; set; }
+            public bool InElementalChannel { get; set; }
+            public string VoiceChannelName { get; set; }
+            public SocketGuildUser Leader { get; set; }
+            public string LeaderDisplayName { get; set; }
+            public string PartyType { get; set; }
+            public string Password { get; set; }
+        }
+
+        private class LfgEmbedVarParameters : LfgEmbedParameters
+        {
+            public ulong TargetUser { get; set; }
+            public FFXIVRole Role { get; set; }
+        }
+
+        private Task SendLfgEmbed(LfgEmbedVarParameters args)
+        {
+            var inviteeFields = new List<EmbedFieldBuilder>
+            {
+                new EmbedFieldBuilder()
+                    .WithIsInline(true)
+                    .WithName("Group")
+                    .WithValue(args.InArsenalCategory
+                        ? args.Leader.VoiceChannel.Category.Name
+                        : "Ask your party leader!"),
+                new EmbedFieldBuilder()
+                    .WithIsInline(true)
+                    .WithName("Voice Channel")
+                    .WithValue(args.InElementalChannel ? args.VoiceChannelName : "Ask your party leader!"),
+                new EmbedFieldBuilder()
+                    .WithIsInline(true)
+                    .WithName("Your Role")
+                    .WithValue(args.Role)
+            };
+            var inviteeEmbed = new EmbedBuilder()
+                .WithTitle("Your queue has popped!")
+                .WithColor(new Discord.Color(0x00, 0x80, 0xFF))
+                .WithThumbnailUrl("https://i.imgur.com/4ogfA2S.png")
+                .WithDescription($"Your queue for {args.PartyType} has popped! Check the PF for a party under `{args.LeaderDisplayName}` (or something similar) and use the password `{args.Password}` to join! " +
+                                 $"Please DM them ({args.Leader}) if you have issues with joining or cannot find the party. " +
+                                 "Additionally, the map used to find your portal location can be found here: https://i.imgur.com/Gao2rzI.jpg")
+                .WithFields(inviteeFields)
+                .Build();
+            return Context.Guild.GetUser(args.TargetUser).SendMessageAsync(embed: inviteeEmbed);
+        }
+
+        private static Task AddLfm(SocketGuildUser member)
         {
             var role = member.Guild.Roles.First(r => r.Id == LfmRoleId);
             return member.AddRoleAsync(role);
         }
 
-        private Task RemoveLfm(SocketGuildUser member)
+        private static Task RemoveLfm(SocketGuildUser member)
         {
             var role = member.Guild.Roles.First(r => r.Id == LfmRoleId);
             return member.RemoveRoleAsync(role);
         }
 
-        private (int, int, int) GetDesiredRoleCounts(string input)
+        private static (int, int, int) GetDesiredRoleCounts(string input)
         {
             input = " " + input;
             var d = input.IndexOf('d');
@@ -357,11 +363,10 @@ namespace Prima.Unstable.Modules
                 return;
             }
 
-            var enqueuedRoles = FFXIVRole.None;
-            foreach (var r in new FFXIVRole[] { FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank })
-                if (roles.HasFlag(r))
-                    if (queue.Enqueue(Context.User.Id, r))
-                        enqueuedRoles |= r;
+            var enqueuedRoles = new[] {FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank}
+                .Where(r => roles.HasFlag(r))
+                .Where(r => queue.Enqueue(Context.User.Id, r))
+                .Aggregate(FFXIVRole.None, (current, r) => current | r);
 
             var response = Context.User.Mention;
             const string queued0 = ", you're already in those queues. You can check your position in them with `~queue`.";
@@ -376,13 +381,13 @@ namespace Prima.Unstable.Modules
                     response += queued0 + extra;
                     break;
                 case 1:
-                    response += string.Format(queued1, enqueuedRolesList[0]) + GetPositionString(queue, Context.User.Id, enqueuedRolesList) + extra;
+                    response += string.Format(queued1, enqueuedRolesList[0]) + GetPositionString(queue, Context.User.Id) + extra;
                     break;
                 case 2:
-                    response += string.Format(queued2, enqueuedRolesList[0], enqueuedRolesList[1]) + GetPositionString(queue, Context.User.Id, enqueuedRolesList) + extra;
+                    response += string.Format(queued2, enqueuedRolesList[0], enqueuedRolesList[1]) + GetPositionString(queue, Context.User.Id) + extra;
                     break;
                 case 3:
-                    response += string.Format(queued3, enqueuedRolesList[0], enqueuedRolesList[1], enqueuedRolesList[2]) + GetPositionString(queue, Context.User.Id, enqueuedRolesList) + extra;
+                    response += string.Format(queued3, enqueuedRolesList[0], enqueuedRolesList[1], enqueuedRolesList[2]) + GetPositionString(queue, Context.User.Id) + extra;
                     break;
             }
 
@@ -407,17 +412,17 @@ namespace Prima.Unstable.Modules
             if (roles == FFXIVRole.None)
             {
                 // Remove from all
-                foreach (var r in new FFXIVRole[] { FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank })
-                    if (queue.Remove(Context.User.Id, r))
-                        removedRoles |= r;
+                removedRoles = new[] {FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank}
+                    .Where(r => queue.Remove(Context.User.Id, r))
+                    .Aggregate(removedRoles, (current, r) => current | r);
             }
             else
             {
                 // Remove from specified
-                foreach (var r in new FFXIVRole[] { FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank })
-                    if (roles.HasFlag(r))
-                        if (queue.Remove(Context.User.Id, r))
-                            removedRoles |= r;
+                removedRoles = new[] {FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank}
+                    .Where(r => roles.HasFlag(r))
+                    .Where(r => queue.Remove(Context.User.Id, r))
+                    .Aggregate(removedRoles, (current, r) => current | r);
             }
 
             var response = Context.User.Mention;
@@ -468,14 +473,11 @@ namespace Prima.Unstable.Modules
             var queueName = LfgChannels[Context.Guild.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
-            var enqueuedRolesList = new List<FFXIVRole>();
-            foreach (var r in new FFXIVRole[] { FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank })
-            {
-                if (queue.GetPosition(Context.User.Id, r) != -1)
-                    enqueuedRolesList.Add(r);
-            }
+            var enqueuedRolesList = new[] {FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank}
+                .Where(r => queue.GetPosition(Context.User.Id, r) != -1)
+                .ToList();
 
-            await ReplyAsync(GetPositionString(queue, Context.User.Id, enqueuedRolesList));
+            await ReplyAsync(GetPositionString(queue, Context.User.Id));
         }
 
         [Command("queuelist")]
@@ -494,14 +496,12 @@ namespace Prima.Unstable.Modules
 
         private static IList<FFXIVRole> RolesToArray(FFXIVRole roles)
         {
-            var rolesList = new List<FFXIVRole>();
-            foreach (var r in new FFXIVRole[] { FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank })
-                if (roles.HasFlag(r))
-                    rolesList.Add(r);
-            return rolesList;
+            return new[] {FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank}
+                .Where(r => roles.HasFlag(r))
+                .ToList();
         }
 
-        private static string GetPositionString(FFXIV3RoleQueue queue, ulong uid, IList<FFXIVRole> roles)
+        private static string GetPositionString(FFXIV3RoleQueue queue, ulong uid)
         {
             var dpsCount = queue.Count(FFXIVRole.DPS);
             var healerCount = queue.Count(FFXIVRole.Healer);
@@ -544,7 +544,7 @@ namespace Prima.Unstable.Modules
                 else
                 { // Just DPS
                     output += $"{dpsPos}/{dpsCount} in the DPS queue";
-				}
+                }
             }
             output += ".";
 
