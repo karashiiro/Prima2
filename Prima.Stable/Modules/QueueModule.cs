@@ -123,7 +123,9 @@ namespace Prima.Stable.Modules
             await RemoveLfm(leader);
 
             var vcName = "";
-            if (leader.VoiceChannel == null || !leader.VoiceChannel.Category.Name.ToLowerInvariant().Contains("arsenal"))
+            if (leader.VoiceChannel == null ||
+                !leader.VoiceChannel.Category.Name.ToLowerInvariant().Contains("arsenal") ||
+                !leader.VoiceChannel.Category.Name.ToLowerInvariant().Contains("castrum"))
             {
                 inArsenalCategory = false;
             }
