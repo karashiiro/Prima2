@@ -481,10 +481,10 @@ namespace Prima.Stable.Modules
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task QueueListAsync()
         {
-            if (!LfgChannels.ContainsKey(Context.Guild.Id))
+            if (!LfgChannels.ContainsKey(Context.Channel.Id))
                 return;
 
-            var queueName = LfgChannels[Context.Guild.Id];
+            var queueName = LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
             await ReplyAsync($"There are currently {queue.Count(FFXIVRole.Tank)} tank(s), {queue.Count(FFXIVRole.Healer)} healer(s), and {queue.Count(FFXIVRole.DPS)} DPS in the queue. (Unique players: {queue.CountDistinct()})");
@@ -544,7 +544,7 @@ namespace Prima.Stable.Modules
             }
             output += ".";
 
-            return output == "you are number ." ? $"<@{uid}>, you are not in any queues. If you meant to join the queue, use ~lfg <role>." : $"<@{uid}>, {output}";
+            return output == "you are number ." ? $"<@{uid}>, you are not in any queues. If you meant to join the queue, use `~lfg <role>`." : $"<@{uid}>, {output}";
         }
 
         private static FFXIVRole ParseRoles(string roleString)
