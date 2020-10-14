@@ -33,10 +33,10 @@ namespace Prima.Stable.Modules
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task LfmAsync([Remainder] string args = "")
         {
-            if (!LfgChannels.ContainsKey(Context.Guild.Id)) // Don't use this outside of LFG channels
+            if (!LfgChannels.ContainsKey(Context.Channel.Id)) // Don't use this outside of LFG channels
                 return;
 
-            var queueName = LfgChannels[Context.Guild.Id];
+            var queueName = LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
             var leader = Context.Guild.GetUser(Context.User.Id);
@@ -349,10 +349,10 @@ namespace Prima.Stable.Modules
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task LfgAsync([Remainder] string args = "")
         {
-            if (!LfgChannels.ContainsKey(Context.Guild.Id))
+            if (!LfgChannels.ContainsKey(Context.Channel.Id))
                 return;
 
-            var queueName = LfgChannels[Context.Guild.Id];
+            var queueName = LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
             var roles = ParseRoles(args);
@@ -400,10 +400,10 @@ namespace Prima.Stable.Modules
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task LeaveQueueAsync([Remainder] string args = "")
         {
-            if (!LfgChannels.ContainsKey(Context.Guild.Id))
+            if (!LfgChannels.ContainsKey(Context.Channel.Id))
                 return;
 
-            var queueName = LfgChannels[Context.Guild.Id];
+            var queueName = LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
             var roles = ParseRoles(args);
