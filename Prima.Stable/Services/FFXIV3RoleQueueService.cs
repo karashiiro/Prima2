@@ -29,7 +29,14 @@ namespace Prima.Services
 
         public void Save()
         {
-            File.WriteAllText(QueuePath, JsonConvert.SerializeObject(Queues));
+            try
+            {
+                File.WriteAllText(QueuePath, JsonConvert.SerializeObject(Queues));
+            }
+            catch
+            {
+                File.WriteAllText(QueuePath, JsonConvert.SerializeObject(Queues));
+            }
         }
 
         public void Load()
