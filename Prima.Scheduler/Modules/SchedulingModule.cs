@@ -251,7 +251,7 @@ namespace Prima.Scheduler.Modules
                 return;
             }
 
-            var scheduleOutputChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
+            var scheduleOutputChannel = Context.Guild.GetTextChannel(result.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.ScheduleOutputChannel : guildConfig.CastrumScheduleOutputChannel);
             if (await scheduleOutputChannel.GetMessageAsync(result.EmbedMessageId) is IUserMessage embedMessage)
             {
                 var embed = embedMessage.Embeds.First();
