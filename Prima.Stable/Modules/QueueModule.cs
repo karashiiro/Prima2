@@ -8,6 +8,7 @@ using Prima.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Prima.Stable.Modules
@@ -27,6 +28,7 @@ namespace Prima.Stable.Modules
         private static readonly string[] Elements = new string[] { "Earth", "Wind", "Water", "Fire", "Lightning", "Ice" };
 
         public FFXIV3RoleQueueService QueueService { get; set; }
+        public PasswordGenerator PwGen { get; set; }
 
         [Command("lfm", RunMode = RunMode.Async)]
         [Description("Group leaders can use this to pull up to 7 members from the queue in a particular channel. Usage: `~lfm <#d/#h/#t>`")]
@@ -53,15 +55,12 @@ namespace Prima.Stable.Modules
                 else await ReplyAsync($"{Context.User.Mention}, you are already looking for members.");
                 return;
             }
-            else
-            {
-                if (ptTuple != default) // An entry for this person exists despite this person not having the role, remove them from the list and update their timer.
-                    LfmPullTimeLog.Remove(ptTuple);
-                LfmPullTimeLog.Add((Context.User.Id, DateTime.UtcNow));
-            }
+
+            if (ptTuple != default) // An entry for this person exists despite this person not having the role, remove them from the list and update their timer.
+                LfmPullTimeLog.Remove(ptTuple);
+            LfmPullTimeLog.Add((Context.User.Id, DateTime.UtcNow));
 
             var fixedRoles = args.Replace(" ", "").ToLowerInvariant();
-            var channelName = Context.Channel.Name;
             bool inEleChannel = false, inArsenalCategory = true;
             var partyType = Context.Channel.Id switch // Bit messy way of doing this but whatever
             {
@@ -94,7 +93,7 @@ namespace Prima.Stable.Modules
                 "Arsenal information will be sent to invitees after 30 seconds.\n" +
                 "You can cancel matchmaking by typing `~stop` within 30 seconds.");
 
-            var pw = "0000"; // TODO hook this up the private generator server
+            var pw = await PwGen.Get(Context.User.Id);
             try
             {
                 await leader.SendMessageAsync($"Your Party Finder password is {pw}.\n" +

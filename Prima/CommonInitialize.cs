@@ -56,7 +56,8 @@ namespace Prima
                 .AddSingleton<DiagnosticService>()
                 .AddSingleton<HttpClient>()
                 .AddSingleton<DbService>()
-                .AddSingleton<FFXIVSheetService>();
+                .AddSingleton<FFXIVSheetService>()
+                .AddSingleton<PasswordGenerator>();
                 //.AddSingleton(new HttpServer(Log.Information))
         }
 
