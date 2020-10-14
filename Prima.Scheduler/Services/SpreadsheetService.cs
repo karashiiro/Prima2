@@ -142,7 +142,7 @@ namespace Prima.Scheduler.Services
                                         {
                                             UserEnteredValue = new ExtendedValue
                                             {
-                                                FormulaValue = $"=HYPERLINK(\"{(await _client.GetGuild(@event.GuildId).GetTextChannel(guildConfig.ScheduleInputChannel).GetMessageAsync(@event.MessageId3)).GetJumpUrl()}\",\"[{_client.GetUser(@event.LeaderId)}]\")",
+                                                FormulaValue = $"=HYPERLINK(\"{(await _client.GetGuild(@event.GuildId).GetTextChannel(@event.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.ScheduleInputChannel : guildConfig.CastrumScheduleInputChannel).GetMessageAsync(@event.MessageId3)).GetJumpUrl()}\",\"[{_client.GetUser(@event.LeaderId)}]\")",
                                             },
                                         },
                                     },
