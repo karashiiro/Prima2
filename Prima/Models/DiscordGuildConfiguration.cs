@@ -73,6 +73,10 @@ namespace Prima.Models
 
         public string BASpreadsheetLink = string.Empty;
 
+        public string CastrumSpreadsheetId = string.Empty;
+
+        public string CastrumSpreadsheetLink = string.Empty;
+
         public DiscordGuildConfiguration(ulong guildId) => Id = guildId;
     }
 }
