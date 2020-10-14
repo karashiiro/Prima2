@@ -228,7 +228,7 @@ namespace Prima.Stable.Modules
             var leaderEmbed = new EmbedBuilder()
                 .WithTitle("Invited the following people:")
                 .WithColor(new Discord.Color(0x00, 0x80, 0xFF))
-                .WithThumbnailUrl("https://i.imgur.com/4ogfA2S.png")
+                .WithThumbnailUrl("https://i.imgur.com/aVEsVRb.png")
                 .WithFields(fields)
                 .Build();
             await leader.SendMessageAsync(embed: leaderEmbed);
@@ -306,7 +306,7 @@ namespace Prima.Stable.Modules
             var inviteeEmbed = new EmbedBuilder()
                 .WithTitle("Your queue has popped!")
                 .WithColor(new Discord.Color(0x00, 0x80, 0xFF))
-                .WithThumbnailUrl("https://i.imgur.com/4ogfA2S.png")
+                .WithThumbnailUrl("https://i.imgur.com/aVEsVRb.png")
                 .WithDescription($"Your queue for {args.PartyType} has popped! Check the PF for a party under `{args.LeaderDisplayName}` (or something similar) and use the password `{args.Password}` to join! " +
                                  $"Please DM them ({args.Leader}) if you have issues with joining or cannot find the party. " +
                                  "Additionally, the map used to find your portal location can be found here: https://i.imgur.com/Gao2rzI.jpg")
