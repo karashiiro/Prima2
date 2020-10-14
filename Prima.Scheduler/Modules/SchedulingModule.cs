@@ -168,7 +168,7 @@ namespace Prima.Scheduler.Modules
                     await Db.AddScheduledEvent(@event);
                     await Sheets.AddEvent(@event, guildConfig.BASpreadsheetId);
                 }
-                else if (Context.Channel.Id != guildConfig.CastrumScheduleInputChannel)
+                else if (Context.Channel.Id == guildConfig.CastrumScheduleInputChannel)
                 {
                     var embed = new EmbedBuilder()
                         .WithTitle(

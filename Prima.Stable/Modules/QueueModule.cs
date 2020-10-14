@@ -27,6 +27,7 @@ namespace Prima.Stable.Modules
         private static readonly IList<(ulong, DateTime)> LfmPullTimeLog = new List<(ulong, DateTime)>();
         private static readonly string[] Elements = new string[] { "Earth", "Wind", "Water", "Fire", "Lightning", "Ice" };
 
+        public DbService Db { get; set; }
         public FFXIV3RoleQueueService QueueService { get; set; }
         public PasswordGenerator PwGen { get; set; }
 
@@ -37,6 +38,9 @@ namespace Prima.Stable.Modules
         {
             if (!LfgChannels.ContainsKey(Context.Channel.Id)) // Don't use this outside of LFG channels
                 return;
+
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return;
 
             var queueName = LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
@@ -81,7 +85,7 @@ namespace Prima.Stable.Modules
                 await RemoveLfm(leader);
                 return;
             }
-            else if (wantedSum <= 0)
+            if (wantedSum <= 0)
             {
                 await ReplyAsync($"{Context.User.Mention}, your party can't be empty :confused:");
                 await RemoveLfm(leader);
@@ -97,7 +101,7 @@ namespace Prima.Stable.Modules
             try
             {
                 await leader.SendMessageAsync($"Your Party Finder password is {pw}.\n" +
-                    "Please join an elemental voice channel within the next 30 seconds to continue matching.\n" +
+                    $"Please join {(Context.Channel.Id == guildConfig.CastrumScheduleInputChannel ? "a Castrum" : "an elemental")} voice channel within the next 30 seconds to continue matching.\n" +
                     "Create the listing in Party Finder now; matching will begin in 30 seconds.");
             }
             catch (HttpException)
