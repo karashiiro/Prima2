@@ -467,15 +467,11 @@ namespace Prima.Stable.Modules
             }
 
             // Regular command body:
-            if (!LfgChannels.ContainsKey(Context.Guild.Id))
+            if (!LfgChannels.ContainsKey(Context.Channel.Id))
                 return;
 
-            var queueName = LfgChannels[Context.Guild.Id];
+            var queueName = LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
-
-            var enqueuedRolesList = new[] {FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank}
-                .Where(r => queue.GetPosition(Context.User.Id, r) != -1)
-                .ToList();
 
             await ReplyAsync(GetPositionString(queue, Context.User.Id));
         }

@@ -58,7 +58,8 @@ namespace Prima.Stable
               .AddSingleton<PresenceService>()
               .AddSingleton<XIVAPIService>()
               .AddSingleton<FFXIVWeatherService>()
-              .AddSingleton<MuteService>();
+              .AddSingleton<MuteService>()
+              .AddSingleton<FFXIV3RoleQueueService>();
             //sc.AddSingleton<UptimeMessageService>();
             return sc.BuildServiceProvider();
         }
