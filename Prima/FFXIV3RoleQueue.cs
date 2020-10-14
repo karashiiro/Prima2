@@ -42,26 +42,33 @@ namespace Prima
 
         public ulong? Dequeue(FFXIVRole role)
         {
+            ulong user;
             switch (role)
             {
                 case FFXIVRole.DPS:
                     if (_dpsQueue.Count == 0) return null;
-                    var (userd, _) = _dpsQueue[0];
+                    (user, _) = _dpsQueue[0];
                     _dpsQueue.RemoveAt(0);
-                    return userd;
+                    break;
                 case FFXIVRole.Healer:
                     if (_healerQueue.Count == 0) return null;
-                    var (userh, _) = _healerQueue[0];
+                    (user, _) = _healerQueue[0];
                     _healerQueue.RemoveAt(0);
-                    return userh;
+                    break;
                 case FFXIVRole.Tank:
                     if (_tankQueue.Count == 0) return null;
-                    var (usert, _) = _tankQueue[0];
+                    (user, _) = _tankQueue[0];
                     _tankQueue.RemoveAt(0);
-                    return usert;
+                    break;
                 default:
                     throw new NotImplementedException();
             }
+
+            Remove(user, FFXIVRole.DPS);
+            Remove(user, FFXIVRole.Healer);
+            Remove(user, FFXIVRole.Tank);
+
+            return user;
         }
 
         public bool Remove(ulong userId, FFXIVRole role)
