@@ -18,9 +18,9 @@ namespace Prima.Stable.Modules
 
         private static readonly IDictionary<ulong, string> LfgChannels = new Dictionary<ulong, string>
         {
-            { 550708765490675773, "learning-and-frag-farm" },
-            { 550708833412972544, "av-and-ozma-prog" },
-            { 550708866497773599, "clears-and-farming" },
+            //{ 550708765490675773, "learning-and-frag-farm" },
+            //{ 550708833412972544, "av-and-ozma-prog" },
+            //{ 550708866497773599, "clears-and-farming" },
             { 765994301850779709, "lfg-castrum" },
         };
         private static readonly IList<(ulong, DateTime)> LfmPullTimeLog = new List<(ulong, DateTime)>();
