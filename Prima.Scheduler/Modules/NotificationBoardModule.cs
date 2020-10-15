@@ -62,11 +62,10 @@ namespace Prima.Scheduler.Modules
 
             var deleteTime = time.AddHours(1);
             var timeDiff = DateTime.UtcNow - deleteTime;
-            _ = Task.Run(async () =>
-            {
+            (new Task(async () => {
                 await Task.Delay((int)timeDiff.TotalMilliseconds);
                 await embed.DeleteAsync();
-            });
+            })).Start();
         }
     }
 }
