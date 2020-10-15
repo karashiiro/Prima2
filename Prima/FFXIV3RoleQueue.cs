@@ -124,19 +124,19 @@ namespace Prima
             var dpsSpot = _dpsQueue.FirstOrDefault(tuple => tuple.Item1 == uid);
             if (dpsSpot != default)
             {
-                dpsSpot.Item2 = DateTime.Now;
+                dpsSpot.Item2 = DateTime.UtcNow;
             }
 
             var healerSpot = _healerQueue.FirstOrDefault(tuple => tuple.Item1 == uid);
             if (healerSpot != default)
             {
-                healerSpot.Item2 = DateTime.Now;
+                healerSpot.Item2 = DateTime.UtcNow;
             }
 
             var tankSpot = _tankQueue.FirstOrDefault(tuple => tuple.Item1 == uid);
             if (tankSpot != default)
             {
-                tankSpot.Item2 = DateTime.Now;
+                tankSpot.Item2 = DateTime.UtcNow;
             }
         }
 
@@ -146,15 +146,15 @@ namespace Prima
             {
                 case FFXIVRole.DPS:
                     Remove(uid, FFXIVRole.DPS);
-                    _dpsQueue.Insert(0, (uid, DateTime.Now));
+                    _dpsQueue.Insert(0, (uid, DateTime.UtcNow));
                     break;
                 case FFXIVRole.Healer:
                     Remove(uid, FFXIVRole.Healer);
-                    _healerQueue.Insert(0, (uid, DateTime.Now));
+                    _healerQueue.Insert(0, (uid, DateTime.UtcNow));
                     break;
                 case FFXIVRole.Tank:
                     Remove(uid, FFXIVRole.Tank);
-                    _tankQueue.Insert(0, (uid, DateTime.Now));
+                    _tankQueue.Insert(0, (uid, DateTime.UtcNow));
                     break;
             }
         }
