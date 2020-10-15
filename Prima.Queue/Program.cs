@@ -2,9 +2,9 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Prima.Services;
+using Prima.Queue.Services;
 
-namespace Prima.Unstable
+namespace Prima.Queue
 {
     class Program
     {
@@ -18,7 +18,7 @@ namespace Prima.Unstable
             await using var services = ConfigureServices(sc);
             await CommonInitialize.ConfigureServicesAsync(services);
 
-            Log.Information($"Prima Unstable logged in!");
+            Log.Information($"Prima Queue logged in!");
 
             await Task.Delay(-1);
         }
@@ -26,7 +26,9 @@ namespace Prima.Unstable
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "<Pending>")]
         private static ServiceProvider ConfigureServices(IServiceCollection sc)
         {
-            return sc.BuildServiceProvider();
+            return sc
+                .AddSingleton<FFXIV3RoleQueueService>()
+                .BuildServiceProvider();
         }
     }
 }

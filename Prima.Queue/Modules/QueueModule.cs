@@ -8,10 +8,10 @@ using Prima.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
+using Prima.Queue.Services;
 
-namespace Prima.Stable.Modules
+namespace Prima.Queue.Modules
 {
     public class QueueModule : ModuleBase<SocketCommandContext>
     {
@@ -27,7 +27,6 @@ namespace Prima.Stable.Modules
         private static readonly IList<(ulong, DateTime)> LfmPullTimeLog = new List<(ulong, DateTime)>();
         private static readonly string[] Elements = { "Earth", "Wind", "Water", "Fire", "Lightning", "Ice" };
 
-        public DbService Db { get; set; }
         public FFXIV3RoleQueueService QueueService { get; set; }
         public PasswordGenerator PwGen { get; set; }
 

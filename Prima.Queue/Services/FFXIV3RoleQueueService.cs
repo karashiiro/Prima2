@@ -6,7 +6,7 @@ using Discord;
 using Discord.WebSocket;
 using Newtonsoft.Json;
 
-namespace Prima.Services
+namespace Prima.Queue.Services
 {
     public class FFXIV3RoleQueueService
     {
