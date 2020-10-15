@@ -349,8 +349,6 @@ namespace Prima.Queue.Modules
             var queueName = LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
-            queue.RemoveDupes();
-
             var roles = ParseRoles(args);
             if (roles == FFXIVRole.None)
             {
@@ -359,10 +357,11 @@ namespace Prima.Queue.Modules
                 return;
             }
 
-            var enqueuedRoles = new[] {FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank}
-                .Where(r => roles.HasFlag(r))
-                .Where(r => queue.Enqueue(Context.User.Id, r))
-                .Aggregate(FFXIVRole.None, (current, r) => current | r);
+            var enqueuedRoles = FFXIVRole.None;
+            foreach (var r in new[] { FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank })
+                if (roles.HasFlag(r))
+                    if (queue.Enqueue(Context.User.Id, r))
+                        enqueuedRoles |= r;
 
             var response = Context.User.Mention;
             const string queued0 = ", you're already in those queues. You can check your position in them with `~queue`.";
@@ -416,14 +415,14 @@ namespace Prima.Queue.Modules
             if (roles == FFXIVRole.None)
             {
                 // Remove from all
-                foreach (var r in new FFXIVRole[] { FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank })
+                foreach (var r in new[] { FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank })
                     if (queue.Remove(Context.User.Id, r))
                         removedRoles |= r;
             }
             else
             {
                 // Remove from specified
-                foreach (var r in new FFXIVRole[] { FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank })
+                foreach (var r in new[] { FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank })
                     if (roles.HasFlag(r))
                         if (queue.Remove(Context.User.Id, r))
                             removedRoles |= r;
@@ -505,9 +504,11 @@ namespace Prima.Queue.Modules
 
         private static IList<FFXIVRole> RolesToArray(FFXIVRole roles)
         {
-            return new[] {FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank}
-                .Where(r => roles.HasFlag(r))
-                .ToList();
+            var rolesList = new List<FFXIVRole>();
+            foreach (var r in new[] { FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank })
+                if (roles.HasFlag(r))
+                    rolesList.Add(r);
+            return rolesList;
         }
 
         private static string GetPositionString(FFXIV3RoleQueue queue, ulong uid)
