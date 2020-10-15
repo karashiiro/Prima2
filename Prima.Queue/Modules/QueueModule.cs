@@ -587,5 +587,30 @@ namespace Prima.Queue.Modules
                 ret |= FFXIVRole.Tank;
             return ret;
         }
+
+        [Command("shove")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public Task ShoveUser(IUser user, [Remainder]string args)
+        {
+            if (!LfgChannels.ContainsKey(Context.Channel.Id))
+                return ReplyAsync("This is not a queue channel!");
+
+            var queueName = LfgChannels[Context.Channel.Id];
+            var queue = QueueService.GetOrCreateQueue(queueName);
+
+            var roles = ParseRoles(args);
+            if (roles == FFXIVRole.None)
+            {
+                return ReplyAsync($"You didn't provide a valid argument, {Context.User.Mention}!\n" +
+                                  "The proper usage would be: `~shove @User <[d][h][t]>`");
+            }
+
+            foreach (var role in RolesToArray(roles))
+            {
+                queue.Shove(user.Id, role);
+            }
+
+            return ReplyAsync("User shoved to front of queue.");
+        }
     }
 }

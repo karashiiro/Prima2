@@ -140,6 +140,25 @@ namespace Prima
             }
         }
 
+        public void Shove(ulong uid, FFXIVRole role)
+        {
+            switch (role)
+            {
+                case FFXIVRole.DPS:
+                    Remove(uid, FFXIVRole.DPS);
+                    _dpsQueue.Insert(0, (uid, DateTime.Now));
+                    break;
+                case FFXIVRole.Healer:
+                    Remove(uid, FFXIVRole.Healer);
+                    _healerQueue.Insert(0, (uid, DateTime.Now));
+                    break;
+                case FFXIVRole.Tank:
+                    Remove(uid, FFXIVRole.Tank);
+                    _tankQueue.Insert(0, (uid, DateTime.Now));
+                    break;
+            }
+        }
+
         public (IEnumerable<ulong>, IEnumerable<ulong>) Timeout(double secondsBeforeNow, double gracePeriod)
         {
             var dpsTimedOut = _dpsQueue.RemoveAll(tuple => (DateTime.UtcNow - tuple.Item2).TotalSeconds > secondsBeforeNow, overload: true)
