@@ -142,8 +142,7 @@ namespace Prima
             if (dpsSpot != default)
             {
                 var index = GetPosition(uid, FFXIVRole.DPS) - 1;
-                dpsSpot.Item2 = DateTime.UtcNow;
-                _dpsQueue.Insert(index, dpsSpot);
+                _dpsQueue.Insert(index, (uid, DateTime.UtcNow));
                 _dpsQueue.RemoveAt(index + 1);
             }
 
@@ -151,8 +150,7 @@ namespace Prima
             if (healerSpot != default)
             {
                 var index = GetPosition(uid, FFXIVRole.Healer) - 1;
-                healerSpot.Item2 = DateTime.UtcNow;
-                _healerQueue.Insert(index, dpsSpot);
+                _healerQueue.Insert(index, (uid, DateTime.UtcNow));
                 _healerQueue.RemoveAt(index + 1);
             }
 
@@ -160,8 +158,7 @@ namespace Prima
             if (tankSpot != default)
             {
                 var index = GetPosition(uid, FFXIVRole.Tank) - 1;
-                tankSpot.Item2 = DateTime.UtcNow;
-                _tankQueue.Insert(index, dpsSpot);
+                _tankQueue.Insert(index, (uid, DateTime.UtcNow));
                 _tankQueue.RemoveAt(index + 1);
             }
         }
