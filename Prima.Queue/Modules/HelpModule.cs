@@ -43,7 +43,7 @@ namespace Prima.Queue.Modules
             }
 
             var embed = new EmbedBuilder()
-                .WithTitle("These are the commands you can use with Prima in that server:")
+                .WithTitle("These are the queue commands you can use with Prima in that server:")
                 .WithColor(Color.DarkGreen)
                 .WithFields(fields)
                 .Build();
