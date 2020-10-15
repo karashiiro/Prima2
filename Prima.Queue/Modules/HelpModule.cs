@@ -49,7 +49,6 @@ namespace Prima.Queue.Modules
                 .Build();
 
             await Context.User.SendMessageAsync(embed: embed);
-            await ReplyAsync($"{Context.User.Mention}, a list of commands you can use in this server was sent to you via DM.");
         }
     }
 }
