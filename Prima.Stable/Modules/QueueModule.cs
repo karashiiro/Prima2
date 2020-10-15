@@ -25,7 +25,7 @@ namespace Prima.Stable.Modules
             { 765994301850779709, "lfg-castrum" },
         };
         private static readonly IList<(ulong, DateTime)> LfmPullTimeLog = new List<(ulong, DateTime)>();
-        private static readonly string[] Elements = new string[] { "Earth", "Wind", "Water", "Fire", "Lightning", "Ice" };
+        private static readonly string[] Elements = { "Earth", "Wind", "Water", "Fire", "Lightning", "Ice" };
 
         public DbService Db { get; set; }
         public FFXIV3RoleQueueService QueueService { get; set; }
@@ -392,6 +392,7 @@ namespace Prima.Stable.Modules
             }
 
             QueueService.Save();
+            RefreshQueuesEx();
 
             await ReplyAsync(response);
         }
@@ -451,6 +452,7 @@ namespace Prima.Stable.Modules
             }
 
             QueueService.Save();
+            RefreshQueuesEx();
 
             await ReplyAsync(response);
         }
@@ -480,6 +482,7 @@ namespace Prima.Stable.Modules
             var queue = QueueService.GetOrCreateQueue(queueName);
 
             QueueService.Save();
+            RefreshQueuesEx();
 
             await ReplyAsync(GetPositionString(queue, Context.User.Id));
         }
@@ -494,6 +497,7 @@ namespace Prima.Stable.Modules
 
             var queueName = LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
+            RefreshQueuesEx();
 
             await ReplyAsync($"There are currently {queue.Count(FFXIVRole.Tank)} tank(s), {queue.Count(FFXIVRole.Healer)} healer(s), and {queue.Count(FFXIVRole.DPS)} DPS in the queue. (Unique players: {queue.CountDistinct()})");
         }
@@ -553,6 +557,24 @@ namespace Prima.Stable.Modules
             output += ".";
 
             return output == "you are number ." ? $"<@{uid}>, you are not in any queues. If you meant to join the queue, use `~lfg <role>`." : $"<@{uid}>, {output}";
+        }
+
+        [Command("refreshqueues")]
+        [Alias("refresh", "refreshqueue")]
+        [Description("Refreshes your position in all queues.")]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public Task RefreshQueues()
+        {
+            RefreshQueuesEx();
+            return ReplyAsync($"{Context.User.Mention}, your positions in all queues have been refreshed!");
+        }
+
+        private void RefreshQueuesEx()
+        {
+            QueueService.GetOrCreateQueue("learning-and-frag-farm").Refresh(Context.User.Id);
+            QueueService.GetOrCreateQueue("av-and-ozma-prog").Refresh(Context.User.Id);
+            QueueService.GetOrCreateQueue("clears-and-farming").Refresh(Context.User.Id);
+            QueueService.GetOrCreateQueue("lfg-castrum").Refresh(Context.User.Id);
         }
 
         private static FFXIVRole ParseRoles(string roleString)

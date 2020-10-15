@@ -119,7 +119,28 @@ namespace Prima
             };
         }
 
-        public (IEnumerable<ulong>, IEnumerable<ulong>, IEnumerable<ulong>) Timeout(double secondsBeforeNow)
+        public void Refresh(ulong uid)
+        {
+            var dpsSpot = _dpsQueue.FirstOrDefault(tuple => tuple.Item1 == uid);
+            if (dpsSpot != default)
+            {
+                dpsSpot.Item2 = DateTime.Now;
+            }
+
+            var healerSpot = _healerQueue.FirstOrDefault(tuple => tuple.Item1 == uid);
+            if (healerSpot != default)
+            {
+                healerSpot.Item2 = DateTime.Now;
+            }
+
+            var tankSpot = _tankQueue.FirstOrDefault(tuple => tuple.Item1 == uid);
+            if (tankSpot != default)
+            {
+                tankSpot.Item2 = DateTime.Now;
+            }
+        }
+
+        public (IEnumerable<ulong>, IEnumerable<ulong>) Timeout(double secondsBeforeNow, double gracePeriod)
         {
             var dpsTimedOut = _dpsQueue.RemoveAll(tuple => (DateTime.UtcNow - tuple.Item2).TotalSeconds > secondsBeforeNow, overload: true)
                 .Select(tuple => tuple.Item1);
@@ -128,7 +149,20 @@ namespace Prima
             var tanksTimedOut = _tankQueue.RemoveAll(tuple => (DateTime.UtcNow - tuple.Item2).TotalSeconds > secondsBeforeNow, overload: true)
                 .Select(tuple => tuple.Item1);
 
-            return (dpsTimedOut, healersTimedOut, tanksTimedOut);
+            var dpsAlmostTimedOut =
+                _dpsQueue
+                    .Where(tuple => (DateTime.UtcNow - tuple.Item2).TotalSeconds > secondsBeforeNow - gracePeriod)
+                    .Select(tuple => tuple.Item1);
+            var healersAlmostTimedOut =
+                _healerQueue
+                    .Where(tuple => (DateTime.UtcNow - tuple.Item2).TotalSeconds > secondsBeforeNow - gracePeriod)
+                    .Select(tuple => tuple.Item1);
+            var tanksAlmostTimedOut =
+                _tankQueue
+                    .Where(tuple => (DateTime.UtcNow - tuple.Item2).TotalSeconds > secondsBeforeNow - gracePeriod)
+                    .Select(tuple => tuple.Item1);
+
+            return (dpsTimedOut.Concat(healersTimedOut).Concat(tanksTimedOut).Distinct(), dpsAlmostTimedOut.Concat(healersAlmostTimedOut).Concat(tanksAlmostTimedOut).Distinct());
         }
     }
 
