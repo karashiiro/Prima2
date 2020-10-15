@@ -32,8 +32,7 @@ namespace Prima.Scheduler.Modules
         {
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
             if (guildConfig == null) return;
-            if (Context.Channel.Id == guildConfig.ScheduleInputChannel &&
-                Context.Channel.Id == guildConfig.CastrumScheduleInputChannel) return;
+            if (Context.Channel.Id != guildConfig.ScheduleInputChannel) return;
             var prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
 
             var splitIndex = content.IndexOf("|", StringComparison.Ordinal);
