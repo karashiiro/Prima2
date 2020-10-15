@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using Prima.Attributes;
 using Prima.Resources;
 using Prima.Services;
 using System;
@@ -16,6 +17,8 @@ namespace Prima.Scheduler.Modules
         public DbService Db { get; set; }
 
         [Command("announce")]
+        [Description("Announce a Castrum Lacus Litore run. Usage: `~announce Time | Description`")]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task Announce([Remainder]string args)
         {
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
