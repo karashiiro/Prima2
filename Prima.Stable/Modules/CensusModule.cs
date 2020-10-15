@@ -57,7 +57,7 @@ namespace Prima.Modules
             var name = parameters[1] + " " + parameters[2];
             world = RegexSearches.NonAlpha.Replace(world, string.Empty);
             name = RegexSearches.AngleBrackets.Replace(name, string.Empty);
-            name = name.Replace("‘", string.Empty);
+            name = RegexSearches.UnicodeApostrophe.Replace(name, "'");
             world = world.ToLower();
             world = ("" + world[0]).ToUpper() + world.Substring(1);
             if (world == "Courel" || world == "Couerl")
