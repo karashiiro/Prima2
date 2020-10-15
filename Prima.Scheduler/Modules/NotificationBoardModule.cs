@@ -51,7 +51,7 @@ namespace Prima.Scheduler.Modules
                     .WithName(Context.User.ToString()))
                 .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
                 .WithTimestamp(time)
-                .WithTitle($"Run scheduled by {Context.User} at {time.ToShortTimeString()} (PDT)!")
+                .WithTitle($"Run scheduled by {Context.User} on {time.DayOfWeek} at {time.ToShortTimeString()} (PDT)!")
                 .WithDescription(description)
                 .Build());
 
