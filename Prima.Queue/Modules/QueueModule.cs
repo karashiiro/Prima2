@@ -592,6 +592,7 @@ namespace Prima.Queue.Modules
         }
 
         [Command("shove")]
+        [Alias("queueshove")]
         [RequireUserPermission(GuildPermission.KickMembers)]
         public Task ShoveUser(IUser user, [Remainder]string args)
         {
