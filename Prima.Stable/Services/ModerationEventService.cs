@@ -52,8 +52,8 @@ namespace Prima.Stable.Services
                 cachedMessage = _db.CachedMessages.FirstOrDefault(m => m.MessageId == cmessage.Id);
                 if (cachedMessage == null)
                 {
-                    await deletedMessageChannel.SendMessageAsync(
-                        "A message was deleted without being cached first! This probably happened in the `welcome` channel.");
+                    //await deletedMessageChannel.SendMessageAsync(
+                    //    "A message was deleted without being cached first! This probably happened in the `welcome` channel.");
                     Log.Warning("Message deleted and not cached! This probably happened in #welcome.");
                     return;
                 }
