@@ -416,17 +416,17 @@ namespace Prima.Queue.Modules
             if (roles == FFXIVRole.None)
             {
                 // Remove from all
-                removedRoles = new[] {FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank}
-                    .Where(r => queue.Remove(Context.User.Id, r))
-                    .Aggregate(removedRoles, (current, r) => current | r);
+                foreach (var r in new FFXIVRole[] { FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank })
+                    if (queue.Remove(Context.User.Id, r))
+                        removedRoles |= r;
             }
             else
             {
                 // Remove from specified
-                removedRoles = new[] {FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank}
-                    .Where(r => roles.HasFlag(r))
-                    .Where(r => queue.Remove(Context.User.Id, r))
-                    .Aggregate(removedRoles, (current, r) => current | r);
+                foreach (var r in new FFXIVRole[] { FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank })
+                    if (roles.HasFlag(r))
+                        if (queue.Remove(Context.User.Id, r))
+                            removedRoles |= r;
             }
 
             var response = Context.User.Mention;

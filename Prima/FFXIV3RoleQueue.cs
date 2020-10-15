@@ -46,7 +46,7 @@ namespace Prima
             {
                 for (var i = 0; i < queue.Count; i++)
                 {
-                    for (var j = queue.Count; j >= 0; j--)
+                    for (var j = queue.Count - 1; j > 0; j--)
                     {
                         if (i != j && queue[j] == queue[i])
                         {
