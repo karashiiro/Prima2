@@ -140,5 +140,41 @@ namespace Prima.Services
                 World = world,
             };
         }
+
+        /// <summary>
+        /// Searches for a character meeting a minimum combat job level, and returns a <see cref="DiscordXIVUser"/> if possible.
+        /// </summary>
+        /// <exception cref="XIVAPICharacterNotFoundException"></exception>
+        /// <exception cref="XIVAPINotMatchingFilterException"></exception>
+        public async Task<DiscordXIVUser> GetDiscordXIVUser(ulong lodestoneId, int minimumJobLevel)
+        {
+            var character = await GetCharacter(lodestoneId);
+
+            // Make sure one of their job levels meet some value.
+            var meetsLevel = false;
+            foreach (var classJob in character.GetClassJobs())
+            {
+                if (classJob.JobID < 8 || classJob.JobID > 18)
+                {
+                    if (classJob.Level >= minimumJobLevel)
+                    {
+                        meetsLevel = true;
+                    }
+                }
+            }
+            if (!meetsLevel)
+            {
+                throw new XIVAPINotMatchingFilterException();
+            }
+
+            return new DiscordXIVUser
+            {
+                DiscordId = 0,
+                LodestoneId = lodestoneId.ToString(),
+                Avatar = character.XivapiResponse["Character"]["Avatar"].ToObject<string>(),
+                Name = character.XivapiResponse["Character"]["Name"].ToObject<string>(),
+                World = character.XivapiResponse["Character"]["Server"].ToObject<string>(),
+            };
+        }
     }
 }

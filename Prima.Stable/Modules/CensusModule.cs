@@ -38,12 +38,26 @@ namespace Prima.Modules
             var guildConfig = Db.Guilds.Single(g => g.Id == guild.Id);
             var prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
 
+            ulong lodestoneId = 0;
             if (parameters.Length != 3)
             {
-                var reply = await ReplyAsync($"{Context.User.Mention}, please enter that command in the format `{prefix}iam World Name Surname`.");
-                await Task.Delay(MessageDeleteDelay);
-                await reply.DeleteAsync();
-                return;
+                if (parameters.Length == 1)
+                {
+                    if (!ulong.TryParse(parameters[0], out lodestoneId))
+                    {
+                        var reply = await ReplyAsync($"{Context.User.Mention}, please enter that command in the format `{prefix}iam World Name Surname`.");
+                        await Task.Delay(MessageDeleteDelay);
+                        await reply.DeleteAsync();
+                        return;
+                    }
+                }
+                else
+                {
+                    var reply = await ReplyAsync($"{Context.User.Mention}, please enter that command in the format `{prefix}iam World Name Surname`.");
+                    await Task.Delay(MessageDeleteDelay);
+                    await reply.DeleteAsync();
+                    return;
+                }
             }
             new Task(async () => {
                 await Task.Delay(MessageDeleteDelay);
@@ -53,20 +67,26 @@ namespace Prima.Modules
                 }
                 catch (HttpException) {} // Message was already deleted.
             }).Start();
-            var world = parameters[0].ToLower();
-            var name = parameters[1] + " " + parameters[2];
-            world = RegexSearches.NonAlpha.Replace(world, string.Empty);
-            name = RegexSearches.AngleBrackets.Replace(name, string.Empty);
-            name = RegexSearches.UnicodeApostrophe.Replace(name, "'");
-            world = world.ToLower();
-            world = ("" + world[0]).ToUpper() + world.Substring(1);
-            if (world == "Courel" || world == "Couerl")
+
+            var world = "";
+            var name = "";
+            if (parameters.Length == 3)
             {
-                world = "Coeurl";
-            }
-            else if (world == "Diablos")
-            {
-                world = "Diabolos";
+                world = parameters[0].ToLower();
+                name = parameters[1] + " " + parameters[2];
+                world = RegexSearches.NonAlpha.Replace(world, string.Empty);
+                name = RegexSearches.AngleBrackets.Replace(name, string.Empty);
+                name = RegexSearches.UnicodeApostrophe.Replace(name, "'");
+                world = world.ToLower();
+                world = ("" + world[0]).ToUpper() + world.Substring(1);
+                if (world == "Courel" || world == "Couerl")
+                {
+                    world = "Coeurl";
+                }
+                else if (world == "Diablos")
+                {
+                    world = "Diabolos";
+                }
             }
 
             var member = guild.GetUser(Context.User.Id);
@@ -82,7 +102,15 @@ namespace Prima.Modules
             DiscordXIVUser foundCharacter;
             try
             {
-                foundCharacter = await XIVAPI.GetDiscordXIVUser(world, name, guildConfig.MinimumLevel);
+                if (parameters.Length == 3)
+                {
+                    foundCharacter = await XIVAPI.GetDiscordXIVUser(world, name, guildConfig.MinimumLevel);
+                }
+                else
+                {
+                    foundCharacter = await XIVAPI.GetDiscordXIVUser(lodestoneId, guildConfig.MinimumLevel);
+                    world = foundCharacter.World;
+                }
             }
             catch (XIVAPICharacterNotFoundException)
             {
