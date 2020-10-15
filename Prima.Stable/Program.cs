@@ -50,16 +50,16 @@ namespace Prima.Stable
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "<Pending>")]
         private static ServiceProvider ConfigureServices(IServiceCollection sc)
         {
-            sc.AddSingleton<WebClient>()
-              .AddSingleton<ModerationEventService>()
-              .AddSingleton<MessageCacheService>()
-              .AddSingleton<CensusEventService>()
-              .AddSingleton<ClericalEventService>()
-              .AddSingleton<PresenceService>()
-              .AddSingleton<XIVAPIService>()
-              .AddSingleton<FFXIVWeatherService>()
-              .AddSingleton<MuteService>()
-              .AddSingleton<FFXIV3RoleQueueService>();
+            sc
+                .AddSingleton<WebClient>()
+                .AddSingleton<ModerationEventService>()
+                .AddSingleton<MessageCacheService>()
+                .AddSingleton<CensusEventService>()
+                .AddSingleton<ClericalEventService>()
+                .AddSingleton<PresenceService>()
+                .AddSingleton<XIVAPIService>()
+                .AddSingleton<FFXIVWeatherService>()
+                .AddSingleton<MuteService>();
             //sc.AddSingleton<UptimeMessageService>();
             return sc.BuildServiceProvider();
         }
