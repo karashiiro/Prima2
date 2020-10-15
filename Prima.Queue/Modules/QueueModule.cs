@@ -592,7 +592,7 @@ namespace Prima.Queue.Modules
         }
 
         [Command("shove")]
-        [RequireUserPermission(GuildPermission.Administrator)]
+        [RequireUserPermission(GuildPermission.KickMembers)]
         public Task ShoveUser(IUser user, [Remainder]string args)
         {
             if (!LfgChannels.ContainsKey(Context.Channel.Id))
