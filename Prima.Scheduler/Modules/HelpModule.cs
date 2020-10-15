@@ -51,13 +51,5 @@ namespace Prima.Scheduler.Modules
 
             await Context.User.SendMessageAsync(embed: embed);
         }
-
-        [Command("refreshqueue")]
-        [Alias("refresh")]
-        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task RefreshQueueAsync()
-        {
-            await ReplyAsync($"{Context.User.Mention}, that command has been removed, please see <https://discordapp.com/channels/550702475112480769/550706420543389696/733547955793166397>.");
-        }
     }
 }

@@ -40,6 +40,23 @@ namespace Prima
             }
         }
 
+        public void RemoveDupes()
+        {
+            foreach (var queue in new[] { _dpsQueue, _healerQueue, _tankQueue })
+            {
+                for (var i = 0; i < queue.Count; i++)
+                {
+                    for (var j = queue.Count; j >= 0; j--)
+                    {
+                        if (i != j && queue[j] == queue[i])
+                        {
+                            queue.RemoveAt(j);
+                        }
+                    }
+                }
+            }
+        }
+
         public ulong? Dequeue(FFXIVRole role)
         {
             ulong user;
@@ -124,19 +141,28 @@ namespace Prima
             var dpsSpot = _dpsQueue.FirstOrDefault(tuple => tuple.Item1 == uid);
             if (dpsSpot != default)
             {
+                var index = GetPosition(uid, FFXIVRole.DPS) - 1;
                 dpsSpot.Item2 = DateTime.UtcNow;
+                _dpsQueue.Insert(index, dpsSpot);
+                _dpsQueue.RemoveAt(index + 1);
             }
 
             var healerSpot = _healerQueue.FirstOrDefault(tuple => tuple.Item1 == uid);
             if (healerSpot != default)
             {
+                var index = GetPosition(uid, FFXIVRole.Healer) - 1;
                 healerSpot.Item2 = DateTime.UtcNow;
+                _healerQueue.Insert(index, dpsSpot);
+                _healerQueue.RemoveAt(index + 1);
             }
 
             var tankSpot = _tankQueue.FirstOrDefault(tuple => tuple.Item1 == uid);
             if (tankSpot != default)
             {
+                var index = GetPosition(uid, FFXIVRole.Tank) - 1;
                 tankSpot.Item2 = DateTime.UtcNow;
+                _tankQueue.Insert(index, dpsSpot);
+                _tankQueue.RemoveAt(index + 1);
             }
         }
 

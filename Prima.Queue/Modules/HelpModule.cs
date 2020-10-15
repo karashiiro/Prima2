@@ -1,14 +1,13 @@
 ﻿using Discord;
 using Discord.Commands;
 using Prima.Attributes;
-using Prima.Resources;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Color = Discord.Color;
 
-namespace Prima.Stable.Modules
+namespace Prima.Queue.Modules
 {
     public class HelpModule : ModuleBase<SocketCommandContext>
     {

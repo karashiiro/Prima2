@@ -349,6 +349,8 @@ namespace Prima.Queue.Modules
             var queueName = LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
+            queue.RemoveDupes();
+
             var roles = ParseRoles(args);
             if (roles == FFXIVRole.None)
             {
