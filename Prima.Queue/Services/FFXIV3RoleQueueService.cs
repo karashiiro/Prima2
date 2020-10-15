@@ -59,7 +59,7 @@ namespace Prima.Queue.Services
 
             while (true)
             {
-                await Task.Delay(second);
+                await Task.Delay(900 * second);
 
                 await AlertTimeouts(Queues["learning-and-frag-farm"]?.Timeout(10800, 900), "learning-and-frag-farm", 3);
                 await AlertTimeouts(Queues["av-and-ozma-prog"]?.Timeout(10800, 900), "av-and-ozma-prog", 3);
@@ -80,6 +80,13 @@ namespace Prima.Queue.Services
                 await user.SendMessageAsync($"You have been in the queue `#{queueName}` for {hours} hours and have been timed-out.\n" +
                                             "This is a measure in place to avoid leads having to pull numerous AFK users before your run.\n" +
                                             "Please rejoin the queue if you are still active.");
+            }
+
+            foreach (var uid in almostUids)
+            {
+                var user = _client.GetUser(uid);
+                await user.SendMessageAsync($"You have been in the queue `#{queueName}` for almost {hours} hours.\n" +
+                                            "To avoid being removed for inactivity, please use the command `~refresh`.");
             }
         }
     }
