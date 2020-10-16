@@ -54,11 +54,11 @@ namespace Prima.Scheduler.Modules
                     .WithName(Context.User.ToString()))
                 .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
                 .WithTimestamp(time)
-                .WithTitle($"Run scheduled by {Context.User} on {time.DayOfWeek} at {time.ToShortTimeString()} (PDT)!")
+                .WithTitle($"Event scheduled by {Context.User} on {time.DayOfWeek} at {time.ToShortTimeString()} (PDT)!")
                 .WithDescription(description)
                 .Build());
 
-            await ReplyAsync($"Run announced! Notification posted in <#{guildConfig.CastrumScheduleOutputChannel}>.");
+            await ReplyAsync($"Event announced! Notification posted in <#{guildConfig.CastrumScheduleOutputChannel}>.");
 
             var deleteTime = time.AddHours(1);
             var timeDiff = DateTime.UtcNow - deleteTime;
