@@ -191,7 +191,11 @@ namespace Prima.Queue.Modules
                     .WithValue(fetchedDps
                         .Select(fd =>
                         {
-                            var user = Context.Guild.GetUser(fd);
+                            IGuildUser user = Context.Guild.GetUser(fd);
+                            if (user == null)
+                            {
+                                user = Context.Client.Rest.GetGuildUserAsync(Context.Guild.Id, fd).Result;
+                            }
                             return user.Nickname ?? user.ToString() ?? "(Unable to retrive)";
                         })
                         .Aggregate(string.Empty, (ws, nextUser) => ws + $"{nextUser}\n")));
@@ -202,7 +206,11 @@ namespace Prima.Queue.Modules
                     .WithValue(fetchedHealers
                         .Select(fh =>
                         {
-                            var user = Context.Guild.GetUser(fh);
+                            IGuildUser user = Context.Guild.GetUser(fh);
+                            if (user == null)
+                            {
+                                user = Context.Client.Rest.GetGuildUserAsync(Context.Guild.Id, fh).Result;
+                            }
                             return user.Nickname ?? user.ToString() ?? "(Unable to retrive)";
                         })
                         .Aggregate(string.Empty, (ws, nextUser) => ws + $"{nextUser}\n")));
@@ -213,7 +221,11 @@ namespace Prima.Queue.Modules
                     .WithValue(fetchedTanks
                         .Select(ft =>
                         {
-                            var user = Context.Guild.GetUser(ft);
+                            IGuildUser user = Context.Guild.GetUser(ft);
+                            if (user == null)
+                            {
+                                user = Context.Client.Rest.GetGuildUserAsync(Context.Guild.Id, ft).Result;
+                            }
                             return user.Nickname ?? user.ToString() ?? "(Unable to retrive)";
                         })
                         .Aggregate(string.Empty, (ws, nextUser) => ws + $"{nextUser}\n")));
