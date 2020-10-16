@@ -32,6 +32,20 @@ namespace Prima.Modules
         [Description("[FFXIV] Register a character to yourself.")]
         public async Task IAmAsync(params string[] parameters)
         {
+            if (Context.Guild != null && Context.Guild.Id == SpecialGuilds.CrystalExploratoryMissions)
+            {
+                const ulong welcome = 573350095903260673;
+                const ulong botSpam = 551586630478331904;
+                if (Context.Channel.Id != welcome && Context.Channel.Id != botSpam)
+                {
+                    await Context.Message.DeleteAsync();
+                    var reply = await ReplyAsync("That command is disabled in this channel.");
+                    await Task.Delay(10000);
+                    await reply.DeleteAsync();
+                    return;
+                }
+            }
+
             var guild = Context.Guild ?? Context.User.MutualGuilds.First(g => Db.Guilds.Any(gc => gc.Id == g.Id));
             Log.Information("Mututal guild ID: {GuildId}", guild.Id);
 
@@ -290,6 +304,20 @@ namespace Prima.Modules
         [Description("[FFXIV] Verify that you've completed the Baldesion Arsenal on your registered character 1 or 10 times.")]
         public async Task VerifyAsync(params string[] args)
         {
+            if (Context.Guild != null && Context.Guild.Id == SpecialGuilds.CrystalExploratoryMissions)
+            {
+                const ulong welcome = 573350095903260673;
+                const ulong botSpam = 551586630478331904;
+                if (Context.Channel.Id == welcome || Context.Channel.Id != botSpam)
+                {
+                    await Context.Message.DeleteAsync();
+                    var reply = await ReplyAsync("That command is disabled in this channel.");
+                    await Task.Delay(10000);
+                    await reply.DeleteAsync();
+                    return;
+                }
+            }
+
             var guild = Context.Guild ?? Context.User.MutualGuilds.First(g => Db.Guilds.Any(gc => gc.Id == g.Id));
             Log.Information("Mututal guild ID: {GuildId}", guild.Id);
 
@@ -364,6 +392,20 @@ namespace Prima.Modules
         [RequireUserInDatabase]
         public async Task AgreeAsync()
         {
+            if (Context.Guild != null && Context.Guild.Id == SpecialGuilds.CrystalExploratoryMissions)
+            {
+                const ulong welcome = 573350095903260673;
+                const ulong botSpam = 551586630478331904;
+                if (Context.Channel.Id != welcome && Context.Channel.Id != botSpam)
+                {
+                    await Context.Message.DeleteAsync();
+                    var reply = await ReplyAsync("That command is disabled in this channel.");
+                    await Task.Delay(10000);
+                    await reply.DeleteAsync();
+                    return;
+                }
+            }
+
             var guildConfig = Db.Guilds.Single(g => g.Id == Context.Guild.Id);
             if (guildConfig.WelcomeChannel != Context.Channel.Id) return;
             var user = Context.Guild.GetUser(Context.User.Id);
@@ -378,6 +420,19 @@ namespace Prima.Modules
         [Description("[FFXIV] Check what character you have registered.")]
         public async Task WhoAmIAsync()
         {
+            if (Context.Guild != null && Context.Guild.Id == SpecialGuilds.CrystalExploratoryMissions)
+            {
+                const ulong welcome = 573350095903260673;
+                if (Context.Channel.Id == welcome)
+                {
+                    await Context.Message.DeleteAsync();
+                    var reply = await ReplyAsync("That command is disabled in this channel.");
+                    await Task.Delay(10000);
+                    await reply.DeleteAsync();
+                    return;
+                }
+            }
+
             DiscordXIVUser found;
             try
             {

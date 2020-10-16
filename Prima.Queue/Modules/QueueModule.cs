@@ -573,6 +573,9 @@ namespace Prima.Queue.Modules
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task RefreshQueues()
         {
+            if (!LfgChannels.ContainsKey(Context.Channel.Id) && Context.Guild != null)
+                return Task.CompletedTask;
+
             RefreshQueuesEx();
             return ReplyAsync($"{Context.User.Mention}, your positions in all queues have been refreshed!");
         }
