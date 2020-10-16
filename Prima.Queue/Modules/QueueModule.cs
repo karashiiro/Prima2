@@ -464,10 +464,16 @@ namespace Prima.Queue.Modules
         {
             if (args.StartsWith("leave")) // See below
             {
-                await LeaveQueueAsync(args.Substring(5));
+                await LeaveQueueAsync(args.Substring("leave".Length));
                 return;
             }
-            
+
+            if (args.StartsWith("refresh")) // See below
+            {
+                await RefreshQueues();
+                return;
+            }
+
             if (args.Length != 0) // Because people always try to type "~queue dps" etc., just give it to them.
             {
                 await LfgAsync(args);
