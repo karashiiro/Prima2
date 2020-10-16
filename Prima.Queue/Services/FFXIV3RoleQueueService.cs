@@ -65,6 +65,8 @@ namespace Prima.Queue.Services
                 await AlertTimeouts(Queues["av-and-ozma-prog"]?.Timeout(10800, 900), "av-and-ozma-prog", 3);
                 await AlertTimeouts(Queues["clears-and-farming"]?.Timeout(10800, 900), "clears-and-farming", 3);
                 await AlertTimeouts(Queues["lfg-castrum"]?.Timeout(3600, 900), "lfg-castrum", 1);
+
+                Save();
             }
         }
 
@@ -81,7 +83,7 @@ namespace Prima.Queue.Services
                                             "This is a measure in place to avoid leads having to pull numerous AFK users before your run.\n" +
                                             "Please rejoin the queue if you are still active.");
             }
-
+            
             foreach (var uid in almostUids)
             {
                 var user = _client.GetUser(uid);

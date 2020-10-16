@@ -22,8 +22,14 @@ namespace Prima.Queue.Modules
             //{ 550708765490675773, "learning-and-frag-farm" },
             //{ 550708833412972544, "av-and-ozma-prog" },
             //{ 550708866497773599, "clears-and-farming" },
-            { 765994301850779709, "lfg-castrum" },
-        };
+            {
+#if DEBUG
+                766712049316265985
+#else
+                765994301850779709
+#endif
+                , "lfg-castrum" },
+            };
         private static readonly IList<(ulong, DateTime)> LfmPullTimeLog = new List<(ulong, DateTime)>();
         private static readonly string[] Elements = { "Earth", "Wind", "Water", "Fire", "Lightning", "Ice" };
 
