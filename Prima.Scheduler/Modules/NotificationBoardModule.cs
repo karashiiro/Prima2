@@ -14,7 +14,7 @@ namespace Prima.Scheduler.Modules
     [RequireContext(ContextType.Guild)]
     public class NotificationBoardModule : ModuleBase<SocketCommandContext>
     {
-        public DbService Db { get; set; }
+        public DbService Db { get; set; } // Just used to get the guild's configured command prefix
 
         [Command("announce")]
         [Description("Announce a Castrum Lacus Litore run. Usage: `~announce Time | Description`")]
