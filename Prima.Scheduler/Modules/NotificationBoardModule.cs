@@ -59,9 +59,9 @@ namespace Prima.Scheduler.Modules
                 .Build());
 
             await ReplyAsync($"Run announced! Notification posted in <#{guildConfig.CastrumScheduleOutputChannel}>.");
-
+            
             var deleteTime = time.AddHours(1);
-            var timeDiff = deleteTime - DateTime.UtcNow;
+            var timeDiff = deleteTime - DateTime.Now;
             (new Task(async () => {
                 await Task.Delay((int)timeDiff.TotalMilliseconds);
                 await embed.DeleteAsync();
