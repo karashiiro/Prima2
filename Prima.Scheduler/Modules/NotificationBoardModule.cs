@@ -61,7 +61,7 @@ namespace Prima.Scheduler.Modules
             await ReplyAsync($"Run announced! Notification posted in <#{guildConfig.CastrumScheduleOutputChannel}>.");
 
             var deleteTime = time.AddHours(1);
-            var timeDiff = DateTime.UtcNow - deleteTime;
+            var timeDiff = deleteTime - DateTime.UtcNow;
             (new Task(async () => {
                 await Task.Delay((int)timeDiff.TotalMilliseconds);
                 await embed.DeleteAsync();
