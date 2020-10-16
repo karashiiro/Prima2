@@ -192,7 +192,7 @@ namespace Prima.Queue.Modules
                         .Select(fd =>
                         {
                             var user = Context.Guild.GetUser(fd);
-                            return user.Nickname ?? user.ToString();
+                            return user.Nickname ?? user.ToString() ?? "(Unable to retrive)";
                         })
                         .Aggregate(string.Empty, (ws, nextUser) => ws + $"{nextUser}\n")));
             if (fetchedHealers.Count != 0)
@@ -203,7 +203,7 @@ namespace Prima.Queue.Modules
                         .Select(fh =>
                         {
                             var user = Context.Guild.GetUser(fh);
-                            return user.Nickname ?? user.ToString();
+                            return user.Nickname ?? user.ToString() ?? "(Unable to retrive)";
                         })
                         .Aggregate(string.Empty, (ws, nextUser) => ws + $"{nextUser}\n")));
             if (fetchedTanks.Count != 0)
@@ -214,7 +214,7 @@ namespace Prima.Queue.Modules
                         .Select(ft =>
                         {
                             var user = Context.Guild.GetUser(ft);
-                            return user.Nickname ?? user.ToString();
+                            return user.Nickname ?? user.ToString() ?? "(Unable to retrive)";
                         })
                         .Aggregate(string.Empty, (ws, nextUser) => ws + $"{nextUser}\n")));
             fields.Add(new EmbedFieldBuilder()
