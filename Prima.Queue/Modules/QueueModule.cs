@@ -464,10 +464,16 @@ namespace Prima.Queue.Modules
         {
             if (args.StartsWith("leave")) // See below
             {
-                await LeaveQueueAsync(args.Substring(5));
+                await LeaveQueueAsync(args.Substring("leave".Length));
                 return;
             }
-            
+
+            if (args.StartsWith("refresh")) // See below
+            {
+                await RefreshQueues();
+                return;
+            }
+
             if (args.Length != 0) // Because people always try to type "~queue dps" etc., just give it to them.
             {
                 await LfgAsync(args);
@@ -567,6 +573,9 @@ namespace Prima.Queue.Modules
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task RefreshQueues()
         {
+            if (!LfgChannels.ContainsKey(Context.Channel.Id) && Context.Guild != null)
+                return Task.CompletedTask;
+
             RefreshQueuesEx();
             return ReplyAsync($"{Context.User.Mention}, your positions in all queues have been refreshed!");
         }
@@ -592,6 +601,7 @@ namespace Prima.Queue.Modules
         }
 
         [Command("shove")]
+        [Alias("queueshove")]
         [RequireUserPermission(GuildPermission.KickMembers)]
         public Task ShoveUser(IUser user, [Remainder]string args)
         {

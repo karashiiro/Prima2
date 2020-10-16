@@ -14,7 +14,7 @@ namespace Prima.Scheduler.Modules
     [RequireContext(ContextType.Guild)]
     public class NotificationBoardModule : ModuleBase<SocketCommandContext>
     {
-        public DbService Db { get; set; }
+        public DbService Db { get; set; } // Just used to get the guild's configured command prefix
 
         [Command("announce")]
         [Description("Announce a Castrum Lacus Litore run. Usage: `~announce Time | Description`")]
@@ -61,12 +61,11 @@ namespace Prima.Scheduler.Modules
             await ReplyAsync($"Event announced! Notification posted in <#{guildConfig.CastrumScheduleOutputChannel}>.");
 
             var deleteTime = time.AddHours(1);
-            var timeDiff = DateTime.UtcNow - deleteTime;
-            _ = Task.Run(async () =>
-            {
+            var timeDiff = deleteTime - DateTime.Now;
+            (new Task(async () => {
                 await Task.Delay((int)timeDiff.TotalMilliseconds);
                 await embed.DeleteAsync();
-            });
+            })).Start();
         }
     }
 }

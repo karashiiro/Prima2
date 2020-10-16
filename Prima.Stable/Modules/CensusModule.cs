@@ -32,18 +32,46 @@ namespace Prima.Modules
         [Description("[FFXIV] Register a character to yourself.")]
         public async Task IAmAsync(params string[] parameters)
         {
+            if (Context.Guild != null && Context.Guild.Id == SpecialGuilds.CrystalExploratoryMissions)
+            {
+                const ulong welcome = 573350095903260673;
+                const ulong botSpam = 551586630478331904;
+                if (Context.Channel.Id != welcome && Context.Channel.Id != botSpam)
+                {
+                    await Context.Message.DeleteAsync();
+                    var reply = await ReplyAsync("That command is disabled in this channel.");
+                    await Task.Delay(10000);
+                    await reply.DeleteAsync();
+                    return;
+                }
+            }
+
             var guild = Context.Guild ?? Context.User.MutualGuilds.First(g => Db.Guilds.Any(gc => gc.Id == g.Id));
             Log.Information("Mututal guild ID: {GuildId}", guild.Id);
 
             var guildConfig = Db.Guilds.Single(g => g.Id == guild.Id);
             var prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
 
+            ulong lodestoneId = 0;
             if (parameters.Length != 3)
             {
-                var reply = await ReplyAsync($"{Context.User.Mention}, please enter that command in the format `{prefix}iam World Name Surname`.");
-                await Task.Delay(MessageDeleteDelay);
-                await reply.DeleteAsync();
-                return;
+                if (parameters.Length == 1)
+                {
+                    if (!ulong.TryParse(parameters[0], out lodestoneId))
+                    {
+                        var reply = await ReplyAsync($"{Context.User.Mention}, please enter that command in the format `{prefix}iam World Name Surname`.");
+                        await Task.Delay(MessageDeleteDelay);
+                        await reply.DeleteAsync();
+                        return;
+                    }
+                }
+                else
+                {
+                    var reply = await ReplyAsync($"{Context.User.Mention}, please enter that command in the format `{prefix}iam World Name Surname`.");
+                    await Task.Delay(MessageDeleteDelay);
+                    await reply.DeleteAsync();
+                    return;
+                }
             }
             new Task(async () => {
                 await Task.Delay(MessageDeleteDelay);
@@ -53,20 +81,26 @@ namespace Prima.Modules
                 }
                 catch (HttpException) {} // Message was already deleted.
             }).Start();
-            var world = parameters[0].ToLower();
-            var name = parameters[1] + " " + parameters[2];
-            world = RegexSearches.NonAlpha.Replace(world, string.Empty);
-            name = RegexSearches.AngleBrackets.Replace(name, string.Empty);
-            name = RegexSearches.UnicodeApostrophe.Replace(name, "'");
-            world = world.ToLower();
-            world = ("" + world[0]).ToUpper() + world.Substring(1);
-            if (world == "Courel" || world == "Couerl")
+
+            var world = "";
+            var name = "";
+            if (parameters.Length == 3)
             {
-                world = "Coeurl";
-            }
-            else if (world == "Diablos")
-            {
-                world = "Diabolos";
+                world = parameters[0].ToLower();
+                name = parameters[1] + " " + parameters[2];
+                world = RegexSearches.NonAlpha.Replace(world, string.Empty);
+                name = RegexSearches.AngleBrackets.Replace(name, string.Empty);
+                name = RegexSearches.UnicodeApostrophe.Replace(name, "'");
+                world = world.ToLower();
+                world = ("" + world[0]).ToUpper() + world.Substring(1);
+                if (world == "Courel" || world == "Couerl")
+                {
+                    world = "Coeurl";
+                }
+                else if (world == "Diablos")
+                {
+                    world = "Diabolos";
+                }
             }
 
             var member = guild.GetUser(Context.User.Id);
@@ -82,7 +116,15 @@ namespace Prima.Modules
             DiscordXIVUser foundCharacter;
             try
             {
-                foundCharacter = await XIVAPI.GetDiscordXIVUser(world, name, guildConfig.MinimumLevel);
+                if (parameters.Length == 3)
+                {
+                    foundCharacter = await XIVAPI.GetDiscordXIVUser(world, name, guildConfig.MinimumLevel);
+                }
+                else
+                {
+                    foundCharacter = await XIVAPI.GetDiscordXIVUser(lodestoneId, guildConfig.MinimumLevel);
+                    world = foundCharacter.World;
+                }
             }
             catch (XIVAPICharacterNotFoundException)
             {
@@ -262,6 +304,20 @@ namespace Prima.Modules
         [Description("[FFXIV] Verify that you've completed the Baldesion Arsenal on your registered character 1 or 10 times.")]
         public async Task VerifyAsync(params string[] args)
         {
+            if (Context.Guild != null && Context.Guild.Id == SpecialGuilds.CrystalExploratoryMissions)
+            {
+                const ulong welcome = 573350095903260673;
+                const ulong botSpam = 551586630478331904;
+                if (Context.Channel.Id == welcome || Context.Channel.Id != botSpam)
+                {
+                    await Context.Message.DeleteAsync();
+                    var reply = await ReplyAsync("That command is disabled in this channel.");
+                    await Task.Delay(10000);
+                    await reply.DeleteAsync();
+                    return;
+                }
+            }
+
             var guild = Context.Guild ?? Context.User.MutualGuilds.First(g => Db.Guilds.Any(gc => gc.Id == g.Id));
             Log.Information("Mututal guild ID: {GuildId}", guild.Id);
 
@@ -336,6 +392,20 @@ namespace Prima.Modules
         [RequireUserInDatabase]
         public async Task AgreeAsync()
         {
+            if (Context.Guild != null && Context.Guild.Id == SpecialGuilds.CrystalExploratoryMissions)
+            {
+                const ulong welcome = 573350095903260673;
+                const ulong botSpam = 551586630478331904;
+                if (Context.Channel.Id != welcome && Context.Channel.Id != botSpam)
+                {
+                    await Context.Message.DeleteAsync();
+                    var reply = await ReplyAsync("That command is disabled in this channel.");
+                    await Task.Delay(10000);
+                    await reply.DeleteAsync();
+                    return;
+                }
+            }
+
             var guildConfig = Db.Guilds.Single(g => g.Id == Context.Guild.Id);
             if (guildConfig.WelcomeChannel != Context.Channel.Id) return;
             var user = Context.Guild.GetUser(Context.User.Id);
@@ -350,6 +420,19 @@ namespace Prima.Modules
         [Description("[FFXIV] Check what character you have registered.")]
         public async Task WhoAmIAsync()
         {
+            if (Context.Guild != null && Context.Guild.Id == SpecialGuilds.CrystalExploratoryMissions)
+            {
+                const ulong welcome = 573350095903260673;
+                if (Context.Channel.Id == welcome)
+                {
+                    await Context.Message.DeleteAsync();
+                    var reply = await ReplyAsync("That command is disabled in this channel.");
+                    await Task.Delay(10000);
+                    await reply.DeleteAsync();
+                    return;
+                }
+            }
+
             DiscordXIVUser found;
             try
             {
