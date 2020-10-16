@@ -3,19 +3,25 @@ using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
 using Prima.Attributes;
+using Prima.Queue.Services;
 using Prima.Resources;
 using Prima.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Prima.Queue.Services;
 
 namespace Prima.Queue.Modules
 {
     public class QueueModule : ModuleBase<SocketCommandContext>
     {
-        private const ulong LfmRoleId = 551523366989725741;
+        private const ulong LfmRoleId =
+#if DEBUG
+            551521141135769600
+#else
+            551523366989725741
+#endif
+            ;
 
         private static readonly IDictionary<ulong, string> LfgChannels = new Dictionary<ulong, string>
         {
@@ -73,7 +79,12 @@ namespace Prima.Queue.Modules
                 550708765490675773 => "learning/frag farming",
                 550708833412972544 => "Absolute Virtue or Ozma prog",
                 550708866497773599 => "Ozma clears or farms",
-                765994301850779709 => "Castrum Lacus Litore",
+#if DEBUG
+                766712049316265985
+#else
+                765994301850779709
+#endif
+                => "Castrum Lacus Litore",
                 _ => throw new NotSupportedException(),
             };
 
@@ -102,8 +113,13 @@ namespace Prima.Queue.Modules
             var pw = await PwGen.Get(Context.User.Id);
             try
             {
+#if DEBUG
+                const ulong castrumLfg = 766712049316265985;
+#else
+                const ulong castrumLfg = 765994301850779709;
+#endif
                 await leader.SendMessageAsync($"Your Party Finder password is {pw}.\n" +
-                    $"Please join {(Context.Channel.Id == 765994301850779709 ? "a Castrum" : "an elemental")} voice channel within the next 30 seconds to continue matching.\n" +
+                    $"Please join {(Context.Channel.Id == castrumLfg ? "a Castrum" : "an elemental")} voice channel within the next 30 seconds to continue matching.\n" +
                     "Create the listing in Party Finder now; matching will begin in 30 seconds.");
             }
             catch (HttpException)
@@ -621,7 +637,7 @@ namespace Prima.Queue.Modules
         [Command("shove")]
         [Alias("queueshove")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        public Task ShoveUser(IUser user, [Remainder]string args)
+        public Task ShoveUser(IUser user, [Remainder] string args)
         {
             if (!LfgChannels.ContainsKey(Context.Channel.Id))
                 return ReplyAsync("This is not a queue channel!");
