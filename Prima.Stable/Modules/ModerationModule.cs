@@ -22,10 +22,9 @@ namespace Prima.Moderation.Modules
     {
         public DbService Db { get; set; }
         public ModerationEventService Events { get; set; }
-        public HttpClient Http { get; set; }
 
         // Submit a report.
-        [Command("report", RunMode = RunMode.Async)]
+        [Command("modmail", RunMode = RunMode.Async)]
         [Description("Privately report information to the administration.")]
         public async Task ReportAsync(params string[] p)
         {
