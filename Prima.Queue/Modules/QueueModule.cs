@@ -338,13 +338,24 @@ namespace Prima.Queue.Modules
                     .WithName("Your Role")
                     .WithValue(args.Role)
             };
+            var inviteeEmbedText = $"Your queue for {args.PartyType} has popped! Check the PF for a party under `{args.LeaderDisplayName}` (or something similar) and use the password `{args.Password}` to join! " +
+                                   $"Please DM them ({args.Leader}) if you have issues with joining or cannot find the party. ";
+
+#if DEBUG
+            const ulong castrumLfg = 766712049316265985;
+#else
+            const ulong castrumLfg = 765994301850779709;
+#endif
+
+            if (Context.Channel.Id != castrumLfg)
+            {
+                inviteeEmbedText += "Additionally, the map used to find your portal location can be found here: https://i.imgur.com/Gao2rzI.jpg";
+            }
             var inviteeEmbed = new EmbedBuilder()
                 .WithTitle("Your queue has popped!")
                 .WithColor(new Discord.Color(0x00, 0x80, 0xFF))
                 .WithThumbnailUrl("https://i.imgur.com/aVEsVRb.png")
-                .WithDescription($"Your queue for {args.PartyType} has popped! Check the PF for a party under `{args.LeaderDisplayName}` (or something similar) and use the password `{args.Password}` to join! " +
-                                 $"Please DM them ({args.Leader}) if you have issues with joining or cannot find the party. " +
-                                 "Additionally, the map used to find your portal location can be found here: https://i.imgur.com/Gao2rzI.jpg")
+                .WithDescription(inviteeEmbedText)
                 .WithFields(inviteeFields)
                 .Build();
 
