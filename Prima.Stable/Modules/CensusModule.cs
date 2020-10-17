@@ -15,10 +15,7 @@ using Color = Discord.Color;
 
 namespace Prima.Modules
 {
-    /// <summary>
-    /// Includes XIVAPI access commands.
-    /// </summary>
-    [Name("XIVAPI")]
+    [Name("Census")]
     public class CensusModule : ModuleBase<SocketCommandContext>
     {
         public DbService Db { get; set; }
@@ -301,7 +298,7 @@ namespace Prima.Modules
 
         // Verify BA clear status.
         [Command("verify", RunMode = RunMode.Async)]
-        [Description("[FFXIV] Verify that you've completed the Baldesion Arsenal on your registered character 1 or 10 times.")]
+        [Description("[FFXIV] Get content completion vanity roles.")]
         public async Task VerifyAsync(params string[] args)
         {
             if (Context.Guild != null && Context.Guild.Id == SpecialGuilds.CrystalExploratoryMissions)
@@ -356,12 +353,28 @@ namespace Prima.Modules
                 await ReplyAsync(Properties.Resources.LodestoneDiscordIdNotFoundError);
                 return;
             }
-            if (character.GetAchievements().Any(achievement => achievement.ID == 2229))
+            if (character.GetAchievements().Any(achievement => achievement.ID == 2229)) // We're On Your Side III
             {
                 Log.Information("Added role " + arsenalMaster.Name);
                 await member.AddRoleAsync(arsenalMaster);
                 await ReplyAsync(Properties.Resources.LodestoneBAAchievementSuccess);
                 hasAchievement = true;
+            }
+            if (character.GetAchievements().Any(achievement => achievement.ID == 2682)) // Operation: Eagle's Nest III
+            {
+                //Log.Information("Added role " + arsenalMaster.Name);
+                //await member.AddRoleAsync(arsenalMaster);
+                //await ReplyAsync(Properties.Resources.LodestoneBAAchievementSuccess);
+                //hasAchievement = true;
+            }
+            if (character.GetAchievements().Any(achievement => achievement.ID == 2683) && // Duels
+                character.GetAchievements().Any(achievement => achievement.ID == 2684) &&
+                character.GetAchievements().Any(achievement => achievement.ID == 2685))
+            {
+                //Log.Information("Added role " + arsenalMaster.Name);
+                //await member.AddRoleAsync(arsenalMaster);
+                //await ReplyAsync(Properties.Resources.LodestoneBAAchievementSuccess);
+                //hasAchievement = true;
             }
             if (character.GetMiMo().Any(mimo => mimo.Name == "Demi-Ozma"))
             {
