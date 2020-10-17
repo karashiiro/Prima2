@@ -240,13 +240,13 @@ namespace Prima.Extra.Modules
 
         [Command("star", RunMode = RunMode.Async)]
         [Description("Shows the Bozjan Southern Front star mob guide.")]
-        [RateLimit(TimeSeconds = 5, Global = true)]
+        [RateLimit(TimeSeconds = 1, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task StarMobsAsync() => PostImage("https://i.imgur.com/muvBR1Z.png");
 
         [Command("cluster", RunMode = RunMode.Async)]
         [Description("Shows the Bozjan Southern Front cluster path guide.")]
-        [RateLimit(TimeSeconds = 5, Global = true)]
+        [RateLimit(TimeSeconds = 1, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task BozjaClustersAsync() => PostImage("https://i.imgur.com/WANkcVe.jpeg");
 
