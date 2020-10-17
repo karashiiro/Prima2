@@ -8,15 +8,15 @@ namespace Prima
 {
     public class FFXIV3RoleQueue
     {
-        [JsonProperty] private readonly List<(ulong, DateTime)> _dpsQueue;
-        [JsonProperty] private readonly List<(ulong, DateTime)> _healerQueue;
-        [JsonProperty] private readonly List<(ulong, DateTime)> _tankQueue;
+        [JsonProperty] private readonly IList<(ulong, DateTime)> _dpsQueue;
+        [JsonProperty] private readonly IList<(ulong, DateTime)> _healerQueue;
+        [JsonProperty] private readonly IList<(ulong, DateTime)> _tankQueue;
 
         public FFXIV3RoleQueue()
         {
-            _dpsQueue = new List<(ulong, DateTime)>();
-            _healerQueue = new List<(ulong, DateTime)>();
-            _tankQueue = new List<(ulong, DateTime)>();
+            _dpsQueue = new SynchronizedCollection<(ulong, DateTime)>();
+            _healerQueue = new SynchronizedCollection<(ulong, DateTime)>();
+            _tankQueue = new SynchronizedCollection<(ulong, DateTime)>();
         }
 
         public bool Enqueue(ulong userId, FFXIVRole role)
@@ -37,23 +37,6 @@ namespace Prima
                     return true;
                 default:
                     throw new NotImplementedException();
-            }
-        }
-
-        public void RemoveDupes()
-        {
-            foreach (var queue in new[] { _dpsQueue, _healerQueue, _tankQueue })
-            {
-                for (var i = 0; i < queue.Count; i++)
-                {
-                    for (var j = queue.Count - 1; j > 0; j--)
-                    {
-                        if (i != j && queue[j] == queue[i])
-                        {
-                            queue.RemoveAt(j);
-                        }
-                    }
-                }
             }
         }
 

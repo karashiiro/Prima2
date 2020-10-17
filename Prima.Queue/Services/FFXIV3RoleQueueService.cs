@@ -31,9 +31,12 @@ namespace Prima.Queue.Services
 
         public FFXIV3RoleQueue GetOrCreateQueue(string name)
         {
-            if (Queues.ContainsKey(name)) return Queues[name];
-            Queues.Add(name, new FFXIV3RoleQueue());
-            return Queues[name];
+            lock (Queues)
+            {
+                if (Queues.ContainsKey(name)) return Queues[name];
+                Queues.Add(name, new FFXIV3RoleQueue());
+                return Queues[name];
+            }
         }
 
         public void Save()
