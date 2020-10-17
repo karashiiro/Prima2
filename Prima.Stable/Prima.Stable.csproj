@@ -12,7 +12,7 @@
   <ItemGroup>
     <PackageReference Include="FFXIVWeather" Version="1.0.7" />
     <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
-    <PackageReference Include="TimeZoneNames" Version="4.0.1" />
+    <PackageReference Include="TimeZoneNames" Version="4.1.0" />
   </ItemGroup>
 
   <ItemGroup>
