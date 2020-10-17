@@ -70,13 +70,14 @@ namespace Prima.Modules
                     return;
                 }
             }
-            new Task(async () => {
+            new Task(async () =>
+            {
                 await Task.Delay(MessageDeleteDelay);
                 try
                 {
                     await Context.Message.DeleteAsync();
                 }
-                catch (HttpException) {} // Message was already deleted.
+                catch (HttpException) { } // Message was already deleted.
             }).Start();
 
             var world = "";
@@ -158,7 +159,7 @@ namespace Prima.Modules
                     }
                 }
             }
-            catch (InvalidOperationException) {}
+            catch (InvalidOperationException) { }
             var user = foundCharacter;
             foundCharacter.DiscordId = Context.User.Id;
             await Db.AddUser(user);
@@ -184,7 +185,7 @@ namespace Prima.Modules
                         : foundCharacter.Name;
                 });
             }
-            catch (HttpException) {}
+            catch (HttpException) { }
 
             Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
 
@@ -208,13 +209,14 @@ namespace Prima.Modules
                 await reply.DeleteAsync();
                 return;
             }
-            (new Task(async () => {
+            (new Task(async () =>
+            {
                 await Task.Delay(MessageDeleteDelay);
                 try
                 {
                     await Context.Message.DeleteAsync();
                 }
-                catch (HttpException) {} // Message was already deleted.
+                catch (HttpException) { } // Message was already deleted.
             })).Start();
             var world = parameters[0].ToLower();
             var name = parameters[1] + " " + parameters[2];
@@ -242,7 +244,7 @@ namespace Prima.Modules
 
             // Fetch the character.
             using var typing = Context.Channel.EnterTypingState();
-            
+
             DiscordXIVUser foundCharacter;
             try
             {
@@ -286,7 +288,7 @@ namespace Prima.Modules
                     }
                 });
             }
-            catch (HttpException) {}
+            catch (HttpException) { }
 
             Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
 
@@ -324,7 +326,7 @@ namespace Prima.Modules
             var member = guild.GetUser(Context.User.Id);
             var arsenalMaster = guild.GetRole(ulong.Parse(guildConfig.Roles["Arsenal Master"]));
             var cleared = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared"]));
-            
+
             if (member.Roles.Contains(arsenalMaster))
             {
                 await ReplyAsync(Properties.Resources.MemberAlreadyHasRoleError);
@@ -367,9 +369,7 @@ namespace Prima.Modules
                 //await ReplyAsync(Properties.Resources.LodestoneBAAchievementSuccess);
                 //hasAchievement = true;
             }
-            if (character.GetAchievements().Any(achievement => achievement.ID == 2683) && // Duels
-                character.GetAchievements().Any(achievement => achievement.ID == 2684) &&
-                character.GetAchievements().Any(achievement => achievement.ID == 2685))
+            if (character.GetAchievements().Select(achievement => (int)achievement.ID).Intersect(new[] { 2683, 2684, 2685 }).Count() == 3) // Duels
             {
                 //Log.Information("Added role " + arsenalMaster.Name);
                 //await member.AddRoleAsync(arsenalMaster);
