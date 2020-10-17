@@ -210,6 +210,7 @@ namespace Prima.Queue.Modules
                             IGuildUser user = Context.Guild.GetUser(fd);
                             if (user == null)
                             {
+                                Task.Delay(250).GetAwaiter().GetResult();
                                 user = Context.Client.Rest.GetGuildUserAsync(Context.Guild.Id, fd).Result;
                             }
                             return user.Nickname ?? user.ToString() ?? "(Unable to retrive)";
@@ -225,6 +226,7 @@ namespace Prima.Queue.Modules
                             IGuildUser user = Context.Guild.GetUser(fh);
                             if (user == null)
                             {
+                                Task.Delay(250).GetAwaiter().GetResult();
                                 user = Context.Client.Rest.GetGuildUserAsync(Context.Guild.Id, fh).Result;
                             }
                             return user.Nickname ?? user.ToString() ?? "(Unable to retrive)";
@@ -240,6 +242,7 @@ namespace Prima.Queue.Modules
                             IGuildUser user = Context.Guild.GetUser(ft);
                             if (user == null)
                             {
+                                Task.Delay(250).GetAwaiter().GetResult();
                                 user = Context.Client.Rest.GetGuildUserAsync(Context.Guild.Id, ft).Result;
                             }
                             return user.Nickname ?? user.ToString() ?? "(Unable to retrive)";
@@ -316,7 +319,7 @@ namespace Prima.Queue.Modules
             public string Password { get; set; }
         }
 
-        private Task SendLfgEmbed(LfgEmbedParameters args)
+        private async Task SendLfgEmbed(LfgEmbedParameters args)
         {
             var inviteeFields = new List<EmbedFieldBuilder>
             {
@@ -344,7 +347,15 @@ namespace Prima.Queue.Modules
                                  "Additionally, the map used to find your portal location can be found here: https://i.imgur.com/Gao2rzI.jpg")
                 .WithFields(inviteeFields)
                 .Build();
-            return Context.Guild.GetUser(args.TargetUser).SendMessageAsync(embed: inviteeEmbed);
+
+            IGuildUser user = Context.Guild.GetUser(args.TargetUser);
+            if (user == null)
+            {
+                await Task.Delay(250);
+                user = await Context.Client.Rest.GetGuildUserAsync(Context.Guild.Id, args.TargetUser);
+            }
+
+            await user.SendMessageAsync(embed: inviteeEmbed);
         }
 
         private static Task AddLfm(SocketGuildUser member)
@@ -372,7 +383,7 @@ namespace Prima.Queue.Modules
             return (countd, counth, countt);
         }
 
-        [Command("lfg")]
+        [Command("lfg", RunMode = RunMode.Async)]
         [Description("Enter the queue in a queue channel. Takes a role as its first argument, e.g. `~lfg dps`")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task LfgAsync([Remainder] string args = "")
@@ -431,7 +442,7 @@ namespace Prima.Queue.Modules
             await ReplyAsync(response);
         }
 
-        [Command("leavequeue")]
+        [Command("leavequeue", RunMode = RunMode.Async)]
         [Alias("unqueue", "leave")]
         [Description("Leaves one or more roles in a channel's queue. Using this with no roles specified removes you from all roles in the channel.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
@@ -491,7 +502,7 @@ namespace Prima.Queue.Modules
             await ReplyAsync(response);
         }
 
-        [Command("queue")]
+        [Command("queue", RunMode = RunMode.Async)]
         [Description("Checks your position in the queues of the channel you enter it in.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task QueueAsync([Remainder] string args = "")
@@ -527,7 +538,7 @@ namespace Prima.Queue.Modules
             await ReplyAsync(GetPositionString(queue, Context.User.Id));
         }
 
-        [Command("queuelist")]
+        [Command("queuelist", RunMode = RunMode.Async)]
         [Description("Checks the queued member counts of the queues of the channel you enter it in.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task QueueListAsync()
@@ -601,7 +612,7 @@ namespace Prima.Queue.Modules
             return output == "you are number ." ? $"<@{uid}>, you are not in any queues. If you meant to join the queue, use `~lfg <role>`." : $"<@{uid}>, {output}";
         }
 
-        [Command("refreshqueues")]
+        [Command("refreshqueues", RunMode = RunMode.Async)]
         [Alias("refresh", "refreshqueue")]
         [Description("Refreshes your position in all queues.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
@@ -634,7 +645,7 @@ namespace Prima.Queue.Modules
             return ret;
         }
 
-        [Command("shove")]
+        [Command("shove", RunMode = RunMode.Async)]
         [Alias("queueshove")]
         [RequireUserPermission(GuildPermission.KickMembers)]
         public Task ShoveUser(IUser user, [Remainder] string args)
