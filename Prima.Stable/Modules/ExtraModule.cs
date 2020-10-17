@@ -200,77 +200,61 @@ namespace Prima.Extra.Modules
         [Description("Shows the portal map.")]
         [RateLimit(TimeSeconds = 30, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task PortalsAsync()
-        {
-            using var http = new HttpClient();
-            var fileStream = await http.GetStreamAsync(new Uri("https://i.imgur.com/XcXACQp.png"));
-            await Context.Channel.SendFileAsync(fileStream, "XcXACQp.png");
-        }
+        public Task PortalsAsync() => PostImage("https://i.imgur.com/XcXACQp.png");
 
         [Command("owain", RunMode = RunMode.Async)]
         [Description("Shows the Owain guide.")]
         [RateLimit(TimeSeconds = 120, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task OwainAsync()
-        {
-            using var http = new HttpClient();
-            var fileStream = await http.GetStreamAsync(new Uri("https://i.imgur.com/ADwopqC.jpg"));
-            await Context.Channel.SendFileAsync(fileStream, "unknown-2.png");
-        }
+        public Task OwainAsync() => PostImage("https://i.imgur.com/ADwopqC.jpg");
 
         [Command("art", RunMode = RunMode.Async)]
         [Description("Shows the Art guide.")]
         [RateLimit(TimeSeconds = 120, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task ArtAsync()
-        {
-            using var http = new HttpClient();
-            var fileStream = await http.GetStreamAsync(new Uri("https://i.imgur.com/sehs4Tw.jpg"));
-            await Context.Channel.SendFileAsync(fileStream, "unknown-1.png");
-        }
+        public Task ArtAsync() => PostImage("https://i.imgur.com/sehs4Tw.jpg");
 
         [Command("raiden", RunMode = RunMode.Async)]
         [Description("Shows the Raiden guide.")]
         [RateLimit(TimeSeconds = 120, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task RaidenAsync()
-        {
-            using var http = new HttpClient();
-            var fileStream = await http.GetStreamAsync(new Uri("https://cdn.discordapp.com/attachments/588592729609469952/721522493197779035/unknown.png"));
-            await Context.Channel.SendFileAsync(fileStream, "unknown.png");
-        }
+        public Task RaidenAsync() => PostImage("https://cdn.discordapp.com/attachments/588592729609469952/721522493197779035/unknown.png");
 
         [Command("av", RunMode = RunMode.Async)]
         [Description("Shows the Absolute Virtue guide.")]
         [RateLimit(TimeSeconds = 120, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task AbsoluteVirtueAsync()
-        {
-            using var http = new HttpClient();
-            var fileStream = await http.GetStreamAsync(new Uri("https://cdn.discordapp.com/attachments/588592729609469952/721522585866731580/unknown.png"));
-            await Context.Channel.SendFileAsync(fileStream, "unknown.png");
-        }
+        public Task AbsoluteVirtueAsync() => PostImage("https://cdn.discordapp.com/attachments/588592729609469952/721522585866731580/unknown.png");
 
         [Command("ozma", RunMode = RunMode.Async)]
         [Description("Shows the Ozma guide.")]
         [RateLimit(TimeSeconds = 120, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task OzmaAsync()
-        {
-            using var http = new HttpClient();
-            var fileStream = await http.GetStreamAsync(new Uri("https://cdn.discordapp.com/attachments/588592729609469952/721522648949063730/unknown.png"));
-            await Context.Channel.SendFileAsync(fileStream, "unknown.png");
-        }
+        public Task OzmaAsync() => PostImage("https://cdn.discordapp.com/attachments/588592729609469952/721522648949063730/unknown.png");
 
         [Command("accel", RunMode = RunMode.Async)]
         [Description("Shows the Acceleration Bomb guide.")]
         [RateLimit(TimeSeconds = 120, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task AccelBombAsync()
+        public Task AccelBombAsync() => PostImage("https://cdn.discordapp.com/attachments/550709673104375818/721527266441560064/unknown.png");
+
+        [Command("star", RunMode = RunMode.Async)]
+        [Description("Shows the Bozjan Southern Front star mob guide.")]
+        [RateLimit(TimeSeconds = 120, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public Task StarMobsAsync() => PostImage("https://i.imgur.com/muvBR1Z.png");
+
+        [Command("cluster", RunMode = RunMode.Async)]
+        [Description("Shows the Bozjan Southern Front cluster path guide.")]
+        [RateLimit(TimeSeconds = 120, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public Task BozjaClustersAsync() => PostImage("https://i.imgur.com/WANkcVe.jpeg");
+
+        private async Task PostImage(string uri)
         {
-            using var http = new HttpClient();
-            var fileStream = await http.GetStreamAsync(new Uri("https://cdn.discordapp.com/attachments/550709673104375818/721527266441560064/unknown.png"));
-            await Context.Channel.SendFileAsync(fileStream, "unknown.png");
+            var fileName = uri.Split('/').Last();
+            var fileStream = await Http.GetStreamAsync(new Uri(uri));
+            await Context.Channel.SendFileAsync(fileStream, fileName);
         }
     }
 }

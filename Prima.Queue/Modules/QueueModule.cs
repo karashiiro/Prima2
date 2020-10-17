@@ -658,11 +658,15 @@ namespace Prima.Queue.Modules
 
         [Command("shove", RunMode = RunMode.Async)]
         [Alias("queueshove")]
-        [RequireUserPermission(GuildPermission.KickMembers)]
         public Task ShoveUser(IUser user, [Remainder] string args)
         {
             if (!LfgChannels.ContainsKey(Context.Channel.Id))
                 return ReplyAsync("This is not a queue channel!");
+
+            const ulong mentor = 579916868035411968;
+            var sender = Context.Guild.GetUser(Context.User.Id);
+            if (sender.Roles.All(r => r.Id != mentor) && !sender.GuildPermissions.KickMembers)
+                return Task.CompletedTask;
 
             var queueName = LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
