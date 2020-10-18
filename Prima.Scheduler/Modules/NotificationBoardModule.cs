@@ -4,8 +4,10 @@ using Prima.Attributes;
 using Prima.Resources;
 using Prima.Services;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Discord.Rest;
 using Color = Discord.Color;
 
 namespace Prima.Scheduler.Modules
@@ -16,9 +18,8 @@ namespace Prima.Scheduler.Modules
     {
         public DbService Db { get; set; } // Just used to get the guild's configured command prefix
 
-        [Command("announce")]
-        [Description("Announce a Castrum Lacus Litore run. Usage: `~announce Time | Description`")]
-        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        [Command("announce", RunMode = RunMode.Async)]
+        [Description("Announce an event. Usage: `~announce Time | Description`")]
         public async Task Announce([Remainder]string args)
         {
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
@@ -45,6 +46,11 @@ namespace Prima.Scheduler.Modules
             }
 
             var time = Util.GetDateTime(parameters);
+            if (time < DateTime.Now)
+            {
+                await ReplyAsync("You cannot announce an event in the past!");
+                return;
+            }
 
             var color = RunDisplayTypes.GetColorCastrum();
             var outputChannel = Context.Guild.GetTextChannel(guildConfig.CastrumScheduleOutputChannel);
@@ -62,10 +68,62 @@ namespace Prima.Scheduler.Modules
 
             var deleteTime = time.AddHours(1);
             var timeDiff = deleteTime - DateTime.Now;
-            (new Task(async () => {
+            new Task(async () => {
                 await Task.Delay((int)timeDiff.TotalMilliseconds);
                 await embed.DeleteAsync();
-            })).Start();
+            }).Start();
+        }
+
+        [Command("unannounce", RunMode = RunMode.Async)]
+        [Description("Cancel an event. Usage: `~unannounce Time`")]
+        public async Task Unannounce([Remainder]string args)
+        {
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return;
+            if (Context.Channel.Id != guildConfig.CastrumScheduleInputChannel) return;
+
+            var outputChannel = Context.Guild.GetTextChannel(guildConfig.CastrumScheduleOutputChannel);
+
+            var username = Context.User.ToString();
+            var time = Util.GetDateTime(args);
+            if (time < DateTime.Now)
+            {
+                await ReplyAsync("That time is in the past!");
+                return;
+            }
+
+            await foreach (var page in outputChannel.GetMessagesAsync())
+            {
+                foreach (var message in page)
+                {
+                    var restMessage = (IUserMessage)message;
+
+                    var embed = restMessage.Embeds.FirstOrDefault();
+                    if (embed == null) continue;
+
+                    if (!(embed.Title.Contains(username) && embed.Title.Contains(time.ToShortTimeString()))) continue;
+
+                    await restMessage.ModifyAsync(props =>
+                    {
+                        props.Embed = new EmbedBuilder()
+                            .WithTitle(embed.Title)
+                            // ReSharper disable once PossibleInvalidOperationException
+                            .WithColor(embed.Color.Value)
+                            .WithDescription("❌ Cancelled")
+                            .Build();
+                    });
+
+                    new Task(async () => {
+                        await Task.Delay(1000 * 60 * 60 * 2); // 2 hours
+                        await restMessage.DeleteAsync();
+                    }).Start();
+
+                    await ReplyAsync("Event cancelled.");
+                    return;
+                }
+            }
+
+            await ReplyAsync("No event by you was found at that time!");
         }
     }
 }
