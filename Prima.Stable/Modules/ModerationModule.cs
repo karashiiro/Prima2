@@ -25,6 +25,7 @@ namespace Prima.Moderation.Modules
 
         // Submit a report.
         [Command("modmail", RunMode = RunMode.Async)]
+        [Alias("report")]
         [Description("Privately report information to the administration.")]
         public async Task ReportAsync(params string[] p)
         {
@@ -49,7 +50,8 @@ namespace Prima.Moderation.Modules
             var guildConfig = Db.Guilds.Single(g => g.Id == guild.Id);
 
             var postChannel = guild.GetTextChannel(guildConfig.ReportChannel);
-            var output = $"<@&{guildConfig.Roles["Moderator"]}> {Context.User.Username}#{Context.User.Discriminator} just sent a report: {Context.Message.Content.Substring(9)}";
+            var output = $"<@&{guildConfig.Roles["Moderator"]}> {Context.User.Username}#{Context.User.Discriminator} just sent a report:"
+                + Context.Message.Content.Substring(Context.Message.Content.IndexOf(' '));
             if (output.Length > 2000) // This can only be the case once, no need for a loop.
             {
                 await postChannel.SendMessageAsync(output.Substring(0, 2000));
