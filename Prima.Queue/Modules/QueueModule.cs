@@ -25,9 +25,9 @@ namespace Prima.Queue.Modules
 
         private static readonly IDictionary<ulong, string> LfgChannels = new Dictionary<ulong, string>
         {
-            //{ 550708765490675773, "learning-and-frag-farm" },
-            //{ 550708833412972544, "av-and-ozma-prog" },
-            //{ 550708866497773599, "clears-and-farming" },
+            { 550708765490675773, "learning-and-frag-farm" },
+            { 550708833412972544, "av-and-ozma-prog" },
+            { 550708866497773599, "clears-and-farming" },
             {
 #if DEBUG
                 766712049316265985
@@ -633,14 +633,11 @@ namespace Prima.Queue.Modules
                 return Task.CompletedTask;
 
             RefreshQueuesEx();
-            return ReplyAsync($"{Context.User.Mention}, your positions in all queues have been refreshed!");
+            return ReplyAsync($"{Context.User.Mention}, your timeouts in the Castrum queues have been refreshed!");
         }
 
         private void RefreshQueuesEx()
         {
-            QueueService.GetOrCreateQueue("learning-and-frag-farm").Refresh(Context.User.Id);
-            QueueService.GetOrCreateQueue("av-and-ozma-prog").Refresh(Context.User.Id);
-            QueueService.GetOrCreateQueue("clears-and-farming").Refresh(Context.User.Id);
             QueueService.GetOrCreateQueue("lfg-castrum").Refresh(Context.User.Id);
         }
 
