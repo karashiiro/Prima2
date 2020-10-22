@@ -349,7 +349,11 @@ namespace Prima.Modules
             {
                 character = await XIVAPI.GetCharacter(ulong.Parse(args[0]));
             }
-            character = await XIVAPI.GetCharacter(ulong.Parse(user?.LodestoneId));
+            else
+            {
+                character = await XIVAPI.GetCharacter(ulong.Parse(user?.LodestoneId));
+            }
+            
             var hasAchievement = false;
             var hasMount = false;
             var hasCastrumLLAchievement1 = false;
