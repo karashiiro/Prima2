@@ -329,7 +329,7 @@ namespace Prima.Modules
             var clearedCastrumLacusLitore = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Castrum"]));
             var siegeLiege = guild.GetRole(ulong.Parse(guildConfig.Roles["Siege Liege"]));
 
-            if (member.Roles.Contains(arsenalMaster))
+            if (member.Roles.Contains(arsenalMaster) && member.Roles.Contains(siegeLiege))
             {
                 await ReplyAsync(Properties.Resources.MemberAlreadyHasRoleError);
                 return;
