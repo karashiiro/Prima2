@@ -142,11 +142,29 @@ namespace Prima.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The mount has been found, and you have been given the Cleared role..
+        ///   Looks up a localized string similar to The mount has been found, and you have been given the Cleared Arsenal role..
         /// </summary>
         public static string LodestoneBAMountSuccess {
             get {
                 return ResourceManager.GetString("LodestoneBAMountSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The achievement has been found, and you have been given the Cleared Castrum role..
+        /// </summary>
+        public static string LodestoneCastrumLLAchievement1Success {
+            get {
+                return ResourceManager.GetString("LodestoneCastrumLLAchievement1Success", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The achievement has been found, and you have been given the Siege Liege role..
+        /// </summary>
+        public static string LodestoneCastrumLLAchievement2Success {
+            get {
+                return ResourceManager.GetString("LodestoneCastrumLLAchievement2Success", resourceCulture);
             }
         }
         

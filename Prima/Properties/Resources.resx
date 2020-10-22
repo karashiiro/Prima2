@@ -145,7 +145,13 @@
     <value>The achievement has been found, and you have been given the Arsenal Master role.</value>
   </data>
   <data name="LodestoneBAMountSuccess" xml:space="preserve">
-    <value>The mount has been found, and you have been given the Cleared role.</value>
+    <value>The mount has been found, and you have been given the Cleared Arsenal role.</value>
+  </data>
+  <data name="LodestoneCastrumLLAchievement1Success" xml:space="preserve">
+    <value>The achievement has been found, and you have been given the Cleared Castrum role.</value>
+  </data>
+  <data name="LodestoneCastrumLLAchievement2Success" xml:space="preserve">
+    <value>The achievement has been found, and you have been given the Siege Liege role.</value>
   </data>
   <data name="LodestoneDiscordIdNotFoundError" xml:space="preserve">
     <value>Discord ID not found. Please ensure your Discord ID is located somewhere in your character profile.</value>

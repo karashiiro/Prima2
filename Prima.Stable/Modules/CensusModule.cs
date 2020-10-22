@@ -326,6 +326,8 @@ namespace Prima.Modules
             var member = guild.GetUser(Context.User.Id);
             var arsenalMaster = guild.GetRole(ulong.Parse(guildConfig.Roles["Arsenal Master"]));
             var cleared = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared"]));
+            var clearedCastrumLacusLitore = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Castrum"]));
+            var siegeLiege = guild.GetRole(ulong.Parse(guildConfig.Roles["Siege Liege"]));
 
             if (member.Roles.Contains(arsenalMaster))
             {
@@ -350,6 +352,8 @@ namespace Prima.Modules
             character = await XIVAPI.GetCharacter(ulong.Parse(user?.LodestoneId));
             var hasAchievement = false;
             var hasMount = false;
+            var hasCastrumLLAchievement1 = false;
+            var hasCastrumLLAchievement2 = false;
             if (!character.GetBio().Contains(Context.User.Id.ToString()))
             {
                 await ReplyAsync(Properties.Resources.LodestoneDiscordIdNotFoundError);
@@ -362,19 +366,19 @@ namespace Prima.Modules
                 await ReplyAsync(Properties.Resources.LodestoneBAAchievementSuccess);
                 hasAchievement = true;
             }
+            if (character.GetAchievements().Any(achievement => achievement.ID == 2680)) // Operation: Eagle's Nest I
+            {
+                Log.Information("Added role " + clearedCastrumLacusLitore.Name);
+                await member.AddRoleAsync(clearedCastrumLacusLitore);
+                await ReplyAsync(Properties.Resources.LodestoneCastrumLLAchievement1Success); // Make these format strings
+                hasCastrumLLAchievement1 = true;
+            }
             if (character.GetAchievements().Any(achievement => achievement.ID == 2682)) // Operation: Eagle's Nest III
             {
-                //Log.Information("Added role " + arsenalMaster.Name);
-                //await member.AddRoleAsync(arsenalMaster);
-                //await ReplyAsync(Properties.Resources.LodestoneBAAchievementSuccess);
-                //hasAchievement = true;
-            }
-            if (character.GetAchievements().Select(achievement => (int)achievement.ID).Intersect(new[] { 2683, 2684, 2685 }).Count() == 3) // Duels
-            {
-                //Log.Information("Added role " + arsenalMaster.Name);
-                //await member.AddRoleAsync(arsenalMaster);
-                //await ReplyAsync(Properties.Resources.LodestoneBAAchievementSuccess);
-                //hasAchievement = true;
+                Log.Information("Added role " + siegeLiege.Name);
+                await member.AddRoleAsync(siegeLiege);
+                await ReplyAsync(Properties.Resources.LodestoneCastrumLLAchievement2Success);
+                hasCastrumLLAchievement2 = true;
             }
             if (character.GetMiMo().Any(mimo => mimo.Name == "Demi-Ozma"))
             {
@@ -384,7 +388,7 @@ namespace Prima.Modules
                 hasMount = true;
             }
 
-            if (!hasAchievement && !hasMount)
+            if (!hasAchievement && !hasMount && !hasCastrumLLAchievement1 && !hasCastrumLLAchievement2)
                 await ReplyAsync(Properties.Resources.LodestoneMountAchievementNotFoundError);
 
             if (user == null)
