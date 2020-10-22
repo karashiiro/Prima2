@@ -34,7 +34,7 @@ namespace Prima.Stable.Services
                     await member.AddRoleAsync(role);
                     Log.Information("Role {Role} was added to {DiscordUser}", role.Name, member.ToString());
                 }
-                else if (guild.Id == 550702475112480769 && ichannel.Id == 552643167808258060 && reaction.Emote.Name == "✅")
+                else if (guild.Id == 550702475112480769 && (ichannel.Id == 552643167808258060 || ichannel.Id == 768886934084648960) && reaction.Emote.Name == "✅")
                 {
                     await member.SendMessageAsync($"You have begun the verification process. Your **Discord account ID** is `{member.Id}`.\n"
 			            + "Please add this somewhere in your FFXIV Lodestone Character Profile.\n"
