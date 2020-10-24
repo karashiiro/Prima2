@@ -14,7 +14,7 @@ namespace Prima.Stable
                 return;
             }
 
-            if (HasWord(message.Content, "sch"))
+            if (HasWord(message.Content, "sch") || HasWord(message.Content, "scholar"))
             {
                 var guild = client.GetGuild(SpecialGuilds.CrystalExploratoryMissions);
                 var emote = await guild.GetEmoteAsync(573531927613800459); // SCH emote
