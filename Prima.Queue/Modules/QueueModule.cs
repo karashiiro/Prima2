@@ -107,7 +107,7 @@ namespace Prima.Queue.Modules
 
             await ReplyAsync($"{Context.User.Mention}, you have begun a search for {dpsWanted} DPS, {healersWanted} Healer(s), and {tanksWanted} Tank(s).\n" +
                 "Party Finder information will be DM'd to you immediately.\n" +
-                "Arsenal information will be sent to invitees after 30 seconds.\n" +
+                "Party information will be sent to invitees after 30 seconds.\n" +
                 "You can cancel matchmaking by typing `~stop` within 30 seconds.");
 
             var pw = await PwGen.Get(Context.User.Id);

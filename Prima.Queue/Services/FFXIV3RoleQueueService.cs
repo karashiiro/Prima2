@@ -51,7 +51,7 @@ namespace Prima.Queue.Services
             }
         }
 
-        public void Load()
+        private void Load()
         {
             Queues = JsonConvert.DeserializeObject<IDictionary<string, FFXIV3RoleQueue>>(File.ReadAllText(QueuePath));
         }
