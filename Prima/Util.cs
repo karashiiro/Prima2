@@ -43,6 +43,12 @@ namespace Prima
             => (x, y) => f(arg, x, y);
 
         /// <summary>
+        /// Converts a function that requires four arguments into a function that requires three arguments.
+        /// </summary>
+        public static Func<T2, T3, T4, TResult> Apply<T1, T2, T3, T4, TResult>(Func<T1, T2, T3, T4, TResult> f, T1 arg)
+            => (x, y, z) => f(arg, x, y, z);
+
+        /// <summary>
         /// Gets the absolute path of a file from its path relative to the entry assembly.
         /// </summary>
         public static string GetAbsolutePath(string relativePath)

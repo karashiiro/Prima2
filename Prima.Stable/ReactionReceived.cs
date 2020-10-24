@@ -1,28 +1,23 @@
-﻿using Discord;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Discord;
 using Discord.WebSocket;
 using Prima.Models;
 using Prima.Services;
 using Serilog;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace Prima.Stable.Services
+namespace Prima.Stable
 {
-    public class ClericalEventService
+    public static class ReactionReceived
     {
-        private readonly DbService _db;
-
-        public ClericalEventService(DbService db)
-            => _db = db;
-
-        public async Task ReactionAdded(Cacheable<IUserMessage, ulong> _, ISocketMessageChannel ichannel, SocketReaction reaction)
+        public static async Task HandlerAdd(DbService db, Cacheable<IUserMessage, ulong> _, ISocketMessageChannel ichannel, SocketReaction reaction)
         {
             if (ichannel is SocketGuildChannel channel)
             {
                 var guild = channel.Guild;
                 var member = guild.GetUser(reaction.UserId);
-                var disConfig = _db.Guilds.FirstOrDefault(g => g.Id == guild.Id);
+                var disConfig = db.Guilds.FirstOrDefault(g => g.Id == guild.Id);
                 if (disConfig == null)
                 {
                     return;
@@ -37,15 +32,15 @@ namespace Prima.Stable.Services
                 else if (guild.Id == 550702475112480769 && (ichannel.Id == 552643167808258060 || ichannel.Id == 768886934084648960) && reaction.Emote.Name == "✅")
                 {
                     await member.SendMessageAsync($"You have begun the verification process. Your **Discord account ID** is `{member.Id}`.\n"
-			            + "Please add this somewhere in your FFXIV Lodestone Character Profile.\n"
-			            + "You can edit your account description here: https://na.finalfantasyxiv.com/lodestone/my/setting/profile/\n\n"
-                        + $"After you have put your Discord account ID in your Lodestone profile, please use `{_db.Config.Prefix}verify` to get your clear role.\n"
-                        + "The Lodestone may not immediately update following updates to your achievements, so please wait a few hours and try again if this is the case.");
+                                                  + "Please add this somewhere in your FFXIV Lodestone Character Profile.\n"
+                                                  + "You can edit your account description here: https://na.finalfantasyxiv.com/lodestone/my/setting/profile/\n\n"
+                                                  + $"After you have put your Discord account ID in your Lodestone profile, please use `{db.Config.Prefix}verify` to get your clear role.\n"
+                                                  + "The Lodestone may not immediately update following updates to your achievements, so please wait a few hours and try again if this is the case.");
                 }
             }
         }
 
-        public async Task ReactionRemoved(Cacheable<IUserMessage, ulong> _, ISocketMessageChannel ichannel, SocketReaction reaction)
+        public static async Task HandlerRemove(DbService db, Cacheable<IUserMessage, ulong> _, ISocketMessageChannel ichannel, SocketReaction reaction)
         {
             if (ichannel is SocketGuildChannel channel)
             {
@@ -55,7 +50,7 @@ namespace Prima.Stable.Services
                 DiscordGuildConfiguration disConfig;
                 try
                 {
-                    disConfig = _db.Guilds.Single(g => g.Id == guild.Id);
+                    disConfig = db.Guilds.Single(g => g.Id == guild.Id);
                 }
                 catch (InvalidOperationException)
                 {

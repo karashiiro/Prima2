@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Newtonsoft.Json;
+using Serilog;
 
 namespace Prima.Queue.Services
 {
@@ -82,6 +83,7 @@ namespace Prima.Queue.Services
             foreach (var uid in uids)
             {
                 var user = _client.GetUser(uid);
+                Log.Information("Timed out {User} from queue {QueueName}.", user.ToString(), queueName);
                 await user.SendMessageAsync($"You have been in the queue `#{queueName}` for {hours} hours and have been timed-out.\n" +
                                             "This is a measure in place to avoid leads having to pull numerous AFK users before your run.\n" +
                                             "Please rejoin the queue if you are still active.");
@@ -90,6 +92,7 @@ namespace Prima.Queue.Services
             foreach (var uid in almostUids)
             {
                 var user = _client.GetUser(uid);
+                Log.Information("Warned {User} of imminent timeout from queue {QueueName}.", user.ToString(), queueName);
                 await user.SendMessageAsync($"You have been in the queue `#{queueName}` for almost {hours} hours.\n" +
                                             "To avoid being removed for inactivity, please use the command `~refresh`.");
             }

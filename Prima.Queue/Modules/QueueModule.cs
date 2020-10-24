@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace Prima.Queue.Modules
 {
@@ -60,6 +61,7 @@ namespace Prima.Queue.Modules
                 var (_, pt) = ptTuple;
                 if ((DateTime.UtcNow - pt).TotalSeconds > 30) // Last pulled more than 30 seconds ago
                 {
+                    Log.Warning("User {User} failed to be deroled, deroling them now.", Context.User.ToString());
                     await ReplyAsync($"{Context.User.Mention}, something went wrong in your last pull and you weren't properly deregistered, so I tried to deregister you again. Please try pulling again.");
                     await RemoveLfm(leader);
                     LfmPullTimeLog.Remove(ptTuple);
@@ -104,6 +106,13 @@ namespace Prima.Queue.Modules
                 await RemoveLfm(leader);
                 return;
             }
+
+            Log.Information(
+                "User {User} executed ~lfm for {DPSCount} DPS, {HealerCount} healers, and {TankCount} tanks.",
+                Context.User.ToString(),
+                dpsWanted,
+                healersWanted,
+                tanksWanted);
 
             await ReplyAsync($"{Context.User.Mention}, you have begun a search for {dpsWanted} DPS, {healersWanted} Healer(s), and {tanksWanted} Tank(s).\n" +
                 "Party Finder information will be DM'd to you immediately.\n" +
@@ -165,6 +174,7 @@ namespace Prima.Queue.Modules
             var leaderDisplayName = leader.Nickname ?? leader.ToString();
 
             // Queue stuff now
+            Log.Information("Removed user {User} from queue {QueueName}.", Context.User.ToString(), queueName);
             queue.RemoveAll(leader.Id);
 
             var fetchedDps = new List<ulong>();
@@ -172,6 +182,7 @@ namespace Prima.Queue.Modules
             {
                 var nextDps = queue.Dequeue(FFXIVRole.DPS);
                 if (nextDps == null) break;
+                Log.Information("Removed user {User} from queue {QueueName}.", nextDps.ToString(), queueName);
                 fetchedDps.Add(nextDps.Value);
             }
             var fetchedHealers = new List<ulong>();
@@ -179,6 +190,7 @@ namespace Prima.Queue.Modules
             {
                 var nextHealer = queue.Dequeue(FFXIVRole.Healer);
                 if (nextHealer == null) break;
+                Log.Information("Removed user {User} from queue {QueueName}.", nextHealer.ToString(), queueName);
                 fetchedHealers.Add(nextHealer.Value);
             }
             var fetchedTanks = new List<ulong>();
@@ -186,6 +198,7 @@ namespace Prima.Queue.Modules
             {
                 var nextTank = queue.Dequeue(FFXIVRole.Tank);
                 if (nextTank == null) break;
+                Log.Information("Removed user {User} from queue {QueueName}.", nextTank.ToString(), queueName);
                 fetchedTanks.Add(nextTank.Value);
             }
 
@@ -367,6 +380,7 @@ namespace Prima.Queue.Modules
             }
 
             await user.SendMessageAsync(embed: inviteeEmbed);
+            Log.Information("Run information for {User}'s party sent to {User}.", args.Leader.ToString(), user.ToString());
         }
 
         private static Task AddLfm(SocketGuildUser member)
@@ -450,6 +464,11 @@ namespace Prima.Queue.Modules
             QueueService.Save();
             RefreshQueuesEx();
 
+            Log.Information(
+                "User {User} joined queue {QueueName} for the roles [{Roles}].",
+                Context.User.ToString(),
+                queueName,
+                string.Join(',', enqueuedRolesList.Select(r => r.ToString()).ToArray()));
             await ReplyAsync(response);
         }
 
@@ -510,6 +529,11 @@ namespace Prima.Queue.Modules
             QueueService.Save();
             RefreshQueuesEx();
 
+            Log.Information(
+                "User {User} dropped-out of queue {QueueName} for the roles [{Roles}].",
+                Context.User.ToString(),
+                queueName,
+                string.Join(',', removedRolesList.Select(r => r.ToString()).ToArray()));
             await ReplyAsync(response);
         }
 
@@ -639,6 +663,7 @@ namespace Prima.Queue.Modules
         private void RefreshQueuesEx()
         {
             QueueService.GetOrCreateQueue("lfg-castrum").Refresh(Context.User.Id);
+            Log.Information("User {User} refreshed queue times.", Context.User.ToString());
         }
 
         private static FFXIVRole ParseRoles(string roleString)
@@ -680,6 +705,7 @@ namespace Prima.Queue.Modules
                 queue.Shove(user.Id, role);
             }
 
+            Log.Information("User {User} shoved to front of queue {QueueName}", user.ToString(), queueName);
             return ReplyAsync("User shoved to front of queue.");
         }
     }

@@ -23,26 +23,25 @@ namespace Prima.Stable
             await CommonInitialize.ConfigureServicesAsync(services);
 
             var client = services.GetRequiredService<DiscordSocketClient>();
-            var clericalEvents = services.GetRequiredService<ClericalEventService>();
+            var db = services.GetRequiredService<DbService>();
             var moderationEvents = services.GetRequiredService<ModerationEventService>();
             var censusEvents = services.GetRequiredService<CensusEventService>();
             var mute = services.GetRequiredService<MuteService>();
 
-            client.ReactionAdded += clericalEvents.ReactionAdded;
-            client.ReactionRemoved += clericalEvents.ReactionRemoved;
+            client.ReactionAdded += (message, channel, reaction) =>  ReactionReceived.HandlerAdd(db, message, channel, reaction);
+            client.ReactionRemoved += (message, channel, reaction) => ReactionReceived.HandlerRemove(db, message, channel, reaction);
 
             client.MessageDeleted += moderationEvents.MessageDeleted;
             client.MessageReceived += moderationEvents.MessageRecieved;
+
+            client.MessageReceived += message => MessageCache.Handler(db, message);
+            client.MessageReceived += message => ExtraMessageReceived.Handler(client, message);
 
             client.GuildMemberUpdated += censusEvents.GuildMemberUpdated;
 
             client.UserVoiceStateUpdated += mute.OnVoiceJoin;
 
             Log.Information("Prima.Stable logged in!");
-                
-            /*var uptime = services.GetRequiredService<UptimeMessageService>();
-                uptime.Initialize("Prima Clerical", "A lonelier cubicle.");
-                uptime.StartAsync().Start();*/
                 
             await Task.Delay(-1);
         }
@@ -53,9 +52,7 @@ namespace Prima.Stable
             sc
                 .AddSingleton<WebClient>()
                 .AddSingleton<ModerationEventService>()
-                .AddSingleton<MessageCacheService>()
                 .AddSingleton<CensusEventService>()
-                .AddSingleton<ClericalEventService>()
                 .AddSingleton<PresenceService>()
                 .AddSingleton<XIVAPIService>()
                 .AddSingleton<FFXIVWeatherService>()
