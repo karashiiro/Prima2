@@ -216,7 +216,7 @@ namespace Prima.Queue
                     .Where(tuple => !tuple.Item3)
                     .Where(tuple => (DateTime.UtcNow - tuple.Item2).TotalSeconds > secondsBeforeNow - gracePeriod)
                     .ToList();
-            foreach (var (uid, dateTime, _) in _dpsAlmostTimedOut)
+            foreach (var (uid, dateTime, _) in _healersAlmostTimedOut)
             {
                 SetNotified(uid, dateTime, FFXIVRole.Healer);
             }
@@ -227,7 +227,7 @@ namespace Prima.Queue
                     .Where(tuple => !tuple.Item3)
                     .Where(tuple => (DateTime.UtcNow - tuple.Item2).TotalSeconds > secondsBeforeNow - gracePeriod)
                     .ToList();
-            foreach (var (uid, dateTime, _) in _dpsAlmostTimedOut)
+            foreach (var (uid, dateTime, _) in _tanksAlmostTimedOut)
             {
                 SetNotified(uid, dateTime, FFXIVRole.Tank);
             }
