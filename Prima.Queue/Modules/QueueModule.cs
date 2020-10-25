@@ -527,7 +527,6 @@ namespace Prima.Queue.Modules
             }
 
             QueueService.Save();
-            RefreshQueuesEx();
 
             Log.Information(
                 "User {User} dropped-out of queue {QueueName} for the roles [{Roles}].",
@@ -568,7 +567,6 @@ namespace Prima.Queue.Modules
             var queue = QueueService.GetOrCreateQueue(queueName);
 
             QueueService.Save();
-            RefreshQueuesEx();
 
             await ReplyAsync(GetPositionString(queue, Context.User.Id));
         }
@@ -583,7 +581,6 @@ namespace Prima.Queue.Modules
 
             var queueName = LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
-            RefreshQueuesEx();
 
             await ReplyAsync($"There are currently {queue.Count(FFXIVRole.Tank)} tank(s), {queue.Count(FFXIVRole.Healer)} healer(s), and {queue.Count(FFXIVRole.DPS)} DPS in the queue. (Unique players: {queue.CountDistinct()})");
         }
