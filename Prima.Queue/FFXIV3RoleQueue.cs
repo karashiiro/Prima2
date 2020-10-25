@@ -4,19 +4,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Prima
+namespace Prima.Queue
 {
     public class FFXIV3RoleQueue
     {
-        [JsonProperty] private readonly IList<(ulong, DateTime)> _dpsQueue;
-        [JsonProperty] private readonly IList<(ulong, DateTime)> _healerQueue;
-        [JsonProperty] private readonly IList<(ulong, DateTime)> _tankQueue;
+        [JsonProperty] private readonly IList<(ulong, DateTime, bool)> _dpsQueue;
+        [JsonProperty] private readonly IList<(ulong, DateTime, bool)> _healerQueue;
+        [JsonProperty] private readonly IList<(ulong, DateTime, bool)> _tankQueue;
 
         public FFXIV3RoleQueue()
         {
-            _dpsQueue = new SynchronizedCollection<(ulong, DateTime)>();
-            _healerQueue = new SynchronizedCollection<(ulong, DateTime)>();
-            _tankQueue = new SynchronizedCollection<(ulong, DateTime)>();
+            _dpsQueue = new SynchronizedCollection<(ulong, DateTime, bool)>();
+            _healerQueue = new SynchronizedCollection<(ulong, DateTime, bool)>();
+            _tankQueue = new SynchronizedCollection<(ulong, DateTime, bool)>();
         }
 
         public bool Enqueue(ulong userId, FFXIVRole role)
@@ -25,15 +25,15 @@ namespace Prima
             {
                 case FFXIVRole.DPS:
                     if (_dpsQueue.Any(tuple => tuple.Item1 == userId)) return false;
-                    _dpsQueue.Add((userId, DateTime.UtcNow));
+                    _dpsQueue.Add((userId, DateTime.UtcNow, false));
                     return true;
                 case FFXIVRole.Healer:
                     if (_healerQueue.Any(tuple => tuple.Item1 == userId)) return false;
-                    _healerQueue.Add((userId, DateTime.UtcNow));
+                    _healerQueue.Add((userId, DateTime.UtcNow, false));
                     return true;
                 case FFXIVRole.Tank:
                     if (_tankQueue.Any(tuple => tuple.Item1 == userId)) return false;
-                    _tankQueue.Add((userId, DateTime.UtcNow));
+                    _tankQueue.Add((userId, DateTime.UtcNow, false));
                     return true;
                 default:
                     throw new NotImplementedException();
@@ -47,17 +47,17 @@ namespace Prima
             {
                 case FFXIVRole.DPS:
                     if (_dpsQueue.Count == 0) return null;
-                    (user, _) = _dpsQueue[0];
+                    (user, _, _) = _dpsQueue[0];
                     _dpsQueue.RemoveAt(0);
                     break;
                 case FFXIVRole.Healer:
                     if (_healerQueue.Count == 0) return null;
-                    (user, _) = _healerQueue[0];
+                    (user, _, _) = _healerQueue[0];
                     _healerQueue.RemoveAt(0);
                     break;
                 case FFXIVRole.Tank:
                     if (_tankQueue.Count == 0) return null;
-                    (user, _) = _tankQueue[0];
+                    (user, _, _) = _tankQueue[0];
                     _tankQueue.RemoveAt(0);
                     break;
                 default:
@@ -76,6 +76,7 @@ namespace Prima
                 FFXIVRole.DPS => _dpsQueue.Remove(tuple => tuple.Item1 == userId),
                 FFXIVRole.Healer => _healerQueue.Remove(tuple => tuple.Item1 == userId),
                 FFXIVRole.Tank => _tankQueue.Remove(tuple => tuple.Item1 == userId),
+                FFXIVRole.None => false,
                 _ => throw new NotImplementedException(),
             };
         }
@@ -94,6 +95,7 @@ namespace Prima
                 FFXIVRole.DPS => _dpsQueue.Count,
                 FFXIVRole.Healer => _healerQueue.Count,
                 FFXIVRole.Tank => _tankQueue.Count,
+                FFXIVRole.None => 0,
                 _ => throw new NotImplementedException(),
             };
         }
@@ -115,6 +117,7 @@ namespace Prima
                 FFXIVRole.DPS => _dpsQueue.IndexOf(tuple => tuple.Item1 == userId) + 1,
                 FFXIVRole.Healer => _healerQueue.IndexOf(tuple => tuple.Item1 == userId) + 1,
                 FFXIVRole.Tank => _tankQueue.IndexOf(tuple => tuple.Item1 == userId) + 1,
+                FFXIVRole.None => 0,
                 _ => throw new NotImplementedException(),
             };
         }
@@ -125,7 +128,7 @@ namespace Prima
             if (dpsSpot != default)
             {
                 var index = GetPosition(uid, FFXIVRole.DPS) - 1;
-                _dpsQueue.Insert(index, (uid, DateTime.UtcNow));
+                _dpsQueue.Insert(index, (uid, DateTime.UtcNow, false));
                 _dpsQueue.RemoveAt(index + 1);
             }
 
@@ -133,7 +136,7 @@ namespace Prima
             if (healerSpot != default)
             {
                 var index = GetPosition(uid, FFXIVRole.Healer) - 1;
-                _healerQueue.Insert(index, (uid, DateTime.UtcNow));
+                _healerQueue.Insert(index, (uid, DateTime.UtcNow, false));
                 _healerQueue.RemoveAt(index + 1);
             }
 
@@ -141,7 +144,7 @@ namespace Prima
             if (tankSpot != default)
             {
                 var index = GetPosition(uid, FFXIVRole.Tank) - 1;
-                _tankQueue.Insert(index, (uid, DateTime.UtcNow));
+                _tankQueue.Insert(index, (uid, DateTime.UtcNow, false));
                 _tankQueue.RemoveAt(index + 1);
             }
         }
@@ -152,16 +155,39 @@ namespace Prima
             {
                 case FFXIVRole.DPS:
                     Remove(uid, FFXIVRole.DPS);
-                    _dpsQueue.Insert(0, (uid, DateTime.UtcNow));
+                    _dpsQueue.Insert(0, (uid, DateTime.UtcNow, false));
                     break;
                 case FFXIVRole.Healer:
                     Remove(uid, FFXIVRole.Healer);
-                    _healerQueue.Insert(0, (uid, DateTime.UtcNow));
+                    _healerQueue.Insert(0, (uid, DateTime.UtcNow, false));
                     break;
                 case FFXIVRole.Tank:
                     Remove(uid, FFXIVRole.Tank);
-                    _tankQueue.Insert(0, (uid, DateTime.UtcNow));
+                    _tankQueue.Insert(0, (uid, DateTime.UtcNow, false));
                     break;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        private void SetNotified(ulong uid, DateTime queueTime, FFXIVRole role)
+        {
+            switch (role)
+            {
+                case FFXIVRole.DPS:
+                    Remove(uid, FFXIVRole.DPS);
+                    _dpsQueue.Insert(0, (uid, queueTime, true));
+                    break;
+                case FFXIVRole.Healer:
+                    Remove(uid, FFXIVRole.Healer);
+                    _healerQueue.Insert(0, (uid, queueTime, true));
+                    break;
+                case FFXIVRole.Tank:
+                    Remove(uid, FFXIVRole.Tank);
+                    _tankQueue.Insert(0, (uid, queueTime, true));
+                    break;
+                default:
+                    throw new NotImplementedException();
             }
         }
 
@@ -174,20 +200,42 @@ namespace Prima
             var tanksTimedOut = _tankQueue.RemoveAll(tuple => (DateTime.UtcNow - tuple.Item2).TotalSeconds > secondsBeforeNow, overload: true)
                 .Select(tuple => tuple.Item1);
 
-            var dpsAlmostTimedOut =
+            var _dpsAlmostTimedOut =
                 _dpsQueue
+                    .Where(tuple => !tuple.Item3)
                     .Where(tuple => (DateTime.UtcNow - tuple.Item2).TotalSeconds > secondsBeforeNow - gracePeriod)
-                    .Select(tuple => tuple.Item1);
-            var healersAlmostTimedOut =
-                _healerQueue
-                    .Where(tuple => (DateTime.UtcNow - tuple.Item2).TotalSeconds > secondsBeforeNow - gracePeriod)
-                    .Select(tuple => tuple.Item1);
-            var tanksAlmostTimedOut =
-                _tankQueue
-                    .Where(tuple => (DateTime.UtcNow - tuple.Item2).TotalSeconds > secondsBeforeNow - gracePeriod)
-                    .Select(tuple => tuple.Item1);
+                    .ToList();
+            foreach (var (uid, dateTime, _) in _dpsAlmostTimedOut)
+            {
+                SetNotified(uid, dateTime, FFXIVRole.DPS);
+            }
+            var dpsAlmostTimedOut = _dpsAlmostTimedOut.Select(tuple => tuple.Item1);
 
-            return (dpsTimedOut.Concat(healersTimedOut).Concat(tanksTimedOut).Distinct(), dpsAlmostTimedOut.Concat(healersAlmostTimedOut).Concat(tanksAlmostTimedOut).Distinct());
+            var _healersAlmostTimedOut =
+                _healerQueue
+                    .Where(tuple => !tuple.Item3)
+                    .Where(tuple => (DateTime.UtcNow - tuple.Item2).TotalSeconds > secondsBeforeNow - gracePeriod)
+                    .ToList();
+            foreach (var (uid, dateTime, _) in _dpsAlmostTimedOut)
+            {
+                SetNotified(uid, dateTime, FFXIVRole.Healer);
+            }
+            var healersAlmostTimedOut = _healersAlmostTimedOut.Select(tuple => tuple.Item1);
+
+            var _tanksAlmostTimedOut =
+                _tankQueue
+                    .Where(tuple => !tuple.Item3)
+                    .Where(tuple => (DateTime.UtcNow - tuple.Item2).TotalSeconds > secondsBeforeNow - gracePeriod)
+                    .ToList();
+            foreach (var (uid, dateTime, _) in _dpsAlmostTimedOut)
+            {
+                SetNotified(uid, dateTime, FFXIVRole.Healer);
+            }
+            var tanksAlmostTimedOut = _tanksAlmostTimedOut.Select(tuple => tuple.Item1);
+
+
+            var almostTimedOut = dpsAlmostTimedOut.Concat(healersAlmostTimedOut).Concat(tanksAlmostTimedOut);
+            return (dpsTimedOut.Concat(healersTimedOut).Concat(tanksTimedOut).Distinct(), almostTimedOut.Distinct());
         }
     }
 

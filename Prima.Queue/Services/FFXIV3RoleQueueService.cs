@@ -63,7 +63,7 @@ namespace Prima.Queue.Services
 
             while (true)
             {
-                await Task.Delay(900 * second);
+                await Task.Delay(300 * second);
 
                 await AlertTimeouts(Queues["learning-and-frag-farm"]?.Timeout(10800, 0), "learning-and-frag-farm", 3);
                 await AlertTimeouts(Queues["av-and-ozma-prog"]?.Timeout(10800, 0), "av-and-ozma-prog", 3);
