@@ -229,7 +229,7 @@ namespace Prima.Queue
                     .ToList();
             foreach (var (uid, dateTime, _) in _dpsAlmostTimedOut)
             {
-                SetNotified(uid, dateTime, FFXIVRole.Healer);
+                SetNotified(uid, dateTime, FFXIVRole.Tank);
             }
             var tanksAlmostTimedOut = _tanksAlmostTimedOut.Select(tuple => tuple.Item1);
 
