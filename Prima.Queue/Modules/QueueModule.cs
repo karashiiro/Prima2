@@ -298,7 +298,7 @@ namespace Prima.Queue.Modules
                 userParams.TargetUser = user;
                 userParams.Role = FFXIVRole.DPS;
 
-                _ = SendLfgEmbed(userParams);
+                _ = Task.Run(() => SendLfgEmbed(userParams));
             }
 
             foreach (var user in fetchedHealers)
@@ -306,7 +306,7 @@ namespace Prima.Queue.Modules
                 userParams.TargetUser = user;
                 userParams.Role = FFXIVRole.Healer;
 
-                _ = SendLfgEmbed(userParams);
+                _ = Task.Run(() => SendLfgEmbed(userParams));
             }
 
             foreach (var user in fetchedTanks)
@@ -314,7 +314,7 @@ namespace Prima.Queue.Modules
                 userParams.TargetUser = user;
                 userParams.Role = FFXIVRole.Tank;
 
-                _ = SendLfgEmbed(userParams);
+                _ = Task.Run(() => SendLfgEmbed(userParams));
             }
         }
 
@@ -399,7 +399,7 @@ namespace Prima.Queue.Modules
                 }
                 catch (HttpException e2)
                 {
-                    Log.Information(e2, "Run information for {User} failed.", args.Leader.ToString());
+                    Log.Warning(e2, "Run information for {User} failed.", args.Leader.ToString());
                     return;
                 }
             }

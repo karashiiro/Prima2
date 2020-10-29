@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Net;
 using Discord.WebSocket;
 using Newtonsoft.Json;
 using Serilog;
@@ -27,7 +28,7 @@ namespace Prima.Queue.Services
 
             _client = client;
 
-            _ = TimeoutLoop();
+            _ = Task.Run(TimeoutLoop);
         }
 
         public FFXIV3RoleQueue GetOrCreateQueue(string name)
@@ -84,17 +85,34 @@ namespace Prima.Queue.Services
             {
                 var user = _client.GetUser(uid);
                 Log.Information("Timed out {User} from queue {QueueName}.", user.ToString(), queueName);
-                await user.SendMessageAsync($"You have been in the queue `#{queueName}` for {hours} hours and have been timed-out.\n" +
-                                            "This is a measure in place to avoid leads having to pull numerous AFK users before your run.\n" +
-                                            "Please rejoin the queue if you are still active.");
+                try
+                {
+                    await user.SendMessageAsync(
+                        $"You have been in the queue `#{queueName}` for {hours} hours and have been timed-out.\n" +
+                        "This is a measure in place to avoid leads having to pull numerous AFK users before your run.\n" +
+                        "Please rejoin the queue if you are still active.");
+                }
+                catch (HttpException e)
+                {
+                    Log.Warning(e, "Messaging user {User} failed.", user.ToString());
+                }
             }
             
             foreach (var uid in almostUids)
             {
                 var user = _client.GetUser(uid);
-                Log.Information("Warned {User} of imminent timeout from queue {QueueName}.", user.ToString(), queueName);
-                await user.SendMessageAsync($"You have been in the queue `#{queueName}` for almost {hours} hours.\n" +
-                                            "To avoid being removed for inactivity, please use the command `~refresh`.");
+                try
+                {
+                    await user.SendMessageAsync(
+                        $"You have been in the queue `#{queueName}` for almost {hours} hours.\n" +
+                        "To avoid being removed for inactivity, please use the command `~refresh`.");
+                    Log.Information("Warned {User} of imminent timeout from queue {QueueName}.", user.ToString(),
+                        queueName);
+                }
+                catch (HttpException e)
+                {
+                    Log.Warning(e, "Message user {User} failed.", user.ToString());
+                }
             }
         }
     }
