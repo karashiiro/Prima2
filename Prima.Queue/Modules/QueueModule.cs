@@ -298,7 +298,7 @@ namespace Prima.Queue.Modules
                 userParams.TargetUser = user;
                 userParams.Role = FFXIVRole.DPS;
 
-                await SendLfgEmbed(userParams);
+                _ = SendLfgEmbed(userParams);
             }
 
             foreach (var user in fetchedHealers)
@@ -306,7 +306,7 @@ namespace Prima.Queue.Modules
                 userParams.TargetUser = user;
                 userParams.Role = FFXIVRole.Healer;
 
-                await SendLfgEmbed(userParams);
+                _ = SendLfgEmbed(userParams);
             }
 
             foreach (var user in fetchedTanks)
@@ -314,7 +314,7 @@ namespace Prima.Queue.Modules
                 userParams.TargetUser = user;
                 userParams.Role = FFXIVRole.Tank;
 
-                await SendLfgEmbed(userParams);
+                _ = SendLfgEmbed(userParams);
             }
         }
 
@@ -379,7 +379,30 @@ namespace Prima.Queue.Modules
                 user = await Context.Client.Rest.GetGuildUserAsync(Context.Guild.Id, args.TargetUser);
             }
 
-            await user.SendMessageAsync(embed: inviteeEmbed);
+            try
+            {
+                await user.SendMessageAsync(embed: inviteeEmbed);
+            }
+            catch (HttpException e1)
+            {
+                if (e1.DiscordCode == 50007)
+                {
+                    await args.Leader.SendMessageAsync($"Couldn't send run information to {user}; they may have server DMs disabled. Please ping them directly.");
+                    return;
+                }
+
+                await Task.Delay(3000);
+
+                try
+                {
+                    await user.SendMessageAsync(embed: inviteeEmbed);
+                }
+                catch (HttpException e2)
+                {
+                    Log.Information(e2, "Run information for {User} failed.", args.Leader.ToString());
+                    return;
+                }
+            }
             Log.Information("Run information for {User}'s party sent to {User}.", args.Leader.ToString(), user.ToString());
         }
 
