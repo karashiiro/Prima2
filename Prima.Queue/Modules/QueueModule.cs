@@ -576,6 +576,12 @@ namespace Prima.Queue.Modules
                 return;
             }
 
+            if (args.StartsWith("list")) // See below
+            {
+                await QueueListAsync();
+                return;
+            }
+
             if (args.Length != 0) // Because people always try to type "~queue dps" etc., just give it to them.
             {
                 await LfgAsync(args);
