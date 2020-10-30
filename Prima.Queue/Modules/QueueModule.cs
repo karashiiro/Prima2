@@ -295,26 +295,29 @@ namespace Prima.Queue.Modules
 
             foreach (var user in fetchedDps)
             {
-                userParams.TargetUser = user;
-                userParams.Role = FFXIVRole.DPS;
+                var userParamsCopy = userParams.Copy();
+                userParamsCopy.TargetUser = user;
+                userParamsCopy.Role = FFXIVRole.DPS;
 
-                _ = Task.Run(() => SendLfgEmbed(userParams));
+                _ = Task.Run(() => SendLfgEmbed(userParamsCopy));
             }
 
             foreach (var user in fetchedHealers)
             {
-                userParams.TargetUser = user;
-                userParams.Role = FFXIVRole.Healer;
+                var userParamsCopy = userParams.Copy();
+                userParamsCopy.TargetUser = user;
+                userParamsCopy.Role = FFXIVRole.Healer;
 
-                _ = Task.Run(() => SendLfgEmbed(userParams));
+                _ = Task.Run(() => SendLfgEmbed(userParamsCopy));
             }
 
             foreach (var user in fetchedTanks)
             {
-                userParams.TargetUser = user;
-                userParams.Role = FFXIVRole.Tank;
+                var userParamsCopy = userParams.Copy();
+                userParamsCopy.TargetUser = user;
+                userParamsCopy.Role = FFXIVRole.Tank;
 
-                _ = Task.Run(() => SendLfgEmbed(userParams));
+                _ = Task.Run(() => SendLfgEmbed(userParamsCopy));
             }
         }
 
@@ -330,6 +333,11 @@ namespace Prima.Queue.Modules
             public string LeaderDisplayName { get; set; }
             public string PartyType { get; set; }
             public string Password { get; set; }
+
+            public LfgEmbedParameters Copy()
+            {
+                return (LfgEmbedParameters)MemberwiseClone();
+            }
         }
 
         private async Task SendLfgEmbed(LfgEmbedParameters args)
