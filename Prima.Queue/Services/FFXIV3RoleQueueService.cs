@@ -84,7 +84,7 @@ namespace Prima.Queue.Services
 
             foreach (var uid in uids)
             {
-                var user = _client.GetUser(uid);
+                var user = (IUser)_client.GetUser(uid) ?? await _client.Rest.GetUserAsync(uid);
                 Log.Information("Timed out {User} from queue {QueueName}.", user.ToString(), queueName);
                 try
                 {
@@ -92,6 +92,10 @@ namespace Prima.Queue.Services
                         $"You have been in the queue `#{queueName}` for {hours} hours and have been timed-out.\n" +
                         "This is a measure in place to avoid leads having to pull numerous AFK users before your run.\n" +
                         "Please rejoin the queue if you are still active.");
+                }
+                catch (HttpException e) when (e.DiscordCode == 50007)
+                {
+                    Log.Warning("User {User} has disabled guild DMs.", user.ToString());
                 }
                 catch (HttpException e)
                 {
@@ -101,7 +105,7 @@ namespace Prima.Queue.Services
             
             foreach (var uid in almostUids ?? Enumerable.Empty<ulong>())
             {
-                var user = _client.GetUser(uid);
+                var user = (IUser)_client.GetUser(uid) ?? await _client.Rest.GetUserAsync(uid);
                 try
                 {
                     await user.SendMessageAsync(
@@ -109,6 +113,10 @@ namespace Prima.Queue.Services
                         "To avoid being removed for inactivity, please use the command `~refresh`.");
                     Log.Information("Warned {User} of imminent timeout from queue {QueueName}.", user.ToString(),
                         queueName);
+                }
+                catch (HttpException e) when (e.DiscordCode == 50007)
+                {
+                    Log.Warning("User {User} has disabled guild DMs.", user.ToString());
                 }
                 catch (HttpException e)
                 {
