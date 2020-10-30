@@ -213,54 +213,11 @@ namespace Prima.Queue.Modules
 
             // Send embed to leader
             var fields = new List<EmbedFieldBuilder>();
-            if (fetchedDps.Count != 0)
-                fields.Add(new EmbedFieldBuilder()
-                    .WithIsInline(false)
-                    .WithName("DPS")
-                    .WithValue(fetchedDps
-                        .Select(fd =>
-                        {
-                            IGuildUser user = Context.Guild.GetUser(fd);
-                            if (user == null)
-                            {
-                                Task.Delay(250).GetAwaiter().GetResult();
-                                user = Context.Client.Rest.GetGuildUserAsync(Context.Guild.Id, fd).Result;
-                            }
-                            return user.Nickname ?? user.ToString() ?? "(Unable to retrive)";
-                        })
-                        .Aggregate(string.Empty, (ws, nextUser) => ws + $"{nextUser}\n")));
-            if (fetchedHealers.Count != 0)
-                fields.Add(new EmbedFieldBuilder()
-                    .WithIsInline(false)
-                    .WithName("Healers")
-                    .WithValue(fetchedHealers
-                        .Select(fh =>
-                        {
-                            IGuildUser user = Context.Guild.GetUser(fh);
-                            if (user == null)
-                            {
-                                Task.Delay(250).GetAwaiter().GetResult();
-                                user = Context.Client.Rest.GetGuildUserAsync(Context.Guild.Id, fh).Result;
-                            }
-                            return user.Nickname ?? user.ToString() ?? "(Unable to retrive)";
-                        })
-                        .Aggregate(string.Empty, (ws, nextUser) => ws + $"{nextUser}\n")));
-            if (fetchedTanks.Count != 0)
-                fields.Add(new EmbedFieldBuilder()
-                    .WithIsInline(false)
-                    .WithName("Tanks")
-                    .WithValue(fetchedTanks
-                        .Select(ft =>
-                        {
-                            IGuildUser user = Context.Guild.GetUser(ft);
-                            if (user == null)
-                            {
-                                Task.Delay(250).GetAwaiter().GetResult();
-                                user = Context.Client.Rest.GetGuildUserAsync(Context.Guild.Id, ft).Result;
-                            }
-                            return user.Nickname ?? user.ToString() ?? "(Unable to retrive)";
-                        })
-                        .Aggregate(string.Empty, (ws, nextUser) => ws + $"{nextUser}\n")));
+
+            LfmAddUsersLeaderEmbed("DPS", fields, fetchedDps);
+            LfmAddUsersLeaderEmbed("Healers", fields, fetchedHealers); 
+            LfmAddUsersLeaderEmbed("Tanks", fields, fetchedTanks);
+
             fields.Add(new EmbedFieldBuilder()
                 .WithIsInline(false)
                 .WithName("Someone didn't show?")
@@ -296,6 +253,26 @@ namespace Prima.Queue.Modules
             LfmNotifyUsers(fetchedDps, userParams, FFXIVRole.DPS);
             LfmNotifyUsers(fetchedHealers, userParams, FFXIVRole.Healer);
             LfmNotifyUsers(fetchedTanks, userParams, FFXIVRole.Tank);
+        }
+
+        private void LfmAddUsersLeaderEmbed(string label, ICollection<EmbedFieldBuilder> fields, ICollection<ulong> fetched)
+        {
+            if (fetched.Count != 0)
+                fields.Add(new EmbedFieldBuilder()
+                    .WithIsInline(false)
+                    .WithName(label)
+                    .WithValue(fetched
+                        .Select(ft =>
+                        {
+                            IGuildUser user = Context.Guild.GetUser(ft);
+                            if (user == null)
+                            {
+                                Task.Delay(250).GetAwaiter().GetResult();
+                                user = Context.Client.Rest.GetGuildUserAsync(Context.Guild.Id, ft).Result;
+                            }
+                            return user.Nickname ?? user.ToString() ?? "(Unable to retrive)";
+                        })
+                        .Aggregate(string.Empty, (ws, nextUser) => ws + $"{nextUser}\n")));
         }
 
         private void LfmNotifyUsers(IEnumerable<ulong> fetched, LfgEmbedParameters userParamsBase, FFXIVRole role)
