@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Net;
@@ -97,13 +98,8 @@ namespace Prima.Queue.Services
                     Log.Warning(e, "Messaging user {User} failed.", user.ToString());
                 }
             }
-
-            if (almostUids == null)
-            {
-                return;
-            }
             
-            foreach (var uid in almostUids)
+            foreach (var uid in almostUids ?? Enumerable.Empty<ulong>())
             {
                 var user = _client.GetUser(uid);
                 try
