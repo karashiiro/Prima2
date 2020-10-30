@@ -116,7 +116,7 @@ namespace Prima.Queue.Services
                 }
                 catch (HttpException e)
                 {
-                    Log.Warning(e, "Message user {User} failed.", user.ToString());
+                    Log.Warning(e, "Messaging user {User} failed.", user.ToString());
                 }
             }
         }
