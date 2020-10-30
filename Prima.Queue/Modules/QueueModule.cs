@@ -293,29 +293,18 @@ namespace Prima.Queue.Modules
                 Password = pw,
             };
 
-            foreach (var user in fetchedDps)
+            LfmNotifyUsers(fetchedDps, userParams, FFXIVRole.DPS);
+            LfmNotifyUsers(fetchedHealers, userParams, FFXIVRole.Healer);
+            LfmNotifyUsers(fetchedTanks, userParams, FFXIVRole.Tank);
+        }
+
+        private void LfmNotifyUsers(IEnumerable<ulong> fetched, LfgEmbedParameters userParamsBase, FFXIVRole role)
+        {
+            foreach (var user in fetched)
             {
-                var userParamsCopy = userParams.Copy();
+                var userParamsCopy = userParamsBase.Copy();
                 userParamsCopy.TargetUser = user;
-                userParamsCopy.Role = FFXIVRole.DPS;
-
-                _ = Task.Run(() => SendLfgEmbed(userParamsCopy));
-            }
-
-            foreach (var user in fetchedHealers)
-            {
-                var userParamsCopy = userParams.Copy();
-                userParamsCopy.TargetUser = user;
-                userParamsCopy.Role = FFXIVRole.Healer;
-
-                _ = Task.Run(() => SendLfgEmbed(userParamsCopy));
-            }
-
-            foreach (var user in fetchedTanks)
-            {
-                var userParamsCopy = userParams.Copy();
-                userParamsCopy.TargetUser = user;
-                userParamsCopy.Role = FFXIVRole.Tank;
+                userParamsCopy.Role = role;
 
                 _ = Task.Run(() => SendLfgEmbed(userParamsCopy));
             }
