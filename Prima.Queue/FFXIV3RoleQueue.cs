@@ -200,6 +200,12 @@ namespace Prima.Queue
             var tanksTimedOut = _tankQueue.RemoveAll(tuple => (DateTime.UtcNow - tuple.Item2).TotalSeconds > secondsBeforeNow, overload: true)
                 .Select(tuple => tuple.Item1);
 
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (gracePeriod == 0)
+            {
+                return (dpsTimedOut.Concat(healersTimedOut).Concat(tanksTimedOut).Distinct(), null);
+            }
+
             var _dpsAlmostTimedOut =
                 _dpsQueue
                     .Where(tuple => !tuple.Item3)
