@@ -138,16 +138,17 @@ namespace Prima.Queue.Modules
                 return;
             }
 
-            for (var i = 0; i < 30; i++)
+            const int stopPollingDelayMs = 250;
+            for (var i = 0; i < 30000 / stopPollingDelayMs; i++)
             {
-                var newMessages = await Context.Channel.GetMessagesAsync(limit: 10).FlattenAsync();
+                var newMessages = await Context.Channel.GetMessagesAsync(limit: 1).FlattenAsync();
                 if (newMessages.Any(m => m.Author.Id == leader.Id && m.Content.StartsWith("~stop")))
                 {
                     await ReplyAsync($"{Context.User.Mention}, your matchmaking attempt has been cancelled.");
                     await RemoveLfm(leader);
                     return;
                 }
-                await Task.Delay(1000);
+                await Task.Delay(stopPollingDelayMs);
             }
 
             await RemoveLfm(leader);
