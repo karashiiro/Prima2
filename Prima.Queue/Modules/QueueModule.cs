@@ -390,6 +390,15 @@ namespace Prima.Queue.Modules
             return member.RemoveRoleAsync(role);
         }
 
+        [Command("stop", RunMode = RunMode.Async)]
+        [Description("Stops looking for members.")]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public Task LfmStopAsync()
+        {
+            // Just a dummy command to put it in the help list; the actual command is in the LFM command.
+            return Task.CompletedTask;
+        }
+
         private static (int, int, int) GetDesiredRoleCounts(string input)
         {
             input = " " + input;
