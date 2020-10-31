@@ -4,6 +4,7 @@ using Prima.Services;
 using Prima.XIVAPI;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -87,7 +88,8 @@ namespace Prima.Extra.Modules
 
         [Command("roll", RunMode = RunMode.Async)]
         [Description("T̵̪͖̎̈̍ḛ̷̤͑̚ș̴̔͑̾ͅͅt̸͔͜͝ ̶̡̨̪͌̉͠ỷ̵̺̕o̴̞̍ū̴͚̣̤r̵͚͎͔͘ ̴̨̬̿ḷ̷͖̀̚u̴͖̲͌́c̴̲̣͙͑̈͝k̸͍͖̿̆̓!̶̢̅̀")]
-        public async Task RollAsync()
+        [SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Required for proper command processing.")]
+        public async Task RollAsync([Remainder] string junk)
         {
             var res = (int)Math.Floor(new Random().NextDouble() * 4);
             switch (res)
