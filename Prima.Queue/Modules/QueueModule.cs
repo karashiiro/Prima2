@@ -357,23 +357,20 @@ namespace Prima.Queue.Modules
             {
                 await user.SendMessageAsync(embed: inviteeEmbed);
             }
-            catch (HttpException e1)
+            catch (HttpException e) when (e.DiscordCode == 50007)
             {
-                if (e1.DiscordCode == 50007)
-                {
-                    await args.Leader.SendMessageAsync($"Couldn't send run information to {user}; they may have server DMs disabled. Please ping them directly.");
-                    return;
-                }
-
-                await Task.Delay(3000);
-
+                await args.Leader.SendMessageAsync($"Couldn't send run information to {user.Mention}; they have server DMs disabled. Please ping them directly.");
+                return;
+            }
+            catch (HttpException)
+            {
                 try
                 {
                     await user.SendMessageAsync(embed: inviteeEmbed);
                 }
-                catch (HttpException e2)
+                catch (HttpException e)
                 {
-                    Log.Warning(e2, "Run information for {User} failed.", args.Leader.ToString());
+                    Log.Warning(e, "Sending run information for {User} failed.", args.Leader.ToString());
                     return;
                 }
             }
