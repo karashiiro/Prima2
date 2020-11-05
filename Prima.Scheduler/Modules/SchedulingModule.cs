@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using TimeZoneNames;
 using Color = Discord.Color;
 
 namespace Prima.Scheduler.Modules
@@ -20,7 +21,6 @@ namespace Prima.Scheduler.Modules
     [RequireContext(ContextType.Guild)]
     public class SchedulingModule : ModuleBase<SocketCommandContext>
     {
-        private const string TimezoneAbbr = "PDT";
         private const long Threshold = 10800000;
 
         public DbService Db { get; set; }
@@ -135,8 +135,12 @@ namespace Prima.Scheduler.Modules
 
                 @event.RunTime = runTime.ToBinary();
 
+                var tzi = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
+                var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
+                var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
+
                 await Context.Channel.SendMessageAsync(
-                    $"{Context.User.Mention} has just scheduled a run on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({TimezoneAbbr})!\n" +
+                    $"{Context.User.Mention} has just scheduled a run on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({tzAbbr})!\n" +
                     $"React to the 📳 on their message to be notified 30 minutes before it begins!");
                 await message.AddReactionAsync(new Emoji("📳"));
 
@@ -394,12 +398,16 @@ namespace Prima.Scheduler.Modules
             @event.RunTime = newRunTime.ToBinary();
             await Db.UpdateScheduledEvent(@event);
 
+            var tzi = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
+            var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
+            var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
+
             var leaderName = (Context.User as IGuildUser)?.Nickname ?? Context.User.Username;
             var embedChannel = Context.Guild.GetTextChannel(@event.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.ScheduleOutputChannel : guildConfig.CastrumScheduleOutputChannel);
             var embedMessage = await embedChannel.GetMessageAsync(@event.EmbedMessageId) as IUserMessage;
             // ReSharper disable once PossibleNullReferenceException
             var embed = embedMessage.Embeds.FirstOrDefault()?.ToEmbedBuilder()
-                .WithTitle($"Run scheduled by {leaderName} on {newRunTime.DayOfWeek} at {newRunTime.ToShortTimeString()} ({TimezoneAbbr}) " +
+                .WithTitle($"Run scheduled by {leaderName} on {newRunTime.DayOfWeek} at {newRunTime.ToShortTimeString()} ({tzAbbr}) " +
                            $"[{newRunTime.DayOfWeek}, {(Month)newRunTime.Month} {newRunTime.Day}]!")
                 .WithTimestamp(newRunTime)
                 .Build();
