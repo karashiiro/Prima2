@@ -60,11 +60,11 @@ namespace Prima
         public static DateTime GetDateTime(string keywords)
         {
             // All this is copied from Roo's scheduler (with minor tweaks)
-            var year = PdtNow().Year;
-            var month = PdtNow().Month;
-            var day = PdtNow().Day;
-            var hour = PdtNow().Hour;
-            var minute = PdtNow().Minute;
+            var year = DateTime.Now.Year;
+            var month = DateTime.Now.Month;
+            var day = DateTime.Now.Day;
+            var hour = DateTime.Now.Hour;
+            var minute = DateTime.Now.Minute;
             var dayOfWeek = -1;
 
             //Check to see if it matches a recognized time format
@@ -238,9 +238,16 @@ namespace Prima
             return (tzi, outTime);
         }
 
-        public static DateTimeOffset PdtNow()
+        public static string PstIdString()
         {
-            return DateTimeOffset.Now.ToOffset(new TimeSpan(-7, 0, 0));
+            if (Environment.OSVersion.Platform == PlatformID.Unix)
+            {
+                return "America/Los_Angeles";
+            }
+            else
+            {
+                return "Pacific Standard Time";
+            }
         }
 
         public static string Capitalize(string input)

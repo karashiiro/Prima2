@@ -1,21 +1,28 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
 using Discord.Net;
 using Discord.WebSocket;
 using Prima.Models;
 using Prima.Resources;
 using Prima.Services;
 using Serilog;
+using System;
+using System.Globalization;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Prima.Scheduler.Services
 {
     public class RunNotiferService : IDisposable
     {
         private const long Threshold = 1800000;
-        private const int CheckInterval = 300000;
+        private const int CheckInterval =
+#if DEBUG
+                    1000
+#else
+                    300000
+#endif
+            ;
 
         private readonly CancellationTokenSource _tokenSource;
         private readonly DbService _db;
@@ -35,16 +42,21 @@ namespace Prima.Scheduler.Services
 
         private async Task NotificationLoop(CancellationToken token)
         {
+            var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
+
             while (true)
             {
                 if (token.IsCancellationRequested)
                     token.ThrowIfCancellationRequested();
 
                 Log.Information("{RunCount} scheduled runs.", _db.Events.Count());
-                var runs = _db.Events.Where(e => DateTime.FromBinary(e.RunTime) > Util.PdtNow() && !e.Notified);
+                var runs = _db.Events.Where(e => DateTime.FromBinary(e.RunTime).AddHours(tzi.IsDaylightSavingTime(DateTime.Now) ? 0 : -1) > DateTime.Now && !e.Notified);
                 foreach (var run in runs)
                 {
-                    var timeDiff = (DateTime.FromBinary(run.RunTime) - Util.PdtNow()).TotalMilliseconds;
+                    var timeDiff = (DateTime.FromBinary(run.RunTime).AddHours(tzi.IsDaylightSavingTime(DateTime.Now) ? 0 : -1) - DateTime.Now).TotalMilliseconds;
+#if DEBUG
+                    Log.Debug(timeDiff.ToString(CultureInfo.InvariantCulture));
+#endif
 
                     if (timeDiff < Threshold)
                     {
@@ -57,19 +69,35 @@ namespace Prima.Scheduler.Services
 
                         Log.Information("Run {MessageId}, notifications started.", run.MessageId3);
 
-                        var guild = _client.Guilds.FirstOrDefault(g => g.Id == run.GuildId);
+                        var guild = _client.Guilds.FirstOrDefault(g =>
+                        {
+#if DEBUG
+                            Log.Debug("{Guild1}, {Guild2}", g.Id, run.GuildId);
+#endif
+                            return g.Id == run.GuildId;
+                        });
                         if (guild == null)
+                        {
+                            Log.Error("No guild found, skipping!");
                             continue;
-                        await guild.DownloadUsersAsync();
+                        }
+
+                        Log.Information("Redownloading user list.");
+                        await Task.WhenAny(guild.DownloadUsersAsync(), Task.Delay(5000, token));
 
                         var guildConfig = _db.Guilds.FirstOrDefault(gc => gc.Id == guild.Id);
-                        if (guildConfig == null) continue;
+                        if (guildConfig == null)
+                        {
+                            Log.Error("No guild configuration found, skipping!");
+                            continue;
+                        }
                         var commandChannel = guild.GetTextChannel(run.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.ScheduleInputChannel : guildConfig.CastrumScheduleInputChannel);
                         var outputChannel = guild.GetTextChannel(run.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.ScheduleOutputChannel : guildConfig.CastrumScheduleOutputChannel);
 
-                        var leader = guild.GetUser(run.LeaderId);
+                        var leader = (IGuildUser)guild.GetUser(run.LeaderId) ?? await _client.Rest.GetGuildUserAsync(guild.Id, run.LeaderId);
                         try
                         {
+                            Log.Information("Sending notification to leader.");
                             await leader.SendMessageAsync("The run you scheduled is set to begin in 30 minutes!\n\n" +
                                 $"Message link: <{(await commandChannel.GetMessageAsync(run.MessageId3)).GetJumpUrl()}>");
                         }
@@ -79,13 +107,14 @@ namespace Prima.Scheduler.Services
                             {
                                 var message = await commandChannel.SendMessageAsync($"{leader.Mention}, the run you scheduled is set to begin in 30 minutes!\n\n" +
                                     $"Message link: <{(await commandChannel.GetMessageAsync(run.MessageId3)).GetJumpUrl()}>");
-                                (new Task(async () => {
+                                (new Task(async () =>
+                                {
                                     await Task.Delay((int)Threshold, token);
                                     try
                                     {
                                         await message.DeleteAsync();
                                     }
-                                    catch (HttpException) {} // Message was already deleted.
+                                    catch (HttpException) { } // Message was already deleted.
                                 })).Start();
                             }
                             catch (HttpException)
@@ -138,13 +167,14 @@ namespace Prima.Scheduler.Services
                 {
                     var message = await commandChannel.SendMessageAsync($"{member.Mention}, the run you reacted to (hosted by {leader.Nickname ?? leader.Username}) is beginning in 30 minutes!\n\n" +
                         $"Message link: <{(await commandChannel.GetMessageAsync(@event.MessageId3)).GetJumpUrl()}>");
-                    (new Task(async () => {
+                    (new Task(async () =>
+                    {
                         await Task.Delay((int)Threshold, token);
                         try
                         {
                             await message.DeleteAsync();
                         }
-                        catch (HttpException) {} // Message was already deleted.
+                        catch (HttpException) { } // Message was already deleted.
                     })).Start();
                     success = true;
                 }

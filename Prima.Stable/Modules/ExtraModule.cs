@@ -61,7 +61,7 @@ namespace Prima.Extra.Modules
             // ReSharper disable once JoinDeclarationAndInitializer
             TimeZoneInfo tzi;
             var (customTzi, _) = Util.GetLocalizedTimeForUser(dbUser, DateTime.Now);
-            tzi = customTzi ?? TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
+            tzi = customTzi ?? TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
 
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
             var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;

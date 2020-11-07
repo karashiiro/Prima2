@@ -135,7 +135,7 @@ namespace Prima.Scheduler.Modules
 
                 @event.RunTime = runTime.ToBinary();
 
-                var tzi = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
+                var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
                 var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
                 var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
 
@@ -151,7 +151,7 @@ namespace Prima.Scheduler.Modules
                 {
                     var embed = new EmbedBuilder()
                         .WithTitle(
-                            $"Run scheduled by {leaderName} on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} (PDT) " +
+                            $"Run scheduled by {leaderName} on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({tzAbbr}) " +
                             $"[{runTime.DayOfWeek}, {(Month) runTime.Month} {runTime.Day}]!")
                         .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
                         .WithDescription(
@@ -175,7 +175,7 @@ namespace Prima.Scheduler.Modules
                 {
                     var embed = new EmbedBuilder()
                         .WithTitle(
-                            $"Run scheduled by {leaderName} on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} (PDT) " +
+                            $"Run scheduled by {leaderName} on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({tzAbbr}) " +
                             $"[{runTime.DayOfWeek}, {(Month)runTime.Month} {runTime.Day}]!")
                         .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
                         .WithDescription(
@@ -231,7 +231,7 @@ namespace Prima.Scheduler.Modules
                 when = when.AddMinutes(-when.Minute);
             }
 
-            if (when < Util.PdtNow())
+            if (when < DateTime.Now)
             {
                 await ReplyAsync($"{Context.User.Mention}, that time has already passed!");
                 return;
@@ -332,7 +332,7 @@ namespace Prima.Scheduler.Modules
                 currentRunTime = currentRunTime.AddMinutes(-currentRunTime.Minute);
             }
 
-            var @event = currentRunTime < Util.PdtNow() ? null : Db.Events.FirstOrDefault(run => run.RunTime == currentRunTime.ToBinary() && run.LeaderId == Context.User.Id);
+            var @event = currentRunTime < DateTime.Now ? null : Db.Events.FirstOrDefault(run => run.RunTime == currentRunTime.ToBinary() && run.LeaderId == Context.User.Id);
             if (@event == null)
             {
                 await ReplyAsync($"{Context.User.Mention}, you don't seem to have a run scheduled at that day and time (or that time has passed)!");
@@ -369,13 +369,13 @@ namespace Prima.Scheduler.Modules
                 return;
             }
 
-            if (newRunTime < Util.PdtNow())
+            if (newRunTime < DateTime.Now)
             {
                 await ReplyAsync($"{Context.User.Mention}, you can't schedule a run in the past!");
                 return;
             }
 
-            if (newRunTime > Util.PdtNow().AddDays(28))
+            if (newRunTime > DateTime.Now.AddDays(28))
             {
                 await ReplyAsync($"{Context.User.Mention}, runs are limited to being scheduled within the next 28 days.\n" +
                                  "Please choose an earlier day to schedule your run.");
@@ -384,7 +384,7 @@ namespace Prima.Scheduler.Modules
 
             if (Db.Events
                 .Where(sr => sr.MessageId3 != @event.MessageId3)
-                .Any(sr => newRunTime > Util.PdtNow() &&
+                .Any(sr => newRunTime > DateTime.Now &&
                                     Math.Abs((DateTime.FromBinary(sr.RunTime) - newRunTime).TotalMilliseconds) <
                                     Threshold))
             {
@@ -398,7 +398,7 @@ namespace Prima.Scheduler.Modules
             @event.RunTime = newRunTime.ToBinary();
             await Db.UpdateScheduledEvent(@event);
 
-            var tzi = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
+            var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
             var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
 
@@ -548,20 +548,20 @@ namespace Prima.Scheduler.Modules
                 runTime = runTime.AddMinutes(-runTime.Minute);
             }
 
-            if (runTime < Util.PdtNow())
+            if (runTime < DateTime.Now)
             {
                 await ReplyAsync($"{Context.User.Mention}, you can't schedule a run in the past!");
                 return false;
             }
 
-            if (runTime > Util.PdtNow().AddDays(28))
+            if (runTime > DateTime.Now.AddDays(28))
             {
                 await ReplyAsync($"{Context.User.Mention}, runs are limited to being scheduled within the next 28 days.\n" +
                                  "Please choose an earlier day to schedule your run.");
                 return false;
             }
 
-            if (Db.Events.Any(sr => runTime > Util.PdtNow() &&
+            if (Db.Events.Any(sr => runTime > DateTime.Now &&
                                     Math.Abs((DateTime.FromBinary(sr.RunTime) - runTime).TotalMilliseconds) <
                                     Threshold))
             {

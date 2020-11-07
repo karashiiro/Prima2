@@ -42,6 +42,12 @@ namespace Prima.Scheduler.Services
             _db = db;
             _client = client;
 
+            if (!File.Exists(GCredentialsFile))
+            {
+                Log.Error("Credentials file not found!");
+                return;
+            }
+
             using var stream = new FileStream(GCredentialsFile, FileMode.Open, FileAccess.Read);
             // ReSharper disable once AsyncConverter.AsyncWait
             var credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
@@ -63,6 +69,12 @@ namespace Prima.Scheduler.Services
 
         public async Task AddEvent(ScheduledEvent @event, string spreadsheetId)
         {
+            if (!File.Exists(GCredentialsFile))
+            {
+                Log.Error("Credentials file not found!");
+                return;
+            }
+
             var dateObj = DateTime.FromBinary(@event.RunTime);
 
             var constants = await GetSpreadsheet(spreadsheetId, "Constants!B1:B3");
@@ -255,6 +267,12 @@ namespace Prima.Scheduler.Services
 
         public async Task RemoveEvent(ScheduledEvent @event, string spreadsheetId)
         {
+            if (!File.Exists(GCredentialsFile))
+            {
+                Log.Error("Credentials file not found!");
+                return;
+            }
+
             var dateObj = DateTime.FromBinary(@event.RunTime);
 
             var constants = await GetSpreadsheet(spreadsheetId, "Constants!B1:B3");
@@ -448,6 +466,12 @@ namespace Prima.Scheduler.Services
 
         private Task<ValueRange> GetSpreadsheet(string spreadSheetId, string range)
         {
+            if (!File.Exists(GCredentialsFile))
+            {
+                Log.Error("Credentials file not found!");
+                return new Task<ValueRange>(() => new ValueRange());
+            }
+
             var request = _service.Spreadsheets.Values.Get(spreadSheetId, range);
             return request.ExecuteAsync();
         }
