@@ -4,10 +4,8 @@ using Prima.Attributes;
 using Prima.Resources;
 using Prima.Services;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Discord.Rest;
 using Color = Discord.Color;
 
 namespace Prima.Scheduler.Modules

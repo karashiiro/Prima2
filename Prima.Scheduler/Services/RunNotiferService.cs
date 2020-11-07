@@ -41,10 +41,10 @@ namespace Prima.Scheduler.Services
                     token.ThrowIfCancellationRequested();
 
                 Log.Information("{RunCount} scheduled runs.", _db.Events.Count());
-                var runs = _db.Events.Where(e => e.RunTime > DateTime.Now.ToBinary() && !e.Notified);
+                var runs = _db.Events.Where(e => DateTime.FromBinary(e.RunTime) > DateTime.UtcNow && !e.Notified);
                 foreach (var run in runs)
                 {
-                    var timeDiff = (DateTime.FromBinary(run.RunTime) - DateTime.Now).TotalMilliseconds;
+                    var timeDiff = (DateTime.FromBinary(run.RunTime) - DateTime.UtcNow).TotalMilliseconds;
 
                     if (timeDiff < Threshold)
                     {

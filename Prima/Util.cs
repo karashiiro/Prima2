@@ -60,11 +60,11 @@ namespace Prima
         public static DateTime GetDateTime(string keywords)
         {
             // All this is copied from Roo's scheduler (with minor tweaks)
-            var year = DateTime.Now.Year;
-            var month = DateTime.Now.Month;
-            var day = DateTime.Now.Day;
-            var hour = DateTime.Now.Hour;
-            var minute = DateTime.Now.Minute;
+            var year = DateTime.UtcNow.Year;
+            var month = DateTime.UtcNow.Month;
+            var day = DateTime.UtcNow.Day;
+            var hour = DateTime.UtcNow.Hour;
+            var minute = DateTime.UtcNow.Minute;
             var dayOfWeek = -1;
 
             //Check to see if it matches a recognized time format
@@ -166,7 +166,7 @@ namespace Prima
             } //foreach
             
             //Check to make sure everything got set here, and then...
-            var finalDate = new DateTime(year, month, day, hour, minute, 0);
+            var finalDate = new DateTime(year, month, day, hour, minute, 0, DateTimeKind.Utc);
             if (dayOfWeek >= 0)
             {
                 finalDate = finalDate.AddDays((dayOfWeek - (int)finalDate.DayOfWeek + 7) % 7);

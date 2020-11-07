@@ -137,7 +137,7 @@ namespace Prima.Scheduler.Modules
 
                 var tzi = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
                 var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
-                var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
+                var tzAbbr = tzi.IsDaylightSavingTime(DateTime.UtcNow) ? tzAbbrs.Daylight : tzAbbrs.Standard;
 
                 await Context.Channel.SendMessageAsync(
                     $"{Context.User.Mention} has just scheduled a run on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({tzAbbr})!\n" +
@@ -231,7 +231,7 @@ namespace Prima.Scheduler.Modules
                 when = when.AddMinutes(-when.Minute);
             }
 
-            if (when < DateTime.Now)
+            if (when < DateTime.UtcNow)
             {
                 await ReplyAsync($"{Context.User.Mention}, that time has already passed!");
                 return;
@@ -332,7 +332,7 @@ namespace Prima.Scheduler.Modules
                 currentRunTime = currentRunTime.AddMinutes(-currentRunTime.Minute);
             }
 
-            var @event = currentRunTime < DateTime.Now ? null : Db.Events.FirstOrDefault(run => run.RunTime == currentRunTime.ToBinary() && run.LeaderId == Context.User.Id);
+            var @event = currentRunTime < DateTime.UtcNow ? null : Db.Events.FirstOrDefault(run => run.RunTime == currentRunTime.ToBinary() && run.LeaderId == Context.User.Id);
             if (@event == null)
             {
                 await ReplyAsync($"{Context.User.Mention}, you don't seem to have a run scheduled at that day and time (or that time has passed)!");
@@ -369,13 +369,13 @@ namespace Prima.Scheduler.Modules
                 return;
             }
 
-            if (newRunTime < DateTime.Now)
+            if (newRunTime < DateTime.UtcNow)
             {
                 await ReplyAsync($"{Context.User.Mention}, you can't schedule a run in the past!");
                 return;
             }
 
-            if (newRunTime > DateTime.Now.AddDays(28))
+            if (newRunTime > DateTime.UtcNow.AddDays(28))
             {
                 await ReplyAsync($"{Context.User.Mention}, runs are limited to being scheduled within the next 28 days.\n" +
                                  "Please choose an earlier day to schedule your run.");
@@ -384,7 +384,7 @@ namespace Prima.Scheduler.Modules
 
             if (Db.Events
                 .Where(sr => sr.MessageId3 != @event.MessageId3)
-                .Any(sr => newRunTime > DateTime.Now &&
+                .Any(sr => newRunTime > DateTime.UtcNow &&
                                     Math.Abs((DateTime.FromBinary(sr.RunTime) - newRunTime).TotalMilliseconds) <
                                     Threshold))
             {
@@ -400,7 +400,7 @@ namespace Prima.Scheduler.Modules
 
             var tzi = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
-            var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
+            var tzAbbr = tzi.IsDaylightSavingTime(DateTime.UtcNow) ? tzAbbrs.Daylight : tzAbbrs.Standard;
 
             var leaderName = (Context.User as IGuildUser)?.Nickname ?? Context.User.Username;
             var embedChannel = Context.Guild.GetTextChannel(@event.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.ScheduleOutputChannel : guildConfig.CastrumScheduleOutputChannel);
@@ -548,20 +548,20 @@ namespace Prima.Scheduler.Modules
                 runTime = runTime.AddMinutes(-runTime.Minute);
             }
 
-            if (runTime < DateTime.Now)
+            if (runTime < DateTime.UtcNow)
             {
                 await ReplyAsync($"{Context.User.Mention}, you can't schedule a run in the past!");
                 return false;
             }
 
-            if (runTime > DateTime.Now.AddDays(28))
+            if (runTime > DateTime.UtcNow.AddDays(28))
             {
                 await ReplyAsync($"{Context.User.Mention}, runs are limited to being scheduled within the next 28 days.\n" +
                                  "Please choose an earlier day to schedule your run.");
                 return false;
             }
 
-            if (Db.Events.Any(sr => runTime > DateTime.Now &&
+            if (Db.Events.Any(sr => runTime > DateTime.UtcNow &&
                                     Math.Abs((DateTime.FromBinary(sr.RunTime) - runTime).TotalMilliseconds) <
                                     Threshold))
             {
