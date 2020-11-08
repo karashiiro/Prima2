@@ -50,10 +50,10 @@ namespace Prima.Scheduler.Services
                     token.ThrowIfCancellationRequested();
 
                 Log.Information("{RunCount} scheduled runs.", _db.Events.Count());
-                var runs = _db.Events.Where(e => DateTime.FromBinary(e.RunTime).AddHours(tzi.IsDaylightSavingTime(DateTime.Now) ? 0 : -1) > DateTime.Now && !e.Notified);
+                var runs = _db.Events.Where(e => DateTime.FromBinary(e.RunTime) > DateTime.Now && !e.Notified);
                 foreach (var run in runs)
                 {
-                    var timeDiff = (DateTime.FromBinary(run.RunTime).AddHours(tzi.IsDaylightSavingTime(DateTime.Now) ? 0 : -1) - DateTime.Now).TotalMilliseconds;
+                    var timeDiff = (DateTime.FromBinary(run.RunTime) - DateTime.Now).TotalMilliseconds;
 #if DEBUG
                     Log.Debug(timeDiff.ToString(CultureInfo.InvariantCulture));
 #endif
