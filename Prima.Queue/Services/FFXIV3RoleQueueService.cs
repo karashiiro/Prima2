@@ -67,10 +67,17 @@ namespace Prima.Queue.Services
             {
                 await Task.Delay(300 * second);
 
-                await AlertTimeouts(Queues["learning-and-frag-farm"]?.Timeout(10800, 0), "learning-and-frag-farm", 3);
-                await AlertTimeouts(Queues["av-and-ozma-prog"]?.Timeout(10800, 0), "av-and-ozma-prog", 3);
-                await AlertTimeouts(Queues["clears-and-farming"]?.Timeout(10800, 0), "clears-and-farming", 3);
-                await AlertTimeouts(Queues["lfg-castrum"]?.Timeout(10800, 900), "lfg-castrum", 1);
+                try
+                {
+                    await AlertTimeouts(Queues["learning-and-frag-farm"]?.Timeout(10800, 0), "learning-and-frag-farm", 3);
+                    await AlertTimeouts(Queues["av-and-ozma-prog"]?.Timeout(10800, 0), "av-and-ozma-prog", 3);
+                    await AlertTimeouts(Queues["clears-and-farming"]?.Timeout(10800, 0), "clears-and-farming", 3);
+                    await AlertTimeouts(Queues["lfg-castrum"]?.Timeout(10800, 900), "lfg-castrum", 1);
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, "Error in user timeout loop!");
+                }
 
                 Save();
             }
