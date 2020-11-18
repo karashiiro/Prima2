@@ -90,7 +90,7 @@ namespace Prima.Scheduler.Services
             tzi = customTzi ?? TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
             if (localizedRunTime != default)
             {
-                runTime = localizedRunTime;
+                runTime = localizedRunTime.AddHours(8);
             }
 
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
