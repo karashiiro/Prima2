@@ -92,6 +92,12 @@ namespace Prima.Queue.Services
             foreach (var uid in uids)
             {
                 var user = (IUser)_client.GetUser(uid) ?? await _client.Rest.GetUserAsync(uid);
+                if (user == null)
+                {
+                    Log.Warning("User {User} could not be fetched.", uid.ToString());
+                    continue;
+                }
+
                 Log.Information("Timed out {User} from queue {QueueName}.", user.ToString(), queueName);
                 try
                 {
