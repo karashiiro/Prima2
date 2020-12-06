@@ -453,7 +453,7 @@ namespace Prima.Scheduler.Modules
                 .Select(@event =>
                 {
                     var runTime = DateTime.FromBinary(@event.RunTime);
-                    return new { Value = @event, Hour = runTime.Hour * 2 + (runTime.Minute == 30 ? 1 : 0) };
+                    return new { Value = @event, Hour = runTime.Hour * 2 };
                 })
                 .GroupBy(kvp => kvp.Hour, kvp => kvp.Value)
                 .OrderBy(bucket => bucket.Key);
@@ -462,7 +462,7 @@ namespace Prima.Scheduler.Modules
             {
                 var hour = runBucket.Key / 2;
                 if (hour > 12) hour -= 12;
-                var label = $"{hour}:{(runBucket.Key % 2 == 0 ? "00" : "30")} {(runBucket.Key > 24 ? "PM" : "AM")}";
+                var label = $"{hour}:00 {(runBucket.Key > 24 ? "PM" : "AM")}";
                 embed = embed.AddField(label, $"{runBucket.Count()} runs (Average {Math.Round(runBucket.Aggregate(0, (i, @event) => i += @event.SubscribedUsers.Count) / (double)runBucket.Count(), 2)} users per run)");
             }
 
