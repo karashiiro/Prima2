@@ -271,7 +271,7 @@ namespace Prima.Queue.Modules
                                 Task.Delay(250).GetAwaiter().GetResult();
                                 user = Context.Client.Rest.GetGuildUserAsync(Context.Guild.Id, ft).Result;
                             }
-                            return user.Nickname ?? user.ToString() ?? "(Unable to retrive)";
+                            return user?.Nickname ?? user?.ToString() ?? "(Unable to retrieve)";
                         })
                         .Aggregate(string.Empty, (ws, nextUser) => ws + $"{nextUser}\n")));
         }
