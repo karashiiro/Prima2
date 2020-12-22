@@ -134,8 +134,14 @@ namespace Prima.Queue
             var queue = GetQueue(role);
 
             var index = GetPosition(uid, role) - 1;
-            Remove(uid, role);
-            queue.Insert(index, (uid, queueTime, true));
+            if (Remove(uid, role))
+            {
+                queue.Insert(index, (uid, queueTime, true));
+            }
+            else
+            {
+                queue.Insert(0, (uid, queueTime, true));
+            }
         }
 
         public (IEnumerable<ulong>, IEnumerable<ulong>) Timeout(double secondsBeforeNow, double gracePeriod)
