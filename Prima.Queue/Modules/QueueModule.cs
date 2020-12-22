@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Prima.Queue.Resources;
 using Serilog;
 
 namespace Prima.Queue.Modules
@@ -24,19 +25,6 @@ namespace Prima.Queue.Modules
 #endif
             ;
 
-        private static readonly IDictionary<ulong, string> LfgChannels = new Dictionary<ulong, string>
-        {
-            { 550708765490675773, "learning-and-frag-farm" },
-            { 550708833412972544, "av-and-ozma-prog" },
-            { 550708866497773599, "clears-and-farming" },
-            {
-#if DEBUG
-                766712049316265985
-#else
-                765994301850779709
-#endif
-                , "lfg-castrum" },
-            };
         private static readonly IList<(ulong, DateTime)> LfmPullTimeLog = new List<(ulong, DateTime)>();
         private static readonly string[] Elements = { "Earth", "Wind", "Water", "Fire", "Lightning", "Ice" };
 
@@ -48,10 +36,10 @@ namespace Prima.Queue.Modules
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task LfmAsync([Remainder] string args = "")
         {
-            if (!LfgChannels.ContainsKey(Context.Channel.Id)) // Don't use this outside of LFG channels
+            if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id)) // Don't use this outside of LFG channels
                 return;
 
-            var queueName = LfgChannels[Context.Channel.Id];
+            var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
             var leader = Context.Guild.GetUser(Context.User.Id);
@@ -417,10 +405,10 @@ namespace Prima.Queue.Modules
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task LfgAsync([Remainder] string args = "")
         {
-            if (!LfgChannels.ContainsKey(Context.Channel.Id))
+            if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id))
                 return;
 
-            var queueName = LfgChannels[Context.Channel.Id];
+            var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
             var roles = ParseRoles(args);
@@ -482,10 +470,10 @@ namespace Prima.Queue.Modules
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task LeaveQueueAsync([Remainder] string args = "")
         {
-            if (!LfgChannels.ContainsKey(Context.Channel.Id))
+            if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id))
                 return;
 
-            var queueName = LfgChannels[Context.Channel.Id];
+            var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
             var roles = ParseRoles(args);
@@ -570,10 +558,10 @@ namespace Prima.Queue.Modules
             }
 
             // Regular command body:
-            if (!LfgChannels.ContainsKey(Context.Channel.Id))
+            if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id))
                 return;
 
-            var queueName = LfgChannels[Context.Channel.Id];
+            var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
             QueueService.Save();
@@ -586,10 +574,10 @@ namespace Prima.Queue.Modules
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task QueueListAsync()
         {
-            if (!LfgChannels.ContainsKey(Context.Channel.Id))
+            if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id))
                 return;
 
-            var queueName = LfgChannels[Context.Channel.Id];
+            var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
             await ReplyAsync($"There are currently {queue.Count(FFXIVRole.Tank)} tank(s), {queue.Count(FFXIVRole.Healer)} healer(s), and {queue.Count(FFXIVRole.DPS)} DPS in the queue. (Unique players: {queue.CountDistinct()})");
@@ -660,7 +648,7 @@ namespace Prima.Queue.Modules
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task RefreshQueues()
         {
-            if (!LfgChannels.ContainsKey(Context.Channel.Id) && Context.Guild != null)
+            if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id) && Context.Guild != null)
                 return Task.CompletedTask;
 
             RefreshQueuesEx();
@@ -689,7 +677,7 @@ namespace Prima.Queue.Modules
         [Alias("queueshove")]
         public Task ShoveUser(IUser user, [Remainder] string args)
         {
-            if (!LfgChannels.ContainsKey(Context.Channel.Id))
+            if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id))
                 return ReplyAsync("This is not a queue channel!");
 
             const ulong mentor = 579916868035411968;
@@ -697,7 +685,7 @@ namespace Prima.Queue.Modules
             if (sender.Roles.All(r => r.Id != mentor) && !sender.GuildPermissions.KickMembers)
                 return Task.CompletedTask;
 
-            var queueName = LfgChannels[Context.Channel.Id];
+            var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
             var roles = ParseRoles(args);

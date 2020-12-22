@@ -7,6 +7,8 @@ using Discord;
 using Discord.Net;
 using Discord.WebSocket;
 using Newtonsoft.Json;
+using Prima.Queue.Resources;
+using Prima.Resources;
 using Serilog;
 
 namespace Prima.Queue.Services
@@ -89,12 +91,24 @@ namespace Prima.Queue.Services
 
             var (uids, almostUids) = sets.Value;
 
+            async Task SendToQueueChannel(ulong uid)
+            {
+                var channelId = QueueInfo.FlipDictionary()[queueName][0];
+                var channel = _client.GetChannel(channelId) as SocketTextChannel;
+                await channel.SendMessageAsync(
+                    $"<@{uid}>, you have been in the queue `#{queueName}` for {hours} hours and have been timed-out.\n" +
+                    "This is a measure in place to avoid leads having to pull numerous AFK users before your run.\n" +
+                    "Please rejoin the queue if you are still active.\n\n" +
+                    "(Failed to DM; hit fallback,)");
+            }
+
             foreach (var uid in uids)
             {
                 var user = (IUser)_client.GetUser(uid) ?? await _client.Rest.GetUserAsync(uid);
                 if (user == null)
                 {
-                    Log.Warning("User {User} could not be fetched.", uid.ToString());
+                    Log.Warning("User {User} could not be fetched, alerting in queue channel.", uid.ToString());
+                    await SendToQueueChannel(uid);
                     continue;
                 }
 
@@ -109,10 +123,12 @@ namespace Prima.Queue.Services
                 catch (HttpException e) when (e.DiscordCode == 50007)
                 {
                     Log.Warning("User {User} has disabled guild DMs.", user.ToString());
+                    await SendToQueueChannel(uid);
                 }
                 catch (HttpException e)
                 {
                     Log.Warning(e, "Messaging user {User} failed.", user.ToString());
+                    await SendToQueueChannel(uid);
                 }
             }
             
