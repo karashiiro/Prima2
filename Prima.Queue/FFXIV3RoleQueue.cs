@@ -34,8 +34,6 @@ namespace Prima.Queue
 
             if (queue.Count == 0) return null;
             var (user, _, _) = queue[0];
-            queue.RemoveAt(0);
-
             RemoveAll(user);
 
             return user;
