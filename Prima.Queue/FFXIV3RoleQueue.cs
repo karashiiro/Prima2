@@ -173,7 +173,7 @@ namespace Prima.Queue
                     .ToList();
             foreach (var (uid, dateTime, _) in _almostTimedOut)
             {
-                SetNotified(uid, dateTime, FFXIVRole.Tank);
+                SetNotified(uid, dateTime, role);
             }
             return _almostTimedOut.Select(tuple => tuple.Item1);
         }
