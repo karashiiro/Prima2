@@ -160,7 +160,7 @@ namespace Prima.Scheduler.Modules
                             $"{new string(@event.Description.Take(1650).ToArray())}{(@event.Description.Length > 1650 ? "..." : "")}\n\n" +
                             $"**Schedule Overview: <{guildConfig.BASpreadsheetLink}>**")
                         .WithFooter(footer => { footer.Text = "Localized time:"; })
-                        .WithTimestamp(runTime)
+                        .WithTimestamp(runTime.AddHours(tzi.BaseUtcOffset.Hours))
                         .Build();
 
                     var scheduleOutputChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
@@ -530,6 +530,13 @@ namespace Prima.Scheduler.Modules
             await Db.AddScheduledEvent(@event);
 
             await ReplyAsync($"success, new count: {Db.Events.Count()}");
+        }
+
+        [RequireOwner]
+        [Command("rebuildposts")]
+        public Task RebuildPosts()
+        {
+            return ScheduleUtils.RebuildPosts(Db, null, Context.Guild.Id);
         }
 
         private async Task<bool> RuntimeIsValid(DateTime runTime)
