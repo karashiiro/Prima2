@@ -28,15 +28,25 @@ namespace Prima.Scheduler
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
             var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
 
+            var postsUpdated = 0;
+
             var postsToUpdate = db.Events.Where(e => !e.Notified && e.RunKindCastrum == RunDisplayTypeCastrum.None);
             foreach (var run in postsToUpdate)
             {
                 var originalMessage = await textChannel.GetMessageAsync(run.MessageId3);
                 var imessage = await textChannel.GetMessageAsync(run.EmbedMessageId);
-                if (!(imessage is SocketUserMessage message)) continue;
+                if (!(imessage is SocketUserMessage message))
+                {
+                    Log.Information("Embed message {MessageId} is null; skipping...", run.EmbedMessageId);
+                    continue;
+                }
 
                 var leader = guild.GetUser(originalMessage.Author.Id);
-                if (leader == null) continue;
+                if (leader == null)
+                {
+                    Log.Information("Leader {UserId} is null; skipping...", originalMessage.Author.Id);
+                    continue;
+                }
                 var leaderName = leader.Nickname ?? leader.ToString();
 
                 var runTime = DateTime.FromBinary(run.RunTime);
@@ -52,10 +62,17 @@ namespace Prima.Scheduler
                     .WithTimestamp(runTime.AddHours(tzi.BaseUtcOffset.Hours))
                     .Build();
 
-                if (newEmbed == null) continue;
+                if (newEmbed == null)
+                {
+                    Log.Information("newEmbed is null; skipping...");
+                    continue;
+                }
                 await message.ModifyAsync(properties => properties.Embed = newEmbed);
                 Log.Information("Updated information for run {MessageId}", run.MessageId3);
+                postsUpdated++;
             }
+
+            Log.Information("Done; {PostsUpdated} messages updated.", postsUpdated);
         }
     }
 }
