@@ -20,8 +20,12 @@ namespace Prima.Scheduler
 
             var guild = client.GetGuild(guildId);
 
-            var channel = client.GetChannel(guildConfig.ScheduleOutputChannel);
-            if (!(channel is ITextChannel textChannel))
+            var iInChannel = client.GetChannel(guildConfig.ScheduleInputChannel);
+            if (!(iInChannel is ITextChannel inChannel))
+                return;
+
+            var iOutChannel = client.GetChannel(guildConfig.ScheduleOutputChannel);
+            if (!(iOutChannel is ITextChannel outChannel))
                 return;
 
             var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
@@ -33,11 +37,17 @@ namespace Prima.Scheduler
             var postsToUpdate = db.Events.Where(e => !e.Notified && e.RunKindCastrum == RunDisplayTypeCastrum.None);
             foreach (var run in postsToUpdate)
             {
-                var originalMessage = await textChannel.GetMessageAsync(run.MessageId3);
-                var imessage = await textChannel.GetMessageAsync(run.EmbedMessageId);
-                if (!(imessage is SocketUserMessage message))
+                var originalMessage = await inChannel.GetMessageAsync(run.MessageId3);
+                if (originalMessage == null)
                 {
-                    Log.Information("Embed message {MessageId} is null; skipping...", run.EmbedMessageId);
+                    Log.Information("Original message is invalid; skipping...");
+                    continue;
+                }
+
+                var iOutMessage = await outChannel.GetMessageAsync(run.EmbedMessageId);
+                if (!(iOutMessage is IUserMessage message))
+                {
+                    Log.Information("Embed message {MessageId} is invalid; skipping...", run.EmbedMessageId);
                     continue;
                 }
 
