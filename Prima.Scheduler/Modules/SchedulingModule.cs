@@ -160,7 +160,7 @@ namespace Prima.Scheduler.Modules
                             $"{new string(@event.Description.Take(1650).ToArray())}{(@event.Description.Length > 1650 ? "..." : "")}\n\n" +
                             $"**Schedule Overview: <{guildConfig.BASpreadsheetLink}>**")
                         .WithFooter(footer => { footer.Text = "Localized time:"; })
-                        .WithTimestamp(runTime.AddHours(tzi.BaseUtcOffset.Hours))
+                        .WithTimestamp(runTime.AddHours(-tzi.BaseUtcOffset.Hours))
                         .Build();
 
                     var scheduleOutputChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
@@ -184,7 +184,7 @@ namespace Prima.Scheduler.Modules
                             $"{new string(@event.Description.Take(1650).ToArray())}{(@event.Description.Length > 1650 ? "..." : "")}\n\n" +
                             $"**Schedule Overview: <{guildConfig.CastrumSpreadsheetLink}>**")
                         .WithFooter(footer => { footer.Text = "Localized time:"; })
-                        .WithTimestamp(runTime)
+                        .WithTimestamp(runTime.AddHours(-tzi.BaseUtcOffset.Hours))
                         .Build();
 
                     var scheduleOutputChannel = Context.Guild.GetTextChannel(guildConfig.CastrumScheduleOutputChannel);

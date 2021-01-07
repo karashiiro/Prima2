@@ -69,7 +69,7 @@ namespace Prima.Scheduler
                                      $"**{guild.GetUser(run.LeaderId).Mention}'s full message: {originalMessage.GetJumpUrl()}**\n\n" +
                                      $"{new string(run.Description.Take(1650).ToArray())}{(run.Description.Length > 1650 ? "..." : "")}\n\n" +
                                      $"**Schedule Overview: <{guildConfig.BASpreadsheetLink}>**")
-                    .WithTimestamp(runTime.AddHours(tzi.BaseUtcOffset.Hours))
+                    .WithTimestamp(runTime.AddHours(-tzi.BaseUtcOffset.Hours))
                     .Build();
 
                 if (newEmbed == null)
