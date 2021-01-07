@@ -536,7 +536,7 @@ namespace Prima.Scheduler.Modules
         [Command("rebuildposts")]
         public Task RebuildPosts()
         {
-            return ScheduleUtils.RebuildPosts(Db, null, Context.Guild.Id);
+            return ScheduleUtils.RebuildPosts(Db, Context.Client, Context.Guild.Id);
         }
 
         private async Task<bool> RuntimeIsValid(DateTime runTime)
