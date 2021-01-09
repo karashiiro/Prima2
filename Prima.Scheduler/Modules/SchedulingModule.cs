@@ -409,7 +409,7 @@ namespace Prima.Scheduler.Modules
             var embed = embedMessage.Embeds.FirstOrDefault()?.ToEmbedBuilder()
                 .WithTitle($"Run scheduled by {leaderName} on {newRunTime.DayOfWeek} at {newRunTime.ToShortTimeString()} ({tzAbbr}) " +
                            $"[{newRunTime.DayOfWeek}, {(Month)newRunTime.Month} {newRunTime.Day}]!")
-                .WithTimestamp(newRunTime)
+                .WithTimestamp(newRunTime.AddHours(-tzi.BaseUtcOffset.Hours))
                 .Build();
             await embedMessage.ModifyAsync(properties => properties.Embed = embed);
 
