@@ -171,30 +171,6 @@ namespace Prima.Scheduler.Modules
                     await Db.AddScheduledEvent(@event);
                     await Sheets.AddEvent(@event, guildConfig.BASpreadsheetId);
                 }
-                else if (Context.Channel.Id == guildConfig.CastrumScheduleInputChannel)
-                {
-                    var embed = new EmbedBuilder()
-                        .WithTitle(
-                            $"Run scheduled by {leaderName} on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({tzAbbr}) " +
-                            $"[{runTime.DayOfWeek}, {(Month)runTime.Month} {runTime.Day}]!")
-                        .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
-                        .WithDescription(
-                            "React to the :vibration_mode: on their message to be notified 30 minutes before it begins!\n\n" +
-                            $"**{Context.User.Mention}'s full message: {message.GetJumpUrl()}**\n\n" +
-                            $"{new string(@event.Description.Take(1650).ToArray())}{(@event.Description.Length > 1650 ? "..." : "")}\n\n" +
-                            $"**Schedule Overview: <{guildConfig.CastrumSpreadsheetLink}>**")
-                        .WithFooter(footer => { footer.Text = "Localized time:"; })
-                        .WithTimestamp(runTime.AddHours(-tzi.BaseUtcOffset.Hours))
-                        .Build();
-
-                    var scheduleOutputChannel = Context.Guild.GetTextChannel(guildConfig.CastrumScheduleOutputChannel);
-                    var embedMessage = await scheduleOutputChannel.SendMessageAsync(embed: embed);
-
-                    @event.EmbedMessageId = embedMessage.Id;
-
-                    await Db.AddScheduledEvent(@event);
-                    await Sheets.AddEvent(@event, guildConfig.CastrumSpreadsheetId);
-                }
             }
         }
 
