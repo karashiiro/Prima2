@@ -62,7 +62,7 @@ namespace Prima.Scheduler.Modules
                     .WithIconUrl(Context.User.GetAvatarUrl())
                     .WithName(Context.User.ToString()))
                 .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
-                .WithTimestamp(time)
+                .WithTimestamp(time.AddHours(-tzi.BaseUtcOffset.Hours))
                 .WithTitle($"Event scheduled by {Context.User} on {time.DayOfWeek} at {time.ToShortTimeString()} ({tzAbbr})!")
                 .WithDescription(description)
                 .Build());
