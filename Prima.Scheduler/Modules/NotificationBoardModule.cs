@@ -6,6 +6,7 @@ using Prima.Services;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using TimeZoneNames;
 using Color = Discord.Color;
 
 namespace Prima.Scheduler.Modules
@@ -50,6 +51,10 @@ namespace Prima.Scheduler.Modules
                 return;
             }
 
+            var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
+            var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
+            var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
+
             var color = RunDisplayTypes.GetColorCastrum();
             var outputChannel = Context.Guild.GetTextChannel(guildConfig.CastrumScheduleOutputChannel);
             var embed = await outputChannel.SendMessageAsync(embed: new EmbedBuilder()
@@ -58,7 +63,7 @@ namespace Prima.Scheduler.Modules
                     .WithName(Context.User.ToString()))
                 .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
                 .WithTimestamp(time)
-                .WithTitle($"Event scheduled by {Context.User} on {time.DayOfWeek} at {time.ToShortTimeString()} (PDT)!")
+                .WithTitle($"Event scheduled by {Context.User} on {time.DayOfWeek} at {time.ToShortTimeString()} ({tzAbbr})!")
                 .WithDescription(description)
                 .Build());
 
