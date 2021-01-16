@@ -197,17 +197,5 @@ namespace Prima.Extra.Modules
                 .Build();
             return ReplyAsync(embed: embed);
         }
-
-        [Command("star", RunMode = RunMode.Async)]
-        [Description("Shows the Bozjan Southern Front star mob guide.")]
-        [RateLimit(TimeSeconds = 1, Global = true)]
-        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task StarMobsAsync() => Util.PostImage(Http, Context, "https://i.imgur.com/muvBR1Z.png");
-
-        [Command("cluster", RunMode = RunMode.Async)]
-        [Description("Shows the Bozjan Southern Front cluster path guide.")]
-        [RateLimit(TimeSeconds = 1, Global = true)]
-        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task BozjaClustersAsync() => Util.PostImage(Http, Context, "https://i.imgur.com/WANkcVe.jpeg");
     }
 }
