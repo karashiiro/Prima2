@@ -1,4 +1,7 @@
-﻿using Discord;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Discord;
 using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
@@ -8,20 +11,14 @@ using Prima.Resources;
 using Prima.Services;
 using Prima.XIVAPI;
 using Serilog;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Prima.Stable.Services;
 using Color = Discord.Color;
-using static Prima.Stable.Services.LodestoneCharacterService;
 
-namespace Prima.Modules
+namespace Prima.Stable.Modules
 {
     [Name("Census")]
     public class CensusModule : ModuleBase<SocketCommandContext>
     {
         public DbService Db { get; set; }
-        public LodestoneCharacterService Lcs { get; set; }
         public XIVAPIService XIVAPI { get; set; }
 
         private const int MessageDeleteDelay = 10000;
@@ -119,22 +116,22 @@ namespace Prima.Modules
             {
                 if (parameters.Length == 3)
                 {
-                    foundCharacter = await Lcs.GetDiscordXIVUser(world, name, guildConfig.MinimumLevel);
+                    foundCharacter = await XIVAPI.GetDiscordXIVUser(world, name, guildConfig.MinimumLevel);
                 }
                 else
                 {
-                    foundCharacter = await Lcs.GetDiscordXIVUser(lodestoneId, guildConfig.MinimumLevel);
+                    foundCharacter = await XIVAPI.GetDiscordXIVUser(lodestoneId, guildConfig.MinimumLevel);
                     world = foundCharacter.World;
                 }
             }
-            catch (CharacterNotFoundException)
+            catch (XIVAPICharacterNotFoundException)
             {
                 var reply = await ReplyAsync($"{Context.User.Mention}, no character matching that name and world was found. Are you sure you typed your world name correctly?");
                 await Task.Delay(MessageDeleteDelay);
                 await reply.DeleteAsync();
                 return;
             }
-            catch (NotMatchingFilterException)
+            catch (XIVAPINotMatchingFilterException)
             {
                 var reply = await ReplyAsync($"This is a security notice. {Context.User.Mention}, that character does not have any combat jobs at Level {guildConfig.MinimumLevel}.");
                 await Task.Delay(MessageDeleteDelay);
@@ -251,9 +248,9 @@ namespace Prima.Modules
             DiscordXIVUser foundCharacter;
             try
             {
-                foundCharacter = await Lcs.GetDiscordXIVUser(world, name, 0);
+                foundCharacter = await XIVAPI.GetDiscordXIVUser(world, name, 0);
             }
-            catch (CharacterNotFoundException)
+            catch (XIVAPICharacterNotFoundException)
             {
                 var reply = await ReplyAsync($"{Context.User.Mention}, no character matching that name and world was found. Are you sure you typed your world name correctly?");
                 await Task.Delay(MessageDeleteDelay);
