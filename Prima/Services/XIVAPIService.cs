@@ -55,8 +55,12 @@ namespace Prima.Services
         public async Task<Character> GetCharacter(ulong id)
         {
             var xivapiResponse = await _http.GetAsync(new Uri($"{BASE_URL}/character/{id}?data=CJ,AC,MiMo"));
-            var dataObject = await xivapiResponse.Content.ReadAsStringAsync();
-            var parsedResponse = JObject.Parse(dataObject);
+            var parsedResponse = await ParseHttpContent(xivapiResponse.Content);
+            if (!parsedResponse["Results"].Children().Any())
+            {
+                xivapiResponse = await _http.GetAsync(new Uri($"{BASE_URL}/character/{id}?data=CJ,AC,MiMo"));
+                parsedResponse = await ParseHttpContent(xivapiResponse.Content);
+            }
             return new Character(parsedResponse);
         }
 
@@ -66,8 +70,7 @@ namespace Prima.Services
         public async Task<CharacterSearchResult> SearchCharacter(string world, string name, string defaultDataCenter = "")
         {
             var xivapiResponse = await _http.GetAsync(new Uri($"{BASE_URL}/character/search?name={name}&server={world}"));
-            var dataObject = await xivapiResponse.Content.ReadAsStringAsync();
-            var parsedResponse = JObject.Parse(dataObject);
+            var parsedResponse = await ParseHttpContent(xivapiResponse.Content);
             IList<JToken> results = parsedResponse["Results"].Children().ToList();
             foreach (var result in results)
             {
@@ -175,6 +178,12 @@ namespace Prima.Services
                 Name = character.XivapiResponse["Character"]["Name"].ToObject<string>(),
                 World = character.XivapiResponse["Character"]["Server"].ToObject<string>(),
             };
+        }
+
+        private async Task<JObject> ParseHttpContent(HttpContent content)
+        {
+            var data = await content.ReadAsStringAsync();
+            return JObject.Parse(data);
         }
     }
 }
