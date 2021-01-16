@@ -18,7 +18,7 @@ namespace Prima.Stable.Modules
         public IServiceProvider Services { get; set; }
 
         [Command("bahelp", RunMode = RunMode.Async)]
-        [Description("Shows help information for the BA image commands.")]
+        [Description("Shows help information for the extra BA commands.")]
         [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task BAHelpAsync()
