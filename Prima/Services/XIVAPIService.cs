@@ -56,11 +56,6 @@ namespace Prima.Services
         {
             var xivapiResponse = await _http.GetAsync(new Uri($"{BASE_URL}/character/{id}?data=CJ,AC,MiMo"));
             var parsedResponse = await ParseHttpContent(xivapiResponse.Content);
-            if (!parsedResponse["Results"].Children().Any())
-            {
-                xivapiResponse = await _http.GetAsync(new Uri($"{BASE_URL}/character/{id}?data=CJ,AC,MiMo"));
-                parsedResponse = await ParseHttpContent(xivapiResponse.Content);
-            }
             return new Character(parsedResponse);
         }
 
@@ -71,6 +66,12 @@ namespace Prima.Services
         {
             var xivapiResponse = await _http.GetAsync(new Uri($"{BASE_URL}/character/search?name={name}&server={world}"));
             var parsedResponse = await ParseHttpContent(xivapiResponse.Content);
+            if (!parsedResponse["Results"].Children().Any())
+            {
+                xivapiResponse = await _http.GetAsync(new Uri($"{BASE_URL}/character/search?name={name}&server={world}"));
+                parsedResponse = await ParseHttpContent(xivapiResponse.Content);
+            }
+
             IList<JToken> results = parsedResponse["Results"].Children().ToList();
             foreach (var result in results)
             {
