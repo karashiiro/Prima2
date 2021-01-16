@@ -1,23 +1,32 @@
 ﻿using System;
-using Prima;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Prima.Services;
 
 namespace TestBed
 {
     public static class Program
     {
-        public static void Main()
+        public static async Task Main()
         {
-            var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
+            var http = new HttpClient();
+            var xivapi = new XIVAPIService(http);
+            var exceptions = 0;
+            for (var i = 0; i < 20; i++)
+            {
+                Console.WriteLine("Request {0}/{1}...", i + 1, 20);
+                try
+                {
+                    await xivapi.SearchCharacter("Coeurl", "Karashiir Akhabila");
+                }
+                catch (XIVAPICharacterNotFoundException)
+                {
+                    exceptions++;
+                }
 
-            var now = DateTime.Now;
-            Console.WriteLine(now);
-
-            var runTime = DateTime.FromBinary(637408872000000000);
-            Console.WriteLine(runTime);
-
-            var timeDiffHours = (runTime
-                .AddDays(-6) - now).TotalHours;
-            Console.WriteLine("Time difference (hours): {0}", timeDiffHours);
+                await Task.Delay(5000);
+            }
+            Console.WriteLine("{0} exceptions caught", exceptions);
         }
     }
 }

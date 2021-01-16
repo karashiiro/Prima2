@@ -6,6 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Prima.Queue\Prima.Queue.csproj" />
+    <ProjectReference Include="..\Prima.Scheduler\Prima.Scheduler.csproj" />
+    <ProjectReference Include="..\Prima.Stable\Prima.Stable.csproj" />
     <ProjectReference Include="..\Prima\Prima.csproj" />
   </ItemGroup>
 
