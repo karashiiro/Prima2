@@ -21,7 +21,7 @@ namespace Prima.Stable.Modules
         [Description("Shows help information for the extra Bozja commands.")]
         [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task BAHelpAsync()
+        public async Task BozjaHelpAsync()
         {
             var commands = (await CommandManager.GetExecutableCommandsAsync(Context, Services))
                 .Where(command => command.Attributes.Any(attr => attr is DescriptionAttribute))
