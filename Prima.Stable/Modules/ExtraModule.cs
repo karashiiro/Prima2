@@ -198,65 +198,16 @@ namespace Prima.Extra.Modules
             return ReplyAsync(embed: embed);
         }
 
-        [Command("portals", RunMode = RunMode.Async)]
-        [Description("Shows the portal map.")]
-        [RateLimit(TimeSeconds = 30, Global = true)]
-        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task PortalsAsync() => PostImage("https://i.imgur.com/XcXACQp.png");
-
-        [Command("owain", RunMode = RunMode.Async)]
-        [Description("Shows the Owain guide.")]
-        [RateLimit(TimeSeconds = 120, Global = true)]
-        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task OwainAsync() => PostImage("https://i.imgur.com/ADwopqC.jpg");
-
-        [Command("art", RunMode = RunMode.Async)]
-        [Description("Shows the Art guide.")]
-        [RateLimit(TimeSeconds = 120, Global = true)]
-        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task ArtAsync() => PostImage("https://i.imgur.com/sehs4Tw.jpg");
-
-        [Command("raiden", RunMode = RunMode.Async)]
-        [Description("Shows the Raiden guide.")]
-        [RateLimit(TimeSeconds = 120, Global = true)]
-        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task RaidenAsync() => PostImage("https://cdn.discordapp.com/attachments/588592729609469952/721522493197779035/unknown.png");
-
-        [Command("av", RunMode = RunMode.Async)]
-        [Description("Shows the Absolute Virtue guide.")]
-        [RateLimit(TimeSeconds = 120, Global = true)]
-        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task AbsoluteVirtueAsync() => PostImage("https://cdn.discordapp.com/attachments/588592729609469952/721522585866731580/unknown.png");
-
-        [Command("ozma", RunMode = RunMode.Async)]
-        [Description("Shows the Ozma guide.")]
-        [RateLimit(TimeSeconds = 120, Global = true)]
-        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task OzmaAsync() => PostImage("https://cdn.discordapp.com/attachments/588592729609469952/721522648949063730/unknown.png");
-
-        [Command("accel", RunMode = RunMode.Async)]
-        [Description("Shows the Acceleration Bomb guide.")]
-        [RateLimit(TimeSeconds = 120, Global = true)]
-        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task AccelBombAsync() => PostImage("https://cdn.discordapp.com/attachments/550709673104375818/721527266441560064/unknown.png");
-
         [Command("star", RunMode = RunMode.Async)]
         [Description("Shows the Bozjan Southern Front star mob guide.")]
         [RateLimit(TimeSeconds = 1, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task StarMobsAsync() => PostImage("https://i.imgur.com/muvBR1Z.png");
+        public Task StarMobsAsync() => Util.PostImage(Http, Context, "https://i.imgur.com/muvBR1Z.png");
 
         [Command("cluster", RunMode = RunMode.Async)]
         [Description("Shows the Bozjan Southern Front cluster path guide.")]
         [RateLimit(TimeSeconds = 1, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task BozjaClustersAsync() => PostImage("https://i.imgur.com/WANkcVe.jpeg");
-
-        private async Task PostImage(string uri)
-        {
-            var fileName = uri.Split('/').Last();
-            var fileStream = await Http.GetStreamAsync(new Uri(uri));
-            await Context.Channel.SendFileAsync(fileStream, fileName);
-        }
+        public Task BozjaClustersAsync() => Util.PostImage(Http, Context, "https://i.imgur.com/WANkcVe.jpeg");
     }
 }
