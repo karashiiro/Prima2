@@ -70,8 +70,6 @@ namespace Prima.Stable.Services
                 };
             }
 
-            var message = imessage as SocketUserMessage;
-
             var prefix = config.Prefix == ' ' ? _db.Config.Prefix : config.Prefix;
 
             // Get executor of the deletion.
