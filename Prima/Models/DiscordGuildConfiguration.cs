@@ -10,9 +10,11 @@ namespace Prima.Models
     {
         [BsonId]
         [BsonRequired]
+        [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "<Pending>")]
         [SuppressMessage("Style", "IDE0044:Add readonly modifier", Justification = "<Pending>")]
-        [SuppressMessage("Code Quality", "IDE0051:Remove unused private members", Justification = "<Pending>")]
+#pragma warning disable 169
         private ObjectId _id;
+#pragma warning restore 169
 
         [BsonRequired]
         [BsonRepresentation(BsonType.String)]
