@@ -36,11 +36,15 @@ namespace Prima.Stable
                     guild.Name, channel.Name, analysisResult.Compound, message.Content);
                 if (outputChannel != null)
                 {
-                    await outputChannel.SendMessageAsync($"Negative message in <#{channel.Id}>: {message.GetJumpUrl()}\n" +
-                                                         $"Score: `{analysisResult.Compound}`\n" +
-                                                         "```\n" +
-                                                         $"{message.Content}\n" +
-                                                         "```");
+                    var embed = new EmbedBuilder()
+                        .WithDescription($"Negative message in <#{channel.Id}>: {message.GetJumpUrl()}\n" +
+                                         $"Score: `{analysisResult.Compound}`\n" +
+                                         "```\n" +
+                                         $"{message.Content}\n" +
+                                         "```")
+                        .WithColor(Color.LightOrange)
+                        .Build();
+                    await outputChannel.SendMessageAsync(embed: embed);
                 }
             }
         }
