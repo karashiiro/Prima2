@@ -72,7 +72,7 @@ namespace Prima.Services
             await _config.UpdateOneAsync(config => true, update);
         }
 
-        public async Task SetGuildConfigurationProperty(ulong guildId, string key, string value)
+        public async Task SetGuildConfigurationProperty<T>(ulong guildId, string key, T value)
         {
             await AddGuildIfAbsent(guildId);
             if (!new DiscordGuildConfiguration(0).HasFieldOrProperty(key))

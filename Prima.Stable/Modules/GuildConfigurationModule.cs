@@ -22,7 +22,14 @@ namespace Prima.Stable.Modules
         {
             try
             {
-                await Db.SetGuildConfigurationProperty(Context.Guild.Id, key, value);
+                if (double.TryParse(value, out var dValue))
+                {
+                    await Db.SetGuildConfigurationProperty(Context.Guild.Id, key, dValue);
+                }
+                else
+                {
+                    await Db.SetGuildConfigurationProperty(Context.Guild.Id, key, value);
+                }
                 await ReplyAsync("Property updated. Please verify your guild configuration change.");
             }
             catch (ArgumentException e)
