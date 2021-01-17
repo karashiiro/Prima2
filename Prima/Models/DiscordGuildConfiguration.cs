@@ -83,6 +83,8 @@ namespace Prima.Models
 
         public string CastrumSpreadsheetLink = string.Empty;
 
+        public double SentimentAnalysisThreshold = -0.5;
+
         public DiscordGuildConfiguration(ulong guildId) => Id = guildId;
     }
 }
