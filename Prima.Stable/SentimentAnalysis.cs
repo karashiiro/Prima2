@@ -36,11 +36,14 @@ namespace Prima.Stable
                     guild.Name, channel.Name, analysisResult.Compound, message.Content);
                 if (outputChannel != null)
                 {
+                    var messageContent = message.Content;
+                    if (messageContent.Length > 1800)
+                        messageContent = messageContent.Substring(0, 1800);
                     var embed = new EmbedBuilder()
                         .WithDescription($"Negative message in <#{channel.Id}>: {message.GetJumpUrl()}\n" +
                                          $"Score: `{analysisResult.Compound}`\n" +
                                          "```\n" +
-                                         $"{message.Content}\n" +
+                                         $"{messageContent}\n" +
                                          "```")
                         .WithColor(Color.LightOrange)
                         .Build();
