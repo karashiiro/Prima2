@@ -85,6 +85,9 @@ namespace Prima.Models
 
         public double SentimentAnalysisThreshold = -0.5;
 
+        [BsonRepresentation(BsonType.String)]
+        public ulong SentimentAnalysisChannel = 0;
+
         public DiscordGuildConfiguration(ulong guildId) => Id = guildId;
     }
 }

@@ -25,11 +25,23 @@ namespace Prima.Stable
             var guildConfig = db.Guilds.FirstOrDefault(g => g.Id == guild.Id);
             if (guildConfig == null) return;
 
+            var outputChannel = guild.GetTextChannel(guildConfig.SentimentAnalysisChannel);
+            if (outputChannel == null)
+                Log.Warning("Output channel for sentiment analysis not configured.");
+
             var analysisResult = sentiment.PolarityScores(message.Content);
             if (analysisResult.Compound < guildConfig.SentimentAnalysisThreshold)
             {
-                Log.Information("Negative message in {GuildName} (Score: {CompoundScore}): {Message}",
-                    guild.Name, analysisResult.Compound, message.Content);
+                Log.Information("Negative message in {GuildName} #{ChannelName} (Score: {CompoundScore}): {Message}",
+                    guild.Name, channel.Name, analysisResult.Compound, message.Content);
+                if (outputChannel != null)
+                {
+                    await outputChannel.SendMessageAsync($"Negative message in <#{channel.Id}>: {message.GetJumpUrl()}\n" +
+                                                         $"Score: `{analysisResult.Compound}`\n" +
+                                                         "```\n" +
+                                                         $"{message.Content}\n" +
+                                                         "```");
+                }
             }
         }
     }
