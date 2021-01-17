@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Prima.Services;
 using System.Net;
 using FFXIVWeather;
+using VaderSharp;
 
 namespace Prima.Stable
 {
@@ -27,6 +28,7 @@ namespace Prima.Stable
             var moderationEvents = services.GetRequiredService<ModerationEventService>();
             var censusEvents = services.GetRequiredService<CensusEventService>();
             var mute = services.GetRequiredService<MuteService>();
+            var sentiment = services.GetRequiredService<SentimentIntensityAnalyzer>();
 
             client.ReactionAdded += (message, channel, reaction) =>  ReactionReceived.HandlerAdd(db, message, channel, reaction);
             client.ReactionRemoved += (message, channel, reaction) => ReactionReceived.HandlerRemove(db, message, channel, reaction);
@@ -36,6 +38,7 @@ namespace Prima.Stable
 
             client.MessageReceived += message => MessageCache.Handler(db, message);
             client.MessageReceived += message => ExtraMessageReceived.Handler(client, message);
+            client.MessageReceived += message => SentimentAnalysis.Handler(sentiment, message);
 
             client.GuildMemberUpdated += censusEvents.GuildMemberUpdated;
 
@@ -56,8 +59,8 @@ namespace Prima.Stable
                 .AddSingleton<PresenceService>()
                 .AddSingleton<XIVAPIService>()
                 .AddSingleton<FFXIVWeatherService>()
-                .AddSingleton<MuteService>();
-            //sc.AddSingleton<UptimeMessageService>();
+                .AddSingleton<MuteService>()
+                .AddSingleton<SentimentIntensityAnalyzer>();
             return sc.BuildServiceProvider();
         }
     }
