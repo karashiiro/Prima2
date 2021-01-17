@@ -22,7 +22,7 @@ namespace Prima.Stable
             var guild = channel.Guild;
 
             var analysisResult = sentiment.PolarityScores(message.Content);
-            if (analysisResult.Compound < 0.5)
+            if (analysisResult.Compound < -0.5)
             {
                 Log.Information("Negative message in {GuildName} (Score: {CompoundScore}): {Message}",
                     guild.Name, analysisResult.Compound, message.Content);
