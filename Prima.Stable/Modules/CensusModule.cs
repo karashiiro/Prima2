@@ -175,7 +175,6 @@ namespace Prima.Stable.Modules
                 .WithDescription("Query matched!")
                 .WithThumbnailUrl(foundCharacter.Avatar)
                 .Build();
-            var finalReply = await ReplyAsync(embed: responseEmbed);
 
             // Set their nickname.
             try
@@ -191,9 +190,9 @@ namespace Prima.Stable.Modules
 
             Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
 
+            var finalReply = await Context.Channel.SendMessageAsync(embed: responseEmbed);
             await ActivateUser(member, guildConfig);
-            await Context.Message.DeleteAsync();
-
+            
             // Cleanup
             await Task.Delay(MessageDeleteDelay);
             await finalReply.DeleteAsync();
@@ -297,11 +296,10 @@ namespace Prima.Stable.Modules
 
             Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
 
+            var finalReply = await Context.Channel.SendMessageAsync(embed: responseEmbed);
             await ActivateUser(member, guildConfig);
-            await Context.Message.DeleteAsync();
 
             // Cleanup
-            var finalReply = await ReplyAsync(embed: responseEmbed);
             await Task.Delay(MessageDeleteDelay);
             await finalReply.DeleteAsync();
         }
