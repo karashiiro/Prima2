@@ -5,7 +5,7 @@ using Prima.Stable.Resources;
 
 namespace Prima.Stable.Services
 {
-    public class PresenceService
+    public class PresenceService : IDisposable
     {
         public int DelayTime { get; private set; }
 
@@ -17,18 +17,18 @@ namespace Prima.Stable.Services
         public PresenceService(DiscordSocketClient client)
         {
             _client = client;
-
             DelayTime = 900000;
+            Start();
         }
 
-        public void Start()
+        private void Start()
         {
             if (_active) return;
             _active = true;
             _runningTask = StartPresenceTask();
         }
 
-        public void Stop() => _active = false;
+        private void Stop() => _active = false;
 
         public void SetDelay(int ms)
         {
@@ -52,6 +52,11 @@ namespace Prima.Stable.Services
                 await NextPresence();
                 await Task.Delay(DelayTime);
             }
+        }
+
+        public void Dispose()
+        {
+            Stop();
         }
     }
 }
