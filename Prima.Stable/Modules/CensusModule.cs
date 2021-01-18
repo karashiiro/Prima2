@@ -23,6 +23,8 @@ namespace Prima.Stable.Modules
 
         private const int MessageDeleteDelay = 10000;
 
+        private const string MostRecentZoneRole = "Bozja";
+
         // Declare yourself as a character.
         [Command("iam", RunMode = RunMode.Async)]
         [Alias("i am")]
@@ -189,10 +191,8 @@ namespace Prima.Stable.Modules
 
             Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
 
-            var memberRole = guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
-            await member.AddRoleAsync(memberRole);
+            await ActivateUser(member, guildConfig);
             await Context.Message.DeleteAsync();
-            Log.Information("Added {DiscordName} to {Role}.", Context.User.ToString(), memberRole.Name);
 
             // Cleanup
             await Task.Delay(MessageDeleteDelay);
@@ -297,15 +297,27 @@ namespace Prima.Stable.Modules
 
             Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
 
-            var memberRole = guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
-            await member.AddRoleAsync(memberRole);
+            await ActivateUser(member, guildConfig);
             await Context.Message.DeleteAsync();
-            Log.Information("Added {DiscordName} to {Role}.", Context.User.ToString(), memberRole.Name);
 
             // Cleanup
             var finalReply = await ReplyAsync(embed: responseEmbed);
             await Task.Delay(MessageDeleteDelay);
             await finalReply.DeleteAsync();
+        }
+
+        private async Task ActivateUser(SocketGuildUser member, DiscordGuildConfiguration guildConfig)
+        {
+            var memberRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
+            await member.AddRoleAsync(memberRole);
+            Log.Information("Added {DiscordName} to {Role}.", Context.User.ToString(), memberRole.Name);
+            
+            var contentRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles[MostRecentZoneRole]));
+            if (contentRole != null)
+            {
+                await member.AddRoleAsync(contentRole);
+                Log.Information("Added {DiscordName} to {Role}.", Context.User.ToString(), contentRole.Name);
+            }
         }
 
         // Verify BA clear status.
