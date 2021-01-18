@@ -189,6 +189,11 @@ namespace Prima.Stable.Modules
 
             Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
 
+            var memberRole = guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
+            await member.AddRoleAsync(memberRole);
+            await Context.Message.DeleteAsync();
+            Log.Information("Added {DiscordName} to {Role}.", Context.User.ToString(), memberRole.Name);
+
             // Cleanup
             await Task.Delay(MessageDeleteDelay);
             await finalReply.DeleteAsync();
@@ -291,6 +296,11 @@ namespace Prima.Stable.Modules
             catch (HttpException) { }
 
             Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
+
+            var memberRole = guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
+            await member.AddRoleAsync(memberRole);
+            await Context.Message.DeleteAsync();
+            Log.Information("Added {DiscordName} to {Role}.", Context.User.ToString(), memberRole.Name);
 
             // Cleanup
             var finalReply = await ReplyAsync(embed: responseEmbed);
@@ -406,34 +416,6 @@ namespace Prima.Stable.Modules
                     World = character.XivapiResponse["Character"]["Server"].ToObject<string>(),
                 });
             }
-        }
-
-        // If they've registered, this adds them to the Member group.
-        [Command("agree")]
-        [RequireUserInDatabase]
-        public async Task AgreeAsync()
-        {
-            if (Context.Guild != null && Context.Guild.Id == SpecialGuilds.CrystalExploratoryMissions)
-            {
-                const ulong welcome = 573350095903260673;
-                const ulong botSpam = 551586630478331904;
-                if (Context.Channel.Id != welcome && Context.Channel.Id != botSpam)
-                {
-                    await Context.Message.DeleteAsync();
-                    var reply = await ReplyAsync("That command is disabled in this channel.");
-                    await Task.Delay(10000);
-                    await reply.DeleteAsync();
-                    return;
-                }
-            }
-
-            var guildConfig = Db.Guilds.Single(g => g.Id == Context.Guild.Id);
-            if (guildConfig.WelcomeChannel != Context.Channel.Id) return;
-            var user = Context.Guild.GetUser(Context.User.Id);
-            var memberRole = Context.Guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
-            await user.AddRoleAsync(memberRole);
-            await Context.Message.DeleteAsync();
-            Log.Information("Added {DiscordName} to {Role}.", Context.User.ToString(), memberRole.Name);
         }
 
         // Check who this user is.
