@@ -6,6 +6,7 @@ using Discord;
 using Discord.Commands;
 using Prima.Attributes;
 using Prima.Resources;
+using Prima.Services;
 using Color = Discord.Color;
 
 namespace Prima.Stable.Modules
@@ -14,6 +15,7 @@ namespace Prima.Stable.Modules
     public class BAExtraModule : ModuleBase<SocketCommandContext>
     {
         public CommandService CommandManager { get; set; }
+        public DbService Db { get; set; }
         public HttpClient Http { get; set; }
         public IServiceProvider Services { get; set; }
 
@@ -23,21 +25,40 @@ namespace Prima.Stable.Modules
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task BAHelpAsync()
         {
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            var prefix = Db.Config.Prefix;
+            if (guildConfig != null && guildConfig.Prefix != ' ')
+                prefix = guildConfig.Prefix;
+
             var commands = (await CommandManager.GetExecutableCommandsAsync(Context, Services))
                 .Where(command => command.Attributes.Any(attr => attr is DescriptionAttribute))
                 .Where(command => command.Module.Name == "BA Extra Module")
                 .Where(command => command.Name != "bahelp");
 
+            var baseCommandString = commands
+                .Select(c =>
+                {
+                    var descAttr = (DescriptionAttribute) c.Attributes.First(attr => attr is DescriptionAttribute);
+                    return $"`{prefix}{c.Name}` - {descAttr.Description}\n";
+                })
+                .Aggregate((text, next) => text + next);
+
+            var hostCommands = (await CommandManager.GetExecutableCommandsAsync(Context, Services))
+                .Where(command => command.Attributes.Any(attr => attr is DescriptionAttribute))
+                .Where(command => command.Module.Name == "Run");
+
+            var hostCommandString = hostCommands
+                .Select(c =>
+                {
+                    var descAttr = (DescriptionAttribute)c.Attributes.First(attr => attr is DescriptionAttribute);
+                    return $"`{prefix}{c.Name}` - {descAttr.Description}\n";
+                })
+                .Aggregate((text, next) => text + next);
+
             var embed = new EmbedBuilder()
                 .WithTitle("Useful Commands (Baldesion Arsenal)")
                 .WithColor(Color.LightOrange)
-                .WithDescription(commands
-                    .Select(c =>
-                    {
-                        var descAttr = (DescriptionAttribute)c.Attributes.First(attr => attr is DescriptionAttribute);
-                        return $"`~{c.Name}` - {descAttr.Description}\n";
-                    })
-                    .Aggregate((text, next) => text + next))
+                .WithDescription(baseCommandString + "==============================\n" + hostCommandString)
                 .Build();
 
             await ReplyAsync(embed: embed);

@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Prima.Models
 {
+    [BsonIgnoreExtraElements]
     public class DiscordGuildConfiguration
     {
         [BsonId]

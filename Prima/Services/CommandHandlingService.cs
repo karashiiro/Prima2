@@ -49,7 +49,6 @@ namespace Prima.Services
             await InitializeAsync();
         }
 
-        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "<Pending>")]
         public async Task MessageReceivedAsync(SocketMessage rawMessage)
         {
             // Ignore system messages, or messages from other bots
