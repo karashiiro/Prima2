@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using Discord;
 using Discord.Commands;
 using Prima.Attributes;
 using Prima.Resources;
+using Prima.Services;
 using Color = Discord.Color;
 
 namespace Prima.Stable.Modules
@@ -13,7 +15,7 @@ namespace Prima.Stable.Modules
     [Name("Castrum Extra Module")]
     public class CastrumExtraModule : ModuleBase<SocketCommandContext>
     {
-        public CommandService CommandManager { get; set; }
+        public DbService Db { get; set; }
         public HttpClient Http { get; set; }
         public IServiceProvider Services { get; set; }
 
@@ -23,21 +25,18 @@ namespace Prima.Stable.Modules
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task BozjaHelpAsync()
         {
-            var commands = (await CommandManager.GetExecutableCommandsAsync(Context, Services))
-                .Where(command => command.Attributes.Any(attr => attr is DescriptionAttribute))
-                .Where(command => command.Module.Name == "Castrum Extra Module")
-                .Where(command => command.Name != "bozhelp");
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            var prefix = Db.Config.Prefix.ToString();
+            if (guildConfig != null && guildConfig.Prefix != ' ')
+                prefix = guildConfig.Prefix.ToString();
+
+            var commands = await DiscordUtilities.GetFormattedCommandList(Services, Context, prefix,
+                "Castrum Extra Module", except: new List<string> {"bozhelp"});
 
             var embed = new EmbedBuilder()
                 .WithTitle("Useful Commands (Bozja)")
                 .WithColor(Color.LightOrange)
-                .WithDescription(commands
-                    .Select(c =>
-                    {
-                        var descAttr = (DescriptionAttribute)c.Attributes.First(attr => attr is DescriptionAttribute);
-                        return $"`~{c.Name}` - {descAttr.Description}\n";
-                    })
-                    .Aggregate((text, next) => text + next))
+                .WithDescription(commands)
                 .Build();
 
             await ReplyAsync(embed: embed);
@@ -47,12 +46,12 @@ namespace Prima.Stable.Modules
         [Description("Shows the Bozjan Southern Front star mob guide.")]
         [RateLimit(TimeSeconds = 1, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task StarMobsAsync() => Util.PostImage(Http, Context, "https://i.imgur.com/muvBR1Z.png");
+        public Task StarMobsAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/muvBR1Z.png");
 
         [Command("cluster", RunMode = RunMode.Async)]
         [Description("Shows the Bozjan Southern Front cluster path guide.")]
         [RateLimit(TimeSeconds = 1, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task BozjaClustersAsync() => Util.PostImage(Http, Context, "https://i.imgur.com/WANkcVe.jpeg");
+        public Task BozjaClustersAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/WANkcVe.jpeg");
     }
 }

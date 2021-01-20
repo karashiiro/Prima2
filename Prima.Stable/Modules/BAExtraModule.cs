@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Microsoft.Extensions.DependencyInjection;
 using Prima.Attributes;
 using Prima.Resources;
 using Prima.Services;
@@ -14,7 +16,6 @@ namespace Prima.Stable.Modules
     [Name("BA Extra Module")]
     public class BAExtraModule : ModuleBase<SocketCommandContext>
     {
-        public CommandService CommandManager { get; set; }
         public DbService Db { get; set; }
         public HttpClient Http { get; set; }
         public IServiceProvider Services { get; set; }
@@ -26,39 +27,17 @@ namespace Prima.Stable.Modules
         public async Task BAHelpAsync()
         {
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
-            var prefix = Db.Config.Prefix;
+            var prefix = Db.Config.Prefix.ToString();
             if (guildConfig != null && guildConfig.Prefix != ' ')
-                prefix = guildConfig.Prefix;
-
-            var commands = (await CommandManager.GetExecutableCommandsAsync(Context, Services))
-                .Where(command => command.Attributes.Any(attr => attr is DescriptionAttribute))
-                .Where(command => command.Module.Name == "BA Extra Module")
-                .Where(command => command.Name != "bahelp");
-
-            var baseCommandString = commands
-                .Select(c =>
-                {
-                    var descAttr = (DescriptionAttribute) c.Attributes.First(attr => attr is DescriptionAttribute);
-                    return $"`{prefix}{c.Name}` - {descAttr.Description}\n";
-                })
-                .Aggregate((text, next) => text + next);
-
-            var hostCommands = (await CommandManager.GetExecutableCommandsAsync(Context, Services))
-                .Where(command => command.Attributes.Any(attr => attr is DescriptionAttribute))
-                .Where(command => command.Module.Name == "Run");
-
-            var hostCommandString = hostCommands
-                .Select(c =>
-                {
-                    var descAttr = (DescriptionAttribute)c.Attributes.First(attr => attr is DescriptionAttribute);
-                    return $"`{prefix}{c.Name}` - {descAttr.Description}\n";
-                })
-                .Aggregate((text, next) => text + next);
+                prefix = guildConfig.Prefix.ToString();
+            
+            var baseCommands = await DiscordUtilities.GetFormattedCommandList(Services, Context, prefix, "BA Extra Module", except: new List<string>{"bahelp"});
+            var hostCommands = await DiscordUtilities.GetFormattedCommandList(Services, Context, prefix, "Run");
 
             var embed = new EmbedBuilder()
                 .WithTitle("Useful Commands (Baldesion Arsenal)")
                 .WithColor(Color.LightOrange)
-                .WithDescription(baseCommandString + "==============================\n" + hostCommandString)
+                .WithDescription(baseCommands + "==============================\n" + hostCommands)
                 .Build();
 
             await ReplyAsync(embed: embed);
@@ -68,42 +47,42 @@ namespace Prima.Stable.Modules
         [Description("Shows the portal map.")]
         [RateLimit(TimeSeconds = 30, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task PortalsAsync() => Util.PostImage(Http, Context, "https://i.imgur.com/XcXACQp.png");
+        public Task PortalsAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/XcXACQp.png");
 
         [Command("owain", RunMode = RunMode.Async)]
         [Description("Shows the Owain guide.")]
         [RateLimit(TimeSeconds = 120, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task OwainAsync() => Util.PostImage(Http, Context, "https://i.imgur.com/ADwopqC.jpg");
+        public Task OwainAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/ADwopqC.jpg");
 
         [Command("art", RunMode = RunMode.Async)]
         [Description("Shows the Art guide.")]
         [RateLimit(TimeSeconds = 120, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task ArtAsync() => Util.PostImage(Http, Context, "https://i.imgur.com/sehs4Tw.jpg");
+        public Task ArtAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/sehs4Tw.jpg");
 
         [Command("raiden", RunMode = RunMode.Async)]
         [Description("Shows the Raiden guide.")]
         [RateLimit(TimeSeconds = 120, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task RaidenAsync() => Util.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/588592729609469952/721522493197779035/unknown.png");
+        public Task RaidenAsync() => DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/588592729609469952/721522493197779035/unknown.png");
 
         [Command("av", RunMode = RunMode.Async)]
         [Description("Shows the Absolute Virtue guide.")]
         [RateLimit(TimeSeconds = 120, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task AbsoluteVirtueAsync() => Util.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/588592729609469952/721522585866731580/unknown.png");
+        public Task AbsoluteVirtueAsync() => DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/588592729609469952/721522585866731580/unknown.png");
 
         [Command("ozma", RunMode = RunMode.Async)]
         [Description("Shows the Ozma guide.")]
         [RateLimit(TimeSeconds = 120, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task OzmaAsync() => Util.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/588592729609469952/721522648949063730/unknown.png");
+        public Task OzmaAsync() => DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/588592729609469952/721522648949063730/unknown.png");
 
         [Command("accel", RunMode = RunMode.Async)]
         [Description("Shows the Acceleration Bomb guide.")]
         [RateLimit(TimeSeconds = 120, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task AccelBombAsync() => Util.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/550709673104375818/721527266441560064/unknown.png");
+        public Task AccelBombAsync() => DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/550709673104375818/721527266441560064/unknown.png");
     }
 }

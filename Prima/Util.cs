@@ -3,25 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Reflection;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Discord.Commands;
 using Prima.Models;
-using Serilog;
 
 namespace Prima
 {
     public static class Util
     {
-        public static async Task PostImage(HttpClient http, SocketCommandContext context, string uri)
-        {
-            var fileName = uri.Split('/').Last();
-            var fileStream = await http.GetStreamAsync(new Uri(uri));
-            await context.Channel.SendFileAsync(fileStream, fileName);
-        }
-
         /// <summary>
         /// Calculates an incremental average of <see cref="TimeSpan"/> objects.
         /// </summary>
