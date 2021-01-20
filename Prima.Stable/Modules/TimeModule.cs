@@ -16,6 +16,14 @@ namespace Prima.Stable.Modules
         [Description("Sets your own timezone for localized DMs and personal messages.")]
         public async Task SetTimezone([Remainder] string timezone)
         {
+            if (Context.Channel.Name == "welcome") // This should really be a precondition...
+            {
+                var r = await ReplyAsync("That command cannot be used in this channel.");
+                await Task.Delay(5000);
+                await r.DeleteAsync();
+                return;
+            }
+
             var dbUser = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id);
             if (dbUser == null)
             {
