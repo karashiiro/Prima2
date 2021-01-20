@@ -19,7 +19,7 @@ namespace Prima.Stable.Modules
             var dbUser = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id);
             if (dbUser == null)
             {
-                await ReplyAsync(Properties.Resources.UserNotInDatabaseError);
+                await ReplyAsync("Your database information seems to be missing. Please use `~iam` again to regenerate it.");
                 return;
             }
 
