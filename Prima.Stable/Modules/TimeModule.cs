@@ -27,7 +27,7 @@ namespace Prima.Stable.Modules
             var dbUser = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id);
             if (dbUser == null)
             {
-                await ReplyAsync("Your database information seems to be missing. Please use `~iam` again to regenerate it.");
+                await ReplyAsync("Your database information seems to be missing. Please use `~iam World FirstName LastName` again to regenerate it.");
                 return;
             }
 
