@@ -23,7 +23,10 @@ namespace Prima.Scheduler.Modules
         {
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
             if (guildConfig == null) return;
-            if (Context.Channel.Id != guildConfig.CastrumScheduleInputChannel) return;
+            if (Context.Channel.Id != guildConfig.CastrumScheduleInputChannel && Context.Channel.Id != guildConfig.DelubrumScheduleInputChannel) return;
+            var outputChannelId = Context.Channel.Id == guildConfig.CastrumScheduleInputChannel
+                ? guildConfig.CastrumScheduleOutputChannel
+                : guildConfig.DelubrumScheduleOutputChannel;
             var prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
 
             var splitIndex = args.IndexOf("|", StringComparison.Ordinal);
@@ -56,7 +59,7 @@ namespace Prima.Scheduler.Modules
             var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
 
             var color = RunDisplayTypes.GetColorCastrum();
-            var outputChannel = Context.Guild.GetTextChannel(guildConfig.CastrumScheduleOutputChannel);
+            var outputChannel = Context.Guild.GetTextChannel(outputChannelId);
             var embed = await outputChannel.SendMessageAsync(embed: new EmbedBuilder()
                 .WithAuthor(new EmbedAuthorBuilder()
                     .WithIconUrl(Context.User.GetAvatarUrl())
@@ -67,7 +70,7 @@ namespace Prima.Scheduler.Modules
                 .WithDescription(description)
                 .Build());
 
-            await ReplyAsync($"Event announced! Notification posted in <#{guildConfig.CastrumScheduleOutputChannel}>.");
+            await ReplyAsync($"Event announced! Notification posted in <#{outputChannelId}>.");
 
             var deleteTime = time.AddHours(1);
             var timeDiff = deleteTime - DateTime.Now;
@@ -83,9 +86,12 @@ namespace Prima.Scheduler.Modules
         {
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
             if (guildConfig == null) return;
-            if (Context.Channel.Id != guildConfig.CastrumScheduleInputChannel) return;
+            if (Context.Channel.Id != guildConfig.CastrumScheduleInputChannel && Context.Channel.Id != guildConfig.DelubrumScheduleInputChannel) return;
+            var outputChannelId = Context.Channel.Id == guildConfig.CastrumScheduleInputChannel
+                ? guildConfig.CastrumScheduleOutputChannel
+                : guildConfig.DelubrumScheduleOutputChannel;
 
-            var outputChannel = Context.Guild.GetTextChannel(guildConfig.CastrumScheduleOutputChannel);
+            var outputChannel = Context.Guild.GetTextChannel(outputChannelId);
 
             var username = Context.User.ToString();
             var time = Util.GetDateTime(args);
