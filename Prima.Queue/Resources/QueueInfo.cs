@@ -18,6 +18,7 @@ namespace Prima.Queue.Resources
                 765994301850779709
 #endif
                 , "lfg-castrum" },
+            { 803636739343908894, "lfg-delubrum" },
         };
 
         public static IDictionary<string, List<ulong>> FlipDictionary()

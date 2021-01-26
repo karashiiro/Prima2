@@ -75,6 +75,7 @@ namespace Prima.Queue.Services
                     await AlertTimeouts(Queues["av-and-ozma-prog"]?.Timeout(10800, 0), "av-and-ozma-prog", 3);
                     await AlertTimeouts(Queues["clears-and-farming"]?.Timeout(10800, 0), "clears-and-farming", 3);
                     await AlertTimeouts(Queues["lfg-castrum"]?.Timeout(10800, 900), "lfg-castrum", 1);
+                    await AlertTimeouts(Queues["lfg-delubrum"]?.Timeout(10800, 0), "lfg-delubrum", 3);
                 }
                 catch (Exception e)
                 {

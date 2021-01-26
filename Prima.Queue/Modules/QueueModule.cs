@@ -75,6 +75,7 @@ namespace Prima.Queue.Modules
                 765994301850779709
 #endif
                 => "Castrum Lacus Litore",
+                803636739343908894 => "Delubrum Reginae",
                 _ => throw new NotSupportedException(),
             };
 
@@ -658,6 +659,7 @@ namespace Prima.Queue.Modules
         private void RefreshQueuesEx()
         {
             QueueService.GetOrCreateQueue("lfg-castrum").Refresh(Context.User.Id);
+            QueueService.GetOrCreateQueue("lfg-delubrum").Refresh(Context.User.Id);
             Log.Information("User {User} refreshed queue times.", Context.User.ToString());
         }
 
