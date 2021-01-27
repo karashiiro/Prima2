@@ -6,6 +6,7 @@ using Prima.Services;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Serilog;
 using TimeZoneNames;
 using Color = Discord.Color;
 
@@ -17,6 +18,7 @@ namespace Prima.Scheduler.Modules
     {
         public DbService Db { get; set; } // Just used to get the guild's configured command prefix
 
+        // Note to self: The IDs for these channels don't get set correctly and I don't care to debug this, so I just set them in the database manually.
         [Command("announce", RunMode = RunMode.Async)]
         [Description("Announce an event. Usage: `~announce Time | Description`")]
         public async Task Announce([Remainder]string args)
