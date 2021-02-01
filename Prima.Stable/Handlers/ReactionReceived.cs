@@ -7,7 +7,7 @@ using Prima.Models;
 using Prima.Services;
 using Serilog;
 
-namespace Prima.Stable
+namespace Prima.Stable.Handlers
 {
     public static class ReactionReceived
     {

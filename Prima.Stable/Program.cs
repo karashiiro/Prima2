@@ -1,11 +1,12 @@
-﻿using Discord.WebSocket;
+﻿using System.Threading.Tasks;
+using System.Net;
+using Discord.WebSocket;
+using FFXIVWeather;
 using Microsoft.Extensions.DependencyInjection;
+using Prima.Services;
+using Prima.Stable.Handlers;
 using Prima.Stable.Services;
 using Serilog;
-using System.Threading.Tasks;
-using Prima.Services;
-using System.Net;
-using FFXIVWeather;
 
 namespace Prima.Stable
 {

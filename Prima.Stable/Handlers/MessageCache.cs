@@ -5,7 +5,7 @@ using Discord;
 using Prima.Models;
 using Prima.Services;
 
-namespace Prima.Stable
+namespace Prima.Stable.Handlers
 {
     public static class MessageCache
     {

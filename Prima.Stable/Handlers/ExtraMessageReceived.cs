@@ -2,7 +2,7 @@
 using Discord.WebSocket;
 using Prima.Resources;
 
-namespace Prima.Stable
+namespace Prima.Stable.Handlers
 {
     public static class ExtraMessageReceived
     {
