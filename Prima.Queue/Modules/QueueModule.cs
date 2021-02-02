@@ -449,7 +449,7 @@ namespace Prima.Queue.Modules
                     break;
             }
 
-            if (Context.Channel.Id != 765994301850779709)
+            if (Context.Channel.Id != 765994301850779709 && Context.Channel.Id != 803636739343908894)
             {
                 response += extra;
             }
