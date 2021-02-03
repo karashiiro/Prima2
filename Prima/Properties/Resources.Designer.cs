@@ -178,6 +178,24 @@ namespace Prima.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The achievement has been found, and you have been given the Cleared Delubrum (Savage) role..
+        /// </summary>
+        public static string LodestoneDRSSuccess1 {
+            get {
+                return ResourceManager.GetString("LodestoneDRSSuccess1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The achievement has been found, and you have been given the Savage Queen role..
+        /// </summary>
+        public static string LodestoneDRSSuccess2 {
+            get {
+                return ResourceManager.GetString("LodestoneDRSSuccess2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The mount or achievement was not found. Please ensure your achievements and mounts are public for this operation..
         /// </summary>
         public static string LodestoneMountAchievementNotFoundError {

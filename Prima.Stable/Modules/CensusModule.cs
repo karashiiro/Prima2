@@ -348,6 +348,8 @@ namespace Prima.Stable.Modules
             var cleared = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared"]));
             var clearedCastrumLacusLitore = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Castrum"]));
             var siegeLiege = guild.GetRole(ulong.Parse(guildConfig.Roles["Siege Liege"]));
+            var clearedDRS = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Delubrum Savage"]));
+            var savageQueen = guild.GetRole(ulong.Parse(guildConfig.Roles["Savage Queen"]));
 
             if (member.Roles.Contains(arsenalMaster) && member.Roles.Contains(siegeLiege))
             {
@@ -378,6 +380,8 @@ namespace Prima.Stable.Modules
             var hasMount = false;
             var hasCastrumLLAchievement1 = false;
             var hasCastrumLLAchievement2 = false;
+            var hasDRSAchievement1 = false;
+            var hasDRSAchievement2 = false;
             if (!character.GetBio().Contains(Context.User.Id.ToString()))
             {
                 await ReplyAsync(Properties.Resources.LodestoneDiscordIdNotFoundError);
@@ -404,6 +408,20 @@ namespace Prima.Stable.Modules
                 await ReplyAsync(Properties.Resources.LodestoneCastrumLLAchievement2Success);
                 hasCastrumLLAchievement2 = true;
             }
+            if (character.GetAchievements().Any(achievement => achievement.ID == 2765)) // Operation: Savage Queen of Swords I
+            {
+                Log.Information("Added role " + clearedDRS.Name);
+                await member.AddRoleAsync(clearedDRS);
+                await ReplyAsync(Properties.Resources.LodestoneDRSSuccess1);
+                hasDRSAchievement1 = true;
+            }
+            if (character.GetAchievements().Any(achievement => achievement.ID == 2767)) // Operation: Savage Queen of Swords III
+            {
+                Log.Information("Added role " + savageQueen.Name);
+                await member.AddRoleAsync(savageQueen);
+                await ReplyAsync(Properties.Resources.LodestoneDRSSuccess2);
+                hasDRSAchievement2 = true;
+            }
             if (character.GetMiMo().Any(mimo => mimo.Name == "Demi-Ozma"))
             {
                 Log.Information("Added role {Role} to {DiscordName}.", cleared.Name, Context.User.ToString());
@@ -412,7 +430,7 @@ namespace Prima.Stable.Modules
                 hasMount = true;
             }
 
-            if (!hasAchievement && !hasMount && !hasCastrumLLAchievement1 && !hasCastrumLLAchievement2)
+            if (!hasAchievement && !hasMount && !hasCastrumLLAchievement1 && !hasCastrumLLAchievement2 && !hasDRSAchievement1 && !hasDRSAchievement2)
                 await ReplyAsync(Properties.Resources.LodestoneMountAchievementNotFoundError);
 
             if (user == null)

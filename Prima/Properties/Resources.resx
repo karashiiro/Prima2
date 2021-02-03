@@ -156,6 +156,13 @@
   <data name="LodestoneDiscordIdNotFoundError" xml:space="preserve">
     <value>Discord ID not found. Please ensure your Discord ID is located somewhere in your character profile.</value>
   </data>
+  <data name="LodestoneDRSSuccess1" xml:space="preserve">
+    <value>The achievement has been found, and you have been given the Cleared Delubrum (Savage) role.</value>
+  </data>
+  <data name="LodestoneDRSSuccess2" xml:space="preserve">
+    <value>The achievement has been found, and you have been given the Savage Queen role.</value>
+    <comment>Should call this Killer Queen qwq</comment>
+  </data>
   <data name="LodestoneMountAchievementNotFoundError" xml:space="preserve">
     <value>The mount or achievement was not found. Please ensure your achievements and mounts are public for this operation.</value>
   </data>
