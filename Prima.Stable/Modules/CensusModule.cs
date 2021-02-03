@@ -109,8 +109,6 @@ namespace Prima.Stable.Modules
                 return;
             }
 
-            var cleared = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared"]));
-
             using var typing = Context.Channel.EnterTypingState();
 
             DiscordXIVUser foundCharacter;
@@ -135,7 +133,7 @@ namespace Prima.Stable.Modules
             }
             catch (XIVAPINotMatchingFilterException)
             {
-                var reply = await ReplyAsync($"This is a security notice. {Context.User.Mention}, that character does not have any combat jobs at Level {guildConfig.MinimumLevel}.");
+                var reply = await ReplyAsync($"{Context.User.Mention}, that character does not have any combat jobs at Level {guildConfig.MinimumLevel}.");
                 await Task.Delay(MessageDeleteDelay);
                 await reply.DeleteAsync();
                 return;
@@ -145,23 +143,6 @@ namespace Prima.Stable.Modules
                 return;
             }
 
-            // Add the user and character to the database.
-            try
-            {
-                // Update an existing file.
-                // If they're verified and aren't reregistering the same character, return.
-                if (cleared != null && member.Roles.Contains(cleared))
-                {
-                    if (Db.Users.Single(user => user.DiscordId == Context.User.Id).LodestoneId != foundCharacter.LodestoneId)
-                    {
-                        var message = await ReplyAsync($"{Context.User.Mention}, you have already verified your character.");
-                        await Task.Delay(5000);
-                        await message.DeleteAsync();
-                        return;
-                    }
-                }
-            }
-            catch (InvalidOperationException) { }
             var user = foundCharacter;
             foundCharacter.DiscordId = Context.User.Id;
             await Db.AddUser(user);
