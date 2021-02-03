@@ -36,6 +36,7 @@ namespace Prima.Stable
 
             client.MessageReceived += message => MessageCache.Handler(db, message);
             client.MessageReceived += message => ExtraMessageReceived.Handler(client, message);
+            client.MessageReceived += DRSStream.Handler;
 
             client.GuildMemberUpdated += censusEvents.GuildMemberUpdated;
 
