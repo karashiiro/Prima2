@@ -75,7 +75,8 @@ namespace Prima.Queue.Modules
                 765994301850779709
 #endif
                 => "Castrum Lacus Litore",
-                803636739343908894 => "Delubrum Reginae",
+                803636739343908894 => "Delubrum Reginae (Savage)",
+                806957742056013895 => "Delubrum Reginae (Normal)",
                 _ => throw new NotSupportedException(),
             };
 
@@ -448,8 +449,8 @@ namespace Prima.Queue.Modules
                     response += string.Format(queued3, enqueuedRolesList[0], enqueuedRolesList[1], enqueuedRolesList[2]) + GetPositionString(queue, Context.User.Id);
                     break;
             }
-
-            if (Context.Channel.Id != 765994301850779709 && Context.Channel.Id != 803636739343908894)
+            
+            if (!new ulong[] { 765994301850779709, 803636739343908894, 806957742056013895 }.Contains(Context.Channel.Id))
             {
                 response += extra;
             }
