@@ -6,7 +6,6 @@ using Prima.Services;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Serilog;
 using TimeZoneNames;
 using Color = Discord.Color;
 
@@ -25,10 +24,24 @@ namespace Prima.Scheduler.Modules
         {
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
             if (guildConfig == null) return;
-            if (Context.Channel.Id != guildConfig.CastrumScheduleInputChannel && Context.Channel.Id != guildConfig.DelubrumScheduleInputChannel) return;
-            var outputChannelId = Context.Channel.Id == guildConfig.CastrumScheduleInputChannel
-                ? guildConfig.CastrumScheduleOutputChannel
-                : guildConfig.DelubrumScheduleOutputChannel;
+            if (Context.Channel.Id != guildConfig.CastrumScheduleInputChannel
+                && Context.Channel.Id != guildConfig.DelubrumScheduleInputChannel
+                && Context.Channel.Id != guildConfig.DelubrumNormalScheduleInputChannel) return;
+
+            ulong outputChannelId;
+            if (Context.Channel.Id == guildConfig.CastrumScheduleInputChannel)
+            {
+                outputChannelId = guildConfig.CastrumScheduleOutputChannel;
+            }
+            else if (Context.Channel.Id == guildConfig.DelubrumScheduleInputChannel)
+            {
+                outputChannelId = guildConfig.DelubrumScheduleOutputChannel;
+            }
+            else // Context.Channel.Id == guildConfig.DelubrumNormalScheduleInputChannel
+            {
+                outputChannelId = guildConfig.DelubrumNormalScheduleOutputChannel;
+            }
+
             var prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
 
             var splitIndex = args.IndexOf("|", StringComparison.Ordinal);
@@ -88,10 +101,23 @@ namespace Prima.Scheduler.Modules
         {
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
             if (guildConfig == null) return;
-            if (Context.Channel.Id != guildConfig.CastrumScheduleInputChannel && Context.Channel.Id != guildConfig.DelubrumScheduleInputChannel) return;
-            var outputChannelId = Context.Channel.Id == guildConfig.CastrumScheduleInputChannel
-                ? guildConfig.CastrumScheduleOutputChannel
-                : guildConfig.DelubrumScheduleOutputChannel;
+            if (Context.Channel.Id != guildConfig.CastrumScheduleInputChannel
+                && Context.Channel.Id != guildConfig.DelubrumScheduleInputChannel
+                && Context.Channel.Id != guildConfig.DelubrumNormalScheduleInputChannel) return;
+
+            ulong outputChannelId;
+            if (Context.Channel.Id == guildConfig.CastrumScheduleInputChannel)
+            {
+                outputChannelId = guildConfig.CastrumScheduleOutputChannel;
+            }
+            else if (Context.Channel.Id == guildConfig.DelubrumScheduleInputChannel)
+            {
+                outputChannelId = guildConfig.DelubrumScheduleOutputChannel;
+            }
+            else // Context.Channel.Id == guildConfig.DelubrumNormalScheduleInputChannel
+            {
+                outputChannelId = guildConfig.DelubrumNormalScheduleOutputChannel;
+            }
 
             var outputChannel = Context.Guild.GetTextChannel(outputChannelId);
 
