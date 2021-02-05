@@ -98,24 +98,24 @@ namespace Prima.Queue
             if (dpsSpot != default)
             {
                 var index = GetPosition(uid, FFXIVRole.DPS) - 1;
+                Remove(uid, FFXIVRole.DPS);
                 _dpsQueue.Insert(index, (uid, DateTime.UtcNow, false));
-                _dpsQueue.RemoveAt(index + 1);
             }
 
             var healerSpot = _healerQueue.FirstOrDefault(tuple => tuple.Item1 == uid);
             if (healerSpot != default)
             {
                 var index = GetPosition(uid, FFXIVRole.Healer) - 1;
+                Remove(uid, FFXIVRole.Healer);
                 _healerQueue.Insert(index, (uid, DateTime.UtcNow, false));
-                _healerQueue.RemoveAt(index + 1);
             }
 
             var tankSpot = _tankQueue.FirstOrDefault(tuple => tuple.Item1 == uid);
             if (tankSpot != default)
             {
                 var index = GetPosition(uid, FFXIVRole.Tank) - 1;
+                Remove(uid, FFXIVRole.Tank);
                 _tankQueue.Insert(index, (uid, DateTime.UtcNow, false));
-                _tankQueue.RemoveAt(index + 1);
             }
         }
 
