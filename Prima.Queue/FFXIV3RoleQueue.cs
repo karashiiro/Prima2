@@ -98,24 +98,30 @@ namespace Prima.Queue
             if (dpsSpot != default)
             {
                 var index = GetPosition(uid, FFXIVRole.DPS) - 1;
-                Remove(uid, FFXIVRole.DPS);
-                _dpsQueue.Insert(index, (uid, DateTime.UtcNow, false));
+                if (Remove(uid, FFXIVRole.DPS))
+                    _dpsQueue.Insert(index, (uid, DateTime.UtcNow, false));
+                else
+                    _dpsQueue.Insert(0, (uid, DateTime.UtcNow, false));
             }
 
             var healerSpot = _healerQueue.FirstOrDefault(tuple => tuple.Item1 == uid);
             if (healerSpot != default)
             {
                 var index = GetPosition(uid, FFXIVRole.Healer) - 1;
-                Remove(uid, FFXIVRole.Healer);
-                _healerQueue.Insert(index, (uid, DateTime.UtcNow, false));
+                if (Remove(uid, FFXIVRole.Healer))
+                    _healerQueue.Insert(index, (uid, DateTime.UtcNow, false));
+                else
+                    _healerQueue.Insert(0, (uid, DateTime.UtcNow, false));
             }
 
             var tankSpot = _tankQueue.FirstOrDefault(tuple => tuple.Item1 == uid);
             if (tankSpot != default)
             {
                 var index = GetPosition(uid, FFXIVRole.Tank) - 1;
-                Remove(uid, FFXIVRole.Tank);
-                _tankQueue.Insert(index, (uid, DateTime.UtcNow, false));
+                if (Remove(uid, FFXIVRole.Tank))
+                    _tankQueue.Insert(index, (uid, DateTime.UtcNow, false));
+                else
+                    _tankQueue.Insert(0, (uid, DateTime.UtcNow, false));
             }
         }
 
@@ -133,13 +139,9 @@ namespace Prima.Queue
 
             var index = GetPosition(uid, role) - 1;
             if (Remove(uid, role))
-            {
                 queue.Insert(index, (uid, queueTime, true));
-            }
             else
-            {
                 queue.Insert(0, (uid, queueTime, true));
-            }
         }
 
         public (IEnumerable<ulong>, IEnumerable<ulong>) Timeout(double secondsBeforeNow, double gracePeriod)
