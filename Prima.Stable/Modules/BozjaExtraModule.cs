@@ -66,8 +66,16 @@ namespace Prima.Stable.Modules
             {
                 await member.SendMessageAsync(
                     "You have been given the Delubrum Roler role for 3 1/2 hours!\n" +
-                    "You can now use the commands `~addprogrole @User @Role` and `~removeprogrole @User @Role` to change " +
-                    "the progression roles of run members!");
+                    "You can now use the commands `~addprogrole @User Role Name` and `~removeprogrole @User Role Name` to change " +
+                    "the progression roles of run members!\n\n" +
+                    "Available roles:\n" +
+                    "▫️ Trinity Seeker Progression\n" +
+                    "▫️ Dahu Progression\n" +
+                    "▫️ Queen's Guard Progression\n" +
+                    "▫️ Phantom Progression\n" +
+                    "▫️ Trinity Avowed Progression\n" +
+                    "▫️ Stygimoloch Lord Progression\n" +
+                    "▫️ The Queen Progression\n");
             }
             catch (HttpException e) when (e.DiscordCode == 50007)
             {

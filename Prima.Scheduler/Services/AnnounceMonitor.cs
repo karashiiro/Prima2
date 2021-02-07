@@ -83,7 +83,15 @@ namespace Prima.Scheduler.Services
                                 await host.SendMessageAsync(
                                     "You have been given the Delubrum Host role for 3 1/2 hours!\n" +
                                     "You can now use the command `~setroler @User` to give them access to the progression " +
-                                    "role commands `~addprogrole @User @Role` and `~removeprogrole @User @Role`!");
+                                    "role commands `~addprogrole @User Role Name` and `~removeprogrole @User Role Name`!\n\n" +
+                                    "Available roles:\n" +
+                                    "▫️ Trinity Seeker Progression\n" +
+                                    "▫️ Dahu Progression\n" +
+                                    "▫️ Queen's Guard Progression\n" +
+                                    "▫️ Phantom Progression\n" +
+                                    "▫️ Trinity Avowed Progression\n" +
+                                    "▫️ Stygimoloch Lord Progression\n" +
+                                    "▫️ The Queen Progression\n");
                                 _ = Task.Run(async () =>
                                 {
                                     await Task.Delay(new TimeSpan(3, 30, 0), token);
