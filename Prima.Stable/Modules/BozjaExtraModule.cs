@@ -61,6 +61,7 @@ namespace Prima.Stable.Modules
             else
             {
                 await member.AddRoleAsync(role);
+                Log.Information("Role {RoleName} added to {User}.", role.Name, user.ToString());
                 await ReplyAsync($"Role added to {user.Mention}.");
             }
         }
@@ -82,6 +83,7 @@ namespace Prima.Stable.Modules
             else
             {
                 await member.RemoveRoleAsync(role);
+                Log.Information("Role {RoleName} removed from {User}.", role.Name, user.ToString());
                 await ReplyAsync($"Role removed from {user.Mention}.");
             }
         }
