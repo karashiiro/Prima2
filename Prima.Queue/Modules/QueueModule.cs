@@ -86,9 +86,30 @@ namespace Prima.Queue.Modules
             var wantedSum = dpsWanted + healersWanted + tanksWanted;
             if (wantedSum > 7)
             {
-                await ReplyAsync($"{Context.User.Mention}, you can't have more than 8 people in a party (including yourself) :eyes:");
-                await RemoveLfm(leader);
-                return;
+                if (Context.Channel.Id == 803636739343908894)
+                {
+                    if (wantedSum > 47)
+                    {
+                        await ReplyAsync($"{Context.User.Mention}, you can't have more than 48 people in a Delubrum Reginae (Savage) raid (including yourself) :eyes:");
+                        await RemoveLfm(leader);
+                        return;
+                    }
+                }
+                else if (Context.Channel.Id == 806957742056013895)
+                {
+                    if (wantedSum > 23)
+                    {
+                        await ReplyAsync($"{Context.User.Mention}, you can't have more than 24 people in a Delubrum Reginae (Normal) raid (including yourself) :eyes:");
+                        await RemoveLfm(leader);
+                        return;
+                    }
+                }
+                else
+                {
+                    await ReplyAsync($"{Context.User.Mention}, you can't have more than 8 people in a party (including yourself) :eyes:");
+                    await RemoveLfm(leader);
+                    return;
+                }
             }
             if (wantedSum <= 0)
             {
@@ -118,7 +139,7 @@ namespace Prima.Queue.Modules
                 const ulong castrumLfg = 765994301850779709;
 #endif
                 await leader.SendMessageAsync($"Your Party Finder password is {pw}.\n" +
-                    $"Please join {(Context.Channel.Id == castrumLfg ? "a Castrum" : "an elemental")} voice channel within the next 30 seconds to continue matching.\n" +
+                    $"Please join {(new ulong[] { castrumLfg, 803636739343908894, 806957742056013895 }.Contains(Context.Channel.Id) ? "a" : "an elemental")} voice channel within the next 30 seconds to continue matching.\n" +
                     "Create the listing in Party Finder now; matching will begin in 30 seconds.");
             }
             catch (HttpException)
