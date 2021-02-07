@@ -78,9 +78,19 @@ namespace Prima.Stable.Modules
         [Command("addprogrole", RunMode = RunMode.Async)]
         [Description("Adds a progression role to a user.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task AddDelubrumProgRoleAsync(IUser user, IRole role)
+        public async Task AddDelubrumProgRoleAsync(IUser user, [Remainder]string roleName)
         {
             if (Context.Guild == null) return;
+
+            roleName = roleName.Trim();
+            var role = Context.Guild.Roles.FirstOrDefault(r =>
+                string.Equals(r.Name.ToLowerInvariant(), roleName.ToLowerInvariant(), StringComparison.InvariantCultureIgnoreCase));
+            if (role == null)
+            {
+                await ReplyAsync($"{Context.User.Mention}, no role by that name exists! Make sure you spelled it correctly.");
+                return;
+            }
+
             if (!DelubrumProgressionRoles.Ids.Contains(role.Id)) return;
             if (!Context.User.HasRole(DelubrumProgressionRoles.Executor, Context)) return;
 
@@ -100,9 +110,19 @@ namespace Prima.Stable.Modules
         [Command("removeprogrole", RunMode = RunMode.Async)]
         [Description("Removes a progression role from a user.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task RemoveDelubrumProgRoleAsync(IUser user, IRole role)
+        public async Task RemoveDelubrumProgRoleAsync(IUser user, [Remainder]string roleName)
         {
             if (Context.Guild == null) return;
+
+            roleName = roleName.Trim();
+            var role = Context.Guild.Roles.FirstOrDefault(r =>
+                string.Equals(r.Name.ToLowerInvariant(), roleName.ToLowerInvariant(), StringComparison.InvariantCultureIgnoreCase));
+            if (role == null)
+            {
+                await ReplyAsync($"{Context.User.Mention}, no role by that name exists! Make sure you spelled it correctly.");
+                return;
+            }
+
             if (!DelubrumProgressionRoles.Ids.Contains(role.Id)) return;
             if (!Context.User.HasRole(DelubrumProgressionRoles.Executor, Context)) return;
 

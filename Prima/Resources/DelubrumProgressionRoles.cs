@@ -19,6 +19,9 @@ namespace Prima.Resources
             807854100204879902, // Trinity Avowed Progression
             807854094286979082, // Stygimoloch Lord Progression
             807854087092830259, // The Queen Progression
+#if DEBUG
+            807881434110754866, // debug delub role
+#endif
         };
     }
 }
