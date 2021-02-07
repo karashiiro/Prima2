@@ -12,8 +12,8 @@ using Color = Discord.Color;
 
 namespace Prima.Stable.Modules
 {
-    [Name("Castrum Extra Module")]
-    public class CastrumExtraModule : ModuleBase<SocketCommandContext>
+    [Name("Bozja Extra Module")]
+    public class BozjaExtraModule : ModuleBase<SocketCommandContext>
     {
         public DbService Db { get; set; }
         public HttpClient Http { get; set; }
@@ -31,7 +31,7 @@ namespace Prima.Stable.Modules
                 prefix = guildConfig.Prefix.ToString();
 
             var commands = await DiscordUtilities.GetFormattedCommandList(Services, Context, prefix,
-                "Castrum Extra Module", except: new List<string> {"bozhelp"});
+                "Bozja Extra Module", except: new List<string> {"bozhelp"});
 
             var embed = new EmbedBuilder()
                 .WithTitle("Useful Commands (Bozja)")
