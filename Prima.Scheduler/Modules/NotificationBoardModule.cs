@@ -85,7 +85,10 @@ namespace Prima.Scheduler.Modules
                 .WithDescription(description)
                 .Build());
 
-            await ReplyAsync($"Event announced! Notification posted in <#{outputChannelId}>.");
+            await embed.AddReactionAsync(new Emoji("📳"));
+
+            await ReplyAsync($"Event announced! Announcement posted in <#{outputChannelId}>. React to the announcement in " +
+                             $"<#{outputChannelId}> with :vibration_mode: to be notified before the event begins.");
 
             var deleteTime = time.AddHours(1);
             var timeDiff = deleteTime - DateTime.Now;
