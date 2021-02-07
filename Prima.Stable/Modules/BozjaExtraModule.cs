@@ -8,7 +8,6 @@ using Discord.Commands;
 using Prima.Attributes;
 using Prima.Resources;
 using Prima.Services;
-using Prima.Stable.Resources;
 using Serilog;
 using Color = Discord.Color;
 

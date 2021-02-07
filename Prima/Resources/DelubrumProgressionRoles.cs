@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Prima.Stable.Resources
+namespace Prima.Resources
 {
     public static class DelubrumProgressionRoles
     {
