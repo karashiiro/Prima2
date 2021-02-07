@@ -105,8 +105,6 @@ namespace Prima.Scheduler.Services
             {
                 foreach (var message in page)
                 {
-                    Log.Information("Scanning message {Message}", message.Id);
-
                     var embed = message.Embeds.FirstOrDefault(e => e.Type == EmbedType.Rich);
 
                     var nullableTimestamp = embed?.Timestamp;
