@@ -87,7 +87,11 @@ namespace Prima.Queue.Modules
             var wantedSum = dpsWanted + healersWanted + tanksWanted;
             if (wantedSum > 7)
             {
+#if DEBUG
+                if (Context.Channel.Id == 766712049316265985)
+#else
                 if (Context.Channel.Id == 803636739343908894)
+#endif
                 {
                     if (wantedSum > 47)
                     {
