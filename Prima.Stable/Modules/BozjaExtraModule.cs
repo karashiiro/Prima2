@@ -50,7 +50,13 @@ namespace Prima.Stable.Modules
         public async Task SetLeadAsync(IUser user)
         {
             if (!Context.User.HasRole(RunHostData.RoleId, Context))
+            {
+                var res = await ReplyAsync($"{Context.User.Mention}, you don't have a run host role!");
+                await Task.Delay(5000);
+                await res.DeleteAsync();
                 return;
+            }
+
             var role = Context.Guild.GetRole(DelubrumProgressionRoles.Executor);
             var member = Context.Guild.GetUser(user.Id);
             await member.AddRoleAsync(role);
@@ -87,12 +93,21 @@ namespace Prima.Stable.Modules
                 string.Equals(r.Name.ToLowerInvariant(), roleName.ToLowerInvariant(), StringComparison.InvariantCultureIgnoreCase));
             if (role == null)
             {
-                await ReplyAsync($"{Context.User.Mention}, no role by that name exists! Make sure you spelled it correctly.");
+                var res = await ReplyAsync($"{Context.User.Mention}, no role by that name exists! Make sure you spelled it correctly.");
+                await Task.Delay(5000);
+                await res.DeleteAsync();
                 return;
             }
 
             if (!DelubrumProgressionRoles.Ids.Contains(role.Id)) return;
-            if (!Context.User.HasRole(DelubrumProgressionRoles.Executor, Context)) return;
+
+            if (!Context.User.HasRole(DelubrumProgressionRoles.Executor, Context))
+            {
+                var res = await ReplyAsync($"{Context.User.Mention}, you don't have the roler role!");
+                await Task.Delay(5000);
+                await res.DeleteAsync();
+                return;
+            }
 
             var member = Context.Guild.GetUser(user.Id);
             if (member.HasRole(role, Context))
@@ -119,12 +134,21 @@ namespace Prima.Stable.Modules
                 string.Equals(r.Name.ToLowerInvariant(), roleName.ToLowerInvariant(), StringComparison.InvariantCultureIgnoreCase));
             if (role == null)
             {
-                await ReplyAsync($"{Context.User.Mention}, no role by that name exists! Make sure you spelled it correctly.");
+                var res = await ReplyAsync($"{Context.User.Mention}, no role by that name exists! Make sure you spelled it correctly.");
+                await Task.Delay(5000);
+                await res.DeleteAsync();
                 return;
             }
 
             if (!DelubrumProgressionRoles.Ids.Contains(role.Id)) return;
-            if (!Context.User.HasRole(DelubrumProgressionRoles.Executor, Context)) return;
+
+            if (!Context.User.HasRole(DelubrumProgressionRoles.Executor, Context))
+            {
+                var res = await ReplyAsync($"{Context.User.Mention}, you don't have the roler role!");
+                await Task.Delay(5000);
+                await res.DeleteAsync();
+                return;
+            }
 
             var member = Context.Guild.GetUser(user.Id);
             if (!member.HasRole(role, Context))
