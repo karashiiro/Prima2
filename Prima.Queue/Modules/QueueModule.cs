@@ -172,7 +172,8 @@ namespace Prima.Queue.Modules
             var vcName = "";
             if (leader.VoiceChannel == null ||
                 !leader.VoiceChannel.Category.Name.ToLowerInvariant().Contains("arsenal") ||
-                !leader.VoiceChannel.Category.Name.ToLowerInvariant().Contains("castrum"))
+                !leader.VoiceChannel.Category.Name.ToLowerInvariant().Contains("castrum") ||
+                !leader.VoiceChannel.Category.Name.ToLowerInvariant().Contains("delubrum"))
             {
                 inArsenalCategory = false;
             }
@@ -247,13 +248,28 @@ namespace Prima.Queue.Modules
                     .WithValue("The queues you selected ran out of members of the roles you asked for. Feel free to use the notifiable roles to fill the rest of your party."));
             }
 
-            var leaderEmbed = new EmbedBuilder()
-                .WithTitle("Invited the following people:")
-                .WithColor(new Discord.Color(0x00, 0x80, 0xFF))
-                .WithThumbnailUrl("https://i.imgur.com/aVEsVRb.png")
-                .WithFields(fields)
-                .Build();
-            await leader.SendMessageAsync(embed: leaderEmbed);
+            try
+            {
+                var leaderEmbed = new EmbedBuilder()
+                    .WithTitle("Invited the following people:")
+                    .WithColor(new Discord.Color(0x00, 0x80, 0xFF))
+                    .WithThumbnailUrl("https://i.imgur.com/aVEsVRb.png")
+                    .WithFields(fields)
+                    .Build();
+                await leader.SendMessageAsync(embed: leaderEmbed);
+            }
+            catch
+            {
+                var leaderEmbedBuilder = new EmbedBuilder()
+                    .WithTitle("Invited the following people:")
+                    .WithColor(new Discord.Color(0x00, 0x80, 0xFF))
+                    .WithThumbnailUrl("https://i.imgur.com/aVEsVRb.png");
+                foreach (var field in fields)
+                {
+                    var lebCopy = leaderEmbedBuilder.WithFields(field);
+                    await leader.SendMessageAsync(embed: lebCopy.Build());
+                }
+            }
 
             // Send member embeds
             var userParams = new LfgEmbedParameters
