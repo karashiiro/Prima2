@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Prima.Attributes;
 
@@ -54,6 +55,16 @@ namespace Prima
         public static bool HasRole(this IUser user, IRole role, SocketCommandContext context)
         {
             return user.HasRole(role.Id, context);
+        }
+
+        public static bool HasRole(this SocketGuildUser member, ulong roleId)
+        {
+            return member.Roles.FirstOrDefault(r => r.Id == roleId) != null;
+        }
+
+        public static bool HasRole(this SocketGuildUser member, IRole role)
+        {
+            return member.HasRole(role.Id);
         }
     }
 }
