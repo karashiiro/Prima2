@@ -683,7 +683,7 @@ namespace Prima.Queue.Modules
                 return Task.CompletedTask;
 
             RefreshQueuesEx();
-            return ReplyAsync($"{Context.User.Mention}, your timeouts in the Castrum queues have been refreshed!");
+            return ReplyAsync($"{Context.User.Mention}, your timeouts in the Bozja queues have been refreshed!");
         }
 
         private void RefreshQueuesEx()
