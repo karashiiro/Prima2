@@ -54,7 +54,8 @@ namespace Prima.Scheduler.Services
                     await host.SendMessageAsync(
                         "You have been given the Delubrum Host role for 3 1/2 hours!\n" +
                         "You can now use the command `~setroler @User` to give them access to the progression " +
-                        "role commands `~addprogrole @User Role Name` and `~removeprogrole @User Role Name`!\n\n" +
+                        "role commands `~addprogrole @User Role Name` and `~removeprogrole @User Role Name`!\n" +
+                        "You can also modify multiple users at once by using `~addprogrole @User1 @User2 Role Name`.\n\n" +
                         "Available roles:\n" +
                         "▫️ Trinity Seeker Progression\n" +
                         "▫️ Dahu Progression\n" +

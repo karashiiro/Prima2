@@ -67,7 +67,8 @@ namespace Prima.Stable.Modules
                 await member.SendMessageAsync(
                     "You have been given the Delubrum Roler role for 3 1/2 hours!\n" +
                     "You can now use the commands `~addprogrole @User Role Name` and `~removeprogrole @User Role Name` to change " +
-                    "the progression roles of run members!\n\n" +
+                    "the progression roles of run members!\n" +
+                    "You can also modify multiple users at once by using `~addprogrole @User1 @User2 Role Name`.\n\n" +
                     "Available roles:\n" +
                     "▫️ Trinity Seeker Progression\n" +
                     "▫️ Dahu Progression\n" +
