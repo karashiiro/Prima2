@@ -9,6 +9,7 @@ using Prima.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Prima.Queue.Resources;
 using Serilog;
@@ -82,7 +83,7 @@ namespace Prima.Queue.Modules
 
             await AddLfm(leader);
 
-            var (dpsWanted, healersWanted, tanksWanted) = GetDesiredRoleCounts(fixedRoles);
+            var (dpsWanted, healersWanted, tanksWanted) = QueueUtil.GetDesiredRoleCounts(fixedRoles);
             var wantedSum = dpsWanted + healersWanted + tanksWanted;
             if (wantedSum > 7)
             {
@@ -408,19 +409,6 @@ namespace Prima.Queue.Modules
         {
             // Just a dummy command to put it in the help list; the actual command is in the LFM command.
             return Task.CompletedTask;
-        }
-
-        private static (int, int, int) GetDesiredRoleCounts(string input)
-        {
-            input = " " + input;
-            var d = input.IndexOf('d');
-            var h = input.IndexOf('h');
-            var t = input.IndexOf('t');
-            int countd = 0, counth = 0, countt = 0;
-            if (d != -1) int.TryParse("" + input[d - 1], out countd);
-            if (h != -1) int.TryParse("" + input[h - 1], out counth);
-            if (t != -1) int.TryParse("" + input[t - 1], out countt);
-            return (countd, counth, countt);
         }
 
         [Command("lfg", RunMode = RunMode.Async)]
