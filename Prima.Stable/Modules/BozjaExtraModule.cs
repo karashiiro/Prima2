@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.Net;
 using Prima.Attributes;
 using Prima.Resources;
 using Prima.Services;
@@ -48,15 +49,25 @@ namespace Prima.Stable.Modules
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task SetLeadAsync(IUser user)
         {
-            if (!Context.User.HasRole(762072215356702741, Context))
+            if (!Context.User.HasRole(RunHostData.RoleId, Context))
                 return;
             var role = Context.Guild.GetRole(DelubrumProgressionRoles.Executor);
             var member = Context.Guild.GetUser(user.Id);
             await member.AddRoleAsync(role);
-            await member.SendMessageAsync(
-                "You have been given the Delubrum Roler role for 3 1/2 hours!\n" +
-                "You can now use the commands `~addprogrole @User @Role` and `~removeprogrole @User @Role` to change " +
-                "the progression roles of run members!");
+            await ReplyAsync($"Added roler role to {member.Mention}!");
+
+            try
+            {
+                await member.SendMessageAsync(
+                    "You have been given the Delubrum Roler role for 3 1/2 hours!\n" +
+                    "You can now use the commands `~addprogrole @User @Role` and `~removeprogrole @User @Role` to change " +
+                    "the progression roles of run members!");
+            }
+            catch (HttpException e) when (e.DiscordCode == 50007)
+            {
+                Log.Warning("Can't send direct message to user {User}.", member.ToString());
+            }
+
             _ = Task.Run(async () =>
             {
                 await Task.Delay(new TimeSpan(3, 30, 0));

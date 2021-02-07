@@ -4,7 +4,11 @@ namespace Prima.Resources
 {
     public static class DelubrumProgressionRoles
     {
-        public const ulong Executor = 807860249775702066; // Delubrum Roler
+#if DEBUG
+        public const ulong Executor = 807879650893889536; // Delubrum Roler
+#else
+        public const ulong Executor = 807860249775702066;
+#endif
 
         public static readonly IList<ulong> Ids = new List<ulong>
         {

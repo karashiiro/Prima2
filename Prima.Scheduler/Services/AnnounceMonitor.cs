@@ -43,7 +43,7 @@ namespace Prima.Scheduler.Services
             var channel = guild.GetTextChannel(guildConfig.DelubrumScheduleOutputChannel);
 
             var executor = guild.GetRole(DelubrumProgressionRoles.Executor);
-            var currentHost = guild.GetRole(762072215356702741);
+            var currentHost = guild.GetRole(RunHostData.RoleId);
 
             var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
 
