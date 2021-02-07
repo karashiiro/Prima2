@@ -39,16 +39,15 @@ namespace Prima.Scheduler.Services
                 return;
             }
 
-            var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
-
             while (!token.IsCancellationRequested)
             {
                 var guild = _client.GetGuild(guildConfig.Id);
-                if (guild == null) continue;
-
-                Log.Information("Scanning announcements in channel {Channel}.", guildConfig.DelubrumScheduleOutputChannel);
-                var channel = guild.GetTextChannel(guildConfig.DelubrumScheduleOutputChannel);
-                if (channel == null) continue;
+                var channel = guild?.GetTextChannel(guildConfig.DelubrumScheduleOutputChannel);
+                if (channel == null)
+                {
+                    await Task.Delay(3000);
+                    continue;
+                }
 
                 var executor = guild.GetRole(DelubrumProgressionRoles.Executor);
                 var currentHost = guild.GetRole(RunHostData.RoleId);
@@ -57,17 +56,19 @@ namespace Prima.Scheduler.Services
                 {
                     foreach (var message in page)
                     {
+                        Log.Information("Scanning message {Message}", message.Id);
+
                         var embed = message.Embeds.FirstOrDefault(e => e.Type == EmbedType.Rich);
 
                         var nullableTimestamp = embed?.Timestamp;
                         if (!nullableTimestamp.HasValue) continue;
 
-                        var timestamp = nullableTimestamp.Value.AddHours(-tzi.BaseUtcOffset.Hours);
-#if DEBUG
-                        Log.Information("{CurrentTimestamp} {Timestamp}", DateTimeOffset.Now.ToString(), timestamp.ToString());
-#endif
-                        if (timestamp.AddMinutes(30) >= DateTimeOffset.Now && embed.Author.HasValue)
+                        var timestamp = nullableTimestamp.Value;
+                        Log.Information("Current timestamp: {CurrentTimestamp}; announcement timestamp: {Timestamp}", DateTimeOffset.Now.ToString(), timestamp.ToString());
+                        if (timestamp.AddMinutes(30) <= DateTimeOffset.Now && embed.Author.HasValue)
                         {
+                            Log.Information("Run matched, assigning roles...");
+
                             var host = guild.Users.FirstOrDefault(u => u.ToString() == embed.Author.Value.Name);
                             if (host == null)
                             {
