@@ -133,9 +133,10 @@ namespace Prima.Scheduler.Services
                             host = guild.Users.FirstOrDefault(u => u.ToString() == embed.Author.Value.Name);
                         }
 
+                        var messageReferenceCopy = message;
                         try
                         {
-                            await onMatch(host, message, embed);
+                            await onMatch(host, messageReferenceCopy, embed);
                         }
                         catch (Exception e)
                         {
