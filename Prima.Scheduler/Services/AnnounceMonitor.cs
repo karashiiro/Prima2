@@ -63,16 +63,6 @@ namespace Prima.Scheduler.Services
                         "▫️ Trinity Avowed Progression\n" +
                         "▫️ Stygimoloch Lord Progression\n" +
                         "▫️ The Queen Progression");
-
-                    _ = Task.Run(async () =>
-                    {
-                        await Task.Delay(new TimeSpan(0, 30, 0), token);
-                        try
-                        {
-                            await embedMessage.DeleteAsync();
-                        }
-                        catch { /* message already deleted */ }
-                    }, token);
                 }, token);
 
                 var drnCheck = CheckRuns(guild, guildConfig.DelubrumNormalScheduleOutputChannel, async (host, embedMessage, embed) =>
@@ -82,16 +72,6 @@ namespace Prima.Scheduler.Services
 
                     await NotifyLead(host);
                     await NotifyMembers(host, embedMessage, token);
-
-                    _ = Task.Run(async () =>
-                    {
-                        await Task.Delay(new TimeSpan(0, 30, 0), token);
-                        try
-                        {
-                            await embedMessage.DeleteAsync();
-                        }
-                        catch { /* message already deleted */ }
-                    }, token);
                 }, token);
 
                 var castrumCheck = CheckRuns(guild, guildConfig.CastrumScheduleOutputChannel, async (host, embedMessage, embed) =>
@@ -101,16 +81,6 @@ namespace Prima.Scheduler.Services
 
                     await NotifyLead(host);
                     await NotifyMembers(host, embedMessage, token);
-
-                    _ = Task.Run(async () =>
-                    {
-                        await Task.Delay(new TimeSpan(0, 30, 0), token);
-                        try
-                        {
-                            await embedMessage.DeleteAsync();
-                        }
-                        catch { /* message already deleted */ }
-                    }, token);
                 }, token);
 
                 await Task.WhenAll(drsCheck, drnCheck, castrumCheck);
@@ -145,8 +115,15 @@ namespace Prima.Scheduler.Services
                     var timestamp = nullableTimestamp.Value;
                     Log.Information("Current timestamp: {CurrentTimestamp}; announcement timestamp: {Timestamp}", DateTimeOffset.Now.ToString(), timestamp.ToString());
 
+                    // Remove expired posts
+                    if (timestamp.AddMinutes(15) < DateTimeOffset.Now)
+                    {
+                        await message.DeleteAsync();
+                        continue;
+                    }
+
                     // ReSharper disable once InvertIf
-                    if (timestamp.AddMinutes(30) <= DateTimeOffset.Now && embed.Author.HasValue)
+                    if (timestamp.AddMinutes(-30) <= DateTimeOffset.Now && embed.Author.HasValue)
                     {
                         Log.Information("Run matched!");
 
@@ -215,6 +192,8 @@ namespace Prima.Scheduler.Services
 
         private async Task NotifyMembers(IGuildUser host, IMessage embedMessage, CancellationToken token)
         {
+            Log.Information("Notifying reactors... {Count}", embedMessage.Reactions.Count);
+
             var (nrEmote, nrMeta) = embedMessage.Reactions
                 .FirstOrDefault(erm => erm.Key.Name == "📳");
 
@@ -225,7 +204,14 @@ namespace Prima.Scheduler.Services
                 foreach (var user in page)
                 {
                     var bm = _client.GetUser(_db.Config.BotMaster);
-                    await bm.SendMessageAsync($"The run you reacted to (hosted by {host.Nickname ?? host.Username}) is beginning in 30 minutes!");
+                    try
+                    {
+                        await bm.SendMessageAsync($"The run you reacted to (hosted by {host.Nickname ?? host.Username}) is beginning in 30 minutes!");
+                    }
+                    catch (HttpException e) when (e.DiscordCode == 50007)
+                    {
+                        Log.Warning("Can't send direct message to user {User}.", host.ToString());
+                    }
                 }
             }
         }
