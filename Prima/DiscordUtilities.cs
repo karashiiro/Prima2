@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Discord;
 using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Prima.Attributes;
@@ -39,6 +40,20 @@ namespace Prima
             var fileName = uri.Split('/').Last();
             var fileStream = await http.GetStreamAsync(new Uri(uri));
             await context.Channel.SendFileAsync(fileStream, fileName);
+        }
+    }
+
+    public static class DiscordUserExtensions
+    {
+        public static bool HasRole(this IUser user, ulong roleId, SocketCommandContext context)
+        {
+            var member = context.Guild.GetUser(user.Id);
+            return member.Roles.FirstOrDefault(r => r.Id == roleId) != null;
+        }
+
+        public static bool HasRole(this IUser user, IRole role, SocketCommandContext context)
+        {
+            return user.HasRole(role.Id, context);
         }
     }
 }

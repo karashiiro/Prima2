@@ -8,6 +8,8 @@ using Discord.Commands;
 using Prima.Attributes;
 using Prima.Resources;
 using Prima.Services;
+using Prima.Stable.Resources;
+using Serilog;
 using Color = Discord.Color;
 
 namespace Prima.Stable.Modules
@@ -40,6 +42,48 @@ namespace Prima.Stable.Modules
                 .Build();
 
             await ReplyAsync(embed: embed);
+        }
+
+        [Command("addprogrole", RunMode = RunMode.Async)]
+        [Description("Adds a progression role to a user.")]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public async Task AddDelubrumProgRoleAsync(IUser user, IRole role)
+        {
+            if (Context.Guild == null) return;
+            if (!DelubrumProgressionRoles.Ids.Contains(role.Id)) return;
+            if (!Context.User.HasRole(DelubrumProgressionRoles.Executor, Context)) return;
+
+            var member = Context.Guild.GetUser(user.Id);
+            if (member.HasRole(role, Context))
+            {
+                await ReplyAsync($"{user.Mention} already has that role!");
+            }
+            else
+            {
+                await member.AddRoleAsync(role);
+                await ReplyAsync($"Role added to {user.Mention}.");
+            }
+        }
+
+        [Command("removeprogrole", RunMode = RunMode.Async)]
+        [Description("Removes a progression role from a user.")]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public async Task RemoveDelubrumProgRoleAsync(IUser user, IRole role)
+        {
+            if (Context.Guild == null) return;
+            if (!DelubrumProgressionRoles.Ids.Contains(role.Id)) return;
+            if (!Context.User.HasRole(DelubrumProgressionRoles.Executor, Context)) return;
+
+            var member = Context.Guild.GetUser(user.Id);
+            if (!member.HasRole(role, Context))
+            {
+                await ReplyAsync($"{user.Mention} already does not have that role!");
+            }
+            else
+            {
+                await member.RemoveRoleAsync(role);
+                await ReplyAsync($"Role removed from {user.Mention}.");
+            }
         }
 
         [Command("star", RunMode = RunMode.Async)]
