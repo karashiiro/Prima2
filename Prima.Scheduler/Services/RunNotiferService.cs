@@ -212,8 +212,8 @@ namespace Prima.Scheduler.Services
         {
             if (_disposed)
                 return;
-            _tokenSource.Cancel();
-            _tokenSource.Dispose();
+            _tokenSource?.Cancel();
+            _tokenSource?.Dispose();
             _disposed = true;
         }
     }

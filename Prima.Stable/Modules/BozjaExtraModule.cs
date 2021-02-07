@@ -43,6 +43,27 @@ namespace Prima.Stable.Modules
             await ReplyAsync(embed: embed);
         }
 
+        [Command("setroler", RunMode = RunMode.Async)]
+        [Description("Gives the Delubrum Roler role to the specified user.")]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public async Task SetLeadAsync(IUser user)
+        {
+            if (!Context.User.HasRole(762072215356702741, Context))
+                return;
+            var role = Context.Guild.GetRole(DelubrumProgressionRoles.Executor);
+            var member = Context.Guild.GetUser(user.Id);
+            await member.AddRoleAsync(role);
+            await member.SendMessageAsync(
+                "You have been given the Delubrum Roler role for 3 1/2 hours!\n" +
+                "You can now use the commands `~addprogrole @User @Role` and `~removeprogrole @User @Role` to change " +
+                "the progression roles of run members!");
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(new TimeSpan(3, 30, 0));
+                await member.RemoveRoleAsync(role);
+            });
+        }
+
         [Command("addprogrole", RunMode = RunMode.Async)]
         [Description("Adds a progression role to a user.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]

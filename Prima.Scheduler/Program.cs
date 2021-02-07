@@ -27,6 +27,7 @@ namespace Prima.Scheduler
             client.ReactionRemoved += events.OnReactionRemove;
 
             services.GetRequiredService<RunNotiferService>().Initialize();
+            services.GetRequiredService<AnnounceMonitor>().Initialize();
 
             Log.Information($"Prima Scheduler logged in!");
                 
@@ -43,7 +44,7 @@ namespace Prima.Scheduler
             sc.AddSingleton<EventService>();
             sc.AddSingleton<RunNotiferService>();
             sc.AddSingleton<SpreadsheetService>();
-            //sc.AddSingleton<UptimeMessageService>();
+            sc.AddSingleton<AnnounceMonitor>();
             return sc.BuildServiceProvider();
         }
     }
