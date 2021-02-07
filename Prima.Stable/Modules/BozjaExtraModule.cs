@@ -75,7 +75,7 @@ namespace Prima.Stable.Modules
                     "▫️ Phantom Progression\n" +
                     "▫️ Trinity Avowed Progression\n" +
                     "▫️ Stygimoloch Lord Progression\n" +
-                    "▫️ The Queen Progression\n");
+                    "▫️ The Queen Progression");
             }
             catch (HttpException e) when (e.DiscordCode == 50007)
             {
