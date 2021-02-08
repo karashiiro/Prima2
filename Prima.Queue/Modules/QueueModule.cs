@@ -821,6 +821,37 @@ namespace Prima.Queue.Modules
             return ReplyAsync("User shoved to front of queue.");
         }
 
+        [Command("insert", RunMode = RunMode.Async)]
+        [Alias("queueinsert")]
+        public Task InsertUser(IUser user, int position, [Remainder] string args)
+        {
+            if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id))
+                return ReplyAsync("This is not a queue channel!");
+
+            const ulong mentor = 579916868035411968;
+            var sender = Context.Guild.GetUser(Context.User.Id);
+            if (sender.Roles.All(r => r.Id != mentor) && !sender.GuildPermissions.KickMembers)
+                return Task.CompletedTask;
+
+            var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
+            var queue = QueueService.GetOrCreateQueue(queueName);
+
+            var roles = ParseRoles(args);
+            if (roles == FFXIVRole.None)
+            {
+                return ReplyAsync($"You didn't provide a valid argument, {Context.User.Mention}!\n" +
+                                  "The proper usage would be: `~insert @User <position> <[d][h][t]>`");
+            }
+
+            foreach (var role in RolesToArray(roles))
+            {
+                queue.Insert(user.Id, position, role);
+            }
+
+            Log.Information("User {User} inserted at position {Position} in queue {QueueName}", user.ToString(), position, queueName);
+            return ReplyAsync($"User inserted in position {position}.");
+        }
+
         private IRole GetRoleFromArgs(string args)
         {
             var roleName =

@@ -3,6 +3,7 @@ using Prima.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Serilog;
 
 namespace Prima.Queue
 {
@@ -120,6 +121,23 @@ namespace Prima.Queue
             var spot = queue.FirstOrDefault(tuple => tuple.Id == uid);
             Remove(uid, role);
             queue.Insert(0, spot);
+        }
+
+        public void Insert(ulong uid, int position, FFXIVRole role)
+        {
+            var queue = GetQueue(role);
+            var spot = queue.FirstOrDefault(tuple => tuple.Id == uid);
+            Remove(uid, role);
+
+            try
+            {
+                queue.Insert(position, spot);
+            }
+            catch (IndexOutOfRangeException)
+            {
+                Log.Error("Tried to insert {User} in out of range queue position {Position}; inserting them at back instead.", uid, position);
+                Enqueue(uid, role);
+            }
         }
 
         public (IEnumerable<ulong>, IEnumerable<ulong>) Timeout(double secondsBeforeNow, double gracePeriod)
