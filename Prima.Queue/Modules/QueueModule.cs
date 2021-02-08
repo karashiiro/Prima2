@@ -26,6 +26,14 @@ namespace Prima.Queue.Modules
 #endif
             ;
 
+        private const ulong DelubrumSavageChannelId =
+#if DEBUG
+            766712049316265985
+#else
+            803636739343908894
+#endif
+            ;
+
         private static readonly IList<(ulong, DateTime)> LfmPullTimeLog = new List<(ulong, DateTime)>();
         private static readonly string[] Elements = { "Earth", "Wind", "Water", "Fire", "Lightning", "Ice" };
 
@@ -85,7 +93,7 @@ namespace Prima.Queue.Modules
 
             // Get progression role if supplied in Savage queue
             IRole requiredDiscordRole = null;
-            if (Context.Channel.Id == 803636739343908894)
+            if (Context.Channel.Id == DelubrumSavageChannelId)
             {
                 requiredDiscordRole = GetRoleFromArgs(args);
             }
@@ -94,11 +102,7 @@ namespace Prima.Queue.Modules
             var wantedSum = dpsWanted + healersWanted + tanksWanted;
             if (wantedSum > 7)
             {
-#if DEBUG
-                if (Context.Channel.Id == 766712049316265985)
-#else
-                if (Context.Channel.Id == 803636739343908894)
-#endif
+                if (Context.Channel.Id == DelubrumSavageChannelId)
                 {
                     if (wantedSum > 47)
                     {
@@ -137,10 +141,12 @@ namespace Prima.Queue.Modules
                 healersWanted,
                 tanksWanted);
 
-            await ReplyAsync($"{Context.User.Mention}, you have begun a search for {dpsWanted} DPS, {healersWanted} Healer(s), and {tanksWanted} Tank(s).\n" +
-                "Party Finder information will be DM'd to you immediately.\n" +
-                "Party information will be sent to invitees after 30 seconds.\n" +
-                "You can cancel matchmaking by typing `~stop` within 30 seconds.");
+            await ReplyAsync($"{Context.User.Mention}, you have begun a search for {dpsWanted} DPS, {healersWanted} Healer(s), and {tanksWanted} Tank(s)" +
+                             (requiredDiscordRole == null ? "" : $" with the {requiredDiscordRole.Name} role") +
+                             ".\n" +
+                             "Party Finder information will be DM'd to you immediately.\n" +
+                             "Party information will be sent to invitees after 30 seconds.\n" +
+                             "You can cancel matchmaking by typing `~stop` within 30 seconds.");
 
             var pw = await PwGen.Get(Context.User.Id);
             try
@@ -151,7 +157,7 @@ namespace Prima.Queue.Modules
                 const ulong castrumLfg = 765994301850779709;
 #endif
                 await leader.SendMessageAsync($"Your Party Finder password is {pw}.\n" +
-                    $"Please join {(new ulong[] { castrumLfg, 803636739343908894, 806957742056013895 }.Contains(Context.Channel.Id) ? "a" : "an elemental")} voice channel within the next 30 seconds to continue matching.\n" +
+                    $"Please join {(new ulong[] { castrumLfg, DelubrumSavageChannelId, 806957742056013895 }.Contains(Context.Channel.Id) ? "a" : "an elemental")} voice channel within the next 30 seconds to continue matching.\n" +
                     "Create the listing in Party Finder now; matching will begin in 30 seconds.");
             }
             catch (HttpException)
@@ -238,7 +244,9 @@ namespace Prima.Queue.Modules
             var fetchedSum = fetchedDps.Count + fetchedHealers.Count + fetchedTanks.Count;
             if (fetchedSum == 0)
             {
-                await ReplyAsync($"{Context.User.Mention}, the queues you're trying to pull from are empty!");
+                await ReplyAsync($"{Context.User.Mention}, the queues you're trying to pull from are empty" +
+                                 (requiredDiscordRole == null ? "" : " for that role") +
+                                 "!");
                 return;
             }
 
@@ -492,7 +500,7 @@ namespace Prima.Queue.Modules
                     break;
             }
             
-            if (!new ulong[] { 765994301850779709, 803636739343908894, 806957742056013895 }.Contains(Context.Channel.Id))
+            if (!new ulong[] { 765994301850779709, DelubrumSavageChannelId, 806957742056013895 }.Contains(Context.Channel.Id))
             {
                 response += extra;
             }
@@ -597,8 +605,15 @@ namespace Prima.Queue.Modules
 
             if (args.Length != 0) // Because people always try to type "~queue dps" etc., just give it to them.
             {
-                await LfgAsync(args);
-                return;
+                // Pass if the only argument is an applicable role name.
+                var roleName =
+                    DelubrumProgressionRoles.Roles.Values.FirstOrDefault(rn =>
+                        args.ToLowerInvariant().EndsWith(rn.ToLowerInvariant()));
+                if (roleName == null)
+                {
+                    await LfgAsync(args);
+                    return;
+                }
             }
 
             // Regular command body:
@@ -610,7 +625,7 @@ namespace Prima.Queue.Modules
 
             // Get progression role if supplied in Savage queue
             IRole requiredDiscordRole = null;
-            if (Context.Channel.Id == 803636739343908894)
+            if (Context.Channel.Id == DelubrumSavageChannelId)
             {
                 requiredDiscordRole = GetRoleFromArgs(args);
             }
@@ -630,7 +645,7 @@ namespace Prima.Queue.Modules
 
             // Get progression role if supplied in Savage queue
             IRole requiredDiscordRole = null;
-            if (Context.Channel.Id == 803636739343908894)
+            if (Context.Channel.Id == DelubrumSavageChannelId)
             {
                 requiredDiscordRole = GetRoleFromArgs(args);
             }
@@ -728,6 +743,11 @@ namespace Prima.Queue.Modules
 
             if (role != null)
             {
+                if (dpsPos == 0 && healerPos == 0 && tankPos == 0)
+                {
+                    return $"<@{uid}>, you aren't in queue under that role; check your progression roles!";
+                }
+
                 output += $" for the role {role.Name}";
             }
 
