@@ -97,6 +97,17 @@ namespace Prima.Stable.Modules
         {
             if (Context.Guild == null) return;
 
+            var executor = Context.Guild.GetUser(Context.User.Id);
+            if (!executor.HasRole(DelubrumProgressionRoles.Executor, Context)
+                && !executor.HasRole(579916868035411968, Context) // or Mentor
+                && !executor.GuildPermissions.KickMembers) // or can kick users
+            {
+                var res = await ReplyAsync($"{Context.User.Mention}, you don't have the roler role!");
+                await Task.Delay(5000);
+                await res.DeleteAsync();
+                return;
+            }
+
             var words = args.Split(' ');
 
             var members = words
@@ -121,14 +132,6 @@ namespace Prima.Stable.Modules
 
             if (!DelubrumProgressionRoles.Roles.Keys.Contains(role.Id)) return;
 
-            if (!Context.User.HasRole(DelubrumProgressionRoles.Executor, Context))
-            {
-                var res = await ReplyAsync($"{Context.User.Mention}, you don't have the roler role!");
-                await Task.Delay(5000);
-                await res.DeleteAsync();
-                return;
-            }
-
             foreach (var member in members)
             {
                 if (!member.HasRole(role, Context))
@@ -147,6 +150,17 @@ namespace Prima.Stable.Modules
         public async Task RemoveDelubrumProgRoleAsync([Remainder] string args)
         {
             if (Context.Guild == null) return;
+
+            var executor = Context.Guild.GetUser(Context.User.Id);
+            if (!executor.HasRole(DelubrumProgressionRoles.Executor, Context)
+                && !executor.HasRole(579916868035411968, Context) // or Mentor
+                && !executor.GuildPermissions.KickMembers) // or can kick users
+            {
+                var res = await ReplyAsync($"{Context.User.Mention}, you don't have the roler role!");
+                await Task.Delay(5000);
+                await res.DeleteAsync();
+                return;
+            }
 
             var words = args.Split(' ');
 
@@ -170,14 +184,6 @@ namespace Prima.Stable.Modules
             }
 
             if (!DelubrumProgressionRoles.Roles.Keys.Contains(role.Id)) return;
-
-            if (!Context.User.HasRole(DelubrumProgressionRoles.Executor, Context))
-            {
-                var res = await ReplyAsync($"{Context.User.Mention}, you don't have the roler role!");
-                await Task.Delay(5000);
-                await res.DeleteAsync();
-                return;
-            }
 
             foreach (var member in members)
             {
