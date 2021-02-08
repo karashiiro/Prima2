@@ -17,17 +17,7 @@ namespace Prima.Queue
             ulong user;
             lock (queue)
             {
-                // Get the first queue member with the specified role.
-                var slot = queue.FirstOrDefault(s =>
-                {
-                    var discordUser = context.Guild.GetUser(s.Id);
-                    if (discordUser != null && discordUser.HasRole(discordRole))
-                    {
-                        return true;
-                    }
-
-                    return false;
-                });
+                var slot = queue.FirstOrDefault(SlotHasRole(discordRole, context));
 
                 if (slot == null)
                 {
