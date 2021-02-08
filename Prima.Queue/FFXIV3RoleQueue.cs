@@ -118,17 +118,31 @@ namespace Prima.Queue
         public void Shove(ulong uid, FFXIVRole role)
         {
             var queue = GetQueue(role);
+            var initialCount = queue.Count;
+            int finalCount;
+
             lock (queue)
             {
                 var spot = queue.FirstOrDefault(tuple => tuple.Id == uid);
                 Remove(uid, role);
                 queue.Insert(0, spot);
+
+                queue.RemoveAll(s => s == null, overload: true);
+
+                finalCount = queue.Count;
+            }
+
+            if (initialCount != finalCount)
+            {
+                Log.Warning("Queue size is inconsistent with expected result! Queue state may be corrupt.");
             }
         }
 
         public void Insert(ulong uid, int position, FFXIVRole role)
         {
             var queue = GetQueue(role);
+            var initialCount = queue.Count;
+            int finalCount;
             lock (queue)
             {
                 var spot = queue.FirstOrDefault(tuple => tuple.Id == uid);
@@ -143,6 +157,15 @@ namespace Prima.Queue
                     Log.Error("Tried to insert {User} in out of range queue position {Position}; inserting them at back instead.", uid, position);
                     Enqueue(uid, role);
                 }
+
+                queue.RemoveAll(s => s == null, overload: true);
+
+                finalCount = queue.Count;
+            }
+
+            if (initialCount + 1 != finalCount)
+            {
+                Log.Warning("Queue size is inconsistent with expected result! Queue state may be corrupt.");
             }
         }
 
