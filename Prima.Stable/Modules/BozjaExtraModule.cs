@@ -119,7 +119,7 @@ namespace Prima.Stable.Modules
                 return;
             }
 
-            if (!DelubrumProgressionRoles.Ids.Contains(role.Id)) return;
+            if (!DelubrumProgressionRoles.Roles.Keys.Contains(role.Id)) return;
 
             if (!Context.User.HasRole(DelubrumProgressionRoles.Executor, Context))
             {
@@ -169,7 +169,7 @@ namespace Prima.Stable.Modules
                 return;
             }
 
-            if (!DelubrumProgressionRoles.Ids.Contains(role.Id)) return;
+            if (!DelubrumProgressionRoles.Roles.Keys.Contains(role.Id)) return;
 
             if (!Context.User.HasRole(DelubrumProgressionRoles.Executor, Context))
             {
