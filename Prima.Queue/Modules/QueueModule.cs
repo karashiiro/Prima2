@@ -745,7 +745,8 @@ namespace Prima.Queue.Modules
             {
                 if (dpsPos == 0 && healerPos == 0 && tankPos == 0)
                 {
-                    return $"<@{uid}>, you aren't in queue under that role; check your progression roles!";
+                    return $"<@{uid}>, you aren't in queue under that role; check your progression roles!\n" +
+                           "If you are coming with experience from another server, please make a request for the appropriate role in <#808406722934210590> with a log or screenshot.";
                 }
 
                 output += $" for the role {role.Name}";
