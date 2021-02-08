@@ -8,9 +8,9 @@ namespace Prima.Queue
 {
     public class FFXIV3RoleQueue
     {
-        [JsonProperty] private readonly IList<QueueSlot> _dpsQueue;
-        [JsonProperty] private readonly IList<QueueSlot> _healerQueue;
-        [JsonProperty] private readonly IList<QueueSlot> _tankQueue;
+        [JsonProperty] protected readonly IList<QueueSlot> _dpsQueue;
+        [JsonProperty] protected readonly IList<QueueSlot> _healerQueue;
+        [JsonProperty] protected readonly IList<QueueSlot> _tankQueue;
 
         public FFXIV3RoleQueue()
         {
@@ -31,11 +31,9 @@ namespace Prima.Queue
         public ulong? Dequeue(FFXIVRole role)
         {
             var queue = GetQueue(role);
-
             if (queue.Count == 0) return null;
             var (user, _, _) = queue[0];
             RemoveAll(user);
-
             return user;
         }
 
@@ -75,7 +73,7 @@ namespace Prima.Queue
             return _dpsQueue
                 .Concat(_healerQueue)
                 .Concat(_tankQueue)
-                .Select(tuple => tuple.Id)
+                .Select(s => s.Id)
                 .Distinct()
                 .Count();
         }
@@ -84,9 +82,9 @@ namespace Prima.Queue
         {
             return role switch
             {
-                FFXIVRole.DPS => _dpsQueue.IndexOf(tuple => tuple.Id == userId) + 1,
-                FFXIVRole.Healer => _healerQueue.IndexOf(tuple => tuple.Id == userId) + 1,
-                FFXIVRole.Tank => _tankQueue.IndexOf(tuple => tuple.Id == userId) + 1,
+                FFXIVRole.DPS => _dpsQueue.IndexOf(s => s.Id == userId) + 1,
+                FFXIVRole.Healer => _healerQueue.IndexOf(s => s.Id == userId) + 1,
+                FFXIVRole.Tank => _tankQueue.IndexOf(s => s.Id == userId) + 1,
                 FFXIVRole.None => 0,
                 _ => throw new NotImplementedException(),
             };
@@ -150,8 +148,8 @@ namespace Prima.Queue
 
             var _almostTimedOut =
                 queue
-                    .Where(tuple => !tuple.ExpirationNotified)
-                    .Where(tuple => (DateTime.UtcNow - tuple.QueueTime).TotalSeconds > secondsBeforeNow - gracePeriod)
+                    .Where(s => !s.ExpirationNotified)
+                    .Where(s => (DateTime.UtcNow - s.QueueTime).TotalSeconds > secondsBeforeNow - gracePeriod)
                     .ToList();
             foreach (var slot in _almostTimedOut)
                 slot.ExpirationNotified = true;
@@ -162,11 +160,11 @@ namespace Prima.Queue
         {
             var queue = GetQueue(role);
 
-            return queue.RemoveAll(tuple => (DateTime.UtcNow - tuple.QueueTime).TotalSeconds > secondsBeforeNow, overload: true)
-                .Select(tuple => tuple.Id);
+            return queue.RemoveAll(s => (DateTime.UtcNow - s.QueueTime).TotalSeconds > secondsBeforeNow, overload: true)
+                .Select(s => s.Id);
         }
 
-        private IList<QueueSlot> GetQueue(FFXIVRole role) => role switch
+        protected IList<QueueSlot> GetQueue(FFXIVRole role) => role switch
         {
             FFXIVRole.DPS => _dpsQueue,
             FFXIVRole.Healer => _healerQueue,

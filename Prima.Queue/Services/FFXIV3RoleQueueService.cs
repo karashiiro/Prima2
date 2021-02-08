@@ -19,14 +19,14 @@ namespace Prima.Queue.Services
             ? "queues.json" // Only use Windows for testing.
             : Path.Combine(Environment.GetEnvironmentVariable("HOME"), "queues.json");
 
-        private IDictionary<string, FFXIV3RoleQueue> Queues { get; set; }
+        private IDictionary<string, FFXIVDiscordIntegratedQueue> Queues { get; set; }
 
         private readonly DiscordSocketClient _client;
 
         public FFXIV3RoleQueueService(DiscordSocketClient client)
         {
             if (!File.Exists(QueuePath))
-                Queues = new Dictionary<string, FFXIV3RoleQueue>();
+                Queues = new Dictionary<string, FFXIVDiscordIntegratedQueue>();
             else Load();
 
             _client = client;
@@ -34,12 +34,12 @@ namespace Prima.Queue.Services
             _ = Task.Run(TimeoutLoop);
         }
 
-        public FFXIV3RoleQueue GetOrCreateQueue(string name)
+        public FFXIVDiscordIntegratedQueue GetOrCreateQueue(string name)
         {
             lock (Queues)
             {
                 if (Queues.ContainsKey(name)) return Queues[name];
-                Queues.Add(name, new FFXIV3RoleQueue());
+                Queues.Add(name, new FFXIVDiscordIntegratedQueue());
                 return Queues[name];
             }
         }
@@ -58,7 +58,7 @@ namespace Prima.Queue.Services
 
         private void Load()
         {
-            Queues = JsonConvert.DeserializeObject<IDictionary<string, FFXIV3RoleQueue>>(File.ReadAllText(QueuePath));
+            Queues = JsonConvert.DeserializeObject<IDictionary<string, FFXIVDiscordIntegratedQueue>>(File.ReadAllText(QueuePath));
         }
 
         private async Task TimeoutLoop()
