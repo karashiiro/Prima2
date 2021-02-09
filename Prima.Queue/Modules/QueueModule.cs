@@ -691,7 +691,7 @@ namespace Prima.Queue.Modules
                         var (dpsCount, healerCount, tankCount, distinctCount) = GetListCounts(queue, r);
                         return $"{r.Name}: {tankCount} tank(s), {healerCount} healer(s), {dpsCount} DPS; Unique players: {distinctCount}";
                     })
-                    .Aggregate("Current queue status across all roles:\n```go\n", (agg, next) => agg + next + '\n') + "```";
+                    .Aggregate("Current queue status across all roles:\n```c++\n", (agg, next) => agg + next + '\n') + "```";
                 await ReplyAsync(response);
             }
             else
