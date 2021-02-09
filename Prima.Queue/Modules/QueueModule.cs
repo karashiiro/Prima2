@@ -699,18 +699,18 @@ namespace Prima.Queue.Modules
                     .Select(r =>
                     {
                         var (dpsCount, healerCount, tankCount, distinctCount) = GetListCounts(queue, r);
-                        /*if (distinctCount != 0)
-                        {*/
+                        if (distinctCount != 0)
+                        {
                             return $"{r.Name}:" +
-                                   $"{PadLeft(30 - $"{r.Name}:".Length)}{tankCount} tank(s)" +
-                                   $"{PadLeft(15 - $"{tankCount:D3} tank(s)".Length)}{healerCount} healer(s)" +
-                                   $"{PadLeft(15 - $"{tankCount:D3} tank(s)".Length)}{dpsCount} DPS" +
-                                   $"{PadLeft(15 - $"{tankCount:D3} tank(s)".Length)}Unique players: {distinctCount}";
-                        /*}
+                                   $"{PadLeft(30 - $"{r.Name}:".Length - $"{tankCount}".Length)}{tankCount} tank(s)" +
+                                   $"{PadLeft(15 - $"{tankCount:D3} tank(s)".Length - $"{healerCount}".Length)}{healerCount} healer(s)" +
+                                   $"{PadLeft(15 - $"{tankCount:D3} tank(s)".Length - $"{dpsCount}".Length)}{dpsCount} DPS" +
+                                   $"{PadLeft(15 - $"{tankCount:D3} tank(s)".Length - $"{distinctCount}".Length)}Unique players: {distinctCount}";
+                        }
                         else
                         {
-                            return $"{r.Name}: No queue members.";
-                        }*/
+                            return $"{PadLeft(30 - $"{r.Name}:".Length)}{r.Name}: No queue members.";
+                        }
                     })
                     .Aggregate("Current queue status across all roles:\n```c++\n", (agg, next) => agg + next + '\n') + "```";
                 await ReplyAsync(response);
