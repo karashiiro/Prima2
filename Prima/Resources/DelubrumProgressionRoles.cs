@@ -24,5 +24,21 @@ namespace Prima.Resources
             {807881434110754866, "debug delub role"},
 #endif
         };
+
+        public static IList<ulong> GetContingentRoles(ulong roleId)
+        {
+            var baseList = new ulong[] { 807854087092830259, 807854094286979082, 807854100204879902, 807854104134680617, 807854109608378368, 807854112905363456, 807854117053136896 };
+            return roleId switch
+            {
+                807854087092830259 => baseList,
+                807854094286979082 => baseList[1..],
+                807854100204879902 => baseList[2..],
+                807854104134680617 => baseList[3..],
+                807854109608378368 => baseList[4..],
+                807854112905363456 => baseList[5..],
+                807854117053136896 => baseList[6..],
+                _ => new List<ulong>(),
+            };
+        }
     }
 }

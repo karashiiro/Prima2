@@ -131,13 +131,15 @@ namespace Prima.Stable.Modules
             }
 
             if (!DelubrumProgressionRoles.Roles.Keys.Contains(role.Id)) return;
+            var contingentRoles = DelubrumProgressionRoles.GetContingentRoles(role.Id);
 
             foreach (var member in members)
             {
-                if (!member.HasRole(role, Context))
+                foreach (var roleId in contingentRoles)
                 {
-                    await member.AddRoleAsync(role);
-                    Log.Information("Role {RoleName} added to {User}.", role.Name, member.ToString());
+                    var r = Context.Guild.GetRole(roleId);
+                    await member.AddRoleAsync(r);
+                    Log.Information("Role {RoleName} added to {User}.", r.Name, member.ToString());
                 }
             }
 
