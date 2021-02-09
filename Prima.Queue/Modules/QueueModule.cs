@@ -749,7 +749,7 @@ namespace Prima.Queue.Modules
                            "If you are coming with experience from another server, please make a request for the appropriate role in <#808406722934210590> with a log or screenshot.";
                 }
 
-                if (dpsPos != 0 && healerPos != 0 && tankPos != 0)
+                if (dpsPos != 0 || healerPos != 0 || tankPos != 0)
                 {
                     output += $" for the role {role.Name}";
                 }
