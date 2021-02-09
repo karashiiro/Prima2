@@ -702,10 +702,10 @@ namespace Prima.Queue.Modules
                         /*if (distinctCount != 0)
                         {*/
                             return $"{r.Name}:" +
-                                   $"{PadLeft(31 - $"{r.Name}:".Length)}{tankCount} tank(s)" +
-                                   $"{PadLeft(15 - $"{tankCount:3} tank(s)".Length)}{healerCount} healer(s)" +
-                                   $"{PadLeft(15 - $"{tankCount:3} tank(s)".Length)}{dpsCount} DPS" +
-                                   $"{PadLeft(15 - $"{tankCount:3} tank(s)".Length)}Unique players: {distinctCount}";
+                                   $"{PadLeft(30 - $"{r.Name}:".Length)}{tankCount} tank(s)" +
+                                   $"{PadLeft(15 - $"{tankCount:D3} tank(s)".Length)}{healerCount} healer(s)" +
+                                   $"{PadLeft(15 - $"{tankCount:D3} tank(s)".Length)}{dpsCount} DPS" +
+                                   $"{PadLeft(15 - $"{tankCount:D3} tank(s)".Length)}Unique players: {distinctCount}";
                         /*}
                         else
                         {
