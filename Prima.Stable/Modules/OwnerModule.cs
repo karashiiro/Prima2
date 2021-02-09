@@ -63,12 +63,24 @@ namespace Prima.Stable.Modules
             var applicableUsers = Context.Guild.Users
                 .Where(u => u.HasRole(role))
                 .ToList();
-            await ReplyAsync($"Downloaded full user list, upgrading {applicableUsers.Count()} users...");
 
+            var left = applicableUsers.Count;
+            var pogRess = await ReplyAsync($"Downloaded full user list, upgrading {left} users...");
             foreach (var user in applicableUsers)
-                await user.AddRolesAsync(contingentRoles);
+            {
+                foreach (var cr in contingentRoles)
+                {
+                    if (!user.HasRole(cr))
+                    {
+                        await user.AddRoleAsync(cr);
+                    }
+                }
 
-            await ReplyAsync("Roles updated!");
+                left--;
+                await pogRess.ModifyAsync(props => props.Content = $"Downloaded full user list, upgrading {left} users...");
+            }
+
+            await pogRess.ModifyAsync(props => props.Content = "Roles updated!");
         }
     }
 }
