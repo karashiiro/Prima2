@@ -635,6 +635,25 @@ namespace Prima.Queue.Modules
             await ReplyAsync(GetPositionString(queue, Context.User, requiredDiscordRole, Context.User.Id));
         }
 
+        private (int, int, int, int) GetListCounts(FFXIVDiscordIntegratedQueue queue, IRole reqRole)
+        {
+            var dpsCount = reqRole == null
+                ? queue.Count(FFXIVRole.DPS)
+                : queue.CountWithDiscordRole(FFXIVRole.DPS, reqRole, Context);
+            var healerCount = reqRole == null
+                ? queue.Count(FFXIVRole.Healer)
+                : queue.CountWithDiscordRole(FFXIVRole.Healer, reqRole, Context);
+            var tankCount = reqRole == null
+                ? queue.Count(FFXIVRole.Tank)
+                : queue.CountWithDiscordRole(FFXIVRole.Tank, reqRole, Context);
+
+            var distinctCount = reqRole == null
+                ? queue.CountDistinct()
+                : queue.CountDistinctWithDiscordRole(reqRole, Context);
+
+            return (dpsCount, healerCount, tankCount, distinctCount);
+        }
+
         [Command("queuelist", RunMode = RunMode.Async)]
         [Description("Checks the queued member counts of the queues of the channel you enter it in.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
@@ -645,33 +664,46 @@ namespace Prima.Queue.Modules
 
             // Get progression role if supplied in Savage queue
             IRole requiredDiscordRole = null;
+            var delubrumAllRoles = false;
             if (Context.Channel.Id == DelubrumSavageChannelId)
             {
-                requiredDiscordRole = GetRoleFromArgs(args);
+                if (args.ToLowerInvariant() == "all")
+                {
+                    delubrumAllRoles = true;
+                }
+                else
+                {
+                    requiredDiscordRole = GetRoleFromArgs(args);
+                }
             }
 
             var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
-            var dpsCount = requiredDiscordRole == null
-                ? queue.Count(FFXIVRole.DPS)
-                : queue.CountWithDiscordRole(FFXIVRole.DPS, requiredDiscordRole, Context);
-            var healerCount = requiredDiscordRole == null
-                ? queue.Count(FFXIVRole.Healer)
-                : queue.CountWithDiscordRole(FFXIVRole.Healer, requiredDiscordRole, Context);
-            var tankCount = requiredDiscordRole == null
-                ? queue.Count(FFXIVRole.Tank)
-                : queue.CountWithDiscordRole(FFXIVRole.Tank, requiredDiscordRole, Context);
+            if (delubrumAllRoles)
+            {
+                var roleIds = DelubrumProgressionRoles.Roles.Keys;
+                var response = roleIds
+                    .Select(rid => Context.Guild.GetRole(rid))
+                    .Where(r => r != null)
+                    .Select(r =>
+                    {
+                        var (dpsCount, healerCount, tankCount, distinctCount) = GetListCounts(queue, r);
+                        return $"{r.Name}: {tankCount} tank(s), {healerCount} healer(s), {dpsCount} DPS; Unique players: {distinctCount}";
+                    })
+                    .Aggregate("Current queue status across all roles:\n```go\n", (agg, next) => agg + next + '\n') + "```";
+                await ReplyAsync(response);
+            }
+            else
+            {
+                var (dpsCount, healerCount, tankCount, distinctCount) = GetListCounts(queue, requiredDiscordRole);
 
-            var distinctCount = requiredDiscordRole == null
-                ? queue.CountDistinct()
-                : queue.CountDistinctWithDiscordRole(requiredDiscordRole, Context);
+                var roleExtraString = requiredDiscordRole == null
+                    ? ""
+                    : $"s for {requiredDiscordRole.Name}";
 
-            var roleExtraString = requiredDiscordRole == null
-                ? ""
-                : $"s for {requiredDiscordRole.Name}";
-
-            await ReplyAsync($"There are currently {tankCount} tank(s), {healerCount} healer(s), and {dpsCount} DPS in the queue{roleExtraString}. (Unique players: {distinctCount})");
+                await ReplyAsync($"There are currently {tankCount} tank(s), {healerCount} healer(s), and {dpsCount} DPS in the queue{roleExtraString}. (Unique players: {distinctCount})");
+            }
         }
 
         private static IList<FFXIVRole> RolesToArray(FFXIVRole roles)
