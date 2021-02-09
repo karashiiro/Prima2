@@ -15,6 +15,30 @@ namespace Prima.Stable.Modules
         public Task SudoMessage(ITextChannel channel, [Remainder] string message)
             => channel.SendMessageAsync(message);
 
+        [Command("sancheckdrsur")]
+        [RequireContext(ContextType.Guild)]
+        public async Task SanCheckDRSUR([Remainder] string roleName)
+        {
+            var role = Context.Guild.Roles.FirstOrDefault(r => r.Name == roleName);
+            if (role == null)
+            {
+                await ReplyAsync("No role by that name exists!");
+                return;
+            }
+
+            if (!DelubrumProgressionRoles.Roles.ContainsKey(role.Id))
+            {
+                await ReplyAsync("Not a valid DRS role!");
+                return;
+            }
+
+            var contingentRoles = DelubrumProgressionRoles.GetContingentRoles(role.Id)
+                .Select(cr => Context.Guild.GetRole(cr))
+                .Aggregate("", (s, socketRole) => s + socketRole.Name + "\n");
+
+            await ReplyAsync(contingentRoles);
+        }
+
         [Command("drsupgraderoles")]
         [RequireContext(ContextType.Guild)]
         public async Task DRSUpgradeRoles([Remainder] string roleName)
