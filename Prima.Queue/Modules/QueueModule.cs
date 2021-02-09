@@ -654,6 +654,16 @@ namespace Prima.Queue.Modules
             return (dpsCount, healerCount, tankCount, distinctCount);
         }
 
+        private string PadLeft(int length)
+        {
+            var agg = "";
+            for (var i = 0; i < length; i++)
+            {
+                agg += ' ';
+            }
+            return agg;
+        }
+
         [Command("queuelist", RunMode = RunMode.Async)]
         [Description("Checks the queued member counts of the queues of the channel you enter it in.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
@@ -689,14 +699,18 @@ namespace Prima.Queue.Modules
                     .Select(r =>
                     {
                         var (dpsCount, healerCount, tankCount, distinctCount) = GetListCounts(queue, r);
-                        if (distinctCount != 0)
-                        {
-                            return $"{r.Name}: {tankCount} tank(s), {healerCount} healer(s), {dpsCount} DPS; Unique players: {distinctCount}";
-                        }
+                        /*if (distinctCount != 0)
+                        {*/
+                            return $"{r.Name}:" +
+                                   $"{PadLeft(31 - $"{r.Name}:".Length)}{tankCount} tank(s)" +
+                                   $"{PadLeft(15 - $"{tankCount:3} tank(s)".Length)}{healerCount} healer(s)" +
+                                   $"{PadLeft(15 - $"{tankCount:3} tank(s)".Length)}{dpsCount} DPS" +
+                                   $"{PadLeft(15 - $"{tankCount:3} tank(s)".Length)}Unique players: {distinctCount}";
+                        /*}
                         else
                         {
                             return $"{r.Name}: No queue members.";
-                        }
+                        }*/
                     })
                     .Aggregate("Current queue status across all roles:\n```c++\n", (agg, next) => agg + next + '\n') + "```";
                 await ReplyAsync(response);
