@@ -31,7 +31,7 @@ namespace Prima.Queue.Services
 
             _client = client;
 
-            _ = Task.Run(TimeoutLoop);
+            //_ = Task.Run(TimeoutLoop);
         }
 
         public FFXIVDiscordIntegratedQueue GetOrCreateQueue(string name)

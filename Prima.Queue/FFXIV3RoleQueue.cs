@@ -117,22 +117,12 @@ namespace Prima.Queue
 
         public void Shove(ulong uid, FFXIVRole role)
         {
-            var queue = GetQueue(role);
-            var initialCount = queue.Count;
-            Remove(uid, role);
-            queue.Insert(0, new QueueSlot(uid));
-            queue.RemoveAll(s => s == null, overload: true);
-            var finalCount = queue.Count;
-            if (initialCount != finalCount)
-            {
-                Log.Warning("Queue size is inconsistent with expected result! Queue state may be corrupt.");
-            }
+            Insert(uid, 0, role);
         }
 
         public void Insert(ulong uid, int position, FFXIVRole role)
         {
             var queue = GetQueue(role);
-            var initialCount = queue.Count;
             Remove(uid, role);
 
             try
@@ -146,11 +136,6 @@ namespace Prima.Queue
             }
 
             queue.RemoveAll(s => s == null, overload: true);
-            var finalCount = queue.Count;
-            if (initialCount + 1 != finalCount)
-            {
-                Log.Warning("Queue size is inconsistent with expected result! Queue state may be corrupt.");
-            }
         }
 
         public (IEnumerable<ulong>, IEnumerable<ulong>) Timeout(double secondsBeforeNow, double gracePeriod)
