@@ -490,13 +490,13 @@ namespace Prima.Queue.Modules
                     response += queued0;
                     break;
                 case 1:
-                    response += string.Format(queued1, enqueuedRolesList[0]) + GetPositionString(queue, null, Context.User.Id);
+                    response += string.Format(queued1, enqueuedRolesList[0]) + GetPositionString(queue, Context.User, null, Context.User.Id);
                     break;
                 case 2:
-                    response += string.Format(queued2, enqueuedRolesList[0], enqueuedRolesList[1]) + GetPositionString(queue, null, Context.User.Id);
+                    response += string.Format(queued2, enqueuedRolesList[0], enqueuedRolesList[1]) + GetPositionString(queue, Context.User, null, Context.User.Id);
                     break;
                 case 3:
-                    response += string.Format(queued3, enqueuedRolesList[0], enqueuedRolesList[1], enqueuedRolesList[2]) + GetPositionString(queue, null, Context.User.Id);
+                    response += string.Format(queued3, enqueuedRolesList[0], enqueuedRolesList[1], enqueuedRolesList[2]) + GetPositionString(queue, Context.User, null, Context.User.Id);
                     break;
             }
             
@@ -632,7 +632,7 @@ namespace Prima.Queue.Modules
 
             QueueService.Save();
 
-            await ReplyAsync(GetPositionString(queue, requiredDiscordRole, Context.User.Id));
+            await ReplyAsync(GetPositionString(queue, Context.User, requiredDiscordRole, Context.User.Id));
         }
 
         [Command("queuelist", RunMode = RunMode.Async)]
@@ -683,7 +683,7 @@ namespace Prima.Queue.Modules
             return rolesList;
         }
 
-        private string GetPositionString(FFXIVDiscordIntegratedQueue queue, IRole role, ulong uid)
+        private string GetPositionString(FFXIVDiscordIntegratedQueue queue, IUser user, IRole role, ulong uid)
         {
             var dpsCount = role == null
                 ? queue.Count(FFXIVRole.DPS)
@@ -743,13 +743,16 @@ namespace Prima.Queue.Modules
 
             if (role != null)
             {
-                if (dpsPos == 0 && healerPos == 0 && tankPos == 0)
+                if (!user.HasRole(role, Context))
                 {
-                    return $"<@{uid}>, you aren't in queue under that role; check your progression roles!\n" +
+                    return $"<@{uid}>, you don't have that role; check your progression roles!\n" +
                            "If you are coming with experience from another server, please make a request for the appropriate role in <#808406722934210590> with a log or screenshot.";
                 }
 
-                output += $" for the role {role.Name}";
+                if (dpsPos != 0 && healerPos != 0 && tankPos != 0)
+                {
+                    output += $" for the role {role.Name}";
+                }
             }
 
             output += ".";
