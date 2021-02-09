@@ -702,14 +702,14 @@ namespace Prima.Queue.Modules
                         if (distinctCount != 0)
                         {
                             return $"{r.Name}:" +
-                                   $"{Padding(32 - $"{r.Name}:".Length - $"{tankCount}".Length)}{tankCount} tank(s)" +
+                                   $"{Padding(33 - $"{r.Name}:".Length - $"{tankCount}".Length)}{tankCount} tank(s)" +
                                    $"{Padding(15 - $"{tankCount:D3} tank(s)".Length - $"{healerCount}".Length)}{healerCount} healer(s)" +
                                    $"{Padding(15 - $"{tankCount:D3} tank(s)".Length - $"{dpsCount}".Length)}{dpsCount} DPS" +
                                    $"{Padding(15 - $"{tankCount:D3} tank(s)".Length - $"{distinctCount}".Length)}{distinctCount} unique players";
                         }
                         else
                         {
-                            return $"{r.Name}:{Padding(32 - $"{r.Name}:".Length - 1)}No queue members.";
+                            return $"{r.Name}:{Padding(33 - $"{r.Name}:".Length - 1)}No queue members.";
                         }
                     })
                     .Aggregate("Current queue status across all roles:\n```c++\n", (agg, next) => agg + next + '\n') + "```";
