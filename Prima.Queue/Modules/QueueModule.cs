@@ -654,7 +654,7 @@ namespace Prima.Queue.Modules
             return (dpsCount, healerCount, tankCount, distinctCount);
         }
 
-        private string PadLeft(int length)
+        private string Padding(int length)
         {
             var agg = "";
             for (var i = 0; i < length; i++)
@@ -702,14 +702,14 @@ namespace Prima.Queue.Modules
                         if (distinctCount != 0)
                         {
                             return $"{r.Name}:" +
-                                   $"{PadLeft(30 - $"{r.Name}:".Length - $"{tankCount}".Length)}{tankCount} tank(s)" +
-                                   $"{PadLeft(15 - $"{tankCount:D3} tank(s)".Length - $"{healerCount}".Length)}{healerCount} healer(s)" +
-                                   $"{PadLeft(15 - $"{tankCount:D3} tank(s)".Length - $"{dpsCount}".Length)}{dpsCount} DPS" +
-                                   $"{PadLeft(15 - $"{tankCount:D3} tank(s)".Length - $"{distinctCount}".Length)}Unique players: {distinctCount}";
+                                   $"{Padding(30 - $"{r.Name}:".Length - $"{tankCount}".Length)}{tankCount} tank(s)" +
+                                   $"{Padding(15 - $"{tankCount:D3} tank(s)".Length - $"{healerCount}".Length)}{healerCount} healer(s)" +
+                                   $"{Padding(15 - $"{tankCount:D3} tank(s)".Length - $"{dpsCount}".Length)}{dpsCount} DPS" +
+                                   $"{Padding(15 - $"{tankCount:D3} tank(s)".Length - $"{distinctCount}".Length)}{distinctCount} unique players";
                         }
                         else
                         {
-                            return $"{PadLeft(30 - $"{r.Name}:".Length)}{r.Name}: No queue members.";
+                            return $"{r.Name}:{Padding(30 - $"{r.Name}:".Length)}No queue members.";
                         }
                     })
                     .Aggregate("Current queue status across all roles:\n```c++\n", (agg, next) => agg + next + '\n') + "```";
