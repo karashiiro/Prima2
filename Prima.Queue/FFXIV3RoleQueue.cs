@@ -129,7 +129,7 @@ namespace Prima.Queue
             {
                 queue.Insert(position, new QueueSlot(uid));
             }
-            catch (IndexOutOfRangeException)
+            catch (ArgumentOutOfRangeException)
             {
                 Log.Error("Tried to insert {User} in out of range queue position {Position}; inserting them at back instead.", uid, position);
                 Enqueue(uid, role);
