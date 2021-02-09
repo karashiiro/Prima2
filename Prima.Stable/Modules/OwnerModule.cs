@@ -3,7 +3,6 @@ using Discord;
 using Discord.Commands;
 using System.Threading.Tasks;
 using Prima.Resources;
-using Prima.Services;
 
 namespace Prima.Stable.Modules
 {
@@ -39,7 +38,7 @@ namespace Prima.Stable.Modules
             await ReplyAsync(contingentRoles);
         }
 
-        [Command("drsupgraderoles")]
+        [Command("drsupgraderoles", RunMode = RunMode.Async)]
         [RequireContext(ContextType.Guild)]
         public async Task DRSUpgradeRoles([Remainder] string roleName)
         {
@@ -62,7 +61,10 @@ namespace Prima.Stable.Modules
 
             await Context.Guild.DownloadUsersAsync();
             var applicableUsers = Context.Guild.Users
-                .Where(u => u.HasRole(role));
+                .Where(u => u.HasRole(role))
+                .ToList();
+            await ReplyAsync($"Downloaded full user list, upgrading {applicableUsers.Count()} users...");
+
             foreach (var user in applicableUsers)
                 await user.AddRolesAsync(contingentRoles);
 
