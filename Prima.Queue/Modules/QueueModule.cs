@@ -817,7 +817,7 @@ namespace Prima.Queue.Modules
                 queue.Shove(user.Id, role);
             }
 
-            Log.Information("User {User} shoved to front of queue {QueueName}", user.ToString(), queueName);
+            Log.Information("User {User} shoved to front of queue {QueueName}.", user.ToString(), queueName);
             return ReplyAsync("User shoved to front of queue.");
         }
 
@@ -848,7 +848,7 @@ namespace Prima.Queue.Modules
                 queue.Insert(user.Id, position, role);
             }
 
-            Log.Information("User {User} inserted at position {Position} in queue {QueueName}", user.ToString(), position, queueName);
+            Log.Information("User {User} inserted at position {Position} in queue {QueueName}.", user.ToString(), position, queueName);
             return ReplyAsync($"User inserted in position {position}.");
         }
 
