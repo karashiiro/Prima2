@@ -94,20 +94,37 @@ namespace Prima.Scheduler.Modules
             await SortEmbeds(outputChannel);
         }
 
+        [Command("sortembeds", RunMode = RunMode.Async)]
+        [RequireOwner]
+        public async Task SortEmbedsCommand(ulong id)
+        {
+            var channel = Context.Guild.GetTextChannel(id);
+            await SortEmbeds(channel);
+            await ReplyAsync("Done!");
+        }
+
         private static async Task SortEmbeds(IMessageChannel channel)
         {
             var embeds = new List<IEmbed>();
 
             await foreach (var page in channel.GetMessagesAsync())
             {
-                embeds.AddRange(page
-                    .Where(m => m.Embeds.Any(e => e.Type == EmbedType.Rich))
-                    .Select(m => m.Embeds.First())
-                    .Where(m => m.Timestamp != null));
+                foreach (var message in page)
+                {
+                    if (message.Embeds.All(e => e.Type != EmbedType.Rich)) continue;
+                    var embed = message.Embeds.First(e => e.Type == EmbedType.Rich);
+
+                    if (!embed.Timestamp.HasValue) continue;
+
+                    await message.DeleteAsync();
+                    if (embed.Timestamp.Value < DateTimeOffset.Now) continue;
+
+                    embeds.Add(embed);
+                }
             }
 
             // ReSharper disable PossibleInvalidOperationException
-            embeds.Sort((a, b) => (int)(a.Timestamp.Value.ToUnixTimeSeconds() - b.Timestamp.Value.ToUnixTimeSeconds()));
+            embeds.Sort((a, b) => (int)(b.Timestamp.Value.ToUnixTimeSeconds() - a.Timestamp.Value.ToUnixTimeSeconds()));
             // ReSharper enable PossibleInvalidOperationException
 
             foreach (var embed in embeds)
