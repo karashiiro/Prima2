@@ -4,6 +4,7 @@ using Prima.Attributes;
 using Prima.Resources;
 using Prima.Services;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TimeZoneNames;
@@ -90,12 +91,29 @@ namespace Prima.Scheduler.Modules
             await ReplyAsync($"Event announced! Announcement posted in <#{outputChannelId}>. React to the announcement in " +
                              $"<#{outputChannelId}> with :vibration_mode: to be notified before the event begins.");
 
-            var deleteTime = time.AddHours(1);
-            var timeDiff = deleteTime - DateTime.Now;
-            new Task(async () => {
-                await Task.Delay((int)timeDiff.TotalMilliseconds);
-                await embed.DeleteAsync();
-            }).Start();
+            await SortEmbeds(outputChannel);
+        }
+
+        private static async Task SortEmbeds(IMessageChannel channel)
+        {
+            var embeds = new List<IEmbed>();
+
+            await foreach (var page in channel.GetMessagesAsync())
+            {
+                embeds.AddRange(page
+                    .Where(m => m.Embeds.Any(e => e.Type == EmbedType.Rich))
+                    .Select(m => m.Embeds.First())
+                    .Where(m => m.Timestamp != null));
+            }
+
+            // ReSharper disable PossibleInvalidOperationException
+            embeds.Sort((a, b) => (int)(a.Timestamp.Value.ToUnixTimeSeconds() - b.Timestamp.Value.ToUnixTimeSeconds()));
+            // ReSharper enable PossibleInvalidOperationException
+
+            foreach (var embed in embeds)
+            {
+                await channel.SendMessageAsync(embed: embed.ToEmbedBuilder().Build());
+            }
         }
 
         [Command("unannounce", RunMode = RunMode.Async)]
