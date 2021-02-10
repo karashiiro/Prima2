@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Prima.Scheduler.Services;
+using Serilog;
 using TimeZoneNames;
 using Color = Discord.Color;
 
@@ -86,8 +87,11 @@ namespace Prima.Scheduler.Modules
             await ReplyAsync("Done!");
         }
 
-        private static async Task SortEmbeds(IMessageChannel channel)
+        private async Task SortEmbeds(IMessageChannel channel)
         {
+            var progress = await ReplyAsync("Sorting announcements...");
+            using var typing = Context.Channel.EnterTypingState();
+
             var embeds = new List<IEmbed>();
 
             await foreach (var page in channel.GetMessagesAsync())
@@ -114,6 +118,8 @@ namespace Prima.Scheduler.Modules
             {
                 await channel.SendMessageAsync(embed: embed.ToEmbedBuilder().Build());
             }
+
+            await progress.DeleteAsync();
         }
 
         [Command("reannounce", RunMode = RunMode.Async)]
@@ -158,7 +164,8 @@ namespace Prima.Scheduler.Modules
 
                 await SortEmbeds(outputChannel);
 
-                await ReplyAsync("Announcement rescheduled!.");
+                Log.Information("Rescheduled announcement from {OldTime} to {NewTime}", curTime.ToShortTimeString(), newTime.ToShortTimeString());
+                await ReplyAsync("Announcement rescheduled!");
             }
             else
             {
