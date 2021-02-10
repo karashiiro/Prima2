@@ -1,5 +1,4 @@
 ﻿using NUnit.Framework;
-using Prima.Queue;
 
 namespace Prima.Tests
 {

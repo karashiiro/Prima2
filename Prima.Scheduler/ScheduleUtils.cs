@@ -12,6 +12,19 @@ namespace Prima.Scheduler
 {
     public static class ScheduleUtils
     {
+        public static TimeZoneInfo TimeZoneFromAbbr(string abbr)
+        {
+            abbr = abbr.ToLowerInvariant();
+            return TimeZoneInfo.GetSystemTimeZones()
+                .FirstOrDefault(tzi =>
+                {
+                    var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
+                    return tzAbbrs.Daylight?.ToLowerInvariant() == abbr
+                           || tzAbbrs.Standard?.ToLowerInvariant() == abbr
+                           || tzAbbrs.Generic?.ToLowerInvariant() == abbr;
+                });
+        }
+
         public static async Task RebuildPosts(DbService db, DiscordSocketClient client, ulong guildId)
         {
             var guildConfig = db.Guilds.FirstOrDefault(g => g.Id == guildId);
