@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Prima.Scheduler.Services;
 using TimeZoneNames;
 using Color = Discord.Color;
 
@@ -16,34 +17,17 @@ namespace Prima.Scheduler.Modules
     [RequireContext(ContextType.Guild)]
     public class NotificationBoardModule : ModuleBase<SocketCommandContext>
     {
-        public DbService Db { get; set; } // Just used to get the guild's configured command prefix
+        public CalendarApi Calendar { get; set; }
+        public DbService Db { get; set; }
 
-        // Note to self: The IDs for these channels don't get set correctly and I don't care to debug this, so I just set them in the database manually.
         [Command("announce", RunMode = RunMode.Async)]
         [Description("Announce an event. Usage: `~announce Time | Description`")]
         public async Task Announce([Remainder]string args)
         {
-            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
-            if (guildConfig == null) return;
-            if (Context.Channel.Id != guildConfig.CastrumScheduleInputChannel
-                && Context.Channel.Id != guildConfig.DelubrumScheduleInputChannel
-                && Context.Channel.Id != guildConfig.DelubrumNormalScheduleInputChannel) return;
+            var outputChannel = GetOutputChannel();
+            if (outputChannel == null) return;
 
-            ulong outputChannelId;
-            if (Context.Channel.Id == guildConfig.CastrumScheduleInputChannel)
-            {
-                outputChannelId = guildConfig.CastrumScheduleOutputChannel;
-            }
-            else if (Context.Channel.Id == guildConfig.DelubrumScheduleInputChannel)
-            {
-                outputChannelId = guildConfig.DelubrumScheduleOutputChannel;
-            }
-            else // Context.Channel.Id == guildConfig.DelubrumNormalScheduleInputChannel
-            {
-                outputChannelId = guildConfig.DelubrumNormalScheduleOutputChannel;
-            }
-
-            var prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
+            var prefix = Db.Config.Prefix;
 
             var splitIndex = args.IndexOf("|", StringComparison.Ordinal);
             if (splitIndex == -1)
@@ -75,7 +59,6 @@ namespace Prima.Scheduler.Modules
             var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
 
             var color = RunDisplayTypes.GetColorCastrum();
-            var outputChannel = Context.Guild.GetTextChannel(outputChannelId);
             var embed = await outputChannel.SendMessageAsync(embed: new EmbedBuilder()
                 .WithAuthor(new EmbedAuthorBuilder()
                     .WithIconUrl(Context.User.GetAvatarUrl())
@@ -88,8 +71,8 @@ namespace Prima.Scheduler.Modules
 
             await embed.AddReactionAsync(new Emoji("📳"));
 
-            await ReplyAsync($"Event announced! Announcement posted in <#{outputChannelId}>. React to the announcement in " +
-                             $"<#{outputChannelId}> with :vibration_mode: to be notified before the event begins.");
+            await ReplyAsync($"Event announced! Announcement posted in <#{outputChannel.Id}>. React to the announcement in " +
+                             $"<#{outputChannel.Id}> with :vibration_mode: to be notified before the event begins.");
 
             await SortEmbeds(outputChannel);
         }
@@ -133,15 +116,103 @@ namespace Prima.Scheduler.Modules
             }
         }
 
+        [Command("reannounce", RunMode = RunMode.Async)]
+        [Description("Reschedule an announcement. Usage: `~reannounce Old Time | New Time`")]
+        public async Task Reannounce([Remainder] string args)
+        {
+            var outputChannel = GetOutputChannel();
+            if (outputChannel == null) return;
+
+            var username = Context.User.ToString();
+            var times = args.Split('|');
+            
+            var curTime = Util.GetDateTime(times[0]);
+            if (curTime < DateTime.Now)
+            {
+                await ReplyAsync("The first time is in the past!");
+                return;
+            }
+
+            var newTime = Util.GetDateTime(times[1]);
+            if (newTime < DateTime.Now)
+            {
+                await ReplyAsync("The second time is in the past!");
+                return;
+            }
+
+            var (embedMessage, embed) = await FindAnnouncement(outputChannel, username, curTime);
+            if (embedMessage != null)
+            {
+                var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
+                var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
+                var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
+
+                await embedMessage.ModifyAsync(props =>
+                {
+                    props.Embed = embed
+                        .ToEmbedBuilder()
+                        .WithTimestamp(newTime.AddHours(-tzi.BaseUtcOffset.Hours))
+                        .WithTitle($"Event scheduled by {Context.User} on {newTime.DayOfWeek} at {newTime.ToShortTimeString()} ({tzAbbr})!")
+                        .Build();
+                });
+
+                await SortEmbeds(outputChannel);
+
+                await ReplyAsync("Announcement rescheduled!.");
+            }
+            else
+            {
+                await ReplyAsync("No announcement by you was found at that time!");
+            }
+        }
+
         [Command("unannounce", RunMode = RunMode.Async)]
         [Description("Cancel an event. Usage: `~unannounce Time`")]
         public async Task Unannounce([Remainder]string args)
         {
+            var outputChannel = GetOutputChannel();
+            if (outputChannel == null) return;
+
+            var username = Context.User.ToString();
+            var time = Util.GetDateTime(args);
+            if (time < DateTime.Now)
+            {
+                await ReplyAsync("That time is in the past!");
+                return;
+            }
+
+            var (embedMessage, embed) = await FindAnnouncement(outputChannel, username, time);
+            if (embedMessage != null)
+            {
+                await embedMessage.ModifyAsync(props =>
+                {
+                    props.Embed = new EmbedBuilder()
+                        .WithTitle(embed.Title)
+                        .WithColor(embed.Color.Value)
+                        .WithDescription("❌ Cancelled")
+                        .Build();
+                });
+
+                new Task(async () => {
+                    await Task.Delay(1000 * 60 * 60 * 2); // 2 hours
+                    await embedMessage.DeleteAsync();
+                }).Start();
+
+                await ReplyAsync("Event cancelled.");
+            }
+            else
+            {
+                await ReplyAsync("No event by you was found at that time!");
+            }
+        }
+
+        private IMessageChannel GetOutputChannel()
+        {
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
-            if (guildConfig == null) return;
+            if (guildConfig == null) return null;
             if (Context.Channel.Id != guildConfig.CastrumScheduleInputChannel
                 && Context.Channel.Id != guildConfig.DelubrumScheduleInputChannel
-                && Context.Channel.Id != guildConfig.DelubrumNormalScheduleInputChannel) return;
+                && Context.Channel.Id != guildConfig.DelubrumNormalScheduleInputChannel) return null;
 
             ulong outputChannelId;
             if (Context.Channel.Id == guildConfig.CastrumScheduleInputChannel)
@@ -157,17 +228,12 @@ namespace Prima.Scheduler.Modules
                 outputChannelId = guildConfig.DelubrumNormalScheduleOutputChannel;
             }
 
-            var outputChannel = Context.Guild.GetTextChannel(outputChannelId);
+            return Context.Guild.GetTextChannel(outputChannelId);
+        }
 
-            var username = Context.User.ToString();
-            var time = Util.GetDateTime(args);
-            if (time < DateTime.Now)
-            {
-                await ReplyAsync("That time is in the past!");
-                return;
-            }
-
-            await foreach (var page in outputChannel.GetMessagesAsync())
+        private static async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, string username, DateTime time)
+        {
+            await foreach (var page in channel.GetMessagesAsync())
             {
                 foreach (var message in page)
                 {
@@ -178,27 +244,11 @@ namespace Prima.Scheduler.Modules
 
                     if (!(embed.Title.Contains(username) && embed.Title.Contains(time.ToShortTimeString()))) continue;
 
-                    await restMessage.ModifyAsync(props =>
-                    {
-                        props.Embed = new EmbedBuilder()
-                            .WithTitle(embed.Title)
-                            // ReSharper disable once PossibleInvalidOperationException
-                            .WithColor(embed.Color.Value)
-                            .WithDescription("❌ Cancelled")
-                            .Build();
-                    });
-
-                    new Task(async () => {
-                        await Task.Delay(1000 * 60 * 60 * 2); // 2 hours
-                        await restMessage.DeleteAsync();
-                    }).Start();
-
-                    await ReplyAsync("Event cancelled.");
-                    return;
+                    return (restMessage, embed);
                 }
             }
 
-            await ReplyAsync("No event by you was found at that time!");
+            return (null, null);
         }
     }
 }

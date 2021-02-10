@@ -45,6 +45,7 @@ namespace Prima.Scheduler
             sc.AddSingleton<RunNotiferService>();
             sc.AddSingleton<SpreadsheetService>();
             sc.AddSingleton<AnnounceMonitor>();
+            sc.AddSingleton<CalendarApi>();
             return sc.BuildServiceProvider();
         }
     }
