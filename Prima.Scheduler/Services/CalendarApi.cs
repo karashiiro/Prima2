@@ -32,7 +32,7 @@ namespace Prima.Scheduler.Services
             }
         }
 
-        public async Task<EventCreateResponse> PostEvent(string calendarClass, MiniEvent newEvent)
+        public async Task<string> PostEvent(string calendarClass, MiniEvent newEvent)
         {
             var uri = new Uri($"{BaseAddress}/{calendarClass}");
             using var newEventJson = new StringContent(JsonConvert.SerializeObject(newEvent));
@@ -41,7 +41,7 @@ namespace Prima.Scheduler.Services
                 var res = await _http.PostAsync(uri, newEventJson);
                 var body = await res.Content.ReadAsStringAsync();
                 var ecr = JsonConvert.DeserializeObject<EventCreateResponse>(body);
-                return ecr;
+                return ecr.EventLink;
             }
             catch (HttpRequestException)
             {
@@ -50,8 +50,9 @@ namespace Prima.Scheduler.Services
             }
         }
 
-        public async Task<GenericResponse> DeleteEvent(string calendarClass, EventDeleteRequest edr)
+        public async Task<bool> DeleteEvent(string calendarClass, string id)
         {
+            var edr = new EventDeleteRequest { ID = id };
             var uri = new Uri($"{BaseAddress}/{calendarClass}");
             using var deleteReqJson = new StringContent(JsonConvert.SerializeObject(edr));
             try
@@ -59,12 +60,12 @@ namespace Prima.Scheduler.Services
                 var res = await _http.PostAsync(uri, deleteReqJson);
                 var body = await res.Content.ReadAsStringAsync();
                 var gr = JsonConvert.DeserializeObject<GenericResponse>(body);
-                return gr;
+                return true;
             }
             catch (HttpRequestException)
             {
                 Log.Warning("Could not connect to API server.");
-                return null;
+                return false;
             }
         }
     }
