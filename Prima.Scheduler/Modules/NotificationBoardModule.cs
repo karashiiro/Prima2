@@ -43,7 +43,7 @@ namespace Prima.Scheduler.Modules
 
             var parameters = args.Substring(0, splitIndex).Trim();
             var description = args.Substring(splitIndex + 1).Trim();
-            var trimmedDescription = description.Substring(0, Math.Min(1700, description.Length));
+            var trimmedDescription = description.Substring(0, Math.Min(1800, description.Length));
             if (trimmedDescription.Length != description.Length)
             {
                 trimmedDescription += "...";
@@ -188,7 +188,7 @@ namespace Prima.Scheduler.Modules
                         .WithTitle($"Event scheduled by {Context.User} on {newTime.DayOfWeek} at {newTime.ToShortTimeString()} ({tzAbbr})!")
                         .Build();
                 });
-
+                
 #if DEBUG
                 var @event = await FindEvent("drs", username, curTime.AddHours(-tzi.BaseUtcOffset.Hours));
                 @event.StartTime = XmlConvert.ToString(newTime.AddHours(-tzi.BaseUtcOffset.Hours),
@@ -245,7 +245,7 @@ namespace Prima.Scheduler.Modules
                     await Task.Delay(1000 * 60 * 60 * 2); // 2 hours
                     await embedMessage.DeleteAsync();
                 }).Start();
-
+                
 #if DEBUG
                 var @event = await FindEvent("drs", username, time.AddHours(-tzi.BaseUtcOffset.Hours));
                 await Calendar.DeleteEvent("drs", @event.ID);
@@ -267,9 +267,9 @@ namespace Prima.Scheduler.Modules
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
             if (guildConfig == null) return null;
 
-            if (channelId == guildConfig.CastrumScheduleInputChannel)
+            if (channelId == guildConfig.CastrumScheduleOutputChannel)
                 return "cll";
-            else if (channelId == guildConfig.DelubrumScheduleInputChannel)
+            else if (channelId == guildConfig.DelubrumScheduleOutputChannel)
                 return "drs";
             else if (channelId == guildConfig.DelubrumNormalScheduleOutputChannel)
                 return "dr";
