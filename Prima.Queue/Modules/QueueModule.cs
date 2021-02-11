@@ -85,6 +85,7 @@ namespace Prima.Queue.Modules
 #endif
                 => "Castrum Lacus Litore",
                 803636739343908894 => "Delubrum Reginae (Savage)",
+                809241125373739058 => "fresh Delubrum Reginae (Savage) progression",
                 806957742056013895 => "Delubrum Reginae (Normal)",
                 _ => throw new NotSupportedException(),
             };
@@ -102,7 +103,7 @@ namespace Prima.Queue.Modules
             var wantedSum = dpsWanted + healersWanted + tanksWanted;
             if (wantedSum > 7)
             {
-                if (Context.Channel.Id == DelubrumSavageChannelId)
+                if (Context.Channel.Id == DelubrumSavageChannelId || Context.Channel.Id == 809241125373739058)
                 {
                     if (wantedSum > 47)
                     {
@@ -157,7 +158,7 @@ namespace Prima.Queue.Modules
                 const ulong castrumLfg = 765994301850779709;
 #endif
                 await leader.SendMessageAsync($"Your Party Finder password is {pw}.\n" +
-                    $"Please join {(new ulong[] { castrumLfg, DelubrumSavageChannelId, 806957742056013895 }.Contains(Context.Channel.Id) ? "a" : "an elemental")} voice channel within the next 30 seconds to continue matching.\n" +
+                    $"Please join {(new ulong[] { castrumLfg, DelubrumSavageChannelId, 806957742056013895, 809241125373739058 }.Contains(Context.Channel.Id) ? "a" : "an elemental")} voice channel within the next 30 seconds to continue matching.\n" +
                     "Create the listing in Party Finder now; matching will begin in 30 seconds.");
             }
             catch (HttpException)
@@ -463,6 +464,8 @@ namespace Prima.Queue.Modules
             var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
+            args = RemoveRoleFromArgs(args);
+
             var roles = ParseRoles(args);
             if (roles == FFXIVRole.None)
             {
@@ -500,7 +503,7 @@ namespace Prima.Queue.Modules
                     break;
             }
             
-            if (!new ulong[] { 765994301850779709, DelubrumSavageChannelId, 806957742056013895 }.Contains(Context.Channel.Id))
+            if (!new ulong[] { 765994301850779709, DelubrumSavageChannelId, 806957742056013895, 809241125373739058 }.Contains(Context.Channel.Id))
             {
                 response += extra;
             }
@@ -830,6 +833,7 @@ namespace Prima.Queue.Modules
         {
             QueueService.GetOrCreateQueue("lfg-castrum").Refresh(Context.User.Id);
             QueueService.GetOrCreateQueue("lfg-delubrum").Refresh(Context.User.Id);
+            QueueService.GetOrCreateQueue("lfg-drs-fresh-prog").Refresh(Context.User.Id);
             QueueService.GetOrCreateQueue("lfg-delubrum-savage").Refresh(Context.User.Id);
             Log.Information("User {User} refreshed queue times.", Context.User.ToString());
         }
@@ -906,6 +910,19 @@ namespace Prima.Queue.Modules
 
             Log.Information("User {User} inserted at position {Position} in queue {QueueName}.", user.ToString(), position, queueName);
             return ReplyAsync($"User inserted in position {position}.");
+        }
+
+        private string RemoveRoleFromArgs(string args)
+        {
+            var roleName =
+                DelubrumProgressionRoles.Roles.Values.FirstOrDefault(rn =>
+                    args.ToLowerInvariant().EndsWith(rn.ToLowerInvariant()));
+            if (roleName != null)
+            {
+                return args.Replace(roleName, "");
+            }
+
+            return args;
         }
 
         private IRole GetRoleFromArgs(string args)

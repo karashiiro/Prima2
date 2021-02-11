@@ -19,6 +19,7 @@ namespace Prima.Queue.Resources
 #endif
                 , "lfg-castrum" },
             { 803636739343908894, "lfg-delubrum-savage" },
+            { 809241125373739058, "lfg-drs-fresh-prog" },
             { 806957742056013895, "lfg-delubrum" },
         };
 
