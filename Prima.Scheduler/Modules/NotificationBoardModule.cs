@@ -44,6 +44,10 @@ namespace Prima.Scheduler.Modules
             var parameters = args.Substring(0, splitIndex).Trim();
             var description = args.Substring(splitIndex + 1).Trim();
             var trimmedDescription = description.Substring(0, Math.Min(1700, description.Length));
+            if (trimmedDescription.Length != description.Length)
+            {
+                trimmedDescription += "...";
+            }
 
             if (parameters.IndexOf(":", StringComparison.Ordinal) == -1)
             {
