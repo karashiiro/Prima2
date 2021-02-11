@@ -7,7 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Prima.Scheduler.Services;
+using System.Xml;
+using Prima.Scheduler.GoogleApis.Calendar;
+using Prima.Scheduler.GoogleApis.Services;
 using Serilog;
 using TimeZoneNames;
 using Color = Discord.Color;
@@ -41,6 +43,7 @@ namespace Prima.Scheduler.Modules
 
             var parameters = args.Substring(0, splitIndex).Trim();
             var description = args.Substring(splitIndex + 1).Trim();
+            var trimmedDescription = description.Substring(0, Math.Min(1700, description.Length));
 
             if (parameters.IndexOf(":", StringComparison.Ordinal) == -1)
             {
@@ -59,6 +62,18 @@ namespace Prima.Scheduler.Modules
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
             var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
 
+            var eventLink =
+#if DEBUG
+            await Calendar.PostEvent("drs", new MiniEvent
+#else
+            await Calendar.PostEvent(GetCalendarCode(outputChannel.Id), new MiniEvent
+#endif
+            {
+                Title = Context.User.ToString(),
+                Description = description,
+                StartTime = XmlConvert.ToString(time.AddHours(-tzi.BaseUtcOffset.Hours), XmlDateTimeSerializationMode.Utc),
+            });
+
             var color = RunDisplayTypes.GetColorCastrum();
             var embed = await outputChannel.SendMessageAsync(embed: new EmbedBuilder()
                 .WithAuthor(new EmbedAuthorBuilder()
@@ -67,15 +82,23 @@ namespace Prima.Scheduler.Modules
                 .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
                 .WithTimestamp(time.AddHours(-tzi.BaseUtcOffset.Hours))
                 .WithTitle($"Event scheduled by {Context.User} on {time.DayOfWeek} at {time.ToShortTimeString()} ({tzAbbr})!")
-                .WithDescription(description)
+                .WithDescription(trimmedDescription + $"\n\n[Copy to Google Calendar]({eventLink})")
                 .Build());
-
             await embed.AddReactionAsync(new Emoji("📳"));
 
             await ReplyAsync($"Event announced! Announcement posted in <#{outputChannel.Id}>. React to the announcement in " +
                              $"<#{outputChannel.Id}> with :vibration_mode: to be notified before the event begins.");
-
             await SortEmbeds(outputChannel);
+        }
+
+        private async Task<MiniEvent> FindEvent(string calendarClass, string title, DateTime startTime)
+        {
+            var events = await Calendar.GetEvents(calendarClass);
+            return events.FirstOrDefault(e =>
+            {
+                var eventStartTime = XmlConvert.ToDateTime(e.StartTime, XmlDateTimeSerializationMode.Utc);
+                return e.Title == title && eventStartTime == startTime;
+            });
         }
 
         [Command("sortembeds", RunMode = RunMode.Async)]
@@ -162,6 +185,18 @@ namespace Prima.Scheduler.Modules
                         .Build();
                 });
 
+#if DEBUG
+                var @event = await FindEvent("drs", username, curTime.AddHours(-tzi.BaseUtcOffset.Hours));
+                @event.StartTime = XmlConvert.ToString(newTime.AddHours(-tzi.BaseUtcOffset.Hours),
+                    XmlDateTimeSerializationMode.Utc);
+                await Calendar.UpdateEvent("drs", @event);
+#else
+                var @event = await FindEvent(GetCalendarCode(outputChannel.Id), username, curTime.AddHours(-tzi.BaseUtcOffset.Hours));
+                @event.StartTime = XmlConvert.ToString(newTime.AddHours(-tzi.BaseUtcOffset.Hours),
+                    XmlDateTimeSerializationMode.Utc);
+                await Calendar.UpdateEvent(GetCalendarCode(outputChannel.Id), @event);
+#endif
+
                 await SortEmbeds(outputChannel);
 
                 Log.Information("Rescheduled announcement from {OldTime} to {NewTime}", curTime.ToShortTimeString(), newTime.ToShortTimeString());
@@ -188,6 +223,8 @@ namespace Prima.Scheduler.Modules
                 return;
             }
 
+            var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
+
             var (embedMessage, embed) = await FindAnnouncement(outputChannel, username, time);
             if (embedMessage != null)
             {
@@ -205,12 +242,35 @@ namespace Prima.Scheduler.Modules
                     await embedMessage.DeleteAsync();
                 }).Start();
 
+#if DEBUG
+                var @event = await FindEvent("drs", username, time.AddHours(-tzi.BaseUtcOffset.Hours));
+                await Calendar.DeleteEvent("drs", @event.ID);
+#else
+                var @event = await FindEvent(GetCalendarCode(outputChannel.Id), username, time.AddHours(-tzi.BaseUtcOffset.Hours));
+                await Calendar.DeleteEvent(GetCalendarCode(outputChannel.Id), @event.ID);
+#endif
+
                 await ReplyAsync("Event cancelled.");
             }
             else
             {
                 await ReplyAsync("No event by you was found at that time!");
             }
+        }
+
+        private string GetCalendarCode(ulong channelId)
+        {
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return null;
+
+            if (channelId == guildConfig.CastrumScheduleInputChannel)
+                return "cll";
+            else if (channelId == guildConfig.DelubrumScheduleInputChannel)
+                return "drs";
+            else if (channelId == guildConfig.DelubrumNormalScheduleOutputChannel)
+                return "dr";
+            else
+                return null;
         }
 
         private IMessageChannel GetOutputChannel()

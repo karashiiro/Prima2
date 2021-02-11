@@ -1,9 +1,9 @@
 ﻿using Prima.Scheduler.Services;
 using Serilog;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
+using Prima.Scheduler.GoogleApis.Services;
 
 namespace Prima.Scheduler
 {
@@ -29,16 +29,11 @@ namespace Prima.Scheduler
             services.GetRequiredService<RunNotiferService>().Initialize();
             services.GetRequiredService<AnnounceMonitor>().Initialize();
 
-            Log.Information($"Prima Scheduler logged in!");
-                
-            /*var uptime = services.GetRequiredService<UptimeMessageService>();
-                uptime.Initialize("Prima Scheduler", "Friendzoned from Google.");
-                uptime.StartAsync().Start();*/
+            Log.Information("Prima Scheduler logged in!");
             
             await Task.Delay(-1);
         }
 
-        [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "<Pending>")]
         private static ServiceProvider ConfigureServices(IServiceCollection sc)
         {
             sc.AddSingleton<EventService>();

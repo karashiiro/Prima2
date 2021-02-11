@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Prima.Scheduler.GoogleApis;
 using Prima.Scheduler.GoogleApis.Calendar;
 using Serilog;
 
-namespace Prima.Scheduler.Services
+namespace Prima.Scheduler.GoogleApis.Services
 {
     public class CalendarApi
     {
@@ -50,14 +49,44 @@ namespace Prima.Scheduler.Services
             }
         }
 
-        public async Task<bool> DeleteEvent(string calendarClass, string id)
+        public async Task<bool> UpdateEvent(string calendarClass, MiniEvent newEvent)
         {
-            var edr = new EventDeleteRequest { ID = id };
-            var uri = new Uri($"{BaseAddress}/{calendarClass}");
-            using var deleteReqJson = new StringContent(JsonConvert.SerializeObject(edr));
+            var uri = new Uri($"{BaseAddress}/{calendarClass}/{newEvent.ID}");
+            using var newEventJson = new StringContent(JsonConvert.SerializeObject(newEvent));
             try
             {
-                var res = await _http.PostAsync(uri, deleteReqJson);
+                await _http.PutAsync(uri, newEventJson);
+                return true;
+            }
+            catch (HttpRequestException)
+            {
+                Log.Warning("Could not connect to API server.");
+                return false;
+            }
+        }
+
+        public async Task<MiniEvent> GetEvent(string calendarClass, string id)
+        {
+            var uri = new Uri($"{BaseAddress}/{calendarClass}/{id}");
+            try
+            {
+                var res = await _http.GetStringAsync(uri);
+                var me = JsonConvert.DeserializeObject<MiniEvent>(res);
+                return me;
+            }
+            catch (HttpRequestException)
+            {
+                Log.Warning("Could not connect to API server.");
+                return null;
+            }
+        }
+
+        public async Task<bool> DeleteEvent(string calendarClass, string id)
+        {
+            var uri = new Uri($"{BaseAddress}/{calendarClass}/{id}");
+            try
+            {
+                var res = await _http.DeleteAsync(uri);
                 var body = await res.Content.ReadAsStringAsync();
                 var gr = JsonConvert.DeserializeObject<GenericResponse>(body);
                 return true;
