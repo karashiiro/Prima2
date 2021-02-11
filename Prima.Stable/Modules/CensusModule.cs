@@ -394,6 +394,17 @@ namespace Prima.Stable.Modules
                 Log.Information("Added role " + clearedDRS.Name);
                 await member.AddRoleAsync(clearedDRS);
                 await ReplyAsync(Properties.Resources.LodestoneDRSSuccess1);
+
+                var queenProg = member.Guild.Roles.FirstOrDefault(r => r.Name == "The Queen Progression");
+                var contingentRoles = DelubrumProgressionRoles.GetContingentRoles(queenProg?.Id ?? 0);
+                foreach (var crId in contingentRoles)
+                {
+                    var cr = member.Guild.GetRole(crId);
+                    if (member.HasRole(cr)) continue;
+                    await member.AddRoleAsync(cr);
+                    Log.Information("Role {RoleName} added to {User}.", cr.Name, member.ToString());
+                }
+
                 hasDRSAchievement1 = true;
             }
             if (character.GetAchievements().Any(achievement => achievement.ID == 2767)) // Operation: Savage Queen of Swords III
@@ -401,6 +412,17 @@ namespace Prima.Stable.Modules
                 Log.Information("Added role " + savageQueen.Name);
                 await member.AddRoleAsync(savageQueen);
                 await ReplyAsync(Properties.Resources.LodestoneDRSSuccess2);
+
+                var queenProg = member.Guild.Roles.FirstOrDefault(r => r.Name == "The Queen Progression");
+                var contingentRoles = DelubrumProgressionRoles.GetContingentRoles(queenProg?.Id ?? 0);
+                foreach (var crId in contingentRoles)
+                {
+                    var cr = member.Guild.GetRole(crId);
+                    if (member.HasRole(cr)) continue;
+                    await member.AddRoleAsync(cr);
+                    Log.Information("Role {RoleName} added to {User}.", cr.Name, member.ToString());
+                }
+
                 hasDRSAchievement2 = true;
             }
             if (character.GetMiMo().Any(mimo => mimo.Name == "Demi-Ozma"))
