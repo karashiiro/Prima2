@@ -72,20 +72,27 @@ namespace Prima.Scheduler.Handlers
 
 #if DEBUG
             var @event = await FindEvent(calendar, "drs", message.Author.ToString(), time);
-            await calendar.UpdateEvent("drs", new MiniEvent
 #else
             var calendarCode = GetCalendarCode(guildConfig, outputChannel.Id);
             var @event = await FindEvent(calendar, calendarCode, message.Author.ToString(), time);
-            await calendar.UpdateEvent(calendarCode, new MiniEvent
 #endif
-            {
-                Title = message.Author.ToString(),
-                Description = description,
-                StartTime = XmlConvert.ToString(time.AddHours(-tzi.BaseUtcOffset.Hours), XmlDateTimeSerializationMode.Utc),
-                ID = @event.ID,
-            });
 
-            Log.Information("Updated calendar entry.");
+            if (@event != null)
+            {
+#if DEBUG
+                await calendar.UpdateEvent("drs", new MiniEvent
+#else
+                await calendar.UpdateEvent(calendarCode, new MiniEvent
+#endif
+                {
+                    Title = message.Author.ToString(),
+                    Description = description,
+                    StartTime = XmlConvert.ToString(time.AddHours(-tzi.BaseUtcOffset.Hours), XmlDateTimeSerializationMode.Utc),
+                    ID = @event.ID,
+                });
+
+                Log.Information("Updated calendar entry.");
+            }
 
             var (embedMessage, embed) = await FindAnnouncement(outputChannel, message.Author.ToString(), time);
             var calendarLinkLine = embed.Description.Split('\n').Last();
