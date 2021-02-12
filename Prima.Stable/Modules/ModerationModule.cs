@@ -7,7 +7,6 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Prima.Attributes;
@@ -50,7 +49,7 @@ namespace Prima.Moderation.Modules
             var guildConfig = Db.Guilds.Single(g => g.Id == guild.Id);
 
             var postChannel = guild.GetTextChannel(guildConfig.ReportChannel);
-            var output = $"<@&{guildConfig.Roles["Moderator"]}> {Context.User.Username}#{Context.User.Discriminator} just sent a report:"
+            var output = $"<@&{guildConfig.Roles["Moderator"]}> {Context.User.Mention} just sent a report:"
                 + Context.Message.Content.Substring(Context.Message.Content.IndexOf(' '));
             if (output.Length > 2000) // This can only be the case once, no need for a loop.
             {
@@ -80,7 +79,6 @@ namespace Prima.Moderation.Modules
         // Check when a user joined Discord.
         [Command("when")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "<Pending>")]
         public async Task WhenAsync(IUser user)
         {
             await ReplyAsync(user.CreatedAt.UtcDateTime.ToString());

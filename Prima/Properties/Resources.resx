@@ -164,7 +164,8 @@
     <comment>Should call this Killer Queen qwq</comment>
   </data>
   <data name="LodestoneMountAchievementNotFoundError" xml:space="preserve">
-    <value>The mount or achievement was not found. Please ensure your achievements and mounts are public for this operation.</value>
+    <value>The mount or achievement was not found. Please ensure your achievements and mounts are public for this operation.
+You can check your privacy settings here: https://na.finalfantasyxiv.com/lodestone/my/setting/account/</value>
   </data>
   <data name="MemberAlreadyHasRoleError" xml:space="preserve">
     <value>You already have all roles associated with this command!</value>

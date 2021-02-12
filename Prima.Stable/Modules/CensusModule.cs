@@ -434,7 +434,9 @@ namespace Prima.Stable.Modules
             }
 
             if (!hasAchievement && !hasMount && !hasCastrumLLAchievement1 && !hasCastrumLLAchievement2 && !hasDRSAchievement1 && !hasDRSAchievement2)
+            {
                 await ReplyAsync(Properties.Resources.LodestoneMountAchievementNotFoundError);
+            }
 
             if (user == null)
             {

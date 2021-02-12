@@ -196,7 +196,8 @@ namespace Prima.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The mount or achievement was not found. Please ensure your achievements and mounts are public for this operation..
+        ///   Looks up a localized string similar to The mount or achievement was not found. Please ensure your achievements and mounts are public for this operation.
+        ///You can check your privacy settings here: https://na.finalfantasyxiv.com/lodestone/my/setting/account/.
         /// </summary>
         public static string LodestoneMountAchievementNotFoundError {
             get {
