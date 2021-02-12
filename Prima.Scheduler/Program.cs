@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Prima.Scheduler.GoogleApis.Services;
+using Prima.Scheduler.Handlers;
+using Prima.Services;
 
 namespace Prima.Scheduler
 {
@@ -21,10 +23,14 @@ namespace Prima.Scheduler
 
             var client = services.GetRequiredService<DiscordSocketClient>();
             var events = services.GetRequiredService<EventService>();
+            var db = services.GetRequiredService<DbService>();
+            var calendar = services.GetRequiredService<CalendarApi>();
 
             client.MessageUpdated += events.OnMessageEdit;
             client.ReactionAdded += events.OnReactionAdd;
             client.ReactionRemoved += events.OnReactionRemove;
+
+            client.MessageUpdated += (_, message, channel) => AnnounceEdit.Handler(client, calendar, db, message);
 
             services.GetRequiredService<RunNotiferService>().Initialize();
             services.GetRequiredService<AnnounceMonitor>().Initialize();
