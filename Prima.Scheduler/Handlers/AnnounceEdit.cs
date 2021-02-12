@@ -28,9 +28,16 @@ namespace Prima.Scheduler.Handlers
             var guild = client.GetGuild(guildConfig.Id);
 
             var prefix = db.Config.Prefix;
+            if (message.Content == null || !message.Content.StartsWith(prefix + "announce")) return;
+
+            Log.Information("Announcement message being edited.");
 
             var outputChannel = GetOutputChannel(guildConfig, guild, message.Channel);
-            if (outputChannel == null) return;
+            if (outputChannel == null)
+            {
+                Log.Information("Could not get output channel; aborting.");
+                return;
+            }
 
             var args = message.Content.Substring(message.Content.IndexOf(' ') + 1);
 
@@ -67,7 +74,7 @@ namespace Prima.Scheduler.Handlers
             var @event = await FindEvent(calendar, "drs", message.Author.ToString(), time);
             await calendar.UpdateEvent("drs", new MiniEvent
 #else
-            var calendarCode = GetCalendarCode(outputChannel.Id);
+            var calendarCode = GetCalendarCode(guildConfig, outputChannel.Id);
             var @event = await FindEvent(calendar, calendarCode, message.Author.ToString(), time);
             await calendar.UpdateEvent(calendarCode, new MiniEvent
 #endif
@@ -77,6 +84,8 @@ namespace Prima.Scheduler.Handlers
                 StartTime = XmlConvert.ToString(time.AddHours(-tzi.BaseUtcOffset.Hours), XmlDateTimeSerializationMode.Utc),
                 ID = @event.ID,
             });
+
+            Log.Information("Updated calendar entry.");
 
             var (embedMessage, embed) = await FindAnnouncement(outputChannel, message.Author.ToString(), time);
             var calendarLinkLine = embed.Description.Split('\n').Last();
@@ -91,6 +100,22 @@ namespace Prima.Scheduler.Handlers
                         : ""))
                     .Build();
             });
+
+            Log.Information("Updated announcement embed.");
+        }
+
+        private static string GetCalendarCode(DiscordGuildConfiguration guildConfig, ulong channelId)
+        {
+            if (guildConfig == null) return null;
+
+            if (channelId == guildConfig.CastrumScheduleOutputChannel)
+                return "cll";
+            else if (channelId == guildConfig.DelubrumScheduleOutputChannel)
+                return "drs";
+            else if (channelId == guildConfig.DelubrumNormalScheduleOutputChannel)
+                return "dr";
+            else
+                return null;
         }
 
         private static async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, string username, DateTime time)
