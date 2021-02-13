@@ -20,22 +20,29 @@ namespace Prima.Queue
             _tankQueue = new SynchronizedCollection<QueueSlot>();
         }
 
-        public bool Enqueue(ulong userId, FFXIVRole role)
+        public bool Enqueue(ulong userId, FFXIVRole role, string eventId = "")
         {
             var queue = GetQueue(role);
 
             if (queue.Any(tuple => tuple.Id == userId)) return false;
-            queue.Add(new QueueSlot(userId));
+            queue.Add(new QueueSlot(userId, eventId));
             return true;
         }
 
-        public ulong? Dequeue(FFXIVRole role)
+        public ulong? Dequeue(FFXIVRole role, string eventId = "")
         {
             var queue = GetQueue(role);
             if (queue.Count == 0) return null;
-            var (user, _, _) = queue[0];
-            RemoveAll(user);
-            return user;
+            var slot = queue.FirstOrDefault(s => s.EventId == eventId);
+            if (slot != null)
+            {
+                RemoveAll(slot.Id);
+                return slot.Id;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public bool Remove(ulong userId, FFXIVRole role)

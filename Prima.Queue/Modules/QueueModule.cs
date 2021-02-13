@@ -9,7 +9,6 @@ using Prima.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Prima.Queue.Resources;
 using Serilog;
@@ -464,6 +463,13 @@ namespace Prima.Queue.Modules
             var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
+            // Get progression role if supplied in Savage queue
+            IRole requiredDiscordRole = null;
+            if (Context.Channel.Id == DelubrumSavageChannelId)
+            {
+                requiredDiscordRole = GetRoleFromArgs(args);
+            }
+
             args = RemoveRoleFromArgs(args);
 
             var roles = ParseRoles(args);
@@ -476,9 +482,18 @@ namespace Prima.Queue.Modules
 
             var enqueuedRoles = FFXIVRole.None;
             foreach (var r in new[] { FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank })
-                if (roles.HasFlag(r))
-                    if (queue.Enqueue(Context.User.Id, r))
-                        enqueuedRoles |= r;
+            {
+                if (!roles.HasFlag(r)) continue;
+                if (requiredDiscordRole == null && queue.Enqueue(Context.User.Id, r))
+                {
+                    enqueuedRoles |= r;
+                }
+                else if (requiredDiscordRole != null &&
+                         queue.EnqueueWithDiscordRole(Context.User.Id, r, requiredDiscordRole, Context) == DiscordIntegratedEnqueueResult.Success)
+                {
+                    enqueuedRoles |= r;
+                }
+            }
 
             var response = Context.User.Mention;
             const string queued0 = ", you're already in those queues. You can check your position in them with `~queue`.";

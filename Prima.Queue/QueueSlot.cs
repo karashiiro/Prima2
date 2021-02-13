@@ -1,5 +1,6 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 
 namespace Prima.Queue
 {
@@ -15,18 +16,29 @@ namespace Prima.Queue
         [JsonProperty("Item3")]
         public bool ExpirationNotified { get; set; }
 
-        public QueueSlot(ulong id)
+        [JsonProperty("EventId")]
+        private string eventId;
+        public string EventId
+        {
+            get => eventId ?? "";
+            private set => eventId = value;
+        }
+
+        [JsonProperty("RoleIds")]
+        private IEnumerable<ulong> roleIds;
+        public IEnumerable<ulong> RoleIds
+        {
+            get => roleIds ?? new List<ulong>();
+            private set => roleIds = value;
+        }
+
+        public QueueSlot(ulong id, string eventId = "", IEnumerable<ulong> roleIds = null)
         {
             Id = id;
             QueueTime = DateTime.UtcNow;
             ExpirationNotified = false;
-        }
-
-        public void Deconstruct(out ulong id, out DateTime queueTime, out bool expirationNotified)
-        {
-            id = Id;
-            queueTime = QueueTime;
-            expirationNotified = ExpirationNotified;
+            EventId = eventId;
+            RoleIds = roleIds ?? new ulong[] { };
         }
     }
 }
