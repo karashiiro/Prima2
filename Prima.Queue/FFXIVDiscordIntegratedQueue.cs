@@ -51,7 +51,7 @@ namespace Prima.Queue
         public int CountWithDiscordRole(FFXIVRole role, IRole discordRole, SocketCommandContext context, string eventId)
         {
             return GetQueue(role)
-                .Where(EventValid(eventId))
+                .Where(string.IsNullOrEmpty(eventId) ? s => true : EventValid(eventId))
                 .Count(s => SlotHasRole(s, discordRole, context));
         }
 
@@ -61,7 +61,7 @@ namespace Prima.Queue
                 .Concat(_healerQueue)
                 .Concat(_tankQueue)
                 .Where(s => SlotHasRole(s, discordRole, context))
-                .Where(EventValid(eventId))
+                .Where(string.IsNullOrEmpty(eventId) ? s => true : EventValid(eventId))
                 .Select(s => s.Id)
                 .Distinct()
                 .Count();
@@ -71,7 +71,7 @@ namespace Prima.Queue
         {
             return GetQueue(role)
                 .Where(s => SlotHasRole(s, discordRole, context))
-                .Where(EventValid(eventId))
+                .Where(string.IsNullOrEmpty(eventId) ? s => true : EventValid(eventId))
                 .ToList()
                 .IndexOf(s => s.Id == userId) + 1;
         }

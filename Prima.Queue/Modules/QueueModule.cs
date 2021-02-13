@@ -579,11 +579,15 @@ namespace Prima.Queue.Modules
                                             "Healer: {1}\n" +
                                             "DPS: {2}";
 
+            var tankEvent = queue.GetEvent(Context.User.Id, FFXIVRole.Tank) ?? "Not in queue";
+            var healerEvent = queue.GetEvent(Context.User.Id, FFXIVRole.Healer) ?? "Not in queue";
+            var dpsEvent = queue.GetEvent(Context.User.Id, FFXIVRole.DPS) ?? "Not in queue";
+
             await ReplyAsync(string.Format(
                 responseTemplate,
-                queue.GetEvent(Context.User.Id, FFXIVRole.Tank) ?? "Not in queue",
-                queue.GetEvent(Context.User.Id, FFXIVRole.Healer) ?? "Not in queue",
-                queue.GetEvent(Context.User.Id, FFXIVRole.DPS) ?? "Not in queue"));
+                tankEvent.Length == 0 ? "None" : tankEvent,
+                healerEvent.Length == 0 ? "None" : healerEvent,
+                dpsEvent.Length == 0 ? "None" : dpsEvent));
         }
 
         [Command("setevent", RunMode = RunMode.Async)]
@@ -1042,6 +1046,7 @@ namespace Prima.Queue.Modules
             foreach (var channelId in channels)
             {
                 var channel = Context.Guild.GetTextChannel(channelId);
+                if (channel == null) continue;
                 await foreach (var page in channel.GetMessagesAsync())
                 {
                     foreach (var message in page)

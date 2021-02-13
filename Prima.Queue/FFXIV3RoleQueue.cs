@@ -34,7 +34,6 @@ namespace Prima.Queue
             var queue = GetQueue(role);
             if (queue.Count == 0) return null;
             var slot = queue.FirstOrDefault(s => !s.RoleIds.Any() && (s.EventId == null || s.EventId == eventId));
-            Log.Information(JsonConvert.SerializeObject(slot));
             if (slot != null)
             {
                 RemoveAll(slot.Id);
@@ -62,7 +61,7 @@ namespace Prima.Queue
         public int Count(FFXIVRole role, string eventId)
         {
             return GetQueue(role)
-                .Count(EventValid(eventId));
+                .Count(string.IsNullOrEmpty(eventId) ? s => true : EventValid(eventId));
         }
 
         public int CountDistinct(string eventId)
@@ -70,7 +69,7 @@ namespace Prima.Queue
             return _dpsQueue
                 .Concat(_healerQueue)
                 .Concat(_tankQueue)
-                .Where(EventValid(eventId))
+                .Where(string.IsNullOrEmpty(eventId) ? s => true : EventValid(eventId))
                 .Select(s => s.Id)
                 .Distinct()
                 .Count();
@@ -79,7 +78,7 @@ namespace Prima.Queue
         public int GetPosition(ulong userId, FFXIVRole role, string eventId)
         {
             return GetQueue(role)
-                .Where(EventValid(eventId))
+                .Where(string.IsNullOrEmpty(eventId) ? s => true : EventValid(eventId))
                 .ToList()
                 .IndexOf(s => s.Id == userId) + 1;
         }
