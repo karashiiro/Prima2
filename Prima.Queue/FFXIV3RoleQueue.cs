@@ -48,14 +48,8 @@ namespace Prima.Queue
 
         public bool Remove(ulong userId, FFXIVRole role)
         {
-            return role switch
-            {
-                FFXIVRole.DPS => _dpsQueue.Remove(tuple => tuple.Id == userId),
-                FFXIVRole.Healer => _healerQueue.Remove(tuple => tuple.Id == userId),
-                FFXIVRole.Tank => _tankQueue.Remove(tuple => tuple.Id == userId),
-                FFXIVRole.None => false,
-                _ => throw new NotImplementedException(),
-            };
+            return GetQueue(role)
+                .Remove(s => s.Id == userId);
         }
 
         public void RemoveAll(ulong user)
@@ -65,37 +59,37 @@ namespace Prima.Queue
             Remove(user, FFXIVRole.Tank);
         }
 
-        public int Count(FFXIVRole role)
+        public int Count(FFXIVRole role, string eventId = null)
         {
-            return role switch
-            {
-                FFXIVRole.DPS => _dpsQueue.Count,
-                FFXIVRole.Healer => _healerQueue.Count,
-                FFXIVRole.Tank => _tankQueue.Count,
-                FFXIVRole.None => 0,
-                _ => throw new NotImplementedException(),
-            };
+            return GetQueue(role)
+                .Count(EventValid(eventId));
         }
 
-        public int CountDistinct()
+        public int CountDistinct(string eventId = null)
         {
             return _dpsQueue
                 .Concat(_healerQueue)
                 .Concat(_tankQueue)
+                .Where(EventValid(eventId))
                 .Select(s => s.Id)
                 .Distinct()
                 .Count();
         }
 
-        public int GetPosition(ulong userId, FFXIVRole role)
+        public int GetPosition(ulong userId, FFXIVRole role, string eventId = null)
         {
-            return role switch
+            return GetQueue(role)
+                .Where(EventValid(eventId))
+                .ToList()
+                .IndexOf(s => s.Id == userId) + 1;
+        }
+
+        private static Func<QueueSlot, bool> EventValid(string eventId)
+        {
+            return s =>
             {
-                FFXIVRole.DPS => _dpsQueue.IndexOf(s => s.Id == userId) + 1,
-                FFXIVRole.Healer => _healerQueue.IndexOf(s => s.Id == userId) + 1,
-                FFXIVRole.Tank => _tankQueue.IndexOf(s => s.Id == userId) + 1,
-                FFXIVRole.None => 0,
-                _ => throw new NotImplementedException(),
+                if (eventId == null) return true;
+                return s.EventId == eventId;
             };
         }
 
