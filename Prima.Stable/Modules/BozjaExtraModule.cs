@@ -121,7 +121,6 @@ namespace Prima.Stable.Modules
             roleName = roleName.Trim();
             var role = Context.Guild.Roles.FirstOrDefault(r =>
                 string.Equals(r.Name.ToLowerInvariant(), roleName.ToLowerInvariant(), StringComparison.InvariantCultureIgnoreCase));
-            Log.Information(roleName);
             if (role == null)
             {
                 var res = await ReplyAsync($"{Context.User.Mention}, no role by that name exists! Make sure you spelled it correctly.");
@@ -131,17 +130,23 @@ namespace Prima.Stable.Modules
             }
 
             if (!DelubrumProgressionRoles.Roles.Keys.Contains(role.Id)) return;
-            var contingentRoles = DelubrumProgressionRoles.GetContingentRoles(role.Id);
+            var contingentRoles = DelubrumProgressionRoles.GetContingentRoles(role.Id)
+                .Select(Context.Guild.GetRole)
+                .ToList();
 
-            foreach (var member in members)
-            {
-                foreach (var roleId in contingentRoles)
+            await Task.WhenAll(members
+                .Select(m =>
                 {
-                    var r = Context.Guild.GetRole(roleId);
-                    await member.AddRoleAsync(r);
-                    Log.Information("Role {RoleName} added to {User}.", r.Name, member.ToString());
-                }
-            }
+                    try
+                    {
+                        return m.AddRolesAsync(contingentRoles.Where(r => !m.HasRole(r)));
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e, "Failed to add roles to user {User}.", m.ToString());
+                        return Task.CompletedTask;
+                    }
+                }));
 
             await ReplyAsync("Roles added!");
         }
@@ -187,14 +192,19 @@ namespace Prima.Stable.Modules
 
             if (!DelubrumProgressionRoles.Roles.Keys.Contains(role.Id)) return;
 
-            foreach (var member in members)
-            {
-                if (member.HasRole(role, Context))
+            await Task.WhenAll(members
+                .Select(m =>
                 {
-                    await member.RemoveRoleAsync(role);
-                    Log.Information("Role {RoleName} removed from {User}.", role.Name, member.ToString());
-                }
-            }
+                    try
+                    {
+                        return m.RemoveRoleAsync(role);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e, "Failed to remove role from user {User}.", m.ToString());
+                        return Task.CompletedTask;
+                    }
+                }));
 
             await ReplyAsync("Roles removed!");
         }

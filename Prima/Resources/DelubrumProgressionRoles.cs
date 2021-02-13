@@ -37,6 +37,9 @@ namespace Prima.Resources
                 807854109608378368 => baseList[4..],
                 807854112905363456 => baseList[5..],
                 807854117053136896 => baseList[6..],
+#if DEBUG
+                807881434110754866 => new List<ulong> { 807881434110754866 },
+#endif
                 _ => new List<ulong>(),
             };
         }
