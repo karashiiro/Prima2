@@ -9,6 +9,7 @@ using Prima.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Prima.Queue.Resources;
 using Serilog;
@@ -941,14 +942,41 @@ namespace Prima.Queue.Modules
             return ReplyAsync($"User inserted in position {position}.");
         }
 
-        private string RemoveRoleFromArgs(string args)
+        private static readonly Regex EventIdRegex = new Regex(@"\d{5}\d+", RegexOptions.Compiled);
+        private static string RemoveEventIdFromArgs(string args)
+        {
+            var match = EventIdRegex.Match(args);
+            if (match.Success)
+            {
+                return args.Replace(match.Value, "");
+            }
+            else
+            {
+                return args;
+            }
+        }
+
+        private static string GetEventIdFromArgs(string args)
+        {
+            var match = EventIdRegex.Match(args);
+            if (match.Success)
+            {
+                return match.Value;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private static string RemoveRoleFromArgs(string args)
         {
             var roleName =
                 DelubrumProgressionRoles.Roles.Values.FirstOrDefault(rn =>
-                    args.ToLowerInvariant().EndsWith(rn.ToLowerInvariant()));
+                    args.ToLowerInvariant().Contains(rn.ToLowerInvariant()));
             if (roleName != null)
             {
-                return args.Replace(roleName, "");
+                return args.Replace(roleName, "", StringComparison.InvariantCultureIgnoreCase);
             }
 
             return args;

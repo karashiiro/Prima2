@@ -131,11 +131,19 @@ namespace Prima.Queue
         public void Insert(ulong uid, int position, FFXIVRole role)
         {
             var queue = GetQueue(role);
+
+            var slot = queue.FirstOrDefault(s => s.Id == uid);
+            if (slot != null)
+            {
+                slot.ExpirationNotified = false;
+                slot.QueueTime = DateTime.UtcNow;
+            }
+
             Remove(uid, role);
 
             try
             {
-                queue.Insert(position, new QueueSlot(uid));
+                queue.Insert(position, slot ?? new QueueSlot(uid));
             }
             catch (ArgumentOutOfRangeException)
             {
