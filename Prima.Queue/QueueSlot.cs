@@ -6,7 +6,7 @@ namespace Prima.Queue
 {
     public class QueueSlot
     {
-        // Doing it this way should give us a drop-in reference replacement for ValueTuple.
+        // Doing it this way gives us a drop-in reference replacement for ValueTuple.
         [JsonProperty("Item1")]
         public ulong Id { get; set; }
 
@@ -16,7 +16,7 @@ namespace Prima.Queue
         [JsonProperty("Item3")]
         public bool ExpirationNotified { get; set; }
 
-        [JsonProperty("EventId")]
+        [JsonProperty("Item4")]
         private string eventId;
         public string EventId
         {
@@ -24,7 +24,7 @@ namespace Prima.Queue
             private set => eventId = value;
         }
 
-        [JsonProperty("RoleIds")]
+        [JsonProperty("Item5")]
         private IEnumerable<ulong> roleIds;
         public IEnumerable<ulong> RoleIds
         {

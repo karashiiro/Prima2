@@ -411,6 +411,11 @@ namespace Prima.Queue.Modules
             {
                 await user.SendMessageAsync(embed: inviteeEmbed);
             }
+            catch (NullReferenceException)
+            {
+                await args.Leader.SendMessageAsync($"Couldn't send run information to {user.Mention}; they have server DMs disabled. Please ping them directly.");
+                return;
+            }
             catch (HttpException e) when (e.DiscordCode == 50007)
             {
                 await args.Leader.SendMessageAsync($"Couldn't send run information to {user.Mention}; they have server DMs disabled. Please ping them directly.");
@@ -488,10 +493,19 @@ namespace Prima.Queue.Modules
                 {
                     enqueuedRoles |= r;
                 }
-                else if (requiredDiscordRole != null &&
-                         queue.EnqueueWithDiscordRole(Context.User.Id, r, requiredDiscordRole, Context) == DiscordIntegratedEnqueueResult.Success)
+                else if (requiredDiscordRole != null)
                 {
-                    enqueuedRoles |= r;
+                    var result = queue.EnqueueWithDiscordRole(Context.User.Id, r, requiredDiscordRole, Context);
+                    if (result == DiscordIntegratedEnqueueResult.Success)
+                    {
+                        enqueuedRoles |= r;
+                    }
+                    else if (result == DiscordIntegratedEnqueueResult.DoesNotHaveRole)
+                    {
+                        await ReplyAsync($"{Context.User.Mention}, you don't have that role; check your progression roles!\n" +
+                                         "If you are coming with experience from another server, please make a request for the appropriate role in <#808406722934210590> with a log or screenshot.");
+                        return;
+                    }
                 }
             }
 
@@ -508,16 +522,16 @@ namespace Prima.Queue.Modules
                     response += queued0;
                     break;
                 case 1:
-                    response += string.Format(queued1, enqueuedRolesList[0]) + GetPositionString(queue, Context.User, null, Context.User.Id);
+                    response += string.Format(queued1, enqueuedRolesList[0]) + GetPositionString(queue, Context.User, requiredDiscordRole, Context.User.Id);
                     break;
                 case 2:
-                    response += string.Format(queued2, enqueuedRolesList[0], enqueuedRolesList[1]) + GetPositionString(queue, Context.User, null, Context.User.Id);
+                    response += string.Format(queued2, enqueuedRolesList[0], enqueuedRolesList[1]) + GetPositionString(queue, Context.User, requiredDiscordRole, Context.User.Id);
                     break;
                 case 3:
-                    response += string.Format(queued3, enqueuedRolesList[0], enqueuedRolesList[1], enqueuedRolesList[2]) + GetPositionString(queue, Context.User, null, Context.User.Id);
+                    response += string.Format(queued3, enqueuedRolesList[0], enqueuedRolesList[1], enqueuedRolesList[2]) + GetPositionString(queue, Context.User, requiredDiscordRole, Context.User.Id);
                     break;
             }
-            
+
             if (!new ulong[] { 765994301850779709, DelubrumSavageChannelId, 806957742056013895, 809241125373739058 }.Contains(Context.Channel.Id))
             {
                 response += extra;
