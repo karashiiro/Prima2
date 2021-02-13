@@ -29,6 +29,7 @@ namespace Prima.Services
         public IEnumerable<ScheduledEvent> Events => _events.AsQueryable().ToEnumerable();
         public IEnumerable<CachedMessage> CachedMessages => _messageCache.AsQueryable().ToEnumerable();
         public IEnumerable<ChannelDescription> ChannelDescriptions => _channelDescriptions.AsQueryable().ToEnumerable();
+        public IAsyncEnumerable<EventReaction> EventReactions => _eventReactions.AsQueryable().ToAsyncEnumerable();
 
         private readonly IMongoCollection<GlobalConfiguration> _config;
         private readonly IMongoCollection<DiscordGuildConfiguration> _guildConfig;
@@ -36,6 +37,7 @@ namespace Prima.Services
         private readonly IMongoCollection<ScheduledEvent> _events;
         private readonly IMongoCollection<CachedMessage> _messageCache;
         private readonly IMongoCollection<ChannelDescription> _channelDescriptions;
+        private readonly IMongoCollection<EventReaction> _eventReactions;
 
         public DbService()
         {
@@ -46,19 +48,22 @@ namespace Prima.Services
             Log.Information("Global configuration status: {DbStatus} documents found.", _config.EstimatedDocumentCount());
 
             _guildConfig = database.GetCollection<DiscordGuildConfiguration>("GuildConfiguration");
-            Log.Information("Guild configuration status: {DbStatus} documents found.", _guildConfig.EstimatedDocumentCount());
+            Log.Information("Guild configuration collection status: {DbStatus} documents found.", _guildConfig.EstimatedDocumentCount());
 
             _users = database.GetCollection<DiscordXIVUser>("Users");
-            Log.Information("User database status: {DbStatus} documents found.", _users.EstimatedDocumentCount());
+            Log.Information("User collection status: {DbStatus} documents found.", _users.EstimatedDocumentCount());
 
             _events = database.GetCollection<ScheduledEvent>("ScheduledEvents");
-            Log.Information("Event database status: {DbStatus} documents found.", _events.EstimatedDocumentCount());
+            Log.Information("Event collection status: {DbStatus} documents found.", _events.EstimatedDocumentCount());
 
             _messageCache = database.GetCollection<CachedMessage>("CachedMessages");
-            Log.Information("Message cache database status: {DbStatus} documents found.", _messageCache.EstimatedDocumentCount());
+            Log.Information("Message cache collection status: {DbStatus} documents found.", _messageCache.EstimatedDocumentCount());
 
             _channelDescriptions = database.GetCollection<ChannelDescription>("ChannelDescriptions");
-            Log.Information("Channel description database status: {DbStatus} documents found.", _channelDescriptions.EstimatedDocumentCount());
+            Log.Information("Channel description collection status: {DbStatus} documents found.", _channelDescriptions.EstimatedDocumentCount());
+
+            _eventReactions = database.GetCollection<EventReaction>("EventReactions");
+            Log.Information("Event reaction collection status: {DbStatus} documents found.", _eventReactions.EstimatedDocumentCount());
         }
 
         public async Task SetGlobalConfigurationProperty(string key, string value)
@@ -105,6 +110,23 @@ namespace Prima.Services
             {
                 await _guildConfig.InsertOneAsync(new DiscordGuildConfiguration(guildId));
             }
+        }
+
+        public async Task<bool> AddEventReaction(ulong eventId, ulong userId)
+        {
+            var existingSet = await _eventReactions.FindAsync(er => er.EventId == eventId && er.UserId == userId);
+            if (await existingSet.AnyAsync()) return false;
+            var newEventReaction = new EventReaction { EventId = eventId, UserId = userId };
+            await _eventReactions.InsertOneAsync(newEventReaction);
+            return true;
+        }
+
+        public async Task<bool> RemoveEventReaction(ulong eventId, ulong userId)
+        {
+            var existingSet = await _eventReactions.FindAsync(er => er.EventId == eventId && er.UserId == userId);
+            if (!await existingSet.AnyAsync()) return false;
+            await _eventReactions.DeleteManyAsync(er => er.EventId == eventId && er.UserId == userId);
+            return true;
         }
 
         public Task ConfigureRole(ulong guildId, string roleName, ulong roleId)

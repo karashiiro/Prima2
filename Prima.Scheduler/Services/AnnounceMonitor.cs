@@ -50,7 +50,7 @@ namespace Prima.Scheduler.Services
                     if (!success) return;
 
                     await AssignExecutorRole(guild, host, token);
-                    await NotifyMembers(host, embedMessage, token);
+                    await NotifyMembers(host, embedMessage, embed, token);
                     await host.SendMessageAsync(
                         "You have been given the Delubrum Host role for 3 1/2 hours!\n" +
                         "You can now use the command `~setroler @User` to give them access to the progression " +
@@ -72,7 +72,7 @@ namespace Prima.Scheduler.Services
                     if (!success) return;
 
                     await NotifyLead(host);
-                    await NotifyMembers(host, embedMessage, token);
+                    await NotifyMembers(host, embedMessage, embed, token);
                 }, token);
 
                 var castrumCheck = CheckRuns(guild, guildConfig.CastrumScheduleOutputChannel, async (host, embedMessage, embed) =>
@@ -81,7 +81,7 @@ namespace Prima.Scheduler.Services
                     if (!success) return;
 
                     await NotifyLead(host);
-                    await NotifyMembers(host, embedMessage, token);
+                    await NotifyMembers(host, embedMessage, embed, token);
                 }, token);
 
                 await Task.WhenAll(drsCheck, drnCheck, castrumCheck);
@@ -190,30 +190,26 @@ namespace Prima.Scheduler.Services
             }
         }
 
-        private async Task NotifyMembers(IGuildUser host, IMessage embedMessage, CancellationToken token)
+        private async Task NotifyMembers(IGuildUser host, IMessage embedMessage, IEmbed embed, CancellationToken token)
         {
-            Log.Information("Notifying reactors... {Count}", embedMessage.Reactions.Count);
+            Log.Information("Notifying reactors...", embedMessage.Reactions.Count);
 
-            var (nrEmote, nrMeta) = embedMessage.Reactions
-                .FirstOrDefault(erm => erm.Key.Name == "📳");
+            if (!embed.Footer.HasValue) return;
+            var eventId = ulong.Parse(embed.Footer.Value.Text);
 
-            if (nrEmote == null) return;
-
-            await foreach (var page in embedMessage.GetReactionUsersAsync(nrEmote, nrMeta.ReactionCount).WithCancellation(token))
+            var reactors = _db.EventReactions.Where(er => er.EventId == eventId);
+            await foreach (var reactor in reactors.WithCancellation(token))
             {
-                foreach (var user in page)
-                {
-                    
-                    if (user.IsBot) continue;
+                var user = _client.GetUser(reactor.UserId);
+                if (user == null || user.IsBot) continue;
 
-                    try
-                    {
-                        await user.SendMessageAsync($"The run you reacted to (hosted by {host.Nickname ?? host.Username}) is beginning in 30 minutes!");
-                    }
-                    catch (HttpException e) when (e.DiscordCode == 50007)
-                    {
-                        Log.Warning("Can't send direct message to user {User}.", host.ToString());
-                    }
+                try
+                {
+                    await user.SendMessageAsync($"The run you reacted to (hosted by {host.Nickname ?? host.Username}) is beginning in 30 minutes!");
+                }
+                catch (HttpException e) when (e.DiscordCode == 50007)
+                {
+                    Log.Warning("Can't send direct message to user {User}.", host.ToString());
                 }
             }
         }

@@ -94,7 +94,7 @@ namespace Prima.Scheduler.Handlers
                 Log.Information("Updated calendar entry.");
             }
 
-            var (embedMessage, embed) = await FindAnnouncement(outputChannel, message.Author.ToString(), time);
+            var (embedMessage, embed) = await FindAnnouncement(outputChannel, message.Id);
             var calendarLinkLine = embed.Description.Split('\n').Last();
             await embedMessage.ModifyAsync(props =>
             {
@@ -125,7 +125,7 @@ namespace Prima.Scheduler.Handlers
                 return null;
         }
 
-        private static async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, string username, DateTime time)
+        private static async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, ulong eventId)
         {
             await foreach (var page in channel.GetMessagesAsync())
             {
@@ -134,9 +134,9 @@ namespace Prima.Scheduler.Handlers
                     var restMessage = (IUserMessage)message;
 
                     var embed = restMessage.Embeds.FirstOrDefault();
-                    if (embed == null) continue;
+                    if (embed?.Footer == null) continue;
 
-                    if (!(embed.Title.Contains(username) && embed.Title.Contains(time.ToShortTimeString()))) continue;
+                    if (embed.Footer?.Text != eventId.ToString()) continue;
 
                     return (restMessage, embed);
                 }

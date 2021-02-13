@@ -87,6 +87,7 @@ namespace Prima.Scheduler.Modules
                 .WithTimestamp(time.AddHours(-tzi.BaseUtcOffset.Hours))
                 .WithTitle($"Event scheduled by {Context.User} on {time.DayOfWeek} at {time.ToShortTimeString()} ({tzAbbr})!")
                 .WithDescription(trimmedDescription + $"\n\n[Copy to Google Calendar]({eventLink})")
+                .WithFooter(Context.Message.Id.ToString())
                 .Build());
             await embed.AddReactionAsync(new Emoji("📳"));
 
@@ -302,8 +303,10 @@ namespace Prima.Scheduler.Modules
             return Context.Guild.GetTextChannel(outputChannelId);
         }
 
-        private static async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, string username, DateTime time)
+        private async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, string username, DateTime time)
         {
+            var announcements = new List<(IUserMessage, IEmbed)>();
+
             await foreach (var page in channel.GetMessagesAsync())
             {
                 foreach (var message in page)
@@ -315,11 +318,43 @@ namespace Prima.Scheduler.Modules
 
                     if (!(embed.Title.Contains(username) && embed.Title.Contains(time.ToShortTimeString()))) continue;
 
-                    return (restMessage, embed);
+                    announcements.Add((restMessage, embed));
                 }
             }
 
-            return (null, null);
+            switch (announcements.Count)
+            {
+                case 0:
+                    return (null, null);
+                case 1:
+                    return announcements[0];
+                default:
+                {
+                    var query = "Multiple runs at that time were found; which one would you like to select?";
+                    for (var i = 0; i < announcements.Count; i++)
+                    {
+                        query += $"\n{i}) {announcements[i].Item1.GetJumpUrl()}";
+                    }
+                    await ReplyAsync(query);
+
+                    var j = -1;
+                    const int stopPollingDelayMs = 250;
+                    for (var i = 0; i < 60000 / stopPollingDelayMs; i++)
+                    {
+                        var newMessages = await Context.Channel.GetMessagesAsync(limit: 1).FlattenAsync();
+                        var newMessage = newMessages.FirstOrDefault(m => m.Author.Id == Context.User.Id);
+                        if (newMessage != null && int.TryParse(newMessage.Content, out j))
+                        {
+                            break;
+                        }
+                        await Task.Delay(stopPollingDelayMs);
+                    }
+
+                    if (j != -1) return announcements[j];
+                    await ReplyAsync("No response received; cancelling...");
+                    return (null, null);
+                }
+            }
         }
     }
 }

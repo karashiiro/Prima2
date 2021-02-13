@@ -31,6 +31,10 @@ namespace Prima.Scheduler
             client.ReactionRemoved += events.OnReactionRemove;
 
             client.MessageUpdated += (_, message, channel) => AnnounceEdit.Handler(client, calendar, db, message);
+            client.ReactionAdded += (cachedMessage, channel, reaction)
+                => AnnounceReact.HandlerAdd(client, db, cachedMessage, reaction.UserId);
+            client.ReactionRemoved += (cachedMessage, channel, reaction)
+                => AnnounceReact.HandlerRemove(client, db, cachedMessage, reaction.UserId);
 
             services.GetRequiredService<RunNotiferService>().Initialize();
             services.GetRequiredService<AnnounceMonitor>().Initialize();
