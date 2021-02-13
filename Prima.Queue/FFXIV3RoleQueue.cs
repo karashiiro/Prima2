@@ -33,7 +33,7 @@ namespace Prima.Queue
         {
             var queue = GetQueue(role);
             if (queue.Count == 0) return null;
-            var slot = queue.FirstOrDefault(s => !s.RoleIds.Any() && s.EventId == eventId);
+            var slot = queue.FirstOrDefault(s => !s.RoleIds.Any() && (s.EventId == null || s.EventId == eventId));
             Log.Information(JsonConvert.SerializeObject(slot));
             if (slot != null)
             {
