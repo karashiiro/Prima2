@@ -79,7 +79,7 @@ namespace Prima.Scheduler.Modules
             });
 
             var color = RunDisplayTypes.GetColorCastrum();
-            var embed = await outputChannel.SendMessageAsync(embed: new EmbedBuilder()
+            await outputChannel.SendMessageAsync(embed: new EmbedBuilder()
                 .WithAuthor(new EmbedAuthorBuilder()
                     .WithIconUrl(Context.User.GetAvatarUrl())
                     .WithName(Context.User.ToString()))
@@ -89,11 +89,13 @@ namespace Prima.Scheduler.Modules
                 .WithDescription(trimmedDescription + $"\n\n[Copy to Google Calendar]({eventLink})")
                 .WithFooter(Context.Message.Id.ToString())
                 .Build());
-            await embed.AddReactionAsync(new Emoji("📳"));
-
+            
             await ReplyAsync($"Event announced! Announcement posted in <#{outputChannel.Id}>. React to the announcement in " +
                              $"<#{outputChannel.Id}> with :vibration_mode: to be notified before the event begins.");
             await SortEmbeds(outputChannel);
+
+            var (sortedEmbedMessage, _) = await FindAnnouncement(outputChannel, Context.Message.Id);
+            await sortedEmbedMessage.AddReactionAsync(new Emoji("📳"));
         }
 
         private async Task<MiniEvent> FindEvent(string calendarClass, string title, DateTime startTime)
@@ -107,12 +109,40 @@ namespace Prima.Scheduler.Modules
         }
 
         [Command("sortembeds", RunMode = RunMode.Async)]
+        [RequireContext(ContextType.Guild)]
         [RequireOwner]
         public async Task SortEmbedsCommand(ulong id)
         {
             var channel = Context.Guild.GetTextChannel(id);
             await SortEmbeds(channel);
             await ReplyAsync("Done!");
+        }
+
+        [Command("setannouncesourcemessage", RunMode = RunMode.Async)]
+        [RequireContext(ContextType.Guild)]
+        [RequireOwner]
+        public async Task RebuildAnnounce(ulong channelId, ulong embedMessageId, ulong messageId)
+        {
+            if (!(await Context.Guild.GetTextChannel(channelId).GetMessageAsync(embedMessageId) is IUserMessage embedMessage))
+            {
+                Log.Information("Embed message is null!");
+                return;
+            }
+
+            if (!embedMessage.Embeds.Any())
+            {
+                Log.Information("No embeds!");
+                return;
+            }
+
+            await embedMessage.ModifyAsync(props =>
+            {
+                props.Embed = embedMessage.Embeds
+                    .First()
+                    .ToEmbedBuilder()
+                    .WithFooter(messageId.ToString())
+                    .Build();
+            });
         }
 
         private async Task SortEmbeds(IMessageChannel channel)
@@ -249,11 +279,22 @@ namespace Prima.Scheduler.Modules
                 
 #if DEBUG
                 var @event = await FindEvent("drs", username, time.AddHours(-tzi.BaseUtcOffset.Hours));
-                await Calendar.DeleteEvent("drs", @event.ID);
 #else
                 var @event = await FindEvent(GetCalendarCode(outputChannel.Id), username, time.AddHours(-tzi.BaseUtcOffset.Hours));
-                await Calendar.DeleteEvent(GetCalendarCode(outputChannel.Id), @event.ID);
 #endif
+                if (@event != null)
+                {
+#if DEBUG
+                    await Calendar.DeleteEvent("drs", @event.ID);
+#else
+                    await Calendar.DeleteEvent(GetCalendarCode(outputChannel.Id), @event.ID);
+#endif
+                }
+
+                if (embed?.Footer != null)
+                {
+                    await Db.RemoveAllEventReactions(ulong.Parse(embed.Footer?.Text));
+                }
 
                 await ReplyAsync("Event cancelled.");
             }
@@ -333,13 +374,13 @@ namespace Prima.Scheduler.Modules
                     var query = "Multiple runs at that time were found; which one would you like to select?";
                     for (var i = 0; i < announcements.Count; i++)
                     {
-                        query += $"\n{i}) {announcements[i].Item1.GetJumpUrl()}";
+                        query += $"\n{i + 1}) {announcements[i].Item1.GetJumpUrl()}";
                     }
                     await ReplyAsync(query);
 
                     var j = -1;
                     const int stopPollingDelayMs = 250;
-                    for (var i = 0; i < 60000 / stopPollingDelayMs; i++)
+                    for (var i = 0; i < (5 * 60000) / stopPollingDelayMs; i++)
                     {
                         var newMessages = await Context.Channel.GetMessagesAsync(limit: 1).FlattenAsync();
                         var newMessage = newMessages.FirstOrDefault(m => m.Author.Id == Context.User.Id);
@@ -350,11 +391,32 @@ namespace Prima.Scheduler.Modules
                         await Task.Delay(stopPollingDelayMs);
                     }
 
-                    if (j != -1) return announcements[j];
+                    if (j != -1) return announcements[j - 1];
                     await ReplyAsync("No response received; cancelling...");
                     return (null, null);
                 }
             }
+        }
+
+        private async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, ulong eventId)
+        {
+            await foreach (var page in channel.GetMessagesAsync())
+            {
+                foreach (var message in page)
+                {
+                    var restMessage = (IUserMessage)message;
+
+                    var embed = restMessage.Embeds.FirstOrDefault();
+                    if (embed?.Footer == null) continue;
+
+                    if (ulong.TryParse(embed.Footer?.Text, out var embedEId) && embedEId == eventId)
+                    {
+                        return (restMessage, embed);
+                    }
+                }
+            }
+
+            return (null, null);
         }
     }
 }

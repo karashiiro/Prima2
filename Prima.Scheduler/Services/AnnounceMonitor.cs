@@ -212,6 +212,8 @@ namespace Prima.Scheduler.Services
                     Log.Warning("Can't send direct message to user {User}.", host.ToString());
                 }
             }
+
+            await _db.RemoveAllEventReactions(eventId);
         }
 
         private bool _disposed;

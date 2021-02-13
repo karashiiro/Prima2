@@ -129,6 +129,13 @@ namespace Prima.Services
             return true;
         }
 
+        public async Task RemoveAllEventReactions(ulong eventId)
+        {
+            var existingSet = await _eventReactions.FindAsync(er => er.EventId == eventId);
+            if (!await existingSet.AnyAsync()) return;
+            await _eventReactions.DeleteManyAsync(er => er.EventId == eventId);
+        }
+
         public Task ConfigureRole(ulong guildId, string roleName, ulong roleId)
         {
             var update = Builders<DiscordGuildConfiguration>.Update.Set($"Roles.{roleName}", roleId.ToString());
