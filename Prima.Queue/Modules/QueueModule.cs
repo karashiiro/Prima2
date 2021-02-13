@@ -99,6 +99,8 @@ namespace Prima.Queue.Modules
                 requiredDiscordRole = GetRoleFromArgs(args);
             }
 
+            var eventId = GetEventIdFromArgs(args) ?? "";
+
             var (dpsWanted, healersWanted, tanksWanted) = QueueUtil.GetDesiredRoleCounts(fixedRoles);
             var wantedSum = dpsWanted + healersWanted + tanksWanted;
             if (wantedSum > 7)
@@ -213,8 +215,8 @@ namespace Prima.Queue.Modules
             for (var i = 0; i < dpsWanted; i++)
             {
                 var nextDps = requiredDiscordRole == null
-                    ? queue.Dequeue(FFXIVRole.DPS)
-                    : queue.DequeueWithDiscordRole(FFXIVRole.DPS, requiredDiscordRole, Context);
+                    ? queue.Dequeue(FFXIVRole.DPS, eventId)
+                    : queue.DequeueWithDiscordRole(FFXIVRole.DPS, requiredDiscordRole, Context, eventId);
                 if (nextDps == null) break;
                 Log.Information("Removed user {User} from queue {QueueName}.", nextDps.ToString(), queueName);
                 fetchedDps.Add(nextDps.Value);
@@ -223,8 +225,8 @@ namespace Prima.Queue.Modules
             for (var i = 0; i < healersWanted; i++)
             {
                 var nextHealer = requiredDiscordRole == null
-                    ? queue.Dequeue(FFXIVRole.Healer)
-                    : queue.DequeueWithDiscordRole(FFXIVRole.Healer, requiredDiscordRole, Context);
+                    ? queue.Dequeue(FFXIVRole.Healer, eventId)
+                    : queue.DequeueWithDiscordRole(FFXIVRole.Healer, requiredDiscordRole, Context, eventId);
                 if (nextHealer == null) break;
                 Log.Information("Removed user {User} from queue {QueueName}.", nextHealer.ToString(), queueName);
                 fetchedHealers.Add(nextHealer.Value);
@@ -233,8 +235,8 @@ namespace Prima.Queue.Modules
             for (var i = 0; i < tanksWanted; i++)
             {
                 var nextTank = requiredDiscordRole == null
-                    ? queue.Dequeue(FFXIVRole.Tank)
-                    : queue.DequeueWithDiscordRole(FFXIVRole.Tank, requiredDiscordRole, Context);
+                    ? queue.Dequeue(FFXIVRole.Tank, eventId)
+                    : queue.DequeueWithDiscordRole(FFXIVRole.Tank, requiredDiscordRole, Context, eventId);
                 if (nextTank == null) break;
                 Log.Information("Removed user {User} from queue {QueueName}.", nextTank.ToString(), queueName);
                 fetchedTanks.Add(nextTank.Value);
@@ -529,13 +531,13 @@ namespace Prima.Queue.Modules
                     response += queued0;
                     break;
                 case 1:
-                    response += string.Format(queued1, enqueuedRolesList[0]) + GetPositionString(queue, Context.User, requiredDiscordRole, Context.User.Id);
+                    response += string.Format(queued1, enqueuedRolesList[0]) + GetPositionString(queue, Context.User, requiredDiscordRole, Context.User.Id, eventId);
                     break;
                 case 2:
-                    response += string.Format(queued2, enqueuedRolesList[0], enqueuedRolesList[1]) + GetPositionString(queue, Context.User, requiredDiscordRole, Context.User.Id);
+                    response += string.Format(queued2, enqueuedRolesList[0], enqueuedRolesList[1]) + GetPositionString(queue, Context.User, requiredDiscordRole, Context.User.Id, eventId);
                     break;
                 case 3:
-                    response += string.Format(queued3, enqueuedRolesList[0], enqueuedRolesList[1], enqueuedRolesList[2]) + GetPositionString(queue, Context.User, requiredDiscordRole, Context.User.Id);
+                    response += string.Format(queued3, enqueuedRolesList[0], enqueuedRolesList[1], enqueuedRolesList[2]) + GetPositionString(queue, Context.User, requiredDiscordRole, Context.User.Id, eventId);
                     break;
             }
 
@@ -553,6 +555,68 @@ namespace Prima.Queue.Modules
                 queueName,
                 string.Join(',', enqueuedRolesList.Select(r => r.ToString()).ToArray()));
             await ReplyAsync(response);
+        }
+
+        [Command("myevents", RunMode = RunMode.Async)]
+        [Description("Check the events you're specifically in queue for, by role.")]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public async Task MyEvents()
+        {
+            if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id))
+                return;
+
+            var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
+            var queue = QueueService.GetOrCreateQueue(queueName);
+
+            const string responseTemplate = "You are signed up for the following events:\n" +
+                                            "Tank: {0}\n" +
+                                            "Healer: {1}\n" +
+                                            "DPS: {2}";
+
+            await ReplyAsync(string.Format(
+                responseTemplate,
+                queue.GetEvent(Context.User.Id, FFXIVRole.Tank) ?? "Not in queue",
+                queue.GetEvent(Context.User.Id, FFXIVRole.Healer) ?? "Not in queue",
+                queue.GetEvent(Context.User.Id, FFXIVRole.DPS) ?? "Not in queue"));
+        }
+
+        [Command("setevent", RunMode = RunMode.Async)]
+        [Description("Check the events you're specifically in queue for, by role.")]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public async Task SetEvent([Remainder] string args)
+        {
+            if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id))
+                return;
+
+            var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
+            var queue = QueueService.GetOrCreateQueue(queueName);
+
+            var eventId = GetEventIdFromArgs(args);
+            if (eventId == null)
+            {
+                await ReplyAsync($"{Context.User.Mention}, that command requires an event ID!\n" +
+                                 "Usage: `~setevent <[d][h][t]> <event ID>`");
+                return;
+            }
+
+            args = RemoveEventIdFromArgs(args);
+
+            var roles = ParseRoles(args);
+            if (roles == FFXIVRole.None)
+            {
+                roles = FFXIVRole.Tank & FFXIVRole.Healer & FFXIVRole.DPS;
+            }
+
+            var rolesList = RolesToArray(roles);
+            foreach (var role in rolesList)
+            {
+                if (queue.GetPosition(Context.User.Id, role, null) != 0)
+                {
+                    queue.SetEvent(Context.User.Id, role, eventId);
+                }
+            }
+
+            await ReplyAsync("Events updated!");
         }
 
         [Command("leavequeue", RunMode = RunMode.Async)]
@@ -669,26 +733,32 @@ namespace Prima.Queue.Modules
                 requiredDiscordRole = GetRoleFromArgs(args);
             }
 
+            var eventId = GetEventIdFromArgs(args);
+            if (eventId != null)
+            {
+                args = RemoveEventIdFromArgs(args);
+            }
+
             QueueService.Save();
 
-            await ReplyAsync(GetPositionString(queue, Context.User, requiredDiscordRole, Context.User.Id));
+            await ReplyAsync(GetPositionString(queue, Context.User, requiredDiscordRole, Context.User.Id, eventId));
         }
 
-        private (int, int, int, int) GetListCounts(FFXIVDiscordIntegratedQueue queue, IRole reqRole)
+        private (int, int, int, int) GetListCounts(FFXIVDiscordIntegratedQueue queue, IRole reqRole, string eventId)
         {
             var dpsCount = reqRole == null
-                ? queue.Count(FFXIVRole.DPS)
-                : queue.CountWithDiscordRole(FFXIVRole.DPS, reqRole, Context);
+                ? queue.Count(FFXIVRole.DPS, eventId)
+                : queue.CountWithDiscordRole(FFXIVRole.DPS, reqRole, Context, eventId);
             var healerCount = reqRole == null
-                ? queue.Count(FFXIVRole.Healer)
-                : queue.CountWithDiscordRole(FFXIVRole.Healer, reqRole, Context);
+                ? queue.Count(FFXIVRole.Healer, eventId)
+                : queue.CountWithDiscordRole(FFXIVRole.Healer, reqRole, Context, eventId);
             var tankCount = reqRole == null
-                ? queue.Count(FFXIVRole.Tank)
-                : queue.CountWithDiscordRole(FFXIVRole.Tank, reqRole, Context);
+                ? queue.Count(FFXIVRole.Tank, eventId)
+                : queue.CountWithDiscordRole(FFXIVRole.Tank, reqRole, Context, eventId);
 
             var distinctCount = reqRole == null
-                ? queue.CountDistinct()
-                : queue.CountDistinctWithDiscordRole(reqRole, Context);
+                ? queue.CountDistinct(eventId)
+                : queue.CountDistinctWithDiscordRole(reqRole, Context, eventId);
 
             return (dpsCount, healerCount, tankCount, distinctCount);
         }
@@ -726,6 +796,8 @@ namespace Prima.Queue.Modules
                 }
             }
 
+            var eventId = GetEventIdFromArgs(args) ?? "";
+
             var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
@@ -737,7 +809,7 @@ namespace Prima.Queue.Modules
                     .Where(r => r != null)
                     .Select(r =>
                     {
-                        var (dpsCount, healerCount, tankCount, distinctCount) = GetListCounts(queue, r);
+                        var (dpsCount, healerCount, tankCount, distinctCount) = GetListCounts(queue, r, eventId);
                         if (distinctCount != 0)
                         {
                             return $"{r.Name}:" +
@@ -756,7 +828,7 @@ namespace Prima.Queue.Modules
             }
             else
             {
-                var (dpsCount, healerCount, tankCount, distinctCount) = GetListCounts(queue, requiredDiscordRole);
+                var (dpsCount, healerCount, tankCount, distinctCount) = GetListCounts(queue, requiredDiscordRole, eventId);
 
                 var roleExtraString = requiredDiscordRole == null
                     ? ""
@@ -775,27 +847,27 @@ namespace Prima.Queue.Modules
             return rolesList;
         }
 
-        private string GetPositionString(FFXIVDiscordIntegratedQueue queue, IUser user, IRole role, ulong uid)
+        private string GetPositionString(FFXIVDiscordIntegratedQueue queue, IUser user, IRole role, ulong uid, string eventId)
         {
             var dpsCount = role == null
-                ? queue.Count(FFXIVRole.DPS)
-                : queue.CountWithDiscordRole(FFXIVRole.DPS, role, Context);
+                ? queue.Count(FFXIVRole.DPS, eventId)
+                : queue.CountWithDiscordRole(FFXIVRole.DPS, role, Context, eventId);
             var healerCount = role == null
-                ? queue.Count(FFXIVRole.Healer)
-                : queue.CountWithDiscordRole(FFXIVRole.Healer, role, Context);
+                ? queue.Count(FFXIVRole.Healer, eventId)
+                : queue.CountWithDiscordRole(FFXIVRole.Healer, role, Context, eventId);
             var tankCount = role == null
-                ? queue.Count(FFXIVRole.Tank)
-                : queue.CountWithDiscordRole(FFXIVRole.Tank, role, Context);
+                ? queue.Count(FFXIVRole.Tank, eventId)
+                : queue.CountWithDiscordRole(FFXIVRole.Tank, role, Context, eventId);
 
             var dpsPos = role == null
-                ? queue.GetPosition(uid, FFXIVRole.DPS)
-                : queue.GetPositionWithDiscordRole(uid, FFXIVRole.DPS, role, Context);
+                ? queue.GetPosition(uid, FFXIVRole.DPS, eventId)
+                : queue.GetPositionWithDiscordRole(uid, FFXIVRole.DPS, role, Context, eventId);
             var healerPos = role == null
-                ? queue.GetPosition(uid, FFXIVRole.Healer)
-                : queue.GetPositionWithDiscordRole(uid, FFXIVRole.Healer, role, Context);
+                ? queue.GetPosition(uid, FFXIVRole.Healer, eventId)
+                : queue.GetPositionWithDiscordRole(uid, FFXIVRole.Healer, role, Context, eventId);
             var tankPos = role == null
-                ? queue.GetPosition(uid, FFXIVRole.Tank)
-                : queue.GetPositionWithDiscordRole(uid, FFXIVRole.Tank, role, Context);
+                ? queue.GetPosition(uid, FFXIVRole.Tank, eventId)
+                : queue.GetPositionWithDiscordRole(uid, FFXIVRole.Tank, role, Context, eventId);
 
             var output = "you are number ";
             if (tankPos > 0)
@@ -888,6 +960,7 @@ namespace Prima.Queue.Modules
 
         [Command("shove", RunMode = RunMode.Async)]
         [Alias("queueshove")]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task ShoveUser(IUser user, [Remainder] string args)
         {
             if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id))
@@ -919,6 +992,7 @@ namespace Prima.Queue.Modules
 
         [Command("insert", RunMode = RunMode.Async)]
         [Alias("queueinsert")]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task InsertUser(IUser user, int position, [Remainder] string args)
         {
             if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id))

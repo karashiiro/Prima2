@@ -20,7 +20,7 @@ namespace Prima.Queue
             _tankQueue = new SynchronizedCollection<QueueSlot>();
         }
 
-        public bool Enqueue(ulong userId, FFXIVRole role, string eventId = "")
+        public bool Enqueue(ulong userId, FFXIVRole role, string eventId)
         {
             var queue = GetQueue(role);
 
@@ -29,7 +29,7 @@ namespace Prima.Queue
             return true;
         }
 
-        public ulong? Dequeue(FFXIVRole role, string eventId = "")
+        public ulong? Dequeue(FFXIVRole role, string eventId)
         {
             var queue = GetQueue(role);
             if (queue.Count == 0) return null;
@@ -59,13 +59,13 @@ namespace Prima.Queue
             Remove(user, FFXIVRole.Tank);
         }
 
-        public int Count(FFXIVRole role, string eventId = null)
+        public int Count(FFXIVRole role, string eventId)
         {
             return GetQueue(role)
                 .Count(EventValid(eventId));
         }
 
-        public int CountDistinct(string eventId = null)
+        public int CountDistinct(string eventId)
         {
             return _dpsQueue
                 .Concat(_healerQueue)
@@ -76,7 +76,7 @@ namespace Prima.Queue
                 .Count();
         }
 
-        public int GetPosition(ulong userId, FFXIVRole role, string eventId = null)
+        public int GetPosition(ulong userId, FFXIVRole role, string eventId)
         {
             return GetQueue(role)
                 .Where(EventValid(eventId))
@@ -84,7 +84,24 @@ namespace Prima.Queue
                 .IndexOf(s => s.Id == userId) + 1;
         }
 
-        private static Func<QueueSlot, bool> EventValid(string eventId)
+        public string GetEvent(ulong userId, FFXIVRole role)
+        {
+            return GetQueue(role)
+                .FirstOrDefault(s => s.Id == userId)
+                ?.EventId;
+        }
+
+        public void SetEvent(ulong userId, FFXIVRole role, string eventId)
+        {
+            var slot = GetQueue(role)
+                .FirstOrDefault(s => s.Id == userId);
+            if (slot != null)
+            {
+                slot.EventId = eventId;
+            }
+        }
+
+        protected static Func<QueueSlot, bool> EventValid(string eventId)
         {
             return s =>
             {
@@ -142,7 +159,7 @@ namespace Prima.Queue
             catch (ArgumentOutOfRangeException)
             {
                 Log.Error("Tried to insert {User} in out of range queue position {Position}; inserting them at back instead.", uid, position);
-                Enqueue(uid, role);
+                Enqueue(uid, role, slot?.EventId ?? "");
             }
 
             queue.RemoveAll(s => s == null, overload: true);

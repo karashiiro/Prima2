@@ -8,7 +8,7 @@ namespace Prima.Queue
 {
     public class FFXIVDiscordIntegratedQueue : FFXIV3RoleQueue
     {
-        public DiscordIntegratedEnqueueResult EnqueueWithDiscordRole(ulong userId, FFXIVRole role, IRole discordRole, SocketCommandContext context, string eventId = "")
+        public DiscordIntegratedEnqueueResult EnqueueWithDiscordRole(ulong userId, FFXIVRole role, IRole discordRole, SocketCommandContext context, string eventId)
         {
             if (context.Guild == null) return DiscordIntegratedEnqueueResult.NoGuild;
             if (!context.Guild.GetUser(userId).HasRole(discordRole)) return DiscordIntegratedEnqueueResult.DoesNotHaveRole;
@@ -16,16 +16,20 @@ namespace Prima.Queue
             var queue = GetQueue(role);
             if (queue.Any(s => s.Id == userId)) return DiscordIntegratedEnqueueResult.AlreadyInQueue;
 
-            var slot = new QueueSlot(userId, eventId ?? "", roleIds: new[] { discordRole.Id });
+            eventId ??= "";
+
+            var slot = new QueueSlot(userId, eventId, roleIds: new[] { discordRole.Id });
             queue.Add(slot);
             return DiscordIntegratedEnqueueResult.Success;
         }
 
-        public ulong? DequeueWithDiscordRole(FFXIVRole role, IRole discordRole, SocketCommandContext context, string eventId = "")
+        public ulong? DequeueWithDiscordRole(FFXIVRole role, IRole discordRole, SocketCommandContext context, string eventId)
         {
             if (context.Guild == null) return null;
             var queue = GetQueue(role);
             if (queue.Count == 0) return null;
+
+            eventId ??= "";
 
             ulong user;
             lock (queue)
@@ -44,39 +48,32 @@ namespace Prima.Queue
             return user;
         }
 
-        public int CountWithDiscordRole(FFXIVRole role, IRole discordRole, SocketCommandContext context)
+        public int CountWithDiscordRole(FFXIVRole role, IRole discordRole, SocketCommandContext context, string eventId)
         {
-            return (role switch
-            {
-                FFXIVRole.DPS => _dpsQueue,
-                FFXIVRole.Healer => _healerQueue,
-                FFXIVRole.Tank => _tankQueue,
-                FFXIVRole.None => GetQueue(FFXIVRole.None),
-                _ => throw new NotImplementedException(),
-            }).Count(s => SlotHasRole(s, discordRole, context));
+            return GetQueue(role)
+                .Where(EventValid(eventId))
+                .Count(s => SlotHasRole(s, discordRole, context));
         }
 
-        public int CountDistinctWithDiscordRole(IRole discordRole, SocketCommandContext context)
+        public int CountDistinctWithDiscordRole(IRole discordRole, SocketCommandContext context, string eventId)
         {
             return _dpsQueue
                 .Concat(_healerQueue)
                 .Concat(_tankQueue)
                 .Where(s => SlotHasRole(s, discordRole, context))
+                .Where(EventValid(eventId))
                 .Select(s => s.Id)
                 .Distinct()
                 .Count();
         }
 
-        public int GetPositionWithDiscordRole(ulong userId, FFXIVRole role, IRole discordRole, SocketCommandContext context)
+        public int GetPositionWithDiscordRole(ulong userId, FFXIVRole role, IRole discordRole, SocketCommandContext context, string eventId)
         {
-            return (role switch
-            {
-                FFXIVRole.DPS => _dpsQueue,
-                FFXIVRole.Healer => _healerQueue,
-                FFXIVRole.Tank => _tankQueue,
-                FFXIVRole.None => GetQueue(FFXIVRole.None),
-                _ => throw new NotImplementedException(),
-            }).Where(s => SlotHasRole(s, discordRole, context)).ToList().IndexOf(s => s.Id == userId) + 1;
+            return GetQueue(role)
+                .Where(s => SlotHasRole(s, discordRole, context))
+                .Where(EventValid(eventId))
+                .ToList()
+                .IndexOf(s => s.Id == userId) + 1;
         }
 
         private static bool SlotHasRole(QueueSlot s, IRole discordRole, SocketCommandContext context)

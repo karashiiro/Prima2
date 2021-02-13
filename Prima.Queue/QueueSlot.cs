@@ -21,7 +21,7 @@ namespace Prima.Queue
         public string EventId
         {
             get => eventId ?? "";
-            private set => eventId = value;
+            set => eventId = value;
         }
 
         [JsonProperty("Item5")]
