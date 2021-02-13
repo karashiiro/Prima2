@@ -93,9 +93,6 @@ namespace Prima.Scheduler.Modules
             await ReplyAsync($"Event announced! Announcement posted in <#{outputChannel.Id}>. React to the announcement in " +
                              $"<#{outputChannel.Id}> with :vibration_mode: to be notified before the event begins.");
             await SortEmbeds(outputChannel);
-
-            var (sortedEmbedMessage, _) = await FindAnnouncement(outputChannel, Context.Message.Id);
-            await sortedEmbedMessage.AddReactionAsync(new Emoji("📳"));
         }
 
         private async Task<MiniEvent> FindEvent(string calendarClass, string title, DateTime startTime)
@@ -174,7 +171,8 @@ namespace Prima.Scheduler.Modules
 
             foreach (var embed in embeds)
             {
-                await channel.SendMessageAsync(embed: embed.ToEmbedBuilder().Build());
+                var m = await channel.SendMessageAsync(embed: embed.ToEmbedBuilder().Build());
+                await m.AddReactionAsync(new Emoji("📳"));
             }
 
             await progress.DeleteAsync();
