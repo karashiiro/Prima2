@@ -178,6 +178,30 @@ namespace Prima.Scheduler.Modules
             await progress.DeleteAsync();
         }
 
+        [Command("reactions")]
+        [Description("Get the number of reactions for an announcement.")]
+        public async Task ReactionCount([Remainder] string args)
+        {
+            var outputChannel = GetOutputChannel();
+            if (outputChannel == null) return;
+
+            var username = Context.User.ToString();
+            var time = Util.GetDateTime(args);
+
+            var (embedMessage, embed) = await FindAnnouncement(outputChannel, username, time);
+            if (embedMessage != null && embed?.Footer != null && ulong.TryParse(embed.Footer?.Text, out var originalMessageId))
+            {
+                var count = await Db.EventReactions
+                    .Where(er => er.EventId == originalMessageId)
+                    .CountAsync();
+                await ReplyAsync($"That event has `{count}` reaction(s).");
+            }
+            else
+            {
+                await ReplyAsync("Failed to fetch embed message!");
+            }
+        }
+
         [Command("reannounce", RunMode = RunMode.Async)]
         [Description("Reschedule an announcement. Usage: `~reannounce Old Time | New Time`")]
         public async Task Reannounce([Remainder] string args)
