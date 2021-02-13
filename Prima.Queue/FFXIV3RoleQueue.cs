@@ -25,7 +25,7 @@ namespace Prima.Queue
             var queue = GetQueue(role);
 
             if (queue.Any(tuple => tuple.Id == userId)) return false;
-            queue.Add(new QueueSlot(userId, eventId));
+            queue.Add(new QueueSlot(userId, eventId ?? ""));
             return true;
         }
 

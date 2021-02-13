@@ -16,7 +16,7 @@ namespace Prima.Queue
             var queue = GetQueue(role);
             if (queue.Any(s => s.Id == userId)) return DiscordIntegratedEnqueueResult.AlreadyInQueue;
 
-            var slot = new QueueSlot(userId, eventId, roleIds: new[] { discordRole.Id });
+            var slot = new QueueSlot(userId, eventId ?? "", roleIds: new[] { discordRole.Id });
             queue.Add(slot);
             return DiscordIntegratedEnqueueResult.Success;
         }

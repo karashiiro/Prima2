@@ -475,8 +475,14 @@ namespace Prima.Queue.Modules
             {
                 requiredDiscordRole = GetRoleFromArgs(args);
             }
-
             args = RemoveRoleFromArgs(args);
+
+            // Here we go again
+            var eventId = GetEventIdFromArgs(args);
+            if (eventId != null)
+            {
+                args = RemoveEventIdFromArgs(args);
+            }
 
             var roles = ParseRoles(args);
             if (roles == FFXIVRole.None)
@@ -490,13 +496,13 @@ namespace Prima.Queue.Modules
             foreach (var r in new[] { FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank })
             {
                 if (!roles.HasFlag(r)) continue;
-                if (requiredDiscordRole == null && queue.Enqueue(Context.User.Id, r))
+                if (requiredDiscordRole == null && queue.Enqueue(Context.User.Id, r, eventId))
                 {
                     enqueuedRoles |= r;
                 }
                 else if (requiredDiscordRole != null)
                 {
-                    var result = queue.EnqueueWithDiscordRole(Context.User.Id, r, requiredDiscordRole, Context);
+                    var result = queue.EnqueueWithDiscordRole(Context.User.Id, r, requiredDiscordRole, Context, eventId);
                     if (result == DiscordIntegratedEnqueueResult.Success)
                     {
                         enqueuedRoles |= r;
