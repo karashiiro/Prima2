@@ -37,6 +37,7 @@ namespace Prima.Queue.Modules
         private static readonly IList<(ulong, DateTime)> LfmPullTimeLog = new List<(ulong, DateTime)>();
         private static readonly string[] Elements = { "Earth", "Wind", "Water", "Fire", "Lightning", "Ice" };
 
+        public DbService Db { get; set; }
         public FFXIV3RoleQueueService QueueService { get; set; }
         public PasswordGenerator PwGen { get; set; }
 
@@ -484,6 +485,11 @@ namespace Prima.Queue.Modules
             if (eventId != null)
             {
                 args = RemoveEventIdFromArgs(args);
+                if (!await IsEventReal(eventId))
+                {
+                    await ReplyAsync($"{Context.User.Mention}, that event ID does not correspond to a scheduled event!");
+                    return;
+                }
             }
 
             var roles = ParseRoles(args);
@@ -1016,6 +1022,42 @@ namespace Prima.Queue.Modules
 
             Log.Information("User {User} inserted at position {Position} in queue {QueueName}.", user.ToString(), position, queueName);
             return ReplyAsync($"User inserted in position {position}.");
+        }
+
+        private async Task<bool> IsEventReal(string eventId)
+        {
+            if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id) || Context.Guild == null)
+                return false;
+
+            var guildConfig = Db.Guilds.FirstOrDefault(conf => conf.Id == Context.Guild.Id);
+            if (guildConfig == null) return false;
+
+            var channels = new[]
+            {
+                guildConfig.DelubrumScheduleOutputChannel,
+                guildConfig.DelubrumNormalScheduleOutputChannel,
+                guildConfig.CastrumScheduleOutputChannel,
+            };
+
+            foreach (var channelId in channels)
+            {
+                var channel = Context.Guild.GetTextChannel(channelId);
+                await foreach (var page in channel.GetMessagesAsync())
+                {
+                    foreach (var message in page)
+                    {
+                        var embed = message.Embeds.FirstOrDefault(e => e.Type == EmbedType.Rich);
+                        if (embed?.Footer == null) continue;
+
+                        if (embed.Footer?.Text == eventId)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
         }
 
         private static readonly Regex EventIdRegex = new Regex(@"\d{5}\d+", RegexOptions.Compiled);
