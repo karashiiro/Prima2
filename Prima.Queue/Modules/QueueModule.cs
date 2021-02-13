@@ -733,11 +733,7 @@ namespace Prima.Queue.Modules
                 requiredDiscordRole = GetRoleFromArgs(args);
             }
 
-            var eventId = GetEventIdFromArgs(args);
-            if (eventId != null)
-            {
-                args = RemoveEventIdFromArgs(args);
-            }
+            var eventId = GetEventIdFromArgs(args) ?? "";
 
             QueueService.Save();
 
@@ -763,7 +759,7 @@ namespace Prima.Queue.Modules
             return (dpsCount, healerCount, tankCount, distinctCount);
         }
 
-        private string Padding(int length)
+        private static string Padding(int length)
         {
             var agg = "";
             for (var i = 0; i < length; i++)
