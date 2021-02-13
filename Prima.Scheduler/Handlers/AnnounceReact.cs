@@ -11,6 +11,8 @@ namespace Prima.Scheduler.Handlers
     {
         public static async Task HandlerAdd(DiscordSocketClient client, DbService db, Cacheable<IUserMessage, ulong> cachedMessage, ulong userId)
         {
+            if (client.CurrentUser.Id == userId) return;
+
             var eventId = await GetEventId(cachedMessage);
             if (eventId == null) return;
             if (await db.AddEventReaction(eventId.Value, userId))
@@ -22,6 +24,8 @@ namespace Prima.Scheduler.Handlers
 
         public static async Task HandlerRemove(DiscordSocketClient client, DbService db, Cacheable<IUserMessage, ulong> cachedMessage, ulong userId)
         {
+            if (client.CurrentUser.Id == userId) return;
+
             var eventId = await GetEventId(cachedMessage);
             if (eventId == null) return;
             if (await db.RemoveEventReaction(eventId.Value, userId))
