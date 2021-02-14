@@ -716,7 +716,28 @@ namespace Prima.Queue.Modules
                 return;
             }
 
-            if (args.Length != 0) // Because people always try to type "~queue dps" etc., just give it to them.
+            var eventId = GetEventIdFromArgs(args);
+            if (args.Length == 0 || args.Split(' ').Length == 1 && eventId != null)
+            {
+                // Regular command body:
+                if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id))
+                    return;
+
+                var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
+                var queue = QueueService.GetOrCreateQueue(queueName);
+
+                // Get progression role if supplied in Savage queue
+                IRole requiredDiscordRole = null;
+                if (Context.Channel.Id == DelubrumSavageChannelId)
+                {
+                    requiredDiscordRole = GetRoleFromArgs(args);
+                }
+
+                QueueService.Save();
+
+                await ReplyAsync(GetPositionString(queue, Context.User, requiredDiscordRole, Context.User.Id, eventId));
+            }
+            else // Because people always try to type "~queue dps" etc., just give it to them.
             {
                 // Pass if the only argument is an applicable role name.
                 var roleName =
@@ -725,29 +746,8 @@ namespace Prima.Queue.Modules
                 if (roleName == null)
                 {
                     await LfgAsync(args);
-                    return;
                 }
             }
-
-            // Regular command body:
-            if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id))
-                return;
-
-            var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
-            var queue = QueueService.GetOrCreateQueue(queueName);
-
-            // Get progression role if supplied in Savage queue
-            IRole requiredDiscordRole = null;
-            if (Context.Channel.Id == DelubrumSavageChannelId)
-            {
-                requiredDiscordRole = GetRoleFromArgs(args);
-            }
-
-            var eventId = GetEventIdFromArgs(args) ?? "";
-
-            QueueService.Save();
-
-            await ReplyAsync(GetPositionString(queue, Context.User, requiredDiscordRole, Context.User.Id, eventId));
         }
 
         private (int, int, int, int) GetListCounts(FFXIVDiscordIntegratedQueue queue, IRole reqRole, string eventId)
