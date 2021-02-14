@@ -948,7 +948,7 @@ namespace Prima.Queue.Modules
         private void RefreshQueuesEx()
         {
             QueueService.GetOrCreateQueue("lfg-castrum").Refresh(Context.User.Id);
-            QueueService.GetOrCreateQueue("lfg-delubrum").Refresh(Context.User.Id);
+            QueueService.GetOrCreateQueue("lfg-delubrum-normal").Refresh(Context.User.Id);
             QueueService.GetOrCreateQueue("lfg-drs-fresh-prog").Refresh(Context.User.Id);
             QueueService.GetOrCreateQueue("lfg-delubrum-savage").Refresh(Context.User.Id);
             Log.Information("User {User} refreshed queue times.", Context.User.ToString());
