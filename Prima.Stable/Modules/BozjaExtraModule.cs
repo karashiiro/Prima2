@@ -117,6 +117,7 @@ namespace Prima.Stable.Modules
                 .Select(id => Context.Guild.GetUser(id));
             
             var roleName = string.Join(' ', words.Where(w => !w.StartsWith('<')));
+            roleName = RegexSearches.UnicodeApostrophe.Replace(roleName, "'");
 
             roleName = roleName.Trim();
             var role = Context.Guild.Roles.FirstOrDefault(r =>
@@ -178,6 +179,7 @@ namespace Prima.Stable.Modules
                 .Select(id => Context.Guild.GetUser(id));
 
             var roleName = string.Join(' ', words.Where(w => !w.StartsWith('<')));
+            roleName = RegexSearches.UnicodeApostrophe.Replace(roleName, "'");
 
             roleName = roleName.Trim();
             var role = Context.Guild.Roles.FirstOrDefault(r =>

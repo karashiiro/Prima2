@@ -1114,6 +1114,7 @@ namespace Prima.Queue.Modules
                     args.ToLowerInvariant().EndsWith(rn.ToLowerInvariant()));
             if (roleName != null)
             {
+                roleName = RegexSearches.UnicodeApostrophe.Replace(roleName, "'");
                 return Context.Guild.Roles.FirstOrDefault(r => r.Name == roleName);
             }
 
