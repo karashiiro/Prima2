@@ -79,7 +79,7 @@ namespace Prima.Scheduler.Modules
             });
 
             var color = RunDisplayTypes.GetColorCastrum();
-            await outputChannel.SendMessageAsync(embed: new EmbedBuilder()
+            await outputChannel.SendMessageAsync(Context.Message.Id.ToString(), embed: new EmbedBuilder()
                 .WithAuthor(new EmbedAuthorBuilder()
                     .WithIconUrl(Context.User.GetAvatarUrl())
                     .WithName(Context.User.ToString()))
@@ -171,7 +171,7 @@ namespace Prima.Scheduler.Modules
 
             foreach (var embed in embeds)
             {
-                var m = await channel.SendMessageAsync(embed: embed.ToEmbedBuilder().Build());
+                var m = await channel.SendMessageAsync(embed.Footer?.Text, embed: embed.ToEmbedBuilder().Build());
                 await m.AddReactionAsync(new Emoji("📳"));
             }
 
