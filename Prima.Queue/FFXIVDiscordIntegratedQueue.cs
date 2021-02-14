@@ -34,7 +34,11 @@ namespace Prima.Queue
             ulong user;
             lock (queue)
             {
-                var slot = queue.FirstOrDefault(s => SlotHasRole(s, discordRole, context) && s.EventId == eventId);
+                QueueSlot slot;
+                if (string.IsNullOrEmpty(eventId))
+                    slot = queue.FirstOrDefault(s => SlotHasRole(s, discordRole, context) && string.IsNullOrEmpty(s.EventId));
+                else
+                    slot = queue.FirstOrDefault(s => SlotHasRole(s, discordRole, context) && s.EventId == eventId);
 
                 if (slot == null)
                 {

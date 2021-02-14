@@ -1111,7 +1111,7 @@ namespace Prima.Queue.Modules
         {
             var roleName =
                 DelubrumProgressionRoles.Roles.Values.FirstOrDefault(rn =>
-                    args.ToLowerInvariant().EndsWith(rn.ToLowerInvariant()));
+                    args.ToLowerInvariant().Contains(rn.ToLowerInvariant()));
             if (roleName != null)
             {
                 roleName = RegexSearches.UnicodeApostrophe.Replace(roleName, "'");
