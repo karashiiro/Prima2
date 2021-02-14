@@ -717,7 +717,16 @@ namespace Prima.Queue.Modules
             }
 
             var eventId = GetEventIdFromArgs(args);
-            if (args.Length == 0 || args.Split(' ').Length == 1 && eventId != null)
+
+            // Get progression role if supplied in Savage queue
+            IRole requiredDiscordRole = null;
+            if (Context.Channel.Id == DelubrumSavageChannelId)
+            {
+                requiredDiscordRole = GetRoleFromArgs(args);
+            }
+            var dumbArgs = RemoveRoleFromArgs(args);
+
+            if (args.Length == 0 || args.Split(' ').Length == 1 && eventId != null || string.IsNullOrEmpty(dumbArgs))
             {
                 // Regular command body:
                 if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id))
@@ -725,13 +734,6 @@ namespace Prima.Queue.Modules
 
                 var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
                 var queue = QueueService.GetOrCreateQueue(queueName);
-
-                // Get progression role if supplied in Savage queue
-                IRole requiredDiscordRole = null;
-                if (Context.Channel.Id == DelubrumSavageChannelId)
-                {
-                    requiredDiscordRole = GetRoleFromArgs(args);
-                }
 
                 QueueService.Save();
 
