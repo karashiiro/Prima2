@@ -842,7 +842,11 @@ namespace Prima.Queue.Modules
                     ? ""
                     : $"s for {requiredDiscordRole.Name}";
 
-                await ReplyAsync($"There are currently {tankCount} tank(s), {healerCount} healer(s), and {dpsCount} DPS in the queue{roleExtraString}. (Unique players: {distinctCount})");
+                var eventExtraString = string.IsNullOrEmpty(eventId)
+                    ? ""
+                    : $", for event {eventId}";
+
+                await ReplyAsync($"There are currently {tankCount} tank(s), {healerCount} healer(s), and {dpsCount} DPS in the queue{roleExtraString}{eventExtraString}. (Unique players: {distinctCount})");
             }
         }
 
@@ -925,6 +929,11 @@ namespace Prima.Queue.Modules
                 {
                     output += $" for the role {role.Name}";
                 }
+            }
+
+            if (!string.IsNullOrEmpty(eventId))
+            {
+                output += $", for event {eventId}";
             }
 
             output += ".";
