@@ -38,7 +38,7 @@ namespace Prima.Queue
             if (string.IsNullOrEmpty(eventId))
                 slot = queue.FirstOrDefault(s => !s.RoleIds.Any() && string.IsNullOrEmpty(s.EventId));
             else
-                slot = queue.FirstOrDefault(s => s.EventId == eventId); // If they're queueing for a specific event we don't care what roles they requested.
+                slot = queue.FirstOrDefault(s => !s.RoleIds.Any() && s.EventId == eventId);
             
             if (slot != null)
             {
