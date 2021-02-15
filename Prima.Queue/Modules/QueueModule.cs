@@ -819,7 +819,7 @@ namespace Prima.Queue.Modules
             var delubrumAllRoles = false;
             if (Context.Channel.Id == DelubrumSavageChannelId)
             {
-                if (args.ToLowerInvariant() == "all")
+                if (args.ToLowerInvariant().StartsWith("all"))
                 {
                     delubrumAllRoles = true;
                 }
