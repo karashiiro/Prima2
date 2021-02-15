@@ -725,6 +725,7 @@ namespace Prima.Queue.Modules
                 requiredDiscordRole = GetRoleFromArgs(args);
             }
             var dumbArgs = RemoveRoleFromArgs(args);
+            dumbArgs = RemoveEventIdFromArgs(dumbArgs).Trim();
 
             if (args.Length == 0 || args.Split(' ').Length == 1 && eventId != null || string.IsNullOrEmpty(dumbArgs))
             {
@@ -741,14 +742,7 @@ namespace Prima.Queue.Modules
             }
             else // Because people always try to type "~queue dps" etc., just give it to them.
             {
-                // Pass if the only argument is an applicable role name.
-                var roleName =
-                    DelubrumProgressionRoles.Roles.Values.FirstOrDefault(rn =>
-                        args.ToLowerInvariant().EndsWith(rn.ToLowerInvariant()));
-                if (roleName == null)
-                {
-                    await LfgAsync(args);
-                }
+                await LfgAsync(args);
             }
         }
 
