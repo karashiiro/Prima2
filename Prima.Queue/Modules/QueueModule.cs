@@ -958,7 +958,14 @@ namespace Prima.Queue.Modules
 
             if (!string.IsNullOrEmpty(eventId))
             {
-                output += $", for event {eventId}";
+                if (dpsPos != 0 || healerPos != 0 || tankPos != 0)
+                {
+                    output += $", for event {eventId}";
+                }
+                else
+                {
+                    return $"<@{uid}>, you are not in queue for that event. Please set your event with `~setevent <[d][h][t]> <event ID>`.";
+                }
             }
 
             output += ".";
