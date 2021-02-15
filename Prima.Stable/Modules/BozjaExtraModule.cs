@@ -65,7 +65,7 @@ namespace Prima.Stable.Modules
             try
             {
                 await member.SendMessageAsync(
-                    "You have been given the Delubrum Roler role for 3 1/2 hours!\n" +
+                    "You have been given the Delubrum Roler role for 4 1/2 hours!\n" +
                     "You can now use the commands `~addprogrole @User Role Name` and `~removeprogrole @User Role Name` to change " +
                     "the progression roles of run members!\n" +
                     "You can also modify multiple users at once by using `~addprogrole @User1 @User2 Role Name`.\n\n" +
@@ -85,7 +85,7 @@ namespace Prima.Stable.Modules
 
             _ = Task.Run(async () =>
             {
-                await Task.Delay(new TimeSpan(3, 30, 0));
+                await Task.Delay(new TimeSpan(4, 30, 0));
                 await member.RemoveRoleAsync(role);
             });
         }

@@ -52,7 +52,7 @@ namespace Prima.Scheduler.Services
                     await AssignExecutorRole(guild, host, token);
                     await NotifyMembers(host, embedMessage, embed, token);
                     await host.SendMessageAsync(
-                        "You have been given the Delubrum Host role for 3 1/2 hours!\n" +
+                        "You have been given the Delubrum Host role for 4 1/2 hours!\n" +
                         "You can now use the command `~setroler @User` to give them access to the progression " +
                         "role commands `~addprogrole @User Role Name` and `~removeprogrole @User Role Name`!\n" +
                         "You can also modify multiple users at once by using `~addprogrole @User1 @User2 Role Name`.\n\n" +
@@ -157,7 +157,7 @@ namespace Prima.Scheduler.Services
                 await host.AddRoleAsync(currentHost);
                 _ = Task.Run(async () =>
                 {
-                    await Task.Delay(new TimeSpan(3, 30, 0), token);
+                    await Task.Delay(new TimeSpan(4, 30, 0), token);
                     await host.RemoveRoleAsync(currentHost);
                 }, token);
 
@@ -173,7 +173,7 @@ namespace Prima.Scheduler.Services
             await host.AddRoleAsync(executor);
             _ = Task.Run(async () =>
             {
-                await Task.Delay(new TimeSpan(3, 30, 0), token);
+                await Task.Delay(new TimeSpan(4, 30, 0), token);
                 await host.RemoveRoleAsync(executor);
             }, token);
         }
