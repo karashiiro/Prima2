@@ -629,6 +629,37 @@ namespace Prima.Queue.Modules
             await ReplyAsync("Events updated!");
         }
 
+        [Command("clearevent", RunMode = RunMode.Async)]
+        [Description("Clear the events you're specifically in queue for, by role.")]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public async Task ClearEvent([Remainder] string args)
+        {
+            if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id))
+                return;
+
+            var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
+            var queue = QueueService.GetOrCreateQueue(queueName);
+
+            args = RemoveEventIdFromArgs(args);
+
+            var roles = ParseRoles(args);
+            if (roles == FFXIVRole.None)
+            {
+                roles = FFXIVRole.Tank & FFXIVRole.Healer & FFXIVRole.DPS;
+            }
+
+            var rolesList = RolesToArray(roles);
+            foreach (var role in rolesList)
+            {
+                if (queue.GetPosition(Context.User.Id, role, null) != 0)
+                {
+                    queue.SetEvent(Context.User.Id, role, "");
+                }
+            }
+
+            await ReplyAsync("Events updated!");
+        }
+
         [Command("leavequeue", RunMode = RunMode.Async)]
         [Alias("unqueue", "leave")]
         [Description("Leaves one or more roles in a channel's queue. Using this with no roles specified removes you from all roles in the channel.")]
