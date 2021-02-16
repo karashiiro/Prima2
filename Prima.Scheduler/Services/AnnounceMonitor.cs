@@ -58,9 +58,7 @@ namespace Prima.Scheduler.Services
                         "You can also modify multiple users at once by using `~addprogrole @User1 @User2 Role Name`.\n\n" +
                         "Available roles:\n" +
                         "▫️ Trinity Seeker Progression\n" +
-                        "▫️ Dahu Progression\n" +
                         "▫️ Queen's Guard Progression\n" +
-                        "▫️ Phantom Progression\n" +
                         "▫️ Trinity Avowed Progression\n" +
                         "▫️ Stygimoloch Lord Progression\n" +
                         "▫️ The Queen Progression");
