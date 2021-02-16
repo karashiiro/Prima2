@@ -3,6 +3,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Prima.Queue.Services;
+using Prima.Services;
+using Discord.WebSocket;
+using Discord;
+using Prima.Queue.Handlers;
 
 namespace Prima.Queue
 {
@@ -17,6 +21,13 @@ namespace Prima.Queue
             // Initialize the ASP.NET service provider and freeze this Task indefinitely.
             await using var services = ConfigureServices(sc);
             await CommonInitialize.ConfigureServicesAsync(services);
+
+            var client = services.GetRequiredService<DiscordSocketClient>();
+            var db = services.GetRequiredService<DbService>();
+            var queueService = services.GetRequiredService<FFXIV3RoleQueueService>();
+
+            client.ReactionAdded += (message, channel, reaction)
+                => AnnounceReact.HandlerAdd(client, queueService, db, message, reaction);
 
             Log.Information($"Prima Queue logged in!");
 

@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Prima.Services;
@@ -14,7 +13,7 @@ namespace Prima.Scheduler.Handlers
             var userId = reaction.UserId;
             if (client.CurrentUser.Id == userId || reaction.Emote.Name != "📳") return;
 
-            var eventId = await GetEventId(cachedMessage);
+            var eventId = await AnnounceUtil.GetEventId(cachedMessage);
             if (eventId == null) return;
             if (await db.AddEventReaction(eventId.Value, userId))
             {
@@ -35,17 +34,6 @@ namespace Prima.Scheduler.Handlers
                 await message.RemoveReactionAsync(new Emoji("📳"), userId);
             }
             catch { /* ignored */ }
-        }
-
-        private static async Task<ulong?> GetEventId(Cacheable<IUserMessage, ulong> cachedMessage)
-        {
-            var message = await cachedMessage.GetOrDownloadAsync();
-            var embed = message.Embeds.FirstOrDefault(e => e.Type == EmbedType.Rich);
-            if (embed?.Footer == null) return null;
-
-            if (!ulong.TryParse(embed.Footer?.Text, out var eventId)) return null;
-
-            return eventId;
         }
     }
 }
