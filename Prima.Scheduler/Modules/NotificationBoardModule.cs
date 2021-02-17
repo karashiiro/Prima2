@@ -168,36 +168,45 @@ namespace Prima.Scheduler.Modules
             var tank = guild.Emotes.FirstOrDefault(e => e.Name.ToLowerInvariant() == "tank");
             foreach (var embed in embeds)
             {
-                var embedBuilder = embed.ToEmbedBuilder();
-
-                var lines = embed.Description.Split('\n');
-                var messageLinkLine = lines.LastOrDefault(LineContainsLastJumpUrl);
-                if (messageLinkLine == null)
+                try
                 {
-                    var linkTrimmedDescription = lines
-                        .Where(l => !LineContainsLastJumpUrl(l))
-                        .Where(l => !LineContainsCalendarLink(l))
-                        .Aggregate("", (agg, nextLine) => agg + nextLine + '\n');
-                    var trimmedDescription = linkTrimmedDescription.Substring(0, Math.Min(1700, linkTrimmedDescription.Length));
-                    if (trimmedDescription.Length != linkTrimmedDescription.Length)
+                    var embedBuilder = embed.ToEmbedBuilder();
+
+                    var lines = embed.Description.Split('\n');
+                    var messageLinkLine = lines.LastOrDefault(LineContainsLastJumpUrl);
+                    if (messageLinkLine == null)
                     {
-                        trimmedDescription += "...";
+                        var linkTrimmedDescription = lines
+                            .Where(l => !LineContainsLastJumpUrl(l))
+                            .Where(l => !LineContainsCalendarLink(l))
+                            .Aggregate("", (agg, nextLine) => agg + nextLine + '\n');
+                        var trimmedDescription =
+                            linkTrimmedDescription.Substring(0, Math.Min(1700, linkTrimmedDescription.Length));
+                        if (trimmedDescription.Length != linkTrimmedDescription.Length)
+                        {
+                            trimmedDescription += "...";
+                        }
+
+                        var calendarLinkLine = lines.LastOrDefault(LineContainsCalendarLink);
+                        messageLinkLine =
+                            $"**Message Link: https://discordapp.com/channels/{guild.Id}/{Context.Channel.Id}/{embed.Footer?.Text}**";
+
+                        embedBuilder.WithDescription(trimmedDescription + (calendarLinkLine != null
+                            ? $"\n\n{calendarLinkLine}"
+                            : "") + $"\n{messageLinkLine}");
                     }
 
-                    var calendarLinkLine = lines.LastOrDefault(LineContainsCalendarLink);
-                    messageLinkLine = $"**Message Link: https://discordapp.com/channels/{guild.Id}/{Context.Channel.Id}/{embed.Footer?.Text}**";
-
-                    embedBuilder.WithDescription(trimmedDescription + (calendarLinkLine != null
-                        ? $"\n\n{calendarLinkLine}"
-                        : "") + $"\n{messageLinkLine}");
-                }
-
-                var m = await channel.SendMessageAsync(embed.Footer?.Text, embed: embedBuilder.Build());
+                    var m = await channel.SendMessageAsync(embed.Footer?.Text, embed: embedBuilder.Build());
 #if DEBUG
-                await m.AddReactionsAsync(new IEmote[] { new Emoji("📳"), dps, healer, tank });
+                    await m.AddReactionsAsync(new IEmote[] {new Emoji("📳"), dps, healer, tank});
 #else
-                await m.AddReactionsAsync(new IEmote[] { new Emoji("📳") });
+                    await m.AddReactionsAsync(new IEmote[] { new Emoji("📳") });
 #endif
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, "Error in sorting procedure!");
+                }
             }
 
             await progress.DeleteAsync();
