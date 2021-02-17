@@ -49,8 +49,7 @@ namespace Prima.Scheduler.Services
             {
                 if (token.IsCancellationRequested)
                     token.ThrowIfCancellationRequested();
-
-                Log.Information("{RunCount} scheduled runs.", _db.Events.Count());
+                
                 var runs = _db.Events.Where(e => DateTime.FromBinary(e.RunTime) > DateTime.Now && !e.Notified);
                 foreach (var run in runs)
                 {
