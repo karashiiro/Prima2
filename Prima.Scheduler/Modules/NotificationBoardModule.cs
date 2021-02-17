@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
+using Discord.WebSocket;
 using Prima.Scheduler.GoogleApis.Calendar;
 using Prima.Scheduler.GoogleApis.Services;
 using Serilog;
@@ -86,7 +87,7 @@ namespace Prima.Scheduler.Modules
                 .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
                 .WithTimestamp(time.AddHours(-tzi.BaseUtcOffset.Hours))
                 .WithTitle($"Event scheduled by {Context.User} on {time.DayOfWeek} at {time.ToShortTimeString()} ({tzAbbr})!")
-                .WithDescription(trimmedDescription + $"\n\n[Copy to Google Calendar]({eventLink})\n**Message Link: {Context.Message.GetJumpUrl()}**")
+                .WithDescription(trimmedDescription + $"\n\n[Copy to Google Calendar]({eventLink})\nMessage Link: {Context.Message.GetJumpUrl()}")
                 .WithFooter(Context.Message.Id.ToString())
                 .Build());
             
@@ -157,6 +158,43 @@ namespace Prima.Scheduler.Modules
             });
         }
 
+        [Command("convertlinks")]
+        [RequireOwner]
+        public async Task ConvertLinks(ulong channelId)
+        {
+            var channel = Context.Guild.GetTextChannel(channelId);
+            await foreach (var page in channel.GetMessagesAsync())
+            {
+                foreach (var message in page)
+                {
+                    if (message.Embeds.All(e => e.Type != EmbedType.Rich)) continue;
+                    var embed = message.Embeds.First(e => e.Type == EmbedType.Rich);
+
+                    if (!embed.Timestamp.HasValue) continue;
+                    
+                    if (embed.Timestamp.Value < DateTimeOffset.Now) continue;
+
+                    var lines = embed.Description.Split('\n');
+                    var messageLinkLine = lines.LastOrDefault(l => l.StartsWith("**Message Link: https://discordapp.com/channels/"));
+                    if (messageLinkLine == null) continue;
+
+                    messageLinkLine = messageLinkLine.Replace("**", "");
+                    var newDescription = lines
+                        .Where(l => !l.StartsWith("**Message Link: https://discordapp.com/channels/"))
+                        .Append(messageLinkLine)
+                        .Aggregate("", (agg, nextLine) => agg + nextLine + '\n');
+
+                    if (!(message is IUserMessage userMessage)) continue;
+                    await userMessage.ModifyAsync(props =>
+                    {
+                        props.Embed = embed.ToEmbedBuilder()
+                            .WithDescription(newDescription)
+                            .Build();
+                    });
+                }
+            }
+        }
+
         private async Task SortEmbeds(IMessageChannel channel, IGuild guild)
         {
             var progress = await ReplyAsync("Sorting announcements...");
@@ -210,7 +248,7 @@ namespace Prima.Scheduler.Modules
 
                         var calendarLinkLine = lines.LastOrDefault(LineContainsCalendarLink);
                         messageLinkLine =
-                            $"**Message Link: https://discordapp.com/channels/{guild.Id}/{Context.Channel.Id}/{embed.Footer?.Text}**";
+                            $"Message Link: https://discordapp.com/channels/{guild.Id}/{Context.Channel.Id}/{embed.Footer?.Text}";
 
                         embedBuilder.WithDescription(trimmedDescription + (calendarLinkLine != null
                             ? $"\n\n{calendarLinkLine}"
@@ -240,7 +278,7 @@ namespace Prima.Scheduler.Modules
 
         private static bool LineContainsLastJumpUrl(string l)
         {
-            return l.StartsWith("**Message Link: https://discordapp.com/channels/");
+            return l.StartsWith("Message Link: https://discordapp.com/channels/");
         }
 
         [Command("reactions")]

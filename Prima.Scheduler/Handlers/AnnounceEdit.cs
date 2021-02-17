@@ -97,7 +97,7 @@ namespace Prima.Scheduler.Handlers
 
             var (embedMessage, embed) = await FindAnnouncement(outputChannel, message.Id);
             var lines = embed.Description.Split('\n');
-            var messageLinkLine = lines.LastOrDefault(l => l.StartsWith("**Message Link: https://discordapp.com/channels/"));
+            var messageLinkLine = lines.LastOrDefault(l => l.StartsWith("Message Link: https://discordapp.com/channels/"));
             var calendarLinkLine = lines.LastOrDefault(l => l.StartsWith("[Copy to Google Calendar]"));
             await embedMessage.ModifyAsync(props =>
             {
