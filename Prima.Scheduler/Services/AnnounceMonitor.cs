@@ -153,7 +153,7 @@ namespace Prima.Scheduler.Services
             if (host != null && !host.HasRole(currentHost))
             {
                 await host.AddRoleAsync(currentHost);
-                await _db.AddTimedRole(currentHost.Id, guild.Id, host.Id, DateTime.UtcNow.AddHours(.5));
+                await _db.AddTimedRole(currentHost.Id, guild.Id, host.Id, DateTime.UtcNow.AddHours(4.5));
 
                 return true;
             }
@@ -165,7 +165,7 @@ namespace Prima.Scheduler.Services
         {
             var executor = guild.GetRole(DelubrumProgressionRoles.Executor);
             await host.AddRoleAsync(executor);
-            await _db.AddTimedRole(executor.Id, guild.Id, host.Id, DateTime.UtcNow.AddHours(.5));
+            await _db.AddTimedRole(executor.Id, guild.Id, host.Id, DateTime.UtcNow.AddHours(4.5));
         }
 
         private static async Task NotifyLead(IUser host)
