@@ -136,6 +136,27 @@ namespace Prima.Scheduler.Modules
             });
         }
 
+        [Command("removecalendarlink")]
+        [RequireOwner]
+        public async Task RemoveCalendarLink(ulong channelId, ulong messageId)
+        {
+            var channel = Context.Guild.GetTextChannel(channelId);
+            var (embedMessage, embed) = await FindAnnouncement(channel, messageId);
+
+            var embedBuilder = embed.ToEmbedBuilder();
+
+            var lines = embed.Description.Split('\n');
+            var linkTrimmedDescription = lines
+                .Where(l => !LineContainsCalendarLink(l))
+                .Aggregate("", (agg, nextLine) => agg + nextLine + '\n');
+
+            embedBuilder.WithDescription(linkTrimmedDescription);
+            await embedMessage.ModifyAsync(props =>
+            {
+                props.Embed = embedBuilder.Build();
+            });
+        }
+
         private async Task SortEmbeds(IMessageChannel channel, IGuild guild)
         {
             var progress = await ReplyAsync("Sorting announcements...");
