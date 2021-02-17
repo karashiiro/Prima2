@@ -158,7 +158,7 @@ namespace Prima.Services
         public async Task RemoveTimedRole(ulong roleId, ulong userId)
         {
             var existingSet = await _timedRoles.FindAsync(tr => tr.RoleId == roleId && tr.UserId == userId);
-            if (await existingSet.AnyAsync()) return;
+            if (!await existingSet.AnyAsync()) return;
             await _timedRoles.DeleteManyAsync(tr => tr.RoleId == roleId && tr.UserId == userId);
         }
 

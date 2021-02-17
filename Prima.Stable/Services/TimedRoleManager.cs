@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using Prima.Services;
+using Serilog;
 
 namespace Prima.Stable.Services
 {
@@ -30,18 +31,25 @@ namespace Prima.Stable.Services
         {
             while (!token.IsCancellationRequested)
             {
-                var toRemove = _db.TimedRoles.Where(tr => tr.RemovalTime <= DateTime.UtcNow);
-                await foreach (var tr in toRemove.WithCancellation(token))
+                var toRemove = await _db.TimedRoles
+                    .Where(tr => tr.RemovalTime <= DateTime.UtcNow)
+                    .ToListAsync(token);
+                if (toRemove.Any())
                 {
-                    var guild = _client.GetGuild(tr.GuildId);
-                    var role = guild.GetRole(tr.RoleId);
-                    var user = guild.GetUser(tr.UserId);
-                    try
+                    Log.Information("Removing roles from {UserCount} users...", toRemove.Count);
+                    foreach (var tr in toRemove)
                     {
-                        await user.RemoveRoleAsync(role);
+                        var guild = _client.GetGuild(tr.GuildId);
+                        var role = guild.GetRole(tr.RoleId);
+                        var user = guild.GetUser(tr.UserId);
+                        Log.Information("Removing role {Role} from {User}.", role.Name, user.ToString());
+                        try
+                        {
+                            await user.RemoveRoleAsync(role);
+                        }
+                        catch { /* ignored */ }
+                        await _db.RemoveTimedRole(tr.RoleId, tr.UserId);
                     }
-                    catch { /* ignored */ }
-                    await _db.RemoveTimedRole(tr.RoleId, tr.UserId);
                 }
 
 #if DEBUG

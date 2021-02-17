@@ -148,7 +148,7 @@ namespace Prima.Scheduler.Services
             }
         }
 
-        private async Task TryNotifyMember(IUser member, IGuildUser leader, ISocketMessageChannel commandChannel, ScheduledEvent @event, DiscordGuildConfiguration guildConfig, CancellationToken token)
+        private static async Task TryNotifyMember(IUser member, IGuildUser leader, ISocketMessageChannel commandChannel, ScheduledEvent @event, DiscordGuildConfiguration guildConfig, CancellationToken token)
         {
             var success = false;
             try
