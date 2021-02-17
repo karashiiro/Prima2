@@ -92,7 +92,7 @@ namespace Prima.Scheduler.Modules
             
             await ReplyAsync($"Event announced! Announcement posted in <#{outputChannel.Id}>. React to the announcement in " +
                              $"<#{outputChannel.Id}> with :vibration_mode: to be notified before the event begins.");
-            await SortEmbeds(outputChannel);
+            await SortEmbeds(outputChannel, Context.Guild);
         }
 
         private async Task<MiniEvent> FindEvent(string calendarClass, string title, DateTime startTime)
@@ -111,7 +111,7 @@ namespace Prima.Scheduler.Modules
         public async Task SortEmbedsCommand(ulong id)
         {
             var channel = Context.Guild.GetTextChannel(id);
-            await SortEmbeds(channel);
+            await SortEmbeds(channel, Context.Guild);
             await ReplyAsync("Done!");
         }
 
@@ -142,7 +142,7 @@ namespace Prima.Scheduler.Modules
             });
         }
 
-        private async Task SortEmbeds(IMessageChannel channel)
+        private async Task SortEmbeds(IMessageChannel channel, IGuild guild)
         {
             var progress = await ReplyAsync("Sorting announcements...");
             using var typing = Context.Channel.EnterTypingState();
@@ -169,10 +169,13 @@ namespace Prima.Scheduler.Modules
             embeds.Sort((a, b) => (int)(b.Timestamp.Value.ToUnixTimeSeconds() - a.Timestamp.Value.ToUnixTimeSeconds()));
             // ReSharper enable PossibleInvalidOperationException
 
+            var dps = guild.Emotes.FirstOrDefault(e => e.Name.ToLowerInvariant() == "dps");
+            var healer = guild.Emotes.FirstOrDefault(e => e.Name.ToLowerInvariant() == "healer");
+            var tank = guild.Emotes.FirstOrDefault(e => e.Name.ToLowerInvariant() == "tank");
             foreach (var embed in embeds)
             {
                 var m = await channel.SendMessageAsync(embed.Footer?.Text, embed: embed.ToEmbedBuilder().Build());
-                await m.AddReactionAsync(new Emoji("📳"));
+                await m.AddReactionsAsync(new IEmote[] { new Emoji("📳"), dps, healer, tank });
             }
 
             await progress.DeleteAsync();
@@ -254,7 +257,7 @@ namespace Prima.Scheduler.Modules
                 await Calendar.UpdateEvent(GetCalendarCode(outputChannel.Id), @event);
 #endif
 
-                await SortEmbeds(outputChannel);
+                await SortEmbeds(outputChannel, Context.Guild);
 
                 Log.Information("Rescheduled announcement from {OldTime} to {NewTime}", curTime.ToShortTimeString(), newTime.ToShortTimeString());
                 await ReplyAsync("Announcement rescheduled!");
