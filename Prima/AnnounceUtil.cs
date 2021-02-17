@@ -10,6 +10,7 @@ namespace Prima
         {
             var message = await cachedMessage.GetOrDownloadAsync();
             var embed = message.Embeds.FirstOrDefault(e => e.Type == EmbedType.Rich);
+            
             if (embed?.Footer == null) return null;
 
             if (!ulong.TryParse(embed.Footer?.Text, out var eventId)) return null;

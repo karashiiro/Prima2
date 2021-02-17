@@ -16,9 +16,9 @@ namespace Prima.Queue.Handlers
     {
         private static readonly IDictionary<string, FFXIVRole> RoleReactions = new Dictionary<string, FFXIVRole>
         {
-            { "<:dps:551592333192462373>", FFXIVRole.DPS },
-            { "<:healer:551592311444996136>", FFXIVRole.Healer },
-            { "<:tank:551592285217882114>", FFXIVRole.Tank },
+            { "dps", FFXIVRole.DPS },
+            { "healer", FFXIVRole.Healer },
+            { "tank", FFXIVRole.Tank },
         };
 
         public static async Task HandlerAdd(DiscordSocketClient client, FFXIV3RoleQueueService queueService, DbService db, Cacheable<IUserMessage, ulong> cachedMessage, SocketReaction reaction)
@@ -27,7 +27,7 @@ namespace Prima.Queue.Handlers
             if (client.CurrentUser.Id == userId || !RoleReactions.ContainsKey(reaction.Emote.Name)) return;
 
             var role = RoleReactions[reaction.Emote.Name];
-
+            
             var eventId = await AnnounceUtil.GetEventId(cachedMessage);
             if (eventId == null) return;
 
@@ -40,7 +40,9 @@ namespace Prima.Queue.Handlers
 
             var messagedOnce = false;
             var user = client.GetUser(userId);
-            foreach (var queueChannelId in GetScheduleQueues(guildConfig, reaction.Channel.Id))
+            var scheduleQueues = GetScheduleQueues(guildConfig, reaction.Channel.Id);
+            if (scheduleQueues == null) return;
+            foreach (var queueChannelId in scheduleQueues)
             {
                 var queueName = QueueInfo.LfgChannels[queueChannelId];
                 var queue = queueService.GetOrCreateQueue(queueName);
@@ -73,6 +75,9 @@ namespace Prima.Queue.Handlers
 
         private static IEnumerable<ulong> GetScheduleQueues(DiscordGuildConfiguration guildConfig, ulong channelId)
         {
+#if DEBUG
+            return new ulong[] { 766712049316265985 };
+#else
             if (channelId == guildConfig.CastrumScheduleOutputChannel)
                 return new ulong[] { 765994301850779709 };
             else if (channelId == guildConfig.DelubrumNormalScheduleOutputChannel)
@@ -80,6 +85,7 @@ namespace Prima.Queue.Handlers
             else if (channelId == guildConfig.DelubrumScheduleOutputChannel)
                 return new ulong[] { 803636739343908894, 809241125373739058 };
             return null;
+#endif
         }
     }
 }
