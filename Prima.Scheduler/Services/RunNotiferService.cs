@@ -15,6 +15,7 @@ namespace Prima.Scheduler.Services
 {
     public class RunNotiferService : IDisposable
     {
+        private const ulong HostRole = 762072215356702741;
         private const long Threshold = 1800000;
         private const int CheckInterval =
 #if DEBUG
@@ -138,11 +139,7 @@ namespace Prima.Scheduler.Services
                             await Task.Delay((int)Threshold, token);
                             await AssignHost(leader);
                             await embedMessage.DeleteAsync();
-                        }, token);
-                        _ = Task.Run(async () =>
-                        {
-                            await Task.Delay(1000 * 60 * 60 * 3, token);
-                            await UnassignHost(leader);
+                            await _db.AddTimedRole(HostRole, guild.Id, leader.Id, DateTime.UtcNow.AddHours(4.5));
                         }, token);
                     }
                 }
@@ -188,22 +185,8 @@ namespace Prima.Scheduler.Services
 
         private static async Task AssignHost(IGuildUser host)
         {
-            var hostRole = host.Guild.GetRole(762072215356702741);
+            var hostRole = host.Guild.GetRole(HostRole);
             await host.AddRoleAsync(hostRole);
-        }
-
-        private static async Task UnassignHost(IGuildUser host)
-        {
-            var hostRole = host.Guild.GetRole(762072215356702741);
-            try
-            {
-                await host.RemoveRoleAsync(hostRole);
-            }
-            catch
-            {
-                await Task.Delay(5000);
-                await host.RemoveRoleAsync(hostRole);
-            }
         }
 
         private bool _disposed;

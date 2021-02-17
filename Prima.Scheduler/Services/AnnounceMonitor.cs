@@ -145,7 +145,7 @@ namespace Prima.Scheduler.Services
             }
         }
 
-        private static async Task<bool> AssignHostRole(SocketGuild guild, SocketGuildUser host, CancellationToken token)
+        private async Task<bool> AssignHostRole(SocketGuild guild, SocketGuildUser host, CancellationToken token)
         {
             var currentHost = guild.GetRole(RunHostData.RoleId);
 
@@ -153,11 +153,7 @@ namespace Prima.Scheduler.Services
             if (host != null && !host.HasRole(currentHost))
             {
                 await host.AddRoleAsync(currentHost);
-                _ = Task.Run(async () =>
-                {
-                    await Task.Delay(new TimeSpan(4, 30, 0), token);
-                    await host.RemoveRoleAsync(currentHost);
-                }, token);
+                await _db.AddTimedRole(currentHost.Id, guild.Id, host.Id, DateTime.UtcNow.AddHours(4.5));
 
                 return true;
             }
@@ -165,15 +161,11 @@ namespace Prima.Scheduler.Services
             return false;
         }
 
-        private static async Task AssignExecutorRole(SocketGuild guild, IGuildUser host, CancellationToken token)
+        private async Task AssignExecutorRole(SocketGuild guild, IGuildUser host, CancellationToken token)
         {
             var executor = guild.GetRole(DelubrumProgressionRoles.Executor);
             await host.AddRoleAsync(executor);
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(new TimeSpan(4, 30, 0), token);
-                await host.RemoveRoleAsync(executor);
-            }, token);
+            await _db.AddTimedRole(executor.Id, guild.Id, host.Id, DateTime.UtcNow.AddHours(4.5));
         }
 
         private static async Task NotifyLead(IUser host)

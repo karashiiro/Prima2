@@ -30,6 +30,7 @@ namespace Prima.Services
         public IEnumerable<CachedMessage> CachedMessages => _messageCache.AsQueryable().ToEnumerable();
         public IEnumerable<ChannelDescription> ChannelDescriptions => _channelDescriptions.AsQueryable().ToEnumerable();
         public IAsyncEnumerable<EventReaction> EventReactions => _eventReactions.AsQueryable().ToAsyncEnumerable();
+        public IAsyncEnumerable<TimedRole> TimedRoles => _timedRoles.AsQueryable().ToAsyncEnumerable();
 
         private readonly IMongoCollection<GlobalConfiguration> _config;
         private readonly IMongoCollection<DiscordGuildConfiguration> _guildConfig;
@@ -38,6 +39,7 @@ namespace Prima.Services
         private readonly IMongoCollection<CachedMessage> _messageCache;
         private readonly IMongoCollection<ChannelDescription> _channelDescriptions;
         private readonly IMongoCollection<EventReaction> _eventReactions;
+        private readonly IMongoCollection<TimedRole> _timedRoles;
 
         public DbService()
         {
@@ -64,6 +66,9 @@ namespace Prima.Services
 
             _eventReactions = database.GetCollection<EventReaction>("EventReactions");
             Log.Information("Event reaction collection status: {DbStatus} documents found.", _eventReactions.EstimatedDocumentCount());
+
+            _timedRoles = database.GetCollection<TimedRole>("TimedRoles");
+            Log.Information("Timed role collection status: {DbStatus} documents found.", _timedRoles.EstimatedDocumentCount());
         }
 
         public async Task SetGlobalConfigurationProperty(string key, string value)
@@ -134,6 +139,27 @@ namespace Prima.Services
             var existingSet = await _eventReactions.FindAsync(er => er.EventId == eventId);
             if (!await existingSet.AnyAsync()) return;
             await _eventReactions.DeleteManyAsync(er => er.EventId == eventId);
+        }
+
+        public async Task AddTimedRole(ulong roleId, ulong guildId, ulong userId, DateTime removalTime)
+        {
+            var existingSet = await _timedRoles.FindAsync(tr => tr.RoleId == roleId && tr.GuildId == guildId && tr.UserId == userId);
+            if (await existingSet.AnyAsync())
+            {
+                var update = Builders<TimedRole>.Update.Set("RemovalTime", removalTime);
+                await _timedRoles.UpdateOneAsync(tr => tr.RoleId == roleId && tr.GuildId == guildId && tr.UserId == userId, update);
+                return;
+            }
+
+            var newTimedRole = new TimedRole { RoleId = roleId, GuildId = guildId, UserId = userId, RemovalTime = removalTime };
+            await _timedRoles.InsertOneAsync(newTimedRole);
+        }
+
+        public async Task RemoveTimedRole(ulong roleId, ulong userId)
+        {
+            var existingSet = await _timedRoles.FindAsync(tr => tr.RoleId == roleId && tr.UserId == userId);
+            if (await existingSet.AnyAsync()) return;
+            await _timedRoles.DeleteManyAsync(tr => tr.RoleId == roleId && tr.UserId == userId);
         }
 
         public Task ConfigureRole(ulong guildId, string roleName, ulong roleId)

@@ -81,11 +81,7 @@ namespace Prima.Stable.Modules
                 Log.Warning("Can't send direct message to user {User}.", member.ToString());
             }
 
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(new TimeSpan(4, 30, 0));
-                await member.RemoveRoleAsync(role);
-            });
+            await Db.AddTimedRole(role.Id, Context.Guild.Id, member.Id, DateTime.UtcNow.AddHours(4.5));
         }
 
         [Command("addprogrole", RunMode = RunMode.Async)]

@@ -27,6 +27,9 @@ namespace Prima.Stable
             var moderationEvents = services.GetRequiredService<ModerationEventService>();
             var censusEvents = services.GetRequiredService<CensusEventService>();
             var mute = services.GetRequiredService<MuteService>();
+            var roleRemover = services.GetRequiredService<TimedRoleManager>();
+
+            roleRemover.Initialize();
 
             client.ReactionAdded += (message, channel, reaction) =>  ReactionReceived.HandlerAdd(db, message, channel, reaction);
             client.ReactionRemoved += (message, channel, reaction) => ReactionReceived.HandlerRemove(db, message, channel, reaction);
@@ -55,7 +58,8 @@ namespace Prima.Stable
                 .AddSingleton<PresenceService>()
                 .AddSingleton<XIVAPIService>()
                 .AddSingleton<FFXIVWeatherService>()
-                .AddSingleton<MuteService>();
+                .AddSingleton<MuteService>()
+                .AddSingleton<TimedRoleManager>();
             return sc.BuildServiceProvider();
         }
     }
