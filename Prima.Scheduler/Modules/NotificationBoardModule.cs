@@ -43,7 +43,7 @@ namespace Prima.Scheduler.Modules
 
             var parameters = args.Substring(0, splitIndex).Trim();
             var description = args.Substring(splitIndex + 1).Trim();
-            var trimmedDescription = description.Substring(0, Math.Min(1800, description.Length));
+            var trimmedDescription = description.Substring(0, Math.Min(1700, description.Length));
             if (trimmedDescription.Length != description.Length)
             {
                 trimmedDescription += "...";
@@ -86,7 +86,7 @@ namespace Prima.Scheduler.Modules
                 .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
                 .WithTimestamp(time.AddHours(-tzi.BaseUtcOffset.Hours))
                 .WithTitle($"Event scheduled by {Context.User} on {time.DayOfWeek} at {time.ToShortTimeString()} ({tzAbbr})!")
-                .WithDescription(trimmedDescription + $"\n\n[Copy to Google Calendar]({eventLink})")
+                .WithDescription(trimmedDescription + $"\n\n[Copy to Google Calendar]({eventLink})\n**Message Link: {Context.Message.GetJumpUrl()}**")
                 .WithFooter(Context.Message.Id.ToString())
                 .Build());
             
@@ -115,30 +115,24 @@ namespace Prima.Scheduler.Modules
             await ReplyAsync("Done!");
         }
 
-        [Command("setannouncesourcemessage", RunMode = RunMode.Async)]
-        [RequireContext(ContextType.Guild)]
+        [Command("removemessagelink")]
         [RequireOwner]
-        public async Task RebuildAnnounce(ulong channelId, ulong embedMessageId, ulong messageId)
+        public async Task RemoveMessageLink(ulong channelId, ulong messageId)
         {
-            if (!(await Context.Guild.GetTextChannel(channelId).GetMessageAsync(embedMessageId) is IUserMessage embedMessage))
-            {
-                Log.Information("Embed message is null!");
-                return;
-            }
+            var channel = Context.Guild.GetTextChannel(channelId);
+            var (embedMessage, embed) = await FindAnnouncement(channel, messageId);
 
-            if (!embedMessage.Embeds.Any())
-            {
-                Log.Information("No embeds!");
-                return;
-            }
+            var embedBuilder = embed.ToEmbedBuilder();
 
+            var lines = embed.Description.Split('\n');
+            var linkTrimmedDescription = lines
+                .Where(l => !LineContainsLastJumpUrl(l))
+                .Aggregate("", (agg, nextLine) => agg + nextLine + '\n');
+
+            embedBuilder.WithDescription(linkTrimmedDescription);
             await embedMessage.ModifyAsync(props =>
             {
-                props.Embed = embedMessage.Embeds
-                    .First()
-                    .ToEmbedBuilder()
-                    .WithFooter(messageId.ToString())
-                    .Build();
+                props.Embed = embedBuilder.Build();
             });
         }
 
@@ -174,11 +168,49 @@ namespace Prima.Scheduler.Modules
             var tank = guild.Emotes.FirstOrDefault(e => e.Name.ToLowerInvariant() == "tank");
             foreach (var embed in embeds)
             {
-                var m = await channel.SendMessageAsync(embed.Footer?.Text, embed: embed.ToEmbedBuilder().Build());
+                var embedBuilder = embed.ToEmbedBuilder();
+
+                var lines = embed.Description.Split('\n');
+                var messageLinkLine = lines.LastOrDefault(LineContainsLastJumpUrl);
+                if (messageLinkLine == null)
+                {
+                    var linkTrimmedDescription = lines
+                        .Where(l => !LineContainsLastJumpUrl(l))
+                        .Where(l => !LineContainsCalendarLink(l))
+                        .Aggregate("", (agg, nextLine) => agg + nextLine + '\n');
+                    var trimmedDescription = linkTrimmedDescription.Substring(0, Math.Min(1700, linkTrimmedDescription.Length));
+                    if (trimmedDescription.Length != linkTrimmedDescription.Length)
+                    {
+                        trimmedDescription += "...";
+                    }
+
+                    var calendarLinkLine = lines.LastOrDefault(LineContainsCalendarLink);
+                    messageLinkLine = $"**Message Link: https://discordapp.com/channels/{guild.Id}/{Context.Channel.Id}/{embed.Footer?.Text}**";
+
+                    embedBuilder.WithDescription(trimmedDescription + (calendarLinkLine != null
+                        ? $"\n\n{calendarLinkLine}"
+                        : "") + $"\n{messageLinkLine}");
+                }
+
+                var m = await channel.SendMessageAsync(embed.Footer?.Text, embed: embedBuilder.Build());
+#if DEBUG
                 await m.AddReactionsAsync(new IEmote[] { new Emoji("📳"), dps, healer, tank });
+#else
+                await m.AddReactionsAsync(new IEmote[] { new Emoji("📳") });
+#endif
             }
 
             await progress.DeleteAsync();
+        }
+
+        private static bool LineContainsCalendarLink(string l)
+        {
+            return l.StartsWith("[Copy to Google Calendar]");
+        }
+
+        private static bool LineContainsLastJumpUrl(string l)
+        {
+            return l.StartsWith("**Message Link: https://discordapp.com/channels/");
         }
 
         [Command("reactions")]
@@ -380,7 +412,7 @@ namespace Prima.Scheduler.Modules
                     var restMessage = (IUserMessage)message;
 
                     var embed = restMessage.Embeds.FirstOrDefault();
-                    if (embed == null) continue;
+                    if (embed?.Footer == null) continue;
 
                     if (!(embed.Title.Contains(username) && embed.Title.Contains(time.ToShortTimeString()))) continue;
 

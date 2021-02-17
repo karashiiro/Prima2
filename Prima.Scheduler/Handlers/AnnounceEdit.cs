@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
 using Discord;
+using Discord.Commands;
 using Discord.WebSocket;
 using Prima.Models;
 using Prima.Resources;
@@ -53,7 +54,7 @@ namespace Prima.Scheduler.Handlers
 
             var parameters = args.Substring(0, splitIndex).Trim();
             var description = args.Substring(splitIndex + 1).Trim();
-            var trimmedDescription = description.Substring(0, Math.Min(1800, description.Length));
+            var trimmedDescription = description.Substring(0, Math.Min(1700, description.Length));
             if (trimmedDescription.Length != description.Length)
             {
                 trimmedDescription += "...";
@@ -95,15 +96,19 @@ namespace Prima.Scheduler.Handlers
             }
 
             var (embedMessage, embed) = await FindAnnouncement(outputChannel, message.Id);
-            var calendarLinkLine = embed.Description.Split('\n').Last();
+            var lines = embed.Description.Split('\n');
+            var messageLinkLine = lines.LastOrDefault(l => l.StartsWith("**Message Link: https://discordapp.com/channels/"));
+            var calendarLinkLine = lines.LastOrDefault(l => l.StartsWith("[Copy to Google Calendar]"));
             await embedMessage.ModifyAsync(props =>
             {
                 props.Embed = embed
                     .ToEmbedBuilder()
                     .WithTimestamp(time.AddHours(-tzi.BaseUtcOffset.Hours))
                     .WithTitle($"Event scheduled by {message.Author} on {time.DayOfWeek} at {time.ToShortTimeString()} ({tzAbbr})!")
-                    .WithDescription(trimmedDescription + (calendarLinkLine.StartsWith("[Copy to Google Calendar]")
+                    .WithDescription(trimmedDescription + (calendarLinkLine != null
                         ? $"\n\n{calendarLinkLine}"
+                        : "") + (messageLinkLine != null
+                        ? $"\n{messageLinkLine}"
                         : ""))
                     .Build();
             });
