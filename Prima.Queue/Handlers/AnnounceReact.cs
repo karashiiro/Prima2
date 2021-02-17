@@ -51,11 +51,11 @@ namespace Prima.Queue.Handlers
                 {
                     if (!messagedOnce)
                     {
-                        await user.SendMessageAsync($"You have been added to the queue for event `{eventId}`. " +
+                        await user.SendMessageAsync($"You have been added to the {role} queue for event `{eventId}`. " +
                             $"You can check your position in queue with `~queue {eventId}` in the queue channel.");
                         messagedOnce = true;
                     }
-                    Log.Information("User {User} has been added to the queue {QueueName}, with event {Event}", user.ToString(), queueName, eventId);
+                    Log.Information("User {User} has been added to the {FFXIVRole} queue for {QueueName}, with event {Event}", user.ToString(), role.ToString(), queueName, eventId);
                 }
                 else
                 {
@@ -64,6 +64,8 @@ namespace Prima.Queue.Handlers
                         "If you would like to leave the queue, please use `~leavequeue` in the queue channel.");
                 }
             }
+
+            queueService.Save();
 
             var message = await cachedMessage.GetOrDownloadAsync();
             try
