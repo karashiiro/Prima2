@@ -10,7 +10,7 @@ using Prima.Queue.Handlers;
 
 namespace Prima.Queue
 {
-    class Program
+    public static class Program
     {
         static void Main(string[] args) => MainAsync(args).GetAwaiter().GetResult();
 
@@ -26,15 +26,16 @@ namespace Prima.Queue
             var db = services.GetRequiredService<DbService>();
             var queueService = services.GetRequiredService<FFXIV3RoleQueueService>();
 
+#if DEBUG
             client.ReactionAdded += (message, channel, reaction)
                 => AnnounceReact.HandlerAdd(client, queueService, db, message, reaction);
+#endif
 
-            Log.Information($"Prima Queue logged in!");
+            Log.Information("Prima Queue logged in!");
 
             await Task.Delay(-1);
         }
 
-        [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "<Pending>")]
         private static ServiceProvider ConfigureServices(IServiceCollection sc)
         {
             return sc
