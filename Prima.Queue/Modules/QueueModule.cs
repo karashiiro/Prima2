@@ -975,7 +975,7 @@ namespace Prima.Queue.Modules
 
         [Command("refreshqueues", RunMode = RunMode.Async)]
         [Alias("refresh", "refreshqueue")]
-        [Description("Refreshes your position in all queues.")]
+        [Description("Refreshes your position in the Bozja queues.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task RefreshQueues()
         {

@@ -52,16 +52,20 @@ namespace Prima.Queue.Handlers
                     if (!messagedOnce)
                     {
                         await user.SendMessageAsync($"You have been added to the {role} queue for event `{eventId}`. " +
-                            $"You can check your position in queue with `~queue {eventId}` in the queue channel.");
+                            $"You can check your position in queue with `~queue {eventId}` in the queue channel.\n" +
+                            "Clicking the reaction again will refresh your position in the queue.");
                         messagedOnce = true;
                     }
                     Log.Information("User {User} has been added to the {FFXIVRole} queue for {QueueName}, with event {Event}", user.ToString(), role.ToString(), queueName, eventId);
                 }
                 else
                 {
-                    await user.SendMessageAsync("You are already in that queue, in position " +
-                        $"{queue.GetPosition(userId, role, eventId.Value.ToString())}/{queue.Count(role, eventId.Value.ToString())}.\n" +
-                        "If you would like to leave the queue, please use `~leavequeue` in the queue channel.");
+                    queueService.GetOrCreateQueue("lfg-castrum").Refresh(userId);
+                    queueService.GetOrCreateQueue("lfg-delubrum-normal").Refresh(userId);
+                    queueService.GetOrCreateQueue("lfg-drs-fresh-prog").Refresh(userId);
+                    queueService.GetOrCreateQueue("lfg-delubrum-savage").Refresh(userId);
+
+                    await user.SendMessageAsync($"{user.Mention}, your timeouts in the Bozja queues have been refreshed!");
                 }
             }
 
