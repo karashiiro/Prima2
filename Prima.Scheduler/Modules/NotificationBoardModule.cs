@@ -257,7 +257,14 @@ namespace Prima.Scheduler.Modules
 
                     var m = await channel.SendMessageAsync(embed.Footer?.Text, embed: embedBuilder.Build());
 
-                    await m.AddReactionsAsync(new IEmote[] {new Emoji("📳"), dps, healer, tank});
+                    try
+                    {
+                        await m.AddReactionsAsync(new IEmote[] {new Emoji("📳"), dps, healer, tank});
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e, "Failed to add reactions!");
+                    }
                 }
                 catch (Exception e)
                 {
