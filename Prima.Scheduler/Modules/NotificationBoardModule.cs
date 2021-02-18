@@ -256,11 +256,8 @@ namespace Prima.Scheduler.Modules
                     }
 
                     var m = await channel.SendMessageAsync(embed.Footer?.Text, embed: embedBuilder.Build());
-#if DEBUG
+
                     await m.AddReactionsAsync(new IEmote[] {new Emoji("📳"), dps, healer, tank});
-#else
-                    await m.AddReactionsAsync(new IEmote[] { new Emoji("📳") });
-#endif
                 }
                 catch (Exception e)
                 {

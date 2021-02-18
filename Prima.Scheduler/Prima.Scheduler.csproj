@@ -6,10 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Modules\SchedulingModule.cs~RF2c94d1a.TMP" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Include="..\Prima\Modules\CommonModule.cs" Link="Modules\CommonModule.cs" />
   </ItemGroup>
 
