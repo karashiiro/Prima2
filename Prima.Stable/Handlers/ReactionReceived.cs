@@ -46,7 +46,6 @@ namespace Prima.Stable.Handlers
             {
                 var guild = channel.Guild;
                 var member = guild.GetUser(reaction.UserId);
-                var emote = reaction.Emote as Emote;
                 DiscordGuildConfiguration disConfig;
                 try
                 {
@@ -56,7 +55,7 @@ namespace Prima.Stable.Handlers
                 {
                     return;
                 }
-                if (disConfig.RoleEmotes.TryGetValue(emote.Id.ToString(), out var roleIdString))
+                if ((ichannel.Id == 551584585432039434 || ichannel.Id == 590757405927669769 || ichannel.Id == 765748243367591936) && reaction.Emote is Emote emote && disConfig.RoleEmotes.TryGetValue(emote.Id.ToString(), out var roleIdString))
                 {
                     var roleId = ulong.Parse(roleIdString);
                     var role = member.Guild.GetRole(roleId);
