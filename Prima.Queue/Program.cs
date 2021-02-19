@@ -25,11 +25,9 @@ namespace Prima.Queue
             var client = services.GetRequiredService<DiscordSocketClient>();
             var db = services.GetRequiredService<DbService>();
             var queueService = services.GetRequiredService<FFXIV3RoleQueueService>();
-
-#if DEBUG
+            
             client.ReactionAdded += (message, channel, reaction)
                 => AnnounceReact.HandlerAdd(client, queueService, db, message, reaction);
-#endif
 
             Log.Information("Prima Queue logged in!");
 
