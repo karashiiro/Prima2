@@ -469,8 +469,6 @@ namespace Prima.Queue.Modules
             if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id))
                 return;
 
-
-
             var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
@@ -1027,7 +1025,7 @@ namespace Prima.Queue.Modules
         [Alias("refresh", "refreshqueue")]
         [Description("Refreshes your position in the Bozja queues.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task RefreshQueues()
+        public Task RefreshQueues([Remainder] string args = "")
         {
             if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id) && Context.Guild != null)
                 return Task.CompletedTask;
