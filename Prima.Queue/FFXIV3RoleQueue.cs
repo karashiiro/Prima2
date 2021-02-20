@@ -110,7 +110,7 @@ namespace Prima.Queue
         {
             return s =>
             {
-                if (eventId == null) return true;
+                if (string.IsNullOrEmpty(eventId)) return string.IsNullOrEmpty(s.EventId);
                 return s.EventId == eventId;
             };
         }
