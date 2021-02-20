@@ -511,6 +511,8 @@ namespace Prima.Queue.Modules
                             var channel = Context.Guild.GetTextChannel(c);
                             if (!ulong.TryParse(eventId, out var messageId)) continue;
                             var postMessage = await channel.GetMessageAsync(messageId);
+                            if (postMessage == null) continue;
+
                             var author = Context.Guild.GetUser(postMessage.Author.Id);
 
                             var discordRoles = DelubrumProgressionRoles.Roles.Keys
