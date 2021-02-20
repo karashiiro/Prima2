@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Discord;
 using Discord.Commands;
@@ -8,6 +8,13 @@ namespace Prima.Queue
 {
     public class FFXIVDiscordIntegratedQueue : FFXIV3RoleQueue
     {
+        public IEnumerable<ulong> GetSlotDiscordRoles(ulong userId, FFXIVRole role, SocketCommandContext context)
+        {
+            if (context.Guild == null) return null;
+            var queue = GetQueue(role);
+            return queue.FirstOrDefault(s => s.Id == userId)?.RoleIds;
+        }
+
         public DiscordIntegratedEnqueueResult EnqueueWithDiscordRole(ulong userId, FFXIVRole role, IRole discordRole, SocketCommandContext context, string eventId)
         {
             if (context.Guild == null) return DiscordIntegratedEnqueueResult.NoGuild;
@@ -85,7 +92,7 @@ namespace Prima.Queue
             // User-specified roles take absolute precedence over their role list
             if (s.RoleIds.Count() != 0)
             {
-                return s.RoleIds.Contains(discordRole.Id);
+                return s.RoleIds.Contains(discordRole?.Id ?? 0);
             }
 
             // Alternatively, check their role list

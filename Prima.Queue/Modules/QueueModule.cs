@@ -817,14 +817,67 @@ namespace Prima.Queue.Modules
                 var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
                 var queue = QueueService.GetOrCreateQueue(queueName);
 
-                QueueService.Save();
+                var tankEvent = queue.GetEvent(Context.User.Id, FFXIVRole.Tank);
+                var healerEvent = queue.GetEvent(Context.User.Id, FFXIVRole.Healer);
+                var dpsEvent = queue.GetEvent(Context.User.Id, FFXIVRole.DPS);
 
-                await ReplyAsync(GetPositionString(queue, Context.User, requiredDiscordRole, Context.User.Id, eventId));
+                await ReplyAsync(GetPositionStringAllEvents(queue, Context.User.Id, dpsEvent, healerEvent, tankEvent));
             }
             else // Because people always try to type "~queue dps" etc., just give it to them.
             {
                 await LfgAsync(args);
             }
+        }
+
+        private string GetPositionStringAllEvents(FFXIVDiscordIntegratedQueue queue, ulong uid, string dpsEventId, string healerEventId, string tankEventId)
+        {
+            const string responseTemplate = "You are in the following queues in this channel:\n" +
+                                            "Tank: {0}\n" +
+                                            "Healer: {1}\n" +
+                                            "DPS: {2}";
+            var dpsRole = Context.Guild.GetRole(queue.GetSlotDiscordRoles(uid, FFXIVRole.DPS, Context)?.FirstOrDefault() ?? 0);
+            var healerRole = Context.Guild.GetRole(queue.GetSlotDiscordRoles(uid, FFXIVRole.Healer, Context)?.FirstOrDefault() ?? 0);
+            var tankRole = Context.Guild.GetRole(queue.GetSlotDiscordRoles(uid, FFXIVRole.Tank, Context)?.FirstOrDefault() ?? 0);
+
+            var dpsCount = dpsRole == null
+                ? queue.Count(FFXIVRole.DPS, dpsEventId)
+                : queue.CountWithDiscordRole(FFXIVRole.DPS, dpsRole, Context, dpsEventId);
+            var healerCount = healerRole == null
+                ? queue.Count(FFXIVRole.Healer, healerEventId)
+                : queue.CountWithDiscordRole(FFXIVRole.Healer, healerRole, Context, healerEventId);
+            var tankCount = tankRole == null
+                ? queue.Count(FFXIVRole.Tank, tankEventId)
+                : queue.CountWithDiscordRole(FFXIVRole.Tank, tankRole, Context, tankEventId);
+            
+            var dpsPos = dpsRole == null
+                ? queue.GetPosition(uid, FFXIVRole.DPS, dpsEventId)
+                : queue.GetPositionWithDiscordRole(uid, FFXIVRole.DPS, dpsRole, Context, dpsEventId);
+            var healerPos = healerRole == null
+                ? queue.GetPosition(uid, FFXIVRole.Healer, healerEventId)
+                : queue.GetPositionWithDiscordRole(uid, FFXIVRole.Healer, healerRole, Context, healerEventId);
+            var tankPos = tankRole == null
+                ? queue.GetPosition(uid, FFXIVRole.Tank, tankEventId)
+                : queue.GetPositionWithDiscordRole(uid, FFXIVRole.Tank, tankRole, Context, tankEventId);
+
+            var dpsStr = "Not in queue";
+            if (dpsPos != 0)
+            {
+                dpsStr = $"{(dpsRole != null ? dpsRole.Name + " " : "")}{dpsPos}/{dpsCount}{(!string.IsNullOrEmpty(dpsEventId) ? $" ({dpsEventId})" : "")}";
+            }
+
+            var healerStr = "Not in queue";
+            if (healerPos != 0)
+            {
+                healerStr = $"{(healerRole != null ? healerRole.Name + " " : "")}{healerPos}/{healerCount}{(!string.IsNullOrEmpty(healerEventId) ? $" ({healerEventId})" : "")}";
+            }
+
+            var tankStr = "Not in queue";
+            if (tankPos != 0)
+            {
+                tankStr = $"{(tankRole != null ? tankRole.Name + " " : "")}{tankPos}/{tankCount}{(!string.IsNullOrEmpty(tankEventId) ? $" ({tankEventId})" : "")}";
+            }
+
+            return string.Format(responseTemplate, tankStr, healerStr, dpsStr);
         }
 
         private (int, int, int, int) GetListCounts(FFXIVDiscordIntegratedQueue queue, IRole reqRole, string eventId)

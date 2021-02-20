@@ -67,6 +67,7 @@ namespace Prima.Queue
         public int Count(FFXIVRole role, string eventId)
         {
             return GetQueue(role)
+                .Where(s => !s.RoleIds.Any())
                 .Count(EventValid(eventId));
         }
 
@@ -76,6 +77,7 @@ namespace Prima.Queue
                 .Concat(_healerQueue)
                 .Concat(_tankQueue)
                 .Where(EventValid(eventId))
+                .Where(s => !s.RoleIds.Any())
                 .Select(s => s.Id)
                 .Distinct()
                 .Count();
@@ -84,6 +86,7 @@ namespace Prima.Queue
         public int GetPosition(ulong userId, FFXIVRole role, string eventId)
         {
             return GetQueue(role)
+                .Where(s => !s.RoleIds.Any())
                 .Where(EventValid(eventId))
                 .ToList()
                 .IndexOf(s => s.Id == userId) + 1;
