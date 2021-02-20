@@ -64,7 +64,7 @@ namespace Prima
 
         public static bool HasRole(this SocketGuildUser member, IRole role)
         {
-            return member.HasRole(role.Id);
+            return member.HasRole(role?.Id ?? 0);
         }
     }
 }

@@ -469,6 +469,8 @@ namespace Prima.Queue.Modules
             if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id))
                 return;
 
+
+
             var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
@@ -489,6 +491,54 @@ namespace Prima.Queue.Modules
                 {
                     await ReplyAsync($"{Context.User.Mention}, that event ID does not correspond to a scheduled event!");
                     return;
+                }
+                else
+                {
+                    if (Context.Channel.Id == DelubrumSavageChannelId)
+                    {
+                        var guildConfig = Db.Guilds.FirstOrDefault(conf => conf.Id == Context.Guild.Id);
+                        if (guildConfig == null) return;
+#if DEBUG
+                        var channels = new ulong[] { 571235821168885780 };
+#else
+                        var channels = new[]
+                        {
+                            guildConfig.DelubrumScheduleInputChannel,
+                            guildConfig.DelubrumNormalScheduleInputChannel,
+                            guildConfig.CastrumScheduleInputChannel,
+                        };
+#endif
+                        foreach (var c in channels)
+                        {
+                            var channel = Context.Guild.GetTextChannel(c);
+                            if (!ulong.TryParse(eventId, out var messageId)) continue;
+                            var postMessage = await channel.GetMessageAsync(messageId);
+                            var author = Context.Guild.GetUser(postMessage.Author.Id);
+
+                            var discordRoles = DelubrumProgressionRoles.Roles.Keys
+                                .Select(rId => Context.Guild.GetRole(rId));
+                            var authorHasProgressionRole = discordRoles.Any(dr => author.HasRole(dr));
+                            if (!authorHasProgressionRole)
+                            {
+                                await ReplyAsync($"{Context.User.Mention}, this is not a queue for fresh progression runs.\n" +
+                                                 "Please queue in <#809241125373739058> instead.");
+                                return;
+                            }
+
+                            // ReSharper disable once InvertIf
+                            if (postMessage.Content.ToLowerInvariant().Contains("fresh prog"))
+                            {
+                                var res = await ReplyAsync($"{Context.User.Mention}, that event contains the words `fresh prog`.\n" +
+                                                 "If that event is a fresh progression run, please leave this queue and queue in <#809241125373739058> instead.");
+                                _ = Task.Run(async () =>
+                                {
+                                    await Task.Delay(20000);
+                                    await res.DeleteAsync();
+                                });
+                                break;
+                            }
+                        }
+                    }
                 }
             }
 
@@ -1073,11 +1123,17 @@ namespace Prima.Queue.Modules
 
         private async Task<bool> IsEventReal(string eventId)
         {
+            var (m, _) = await GetEvent(eventId);
+            return m != null;
+        }
+
+        private async Task<(IMessage, IEmbed)> GetEvent(string eventId)
+        {
             if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id) || Context.Guild == null)
-                return false;
+                return (null, null);
 
             var guildConfig = Db.Guilds.FirstOrDefault(conf => conf.Id == Context.Guild.Id);
-            if (guildConfig == null) return false;
+            if (guildConfig == null) return (null, null);
 
             var channels = new[]
             {
@@ -1099,13 +1155,13 @@ namespace Prima.Queue.Modules
 
                         if (embed.Footer?.Text == eventId)
                         {
-                            return true;
+                            return (message, embed);
                         }
                     }
                 }
             }
 
-            return false;
+            return (null, null);
         }
 
         private static readonly Regex EventIdRegex = new Regex(@"\d{5}\d+", RegexOptions.Compiled);
