@@ -110,8 +110,7 @@ namespace Prima.Scheduler.Services
                     if (!nullableTimestamp.HasValue) continue;
 
                     var timestamp = nullableTimestamp.Value;
-                    Log.Information("Current timestamp: {CurrentTimestamp}; announcement timestamp: {Timestamp}", DateTimeOffset.Now.ToString(), timestamp.ToString());
-
+                    
                     // Remove expired posts
                     if (timestamp.AddMinutes(15) < DateTimeOffset.Now)
                     {
