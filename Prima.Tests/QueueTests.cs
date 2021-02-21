@@ -9,6 +9,18 @@ namespace Prima.Tests
         const ulong userId = 435164236432553542;
         const string eventId = "483597092876052452";
 
+        [TestCase(FFXIVRole.DPS)]
+        [TestCase(FFXIVRole.Healer)]
+        [TestCase(FFXIVRole.Tank)]
+        public void SetEvent_Works(FFXIVRole role)
+        {
+            var queue = new FFXIV3RoleQueue();
+            queue.Enqueue(userId, role, eventId);
+            queue.SetEvent(userId, role, null);
+            var userEventId = queue.GetEvent(userId, role);
+            Assert.That(string.IsNullOrEmpty(userEventId));
+        }
+
         [Test]
         public void GetEvents_Works_1()
         {

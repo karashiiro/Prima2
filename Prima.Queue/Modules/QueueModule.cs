@@ -670,10 +670,8 @@ namespace Prima.Queue.Modules
             var rolesList = RolesToArray(roles);
             foreach (var role in rolesList)
             {
-                if (queue.GetPosition(Context.User.Id, role, null) != 0)
-                {
-                    queue.SetEvent(Context.User.Id, role, eventId);
-                }
+                queue.SetEvent(Context.User.Id, role, eventId);
+                Log.Information("Event for role {RoleName} on user {User} set to {EventId}.", role, Context.User, eventId);
             }
 
             await ReplyAsync("Events updated!");
@@ -701,10 +699,8 @@ namespace Prima.Queue.Modules
             var rolesList = RolesToArray(roles);
             foreach (var role in rolesList)
             {
-                if (queue.GetPosition(Context.User.Id, role, null) != 0)
-                {
-                    queue.SetEvent(Context.User.Id, role, "");
-                }
+                queue.SetEvent(Context.User.Id, role, "");
+                Log.Information("Event for role {RoleName} on user {User} cleared.", role, Context.User);
             }
 
             await ReplyAsync("Events updated!");
