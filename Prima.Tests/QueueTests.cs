@@ -1,4 +1,7 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Prima.Queue;
 
@@ -8,6 +11,72 @@ namespace Prima.Tests
     {
         const ulong userId = 435164236432553542;
         const string eventId = "483597092876052452";
+
+        [Test]
+        public async Task RefreshEvent_Works()
+        {
+            var rand = new Random(1234);
+            var queue = new TestQueue();
+            for (ulong i = 0; i < 1000; i++)
+            {
+                var nextRole = rand.Next(0, 3) switch
+                {
+                    0 => FFXIVRole.DPS,
+                    1 => FFXIVRole.Healer,
+                    2 => FFXIVRole.Tank,
+                    _ => FFXIVRole.None,
+                };
+                queue.Enqueue(i, nextRole, eventId);
+                await Task.Delay(rand.Next(1, 20));
+            }
+            queue.RefreshEvent(eventId);
+            var timestamps = queue.GetAllSlots()
+                .Select(slot => slot.QueueTime)
+                .ToList();
+            var firstTimestamp = timestamps.First();
+            foreach (var timestamp in timestamps.Skip(1))
+            {
+                Assert.AreEqual(firstTimestamp, timestamp);
+            }
+        }
+
+        [TestCase(FFXIVRole.DPS)]
+        [TestCase(FFXIVRole.Healer)]
+        [TestCase(FFXIVRole.Tank)]
+        public async Task Refresh_Works_Event(FFXIVRole role)
+        {
+            var queue = new TestQueue();
+            var enqueuedSlot = new QueueSlot(userId, eventId, new List<ulong>())
+            {
+                QueueTime = DateTime.UtcNow.AddHours(-4).AddMinutes(-45),
+            };
+            queue.AddSlot(enqueuedSlot, role);
+            await Task.Delay(1000);
+            var now = DateTime.UtcNow;
+            queue.Refresh(userId);
+            var dequeuedSlot = queue.GetAllSlots().First();
+            Assert.AreEqual(now.Hour, dequeuedSlot.QueueTime.Hour);
+            Assert.AreEqual(now.Minute, dequeuedSlot.QueueTime.Minute);
+        }
+
+        [TestCase(FFXIVRole.DPS)]
+        [TestCase(FFXIVRole.Healer)]
+        [TestCase(FFXIVRole.Tank)]
+        public async Task Refresh_Works_NoEvent(FFXIVRole role)
+        {
+            var queue = new TestQueue();
+            var enqueuedSlot = new QueueSlot(userId, "", new List<ulong>())
+            {
+                QueueTime = DateTime.UtcNow.AddHours(-4).AddMinutes(-45),
+            };
+            queue.AddSlot(enqueuedSlot, role);
+            await Task.Delay(1000);
+            var now = DateTime.UtcNow;
+            queue.Refresh(userId);
+            var dequeuedSlot = queue.GetAllSlots().First();
+            Assert.AreEqual(now.Hour, dequeuedSlot.QueueTime.Hour);
+            Assert.AreEqual(now.Minute, dequeuedSlot.QueueTime.Minute);
+        }
 
         [TestCase(FFXIVRole.DPS)]
         [TestCase(FFXIVRole.Healer)]

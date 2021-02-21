@@ -153,6 +153,21 @@ namespace Prima.Queue
             }
         }
 
+        public void RefreshEvent(string eventId)
+        {
+            var now = DateTime.UtcNow;
+            var allQueues = GetQueue(FFXIVRole.DPS)
+                .Concat(GetQueue(FFXIVRole.Healer))
+                .Concat(GetQueue(FFXIVRole.Tank))
+                .Where(EventValid(eventId))
+                .ToList();
+            foreach (var slot in allQueues)
+            {
+                slot.QueueTime = now;
+                slot.ExpirationNotified = false;
+            }
+        }
+
         public void Shove(ulong uid, FFXIVRole role)
         {
             Insert(uid, 0, role);
