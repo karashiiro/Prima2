@@ -968,17 +968,30 @@ namespace Prima.Queue.Modules
             }
             else
             {
-                var (dpsCount, healerCount, tankCount, distinctCount) = GetListCounts(queue, requiredDiscordRole, eventId);
+                IEnumerable<string> events = new[] { eventId };
+                if (string.IsNullOrEmpty(eventId))
+                {
+                    events = queue.GetEvents().Append("");
+                }
 
-                var roleExtraString = requiredDiscordRole == null
-                    ? ""
-                    : $"s for {requiredDiscordRole.Name}";
+                foreach (var eId in events)
+                {
+                    var (dpsCount, healerCount, tankCount, distinctCount) = GetListCounts(queue, requiredDiscordRole, eId);
 
-                var eventExtraString = string.IsNullOrEmpty(eventId)
-                    ? ""
-                    : $", for event {eventId}";
+                    var roleExtraString = requiredDiscordRole == null
+                        ? ""
+                        : $"s for {requiredDiscordRole.Name}";
 
-                await ReplyAsync($"There are currently {tankCount} tank(s), {healerCount} healer(s), and {dpsCount} DPS in the queue{roleExtraString}{eventExtraString}. (Unique players: {distinctCount})");
+                    var eventExtraString = string.IsNullOrEmpty(eId)
+                        ? ""
+                        : $", for event {eId}";
+
+                    var noEventExtraString = string.IsNullOrEmpty(eId)
+                        ? "non-event "
+                        : "";
+
+                    await ReplyAsync($"There are currently {tankCount} tank(s), {healerCount} healer(s), and {dpsCount} DPS in the {noEventExtraString}queue{roleExtraString}{eventExtraString}. (Unique players: {distinctCount})");
+                }
             }
         }
 
@@ -1073,6 +1086,10 @@ namespace Prima.Queue.Modules
                 {
                     return $"<@{uid}>, you are not in queue for that event. Please set your event with `~setevent <[d][h][t]> <event ID>`.";
                 }
+            }
+            else
+            {
+                output += ", in the non-event queue";
             }
 
             output += ".";
