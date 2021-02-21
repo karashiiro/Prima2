@@ -157,7 +157,7 @@ namespace Prima.Queue
             var allQueues = GetQueue(FFXIVRole.DPS)
                 .Concat(GetQueue(FFXIVRole.Healer))
                 .Concat(GetQueue(FFXIVRole.Tank))
-                .Where(EventValid(eventId))
+                .Where(slot => slot.EventId == eventId)
                 .ToList();
             foreach (var slot in allQueues)
             {

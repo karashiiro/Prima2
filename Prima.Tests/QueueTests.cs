@@ -61,6 +61,7 @@ namespace Prima.Tests
         {
             var rand = new Random(1234);
             var queue = new TestQueue();
+            var slotNotInEvent = rand.Next(200, 800);
             for (ulong i = 0; i < 1000; i++)
             {
                 var nextRole = rand.Next(0, 3) switch
@@ -70,17 +71,19 @@ namespace Prima.Tests
                     2 => FFXIVRole.Tank,
                     _ => FFXIVRole.None,
                 };
-                queue.Enqueue(i, nextRole, eventId);
+                queue.Enqueue(i, nextRole, i == (ulong)slotNotInEvent ? null : eventId);
                 await Task.Delay(rand.Next(1, 20));
             }
             queue.RefreshEvent(eventId);
             var timestamps = queue.GetAllSlots()
-                .Select(slot => slot.QueueTime)
                 .ToList();
-            var firstTimestamp = timestamps.First();
-            foreach (var timestamp in timestamps.Skip(1))
+            var firstTimestamp = timestamps.First().QueueTime;
+            foreach (var slot in timestamps.Skip(1))
             {
-                Assert.AreEqual(firstTimestamp, timestamp);
+                if (slot.Id == (ulong)slotNotInEvent)
+                    Assert.AreNotEqual(firstTimestamp, slot.QueueTime);
+                else
+                    Assert.AreEqual(firstTimestamp, slot.QueueTime);
             }
         }
 
