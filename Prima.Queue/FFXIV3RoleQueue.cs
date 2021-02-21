@@ -2,9 +2,7 @@
 using Prima.Extensions;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Serilog;
 
 namespace Prima.Queue
 {
@@ -192,7 +190,6 @@ namespace Prima.Queue
             }
             catch (ArgumentOutOfRangeException)
             {
-                Log.Error("Tried to insert {User} in out of range queue position {Position}; inserting them at back instead.", uid, position);
                 Enqueue(uid, role, slot?.EventId ?? "");
             }
 
