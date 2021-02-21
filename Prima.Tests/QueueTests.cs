@@ -12,6 +12,50 @@ namespace Prima.Tests
         const ulong userId = 435164236432553542;
         const string eventId = "483597092876052452";
 
+        [TestCase(FFXIVRole.DPS)]
+        [TestCase(FFXIVRole.Healer)]
+        [TestCase(FFXIVRole.Tank)]
+        public void Insert_Works_Event(FFXIVRole role)
+        {
+            var queue = new FFXIV3RoleQueue();
+            queue.Enqueue(userId, role, eventId);
+            queue.Insert(userId, 0, role);
+            Assert.AreEqual(1, queue.GetPosition(userId, role, eventId));
+        }
+
+        [TestCase(FFXIVRole.DPS)]
+        [TestCase(FFXIVRole.Healer)]
+        [TestCase(FFXIVRole.Tank)]
+        public void Insert_Works_NoEvent(FFXIVRole role)
+        {
+            var queue = new FFXIV3RoleQueue();
+            queue.Enqueue(userId, role, "");
+            queue.Insert(userId, 0, role);
+            Assert.AreEqual(1, queue.GetPosition(userId, role, null));
+        }
+
+        [TestCase(FFXIVRole.DPS)]
+        [TestCase(FFXIVRole.Healer)]
+        [TestCase(FFXIVRole.Tank)]
+        public void Shove_Works_Event(FFXIVRole role)
+        {
+            var queue = new FFXIV3RoleQueue();
+            queue.Enqueue(userId, role, eventId);
+            queue.Shove(userId, role);
+            Assert.AreEqual(1, queue.GetPosition(userId, role, eventId));
+        }
+
+        [TestCase(FFXIVRole.DPS)]
+        [TestCase(FFXIVRole.Healer)]
+        [TestCase(FFXIVRole.Tank)]
+        public void Shove_Works_NoEvent(FFXIVRole role)
+        {
+            var queue = new FFXIV3RoleQueue();
+            queue.Enqueue(userId, role, "");
+            queue.Shove(userId, role);
+            Assert.AreEqual(1, queue.GetPosition(userId, role, null));
+        }
+
         [Test]
         public async Task RefreshEvent_Works()
         {
