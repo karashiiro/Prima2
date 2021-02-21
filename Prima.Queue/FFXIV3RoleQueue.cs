@@ -2,6 +2,7 @@
 using Prima.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Serilog;
 
@@ -62,6 +63,16 @@ namespace Prima.Queue
             Remove(user, FFXIVRole.DPS);
             Remove(user, FFXIVRole.Healer);
             Remove(user, FFXIVRole.Tank);
+        }
+
+        public IEnumerable<string> GetEvents()
+        {
+            return _dpsQueue
+                .Concat(_healerQueue)
+                .Concat(_tankQueue)
+                .Select(slot => slot.EventId)
+                .Where(eventId => !string.IsNullOrEmpty(eventId))
+                .Distinct();
         }
 
         public int Count(FFXIVRole role, string eventId)

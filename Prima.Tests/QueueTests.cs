@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System.Linq;
+using NUnit.Framework;
 using Prima.Queue;
 
 namespace Prima.Tests
@@ -7,6 +8,37 @@ namespace Prima.Tests
     {
         const ulong userId = 435164236432553542;
         const string eventId = "483597092876052452";
+
+        [Test]
+        public void GetEvents_Works_1()
+        {
+            var queue = new FFXIV3RoleQueue();
+            queue.Enqueue(userId, FFXIVRole.DPS, eventId);
+            queue.Enqueue(0, FFXIVRole.Tank, eventId);
+            queue.Enqueue(1, FFXIVRole.Healer, eventId);
+            queue.Enqueue(2, FFXIVRole.Healer, null);
+            queue.Enqueue(3, FFXIVRole.Tank, "");
+
+            var eventIds = queue.GetEvents().ToList();
+            Assert.That(eventIds.Count == 1);
+            Assert.That(eventIds[0] == eventId);
+        }
+
+        [Test]
+        public void GetEvents_Works_2()
+        {
+            var queue = new FFXIV3RoleQueue();
+            queue.Enqueue(userId, FFXIVRole.DPS, eventId);
+            queue.Enqueue(0, FFXIVRole.Tank, "b");
+            queue.Enqueue(1, FFXIVRole.Healer, "a");
+            queue.Enqueue(2, FFXIVRole.Healer, null);
+            queue.Enqueue(3, FFXIVRole.Tank, "");
+
+            var eventIds = queue.GetEvents().ToList();
+            Assert.IsNotNull(eventIds.FirstOrDefault(eId => eId == eventId));
+            Assert.IsNotNull(eventIds.FirstOrDefault(eId => eId == "b"));
+            Assert.IsNotNull(eventIds.FirstOrDefault(eId => eId == "a"));
+        }
 
         [Test]
         public void CountDistinct_Event_Works()

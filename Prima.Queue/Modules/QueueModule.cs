@@ -940,27 +940,31 @@ namespace Prima.Queue.Modules
             if (delubrumAllRoles)
             {
                 var roleIds = DelubrumProgressionRoles.Roles.Keys;
-                var response = roleIds
-                    .Select(rid => Context.Guild.GetRole(rid))
-                    .Where(r => r != null)
-                    .Select(r =>
-                    {
-                        var (dpsCount, healerCount, tankCount, distinctCount) = GetListCounts(queue, r, eventId);
-                        if (distinctCount != 0)
+                var events = queue.GetEvents().Append("");
+                foreach (var eId in events)
+                {
+                    var response = roleIds
+                        .Select(rid => Context.Guild.GetRole(rid))
+                        .Where(r => r != null)
+                        .Select(r =>
                         {
-                            return $"{r.Name}:" +
-                                   $"{Padding(33 - $"{r.Name}:".Length - $"{tankCount}".Length)}{tankCount} tank(s)" +
-                                   $"{Padding(15 - $"{tankCount:D3} tank(s)".Length - $"{healerCount}".Length)}{healerCount} healer(s)" +
-                                   $"{Padding(15 - $"{tankCount:D3} tank(s)".Length - $"{dpsCount}".Length)}{dpsCount} DPS" +
-                                   $"{Padding(15 - $"{tankCount:D3} tank(s)".Length - $"{distinctCount}".Length)}{distinctCount} unique players";
-                        }
-                        else
-                        {
-                            return $"{r.Name}:{Padding(33 - $"{r.Name}:".Length - 1)}No queue members.";
-                        }
-                    })
-                    .Aggregate("Current queue status across all roles:\n```c++\n", (agg, next) => agg + next + '\n') + "```";
-                await ReplyAsync(response);
+                            var (dpsCount, healerCount, tankCount, distinctCount) = GetListCounts(queue, r, eId);
+                            if (distinctCount != 0)
+                            {
+                                return $"{r.Name}:" +
+                                       $"{Padding(33 - $"{r.Name}:".Length - $"{tankCount}".Length)}{tankCount} tank(s)" +
+                                       $"{Padding(15 - $"{tankCount:D3} tank(s)".Length - $"{healerCount}".Length)}{healerCount} healer(s)" +
+                                       $"{Padding(15 - $"{tankCount:D3} tank(s)".Length - $"{dpsCount}".Length)}{dpsCount} DPS" +
+                                       $"{Padding(15 - $"{tankCount:D3} tank(s)".Length - $"{distinctCount}".Length)}{distinctCount} unique players";
+                            }
+                            else
+                            {
+                                return $"{r.Name}:{Padding(33 - $"{r.Name}:".Length - 1)}No queue members.";
+                            }
+                        })
+                        .Aggregate($"Current queue status {(string.IsNullOrEmpty(eId) ? "across all roles" : "for event " + eId)}:\n```c++\n", (agg, next) => agg + next + '\n') + "```";
+                    await ReplyAsync(response);
+                }
             }
             else
             {
