@@ -49,7 +49,7 @@ namespace Prima.Queue.Handlers
             var discordRoles = DelubrumProgressionRoles.Roles.Keys
                 .Select(rId => guild.GetRole(rId));
             var authorHasProgressionRole = discordRoles.Any(dr => host.HasRole(dr));
-            var freshProg = !authorHasProgressionRole || eventMessage.Content.ToLowerInvariant().Contains("fresh prog");
+            var freshProg = !authorHasProgressionRole || eventMessage.Content.ToLowerInvariant().Contains("810201516291653643");
 #if DEBUG
             Log.Information("Fresh prog: {FreshProg}", freshProg);
 #endif

@@ -526,9 +526,9 @@ namespace Prima.Queue.Modules
                             }
 
                             // ReSharper disable once InvertIf
-                            if (postMessage.Content.ToLowerInvariant().Contains("fresh prog"))
+                            if (postMessage.Content.ToLowerInvariant().Contains("810201516291653643"))
                             {
-                                var res = await ReplyAsync($"{Context.User.Mention}, that event contains the words `fresh prog`.\n" +
+                                var res = await ReplyAsync($"{Context.User.Mention}, that event mentions the LFG Fresh Prog role.\n" +
                                                  "If that event is a fresh progression run, please leave this queue and queue in <#809241125373739058> instead.");
                                 _ = Task.Run(async () =>
                                 {
