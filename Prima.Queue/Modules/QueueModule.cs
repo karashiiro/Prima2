@@ -643,7 +643,7 @@ namespace Prima.Queue.Modules
         [Command("setevent", RunMode = RunMode.Async)]
         [Description("Check the events you're specifically in queue for, by role.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task SetEvent([Remainder] string args)
+        public async Task SetEvent([Remainder] string args = "")
         {
             if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id))
                 return;
@@ -664,7 +664,7 @@ namespace Prima.Queue.Modules
             var roles = ParseRoles(args);
             if (roles == FFXIVRole.None)
             {
-                roles = FFXIVRole.Tank & FFXIVRole.Healer & FFXIVRole.DPS;
+                roles = FFXIVRole.Tank | FFXIVRole.Healer | FFXIVRole.DPS;
             }
 
             var rolesList = RolesToArray(roles);
@@ -680,7 +680,7 @@ namespace Prima.Queue.Modules
         [Command("clearevent", RunMode = RunMode.Async)]
         [Description("Clear the events you're specifically in queue for, by role.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task ClearEvent([Remainder] string args)
+        public async Task ClearEvent([Remainder] string args = "")
         {
             if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id))
                 return;
@@ -693,7 +693,7 @@ namespace Prima.Queue.Modules
             var roles = ParseRoles(args);
             if (roles == FFXIVRole.None)
             {
-                roles = FFXIVRole.Tank & FFXIVRole.Healer & FFXIVRole.DPS;
+                roles = FFXIVRole.Tank | FFXIVRole.Healer | FFXIVRole.DPS;
             }
 
             var rolesList = RolesToArray(roles);
