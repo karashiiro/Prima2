@@ -63,7 +63,7 @@ namespace Prima.Queue.Handlers
             if (queue.Enqueue(userId, role, eventId.Value.ToString()))
             {
                 await user.SendMessageAsync($"You have been added to the {role} queue for event `{eventId}`. " +
-                    $"You can check your position in queue with `~queue {eventId}` in the queue channel.\n" +
+                    "You can check your position in queue with `~queue` in the queue channel.\n" +
                     "Clicking the reaction again will refresh your position in the queue.");
                 Log.Information("User {User} has been added to the {FFXIVRole} queue for {QueueName}, with event {Event}", user.ToString(), role.ToString(), queueName, eventId);
             }
