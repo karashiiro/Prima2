@@ -959,11 +959,22 @@ namespace Prima.Queue.Modules
                             }
                             else
                             {
-                                return $"{r.Name}:{Padding(33 - $"{r.Name}:".Length - 1)}No queue members.";
+                                return string.Empty;
                             }
                         })
-                        .Aggregate($"Current queue status {(string.IsNullOrEmpty(eId) ? "across all roles" : "for event " + eId)}:\n```c++\n", (agg, next) => agg + next + '\n') + "```";
-                    await ReplyAsync(response);
+                        .Where(line => !string.IsNullOrEmpty(line))
+                        .ToList();
+
+                    if (response.Any())
+                    {
+                        await ReplyAsync(response
+                            .Aggregate($"Current queue status {(string.IsNullOrEmpty(eId) ? "across all roles" : "for event " + eId)}:\n```c++\n",
+                                (agg, next) => agg + next + '\n') + "```");
+                    }
+                    else
+                    {
+                        await ReplyAsync($"Current queue status {(string.IsNullOrEmpty(eId) ? "across all roles" : "for event " + eId)}:\n```c++\nNo members in queue.```");
+                    }
                 }
             }
             else
