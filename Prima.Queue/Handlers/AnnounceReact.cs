@@ -37,41 +37,48 @@ namespace Prima.Queue.Handlers
                 Log.Error("No guild configuration found for the default guild!");
                 return;
             }
-
-            var messagedOnce = false;
+            
             var user = client.GetUser(userId);
-            var scheduleQueues = GetScheduleQueues(guildConfig, reaction.Channel.Id);
-            if (scheduleQueues == null) return;
-            foreach (var queueChannelId in scheduleQueues)
+            var guild = client.GetGuild(SpecialGuilds.CrystalExploratoryMissions);
+
+            var message = await cachedMessage.GetOrDownloadAsync();
+            var inputChannel = guild.GetTextChannel(GetScheduleInputChannel(guildConfig, message.Channel.Id));
+            var eventMessage = await inputChannel.GetMessageAsync(eventId.Value);
+
+            var host = guild.GetUser(eventMessage.Author.Id);
+            var discordRoles = DelubrumProgressionRoles.Roles.Keys
+                .Select(rId => guild.GetRole(rId));
+            var authorHasProgressionRole = discordRoles.Any(dr => host.HasRole(dr));
+            var freshProg = !authorHasProgressionRole || eventMessage.Content.ToLowerInvariant().Contains("fresh prog");
+#if DEBUG
+            Log.Information("Fresh prog: {FreshProg}", freshProg);
+#endif
+
+            var scheduleQueue = GetScheduleQueue(guildConfig, freshProg, reaction.Channel.Id);
+            if (scheduleQueue == 0) return;
+
+            var queueName = QueueInfo.LfgChannels[scheduleQueue];
+            var queue = queueService.GetOrCreateQueue(queueName);
+
+            if (queue.Enqueue(userId, role, eventId.Value.ToString()))
             {
-                var queueName = QueueInfo.LfgChannels[queueChannelId];
-                var queue = queueService.GetOrCreateQueue(queueName);
+                await user.SendMessageAsync($"You have been added to the {role} queue for event `{eventId}`. " +
+                    $"You can check your position in queue with `~queue {eventId}` in the queue channel.\n" +
+                    "Clicking the reaction again will refresh your position in the queue.");
+                Log.Information("User {User} has been added to the {FFXIVRole} queue for {QueueName}, with event {Event}", user.ToString(), role.ToString(), queueName, eventId);
+            }
+            else
+            {
+                queueService.GetOrCreateQueue("lfg-castrum").Refresh(userId);
+                queueService.GetOrCreateQueue("lfg-delubrum-normal").Refresh(userId);
+                queueService.GetOrCreateQueue("lfg-drs-fresh-prog").Refresh(userId);
+                queueService.GetOrCreateQueue("lfg-delubrum-savage").Refresh(userId);
 
-                if (queue.Enqueue(userId, role, eventId.Value.ToString()))
-                {
-                    if (!messagedOnce)
-                    {
-                        await user.SendMessageAsync($"You have been added to the {role} queue for event `{eventId}`. " +
-                            $"You can check your position in queue with `~queue {eventId}` in the queue channel.\n" +
-                            "Clicking the reaction again will refresh your position in the queue.");
-                        messagedOnce = true;
-                    }
-                    Log.Information("User {User} has been added to the {FFXIVRole} queue for {QueueName}, with event {Event}", user.ToString(), role.ToString(), queueName, eventId);
-                }
-                else
-                {
-                    queueService.GetOrCreateQueue("lfg-castrum").Refresh(userId);
-                    queueService.GetOrCreateQueue("lfg-delubrum-normal").Refresh(userId);
-                    queueService.GetOrCreateQueue("lfg-drs-fresh-prog").Refresh(userId);
-                    queueService.GetOrCreateQueue("lfg-delubrum-savage").Refresh(userId);
-
-                    await user.SendMessageAsync($"{user.Mention}, your timeouts in the Bozja queues have been refreshed!");
-                }
+                await user.SendMessageAsync($"{user.Mention}, your timeouts in the Bozja queues have been refreshed!");
             }
 
             queueService.Save();
 
-            var message = await cachedMessage.GetOrDownloadAsync();
             try
             {
                 await message.RemoveReactionAsync(reaction.Emote, userId);
@@ -79,18 +86,35 @@ namespace Prima.Queue.Handlers
             catch { /* ignored */ }
         }
 
-        private static IEnumerable<ulong> GetScheduleQueues(DiscordGuildConfiguration guildConfig, ulong channelId)
+        private static ulong GetScheduleInputChannel(DiscordGuildConfiguration guildConfig, ulong channelId)
+        {
+            if (channelId == guildConfig.CastrumScheduleOutputChannel)
+                return guildConfig.CastrumScheduleInputChannel;
+            else if (channelId == guildConfig.DelubrumNormalScheduleOutputChannel)
+                return guildConfig.DelubrumNormalScheduleInputChannel;
+            else if (channelId == guildConfig.DelubrumScheduleOutputChannel)
+                return guildConfig.DelubrumScheduleInputChannel;
+            else if (channelId == guildConfig.ScheduleOutputChannel)
+                return guildConfig.ScheduleInputChannel;
+            return 0;
+        }
+
+        private static ulong GetScheduleQueue(DiscordGuildConfiguration guildConfig, bool freshProg, ulong channelId)
         {
 #if DEBUG
-            return new ulong[] { 766712049316265985 };
+            return 766712049316265985;
 #else
             if (channelId == guildConfig.CastrumScheduleOutputChannel)
-                return new ulong[] { 765994301850779709 };
+                return 765994301850779709;
             else if (channelId == guildConfig.DelubrumNormalScheduleOutputChannel)
-                return new ulong[] { 806957742056013895 };
+                return 806957742056013895;
             else if (channelId == guildConfig.DelubrumScheduleOutputChannel)
-                return new ulong[] { 803636739343908894, 809241125373739058 };
-            return null;
+            {
+                if (freshProg)
+                    return 809241125373739058;
+                return 803636739343908894;
+            }
+            return 0;
 #endif
         }
     }
