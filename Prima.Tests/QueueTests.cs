@@ -1,9 +1,10 @@
-﻿using System;
+﻿using NUnit.Framework;
+using Prima.Queue;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
-using Prima.Queue;
 
 namespace Prima.Tests
 {
@@ -11,6 +12,92 @@ namespace Prima.Tests
     {
         const ulong userId = 435164236432553542;
         const string eventId = "483597092876052452";
+
+        [Test]
+        public void Dequeue_IsThreadSafe()
+        {
+            var rand = new Random(1234);
+            var queue = new TestQueue();
+            var counts = new Dictionary<FFXIVRole, int>
+            {
+                { FFXIVRole.DPS, 0 },
+                { FFXIVRole.Healer, 0 },
+                { FFXIVRole.Tank, 0 },
+            };
+            for (ulong i = 0; i < 1000; i++)
+            {
+                var curI = i;
+                var nextRole = rand.Next(0, 3) switch
+                {
+                    0 => FFXIVRole.DPS,
+                    1 => FFXIVRole.Healer,
+                    2 => FFXIVRole.Tank,
+                    _ => FFXIVRole.None,
+                };
+                counts[nextRole]++;
+                queue.Enqueue(curI, nextRole, "");
+            }
+
+            var threads = new List<Thread>();
+            var outList = new SynchronizedCollection<ulong>();
+            var roles = new[] { FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank };
+            foreach (var role in roles)
+            {
+                for (var i = 0; i < counts[role]; i++)
+                {
+                    var thread = new Thread(() =>
+                    {
+                        Thread.Sleep(rand.Next(0, 1001));
+                        var id = queue.Dequeue(role, null);
+                        if (id != null)
+                            outList.Add(id.Value);
+                    });
+                    thread.Start();
+                    threads.Add(thread);
+                }
+            }
+
+            foreach (var thread in threads)
+                thread.Join();
+
+            var slots = queue.GetAllSlots().ToList();
+            Assert.That(!slots.Any());
+            Assert.That(outList.Count == 1000);
+        }
+
+        [Test]
+        public void Enqueue_IsThreadSafe()
+        {
+            var rand = new Random(1234);
+            var queue = new TestQueue();
+            var threads = new List<Thread>();
+            for (ulong i = 0; i < 1000; i++)
+            {
+                var curI = i;
+                var nextRole = rand.Next(0, 3) switch
+                {
+                    0 => FFXIVRole.DPS,
+                    1 => FFXIVRole.Healer,
+                    2 => FFXIVRole.Tank,
+                    _ => FFXIVRole.None,
+                };
+                var thread = new Thread(() =>
+                {
+                    Thread.Sleep(rand.Next(0, 1001));
+                    queue.Enqueue(curI, nextRole, "");
+                });
+                thread.Start();
+                threads.Add(thread);
+            }
+
+            foreach (var thread in threads)
+                thread.Join();
+
+            var slots = queue.GetAllSlots().ToList();
+            slots.Sort((a, b) => (int)a.Id - (int)b.Id);
+            for (ulong i = 0; i < 1000; i++)
+                Assert.That(slots[(int)i].Id == i);
+        }
 
         [Test]
         public void ExpireEvent_Works_Event()

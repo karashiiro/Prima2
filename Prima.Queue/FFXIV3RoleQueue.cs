@@ -12,7 +12,7 @@ namespace Prima.Queue
         [JsonProperty] protected readonly IList<QueueSlot> _healerQueue;
         [JsonProperty] protected readonly IList<QueueSlot> _tankQueue;
 
-        private IEnumerable<FFXIVRole> Roles => new[] {FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank};
+        private static IEnumerable<FFXIVRole> Roles => new[] {FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank};
 
         public FFXIV3RoleQueue()
         {
@@ -25,30 +25,37 @@ namespace Prima.Queue
         {
             var queue = GetQueue(role);
 
-            if (queue.Any(tuple => tuple.Id == userId)) return false;
-            queue.Add(new QueueSlot(userId, eventId ?? ""));
-            return true;
+            lock (queue)
+            {
+                if (queue.Any(tuple => tuple.Id == userId)) return false;
+                queue.Add(new QueueSlot(userId, eventId ?? ""));
+                return true;
+            }
         }
 
         public ulong? Dequeue(FFXIVRole role, string eventId)
         {
             var queue = GetQueue(role);
-            if (queue.Count == 0) return null;
-
-            QueueSlot slot;
-            if (string.IsNullOrEmpty(eventId))
-                slot = queue.FirstOrDefault(s => !s.RoleIds.Any() && string.IsNullOrEmpty(s.EventId));
-            else
-                slot = queue.FirstOrDefault(s => !s.RoleIds.Any() && s.EventId == eventId);
             
-            if (slot != null)
+            lock (queue)
             {
-                RemoveAll(slot.Id);
-                return slot.Id;
-            }
-            else
-            {
-                return null;
+                if (queue.Count == 0) return null;
+
+                QueueSlot slot;
+                if (string.IsNullOrEmpty(eventId))
+                    slot = queue.FirstOrDefault(s => !s.RoleIds.Any() && string.IsNullOrEmpty(s.EventId));
+                else
+                    slot = queue.FirstOrDefault(s => !s.RoleIds.Any() && s.EventId == eventId);
+
+                if (slot != null)
+                {
+                    RemoveAll(slot.Id);
+                    return slot.Id;
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
