@@ -45,7 +45,7 @@ namespace Prima.Scheduler.Services
             {
                 var guild = _client.GetGuild(guildConfig.Id);
 
-                var drsCheck = CheckRuns(guild, guildConfig.DelubrumScheduleOutputChannel, async (host, embedMessage, embed) =>
+                var drsCheck = CheckRuns(guild, guildConfig.DelubrumScheduleOutputChannel, QueueInfo.DelubrumQueueTimeout, async (host, embedMessage, embed) =>
                 {
                     var success = await AssignHostRole(guild, host);
                     if (!success) return;
@@ -65,7 +65,7 @@ namespace Prima.Scheduler.Services
                         "▫️ The Queen Progression");
                 }, token);
 
-                var drnCheck = CheckRuns(guild, guildConfig.DelubrumNormalScheduleOutputChannel, async (host, embedMessage, embed) =>
+                var drnCheck = CheckRuns(guild, guildConfig.DelubrumNormalScheduleOutputChannel, QueueInfo.DelubrumQueueTimeout, async (host, embedMessage, embed) =>
                 {
                     var success = await AssignHostRole(guild, host);
                     if (!success) return;
@@ -74,7 +74,7 @@ namespace Prima.Scheduler.Services
                     await NotifyMembers(host, embedMessage, embed, token);
                 }, token);
 
-                var castrumCheck = CheckRuns(guild, guildConfig.CastrumScheduleOutputChannel, async (host, embedMessage, embed) =>
+                var castrumCheck = CheckRuns(guild, guildConfig.CastrumScheduleOutputChannel, -1, async (host, embedMessage, embed) =>
                 {
                     var success = await AssignHostRole(guild, host);
                     if (!success) return;
@@ -92,7 +92,7 @@ namespace Prima.Scheduler.Services
             }
         }
 
-        private async Task CheckRuns(SocketGuild guild, ulong channelId, Func<SocketGuildUser, IMessage, IEmbed, Task> onMatch, CancellationToken token)
+        private async Task CheckRuns(SocketGuild guild, ulong channelId, double queueTimeSeconds, Func<SocketGuildUser, IMessage, IEmbed, Task> onMatch, CancellationToken token)
         {
             var channel = guild?.GetTextChannel(channelId);
             if (channel == null)
@@ -120,7 +120,7 @@ namespace Prima.Scheduler.Services
                     }
 
 #if DEBUG
-                    if (timestamp.AddSeconds(-4 * Time.Hour) <= DateTimeOffset.Now && embed.Author.HasValue)
+                    if (queueTimeSeconds > 0 && timestamp.AddSeconds(queueTimeSeconds) <= DateTimeOffset.Now && embed.Author.HasValue)
                     {
                         var eventId = ulong.Parse(embed.Footer?.Text ?? "0");
                         var toNotify = _db.EventReactions.Where(er => er.EventId == eventId);
