@@ -112,7 +112,7 @@ namespace Prima.Scheduler.Services
                     var timestamp = nullableTimestamp.Value;
                     
                     // Remove expired posts
-                    if (timestamp.AddMinutes(15) < DateTimeOffset.Now)
+                    if (timestamp.AddMinutes(60) < DateTimeOffset.Now)
                     {
                         await message.DeleteAsync();
                         continue;
