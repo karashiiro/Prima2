@@ -4,6 +4,7 @@ using Prima.Resources;
 using Prima.Services;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -91,7 +92,7 @@ namespace Prima.Scheduler.Services
             }
         }
 
-        private static async Task CheckRuns(SocketGuild guild, ulong channelId, Func<SocketGuildUser, IMessage, IEmbed, Task> onMatch, CancellationToken token)
+        private async Task CheckRuns(SocketGuild guild, ulong channelId, Func<SocketGuildUser, IMessage, IEmbed, Task> onMatch, CancellationToken token)
         {
             var channel = guild?.GetTextChannel(channelId);
             if (channel == null)
@@ -117,6 +118,23 @@ namespace Prima.Scheduler.Services
                         await message.DeleteAsync();
                         continue;
                     }
+
+#if DEBUG
+                    if (timestamp.AddSeconds(-4 * Time.Hour) <= DateTimeOffset.Now && embed.Author.HasValue)
+                    {
+                        var eventId = ulong.Parse(embed.Footer?.Text ?? "0");
+                        var toNotify = _db.EventReactions.Where(er => er.EventId == eventId);
+                        await foreach (var er in toNotify.WithCancellation(token))
+                        {
+                            var member = guild.GetUser(er.UserId);
+                            _ = member.SendMessageAsync($"The event you signed up for notifications on `(ID: {eventId})` is now open for queuing.\n" +
+                                                        "If the run host has declared that they are pulling from the queue, you can join the queue by " +
+                                                        "clicking on the appropriate role reaction on the event post.");
+                            er.QueueOpenNotified = true;
+                            await _db.UpdateEventReaction(er);
+                        }
+                    }
+#endif
 
                     // ReSharper disable once InvertIf
                     if (timestamp.AddMinutes(-30) <= DateTimeOffset.Now && embed.Author.HasValue)

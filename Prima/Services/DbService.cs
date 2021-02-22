@@ -126,6 +126,12 @@ namespace Prima.Services
             return true;
         }
 
+        public async Task UpdateEventReaction(EventReaction updated)
+        {
+            await RemoveEventReaction(updated.EventId, updated.UserId);
+            await AddEventReaction(updated.EventId, updated.UserId);
+        }
+
         public async Task<bool> RemoveEventReaction(ulong eventId, ulong userId)
         {
             var existingSet = await _eventReactions.FindAsync(er => er.EventId == eventId && er.UserId == userId);
