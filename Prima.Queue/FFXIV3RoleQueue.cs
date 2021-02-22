@@ -12,6 +12,8 @@ namespace Prima.Queue
         [JsonProperty] protected readonly IList<QueueSlot> _healerQueue;
         [JsonProperty] protected readonly IList<QueueSlot> _tankQueue;
 
+        private IEnumerable<FFXIVRole> Roles => new[] {FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank};
+
         public FFXIV3RoleQueue()
         {
             _dpsQueue = new SynchronizedCollection<QueueSlot>();
@@ -151,8 +153,14 @@ namespace Prima.Queue
             }
         }
 
+        /// <summary>
+        /// Refreshes all members that are registered for an event.
+        /// Does nothing if the event ID is null or an empty string.
+        /// </summary>
         public void RefreshEvent(string eventId)
         {
+            if (string.IsNullOrEmpty(eventId)) return;
+
             var now = DateTime.UtcNow;
             var allQueues = GetQueue(FFXIVRole.DPS)
                 .Concat(GetQueue(FFXIVRole.Healer))
@@ -163,6 +171,21 @@ namespace Prima.Queue
             {
                 slot.QueueTime = now;
                 slot.ExpirationNotified = false;
+            }
+        }
+
+        /// <summary>
+        /// Removes all members from the queues that are registered for an event.
+        /// Does nothing if the event ID is null or an empty string.
+        /// </summary>
+        public void ExpireEvent(string eventId)
+        {
+            if (string.IsNullOrEmpty(eventId)) return;
+
+            foreach (var role in Roles)
+            {
+                var queue = GetQueue(role);
+                queue.RemoveAll(slot => slot.EventId == eventId, overload: true);
             }
         }
 

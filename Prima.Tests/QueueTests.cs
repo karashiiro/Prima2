@@ -12,6 +12,55 @@ namespace Prima.Tests
         const ulong userId = 435164236432553542;
         const string eventId = "483597092876052452";
 
+        [Test]
+        public void ExpireEvent_Works_Event()
+        {
+            var rand = new Random(1234);
+            var queue = new TestQueue();
+            for (ulong i = 0; i < 1000; i++)
+            {
+                var nextRole = rand.Next(0, 3) switch
+                {
+                    0 => FFXIVRole.DPS,
+                    1 => FFXIVRole.Healer,
+                    2 => FFXIVRole.Tank,
+                    _ => FFXIVRole.None,
+                };
+                queue.Enqueue(i, nextRole, eventId);
+            }
+
+            queue.ExpireEvent(eventId);
+
+            var slots = queue.GetAllSlots();
+            Assert.That(!slots.Any());
+        }
+
+        [Test]
+        public void ExpireEvent_DoesNothing_NoEvent()
+        {
+            var rand = new Random(1234);
+            var queue = new TestQueue();
+            for (ulong i = 0; i < 1000; i++)
+            {
+                var nextRole = rand.Next(0, 3) switch
+                {
+                    0 => FFXIVRole.DPS,
+                    1 => FFXIVRole.Healer,
+                    2 => FFXIVRole.Tank,
+                    _ => FFXIVRole.None,
+                };
+                queue.Enqueue(i, nextRole, null);
+            }
+
+            queue.ExpireEvent(null);
+
+            var slots = queue.GetAllSlots();
+            foreach (var slot in slots)
+            {
+                Assert.That(string.IsNullOrEmpty(slot.EventId));
+            }
+        }
+
         [TestCase(FFXIVRole.DPS)]
         [TestCase(FFXIVRole.Healer)]
         [TestCase(FFXIVRole.Tank)]
@@ -57,7 +106,7 @@ namespace Prima.Tests
         }
 
         [Test]
-        public async Task RefreshEvent_Works()
+        public async Task RefreshEvent_Works_Event()
         {
             var rand = new Random(1234);
             var queue = new TestQueue();
@@ -84,6 +133,33 @@ namespace Prima.Tests
                     Assert.AreNotEqual(firstTimestamp, slot.QueueTime);
                 else
                     Assert.AreEqual(firstTimestamp, slot.QueueTime);
+            }
+        }
+
+        [Test]
+        public async Task RefreshEvent_DoesNothing_NoEvent()
+        {
+            var rand = new Random(1234);
+            var queue = new TestQueue();
+            for (ulong i = 0; i < 1000; i++)
+            {
+                var nextRole = rand.Next(0, 3) switch
+                {
+                    0 => FFXIVRole.DPS,
+                    1 => FFXIVRole.Healer,
+                    2 => FFXIVRole.Tank,
+                    _ => FFXIVRole.None,
+                };
+                queue.Enqueue(i, nextRole, null);
+                await Task.Delay(rand.Next(1, 20));
+            }
+            queue.RefreshEvent(eventId);
+            var timestamps = queue.GetAllSlots()
+                .ToList();
+            var firstTimestamp = timestamps.First().QueueTime;
+            foreach (var slot in timestamps.Skip(1))
+            {
+                Assert.AreNotEqual(firstTimestamp, slot.QueueTime);
             }
         }
 
