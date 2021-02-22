@@ -505,6 +505,8 @@ namespace Prima.Queue.Modules
                             guildConfig.CastrumScheduleInputChannel,
                         };
 #endif
+
+#if DEBUG
                         var (_, embed) = await GetEvent(eventId);
                         if (embed.Timestamp == null)
                         {
@@ -512,7 +514,6 @@ namespace Prima.Queue.Modules
                             return;
                         }
 
-#if DEBUG
                         var eventTime = embed.Timestamp.Value;
                         if (eventTime.AddSeconds(QueueInfo.DelubrumQueueTimeout) > DateTimeOffset.Now)
                         {
