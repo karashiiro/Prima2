@@ -505,37 +505,54 @@ namespace Prima.Queue.Modules
                             guildConfig.CastrumScheduleInputChannel,
                         };
 #endif
+                        var (_, embed) = await GetEvent(eventId);
+                        if (embed.Timestamp == null)
+                        {
+                            Log.Error("Event {EventId} has no timestamp; aborting.", eventId);
+                            return;
+                        }
+
+#if DEBUG
+                        var eventTime = embed.Timestamp.Value;
+                        if (eventTime.AddSeconds(QueueInfo.DelubrumQueueTimeout) > DateTimeOffset.Now)
+                        {
+                            await ReplyAsync($"{Context.User.Mention}, the queue for this event has not yet opened. Please wait for the queue to open.");
+                            return;
+                        }
+#endif
+
+                        IMessage postMessage = null;
                         foreach (var c in channels)
                         {
                             var channel = Context.Guild.GetTextChannel(c);
                             if (!ulong.TryParse(eventId, out var messageId)) continue;
-                            var postMessage = await channel.GetMessageAsync(messageId);
-                            if (postMessage == null) continue;
+                            postMessage = await channel.GetMessageAsync(messageId);
+                            if (postMessage != null) break;
+                        }
+                        if (postMessage == null) return; // Shouldn't happen at this point; could be merged with other branch
 
-                            var author = Context.Guild.GetUser(postMessage.Author.Id);
+                        var author = Context.Guild.GetUser(postMessage.Author.Id);
 
-                            var discordRoles = DelubrumProgressionRoles.Roles.Keys
-                                .Select(rId => Context.Guild.GetRole(rId));
-                            var authorHasProgressionRole = discordRoles.Any(dr => author.HasRole(dr));
-                            if (!authorHasProgressionRole)
+                        var discordRoles = DelubrumProgressionRoles.Roles.Keys
+                            .Select(rId => Context.Guild.GetRole(rId));
+                        var authorHasProgressionRole = discordRoles.Any(dr => author.HasRole(dr));
+                        if (!authorHasProgressionRole)
+                        {
+                            await ReplyAsync($"{Context.User.Mention}, this is not a queue for fresh progression runs.\n" +
+                                             "Please queue in <#809241125373739058> instead.");
+                            return;
+                        }
+
+                        // ReSharper disable once InvertIf
+                        if (postMessage.Content.ToLowerInvariant().Contains("810201516291653643"))
+                        {
+                            var res = await ReplyAsync($"{Context.User.Mention}, that event mentions the LFG Fresh Prog role.\n" +
+                                                       "If that event is a fresh progression run, please leave this queue and queue in <#809241125373739058> instead.");
+                            _ = Task.Run(async () =>
                             {
-                                await ReplyAsync($"{Context.User.Mention}, this is not a queue for fresh progression runs.\n" +
-                                                 "Please queue in <#809241125373739058> instead.");
-                                return;
-                            }
-
-                            // ReSharper disable once InvertIf
-                            if (postMessage.Content.ToLowerInvariant().Contains("810201516291653643"))
-                            {
-                                var res = await ReplyAsync($"{Context.User.Mention}, that event mentions the LFG Fresh Prog role.\n" +
-                                                 "If that event is a fresh progression run, please leave this queue and queue in <#809241125373739058> instead.");
-                                _ = Task.Run(async () =>
-                                {
-                                    await Task.Delay(20000);
-                                    await res.DeleteAsync();
-                                });
-                                break;
-                            }
+                                await Task.Delay(20000);
+                                await res.DeleteAsync();
+                            });
                         }
                     }
                 }

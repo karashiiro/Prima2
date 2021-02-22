@@ -123,7 +123,9 @@ namespace Prima.Scheduler.Services
                     if (queueTimeSeconds > 0 && timestamp.AddSeconds(queueTimeSeconds) <= DateTimeOffset.Now && embed.Author.HasValue)
                     {
                         var eventId = ulong.Parse(embed.Footer?.Text ?? "0");
-                        var toNotify = _db.EventReactions.Where(er => er.EventId == eventId);
+                        var toNotify = _db.EventReactions
+                            .Where(er => er.EventId == eventId)
+                            .Where(er => !er.QueueOpenNotified);
                         await foreach (var er in toNotify.WithCancellation(token))
                         {
                             var member = guild.GetUser(er.UserId);
