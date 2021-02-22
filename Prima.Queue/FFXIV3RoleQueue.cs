@@ -250,14 +250,14 @@ namespace Prima.Queue
         {
             var queue = GetQueue(role);
 
-            var _almostTimedOut =
+            var almostTimedOut =
                 queue
                     .Where(s => !s.ExpirationNotified)
                     .Where(s => (DateTime.UtcNow - s.QueueTime).TotalSeconds > secondsBeforeNow - gracePeriod)
                     .ToList();
-            foreach (var slot in _almostTimedOut)
+            foreach (var slot in almostTimedOut)
                 slot.ExpirationNotified = true;
-            return _almostTimedOut.Select(tuple => tuple.Id);
+            return almostTimedOut.Select(tuple => tuple.Id);
         }
 
         protected IEnumerable<ulong> QueryTimeout(FFXIVRole role, double secondsBeforeNow, bool includeEvents = false)
