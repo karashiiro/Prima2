@@ -5,13 +5,9 @@ namespace Prima.Resources
 {
     public static class QueueInfo
     {
-        private const double Second = 1;
-        private const double Minute = 60 * Second;
-        private const double Hour = 60 * Minute;
-
-        public const double BAQueueTimeout = 4 * Hour;
-        public const double CastrumQueueTimeout = 4 * Hour;
-        public const double DelubrumQueueTimeout = 4 * Hour;
+        public const double BAQueueTimeout = 4 * Time.Hour;
+        public const double CastrumQueueTimeout = 4 * Time.Hour;
+        public const double DelubrumQueueTimeout = 4 * Time.Hour;
 
         // This is all really bad and should be done in config.
         public static readonly IDictionary<ulong, string> LfgChannels = new Dictionary<ulong, string>
