@@ -21,5 +21,7 @@ namespace Prima.Models
         [BsonRequired]
         [BsonRepresentation(BsonType.String)]
         public ulong UserId { get; set; }
+
+        public bool QueueOpenNotified { get; set; }
     }
 }
