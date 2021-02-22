@@ -18,6 +18,8 @@ namespace Prima.Queue
 
         [JsonProperty("Item4")]
         private string eventId;
+
+        [JsonIgnore]
         public string EventId
         {
             get => eventId ?? "";
@@ -26,19 +28,32 @@ namespace Prima.Queue
 
         [JsonProperty("Item5")]
         private IEnumerable<ulong> roleIds;
+
+        [JsonIgnore]
         public IEnumerable<ulong> RoleIds
         {
             get => roleIds ?? new List<ulong>();
             private set => roleIds = value;
         }
 
-        public QueueSlot(ulong id, string eventId = "", IEnumerable<ulong> roleIds = null)
+        [JsonProperty("Item6")]
+        private IEnumerable<string> eventIds;
+
+        [JsonIgnore]
+        public IEnumerable<string> EventIds
+        {
+            get => eventIds ?? new List<string> { eventId };
+            private set => eventIds = value;
+        }
+
+        public QueueSlot(ulong id, string eventId = "", IEnumerable<ulong> roleIds = null, IEnumerable<string> eventIds = null)
         {
             Id = id;
             QueueTime = DateTime.UtcNow;
             ExpirationNotified = false;
             EventId = eventId;
             RoleIds = roleIds ?? new ulong[] { };
+            EventIds = eventIds ?? new string[] { };
         }
     }
 }
