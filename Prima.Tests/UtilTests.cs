@@ -3,6 +3,7 @@ using NUnit.Framework;
 
 namespace Prima.Tests
 {
+    [TestFixture]
     public class UtilTests
     {
         [Test]

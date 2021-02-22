@@ -5,15 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Prima.Resources;
 
 namespace Prima.Tests
 {
+    [TestFixture]
     public class QueueTests
     {
-        private const double Second = 1;
-        private const double Minute = 60 * Second;
-        private const double Hour = 60 * Minute;
-
         private const ulong userId = 435164236432553542;
         private const string eventId = "483597092876052452";
 
@@ -48,7 +46,7 @@ namespace Prima.Tests
             var timeouts = new Dictionary<FFXIVRole, IEnumerable<ulong>>();
             foreach (var role in roles)
             {
-                timeouts[role] = queue.TryQueryTimeout(role, 4 * Hour, includeEvents: true);
+                timeouts[role] = queue.TryQueryTimeout(role, 4 * Time.Hour, includeEvents: true);
             }
             Assert.That(!timeouts[FFXIVRole.DPS].Concat(timeouts[FFXIVRole.Healer]).Concat(timeouts[FFXIVRole.Tank]).Any());
         }
@@ -84,7 +82,7 @@ namespace Prima.Tests
             var timeouts = new Dictionary<FFXIVRole, IEnumerable<ulong>>();
             foreach (var role in roles)
             {
-                timeouts[role] = queue.TryQueryTimeout(role, 4 * Hour);
+                timeouts[role] = queue.TryQueryTimeout(role, 4 * Time.Hour);
             }
             Assert.That(timeouts[FFXIVRole.DPS].Concat(timeouts[FFXIVRole.Healer]).Concat(timeouts[FFXIVRole.Tank]).Count() == 1000);
         }

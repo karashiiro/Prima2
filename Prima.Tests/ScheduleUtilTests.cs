@@ -3,6 +3,7 @@ using Prima.Scheduler;
 
 namespace Prima.Tests
 {
+    [TestFixture]
     public class ScheduleUtilTests
     {
         [Test]

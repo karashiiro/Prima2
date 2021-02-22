@@ -2,6 +2,7 @@
 
 namespace Prima.Tests
 {
+    [TestFixture]
     public class QueueUtilTests
     {
         [Test]
