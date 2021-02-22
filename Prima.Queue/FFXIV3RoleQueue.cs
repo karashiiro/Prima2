@@ -260,12 +260,26 @@ namespace Prima.Queue
             return _almostTimedOut.Select(tuple => tuple.Id);
         }
 
-        private IEnumerable<ulong> QueryTimeout(FFXIVRole role, double secondsBeforeNow)
+        protected IEnumerable<ulong> QueryTimeout(FFXIVRole role, double secondsBeforeNow, bool includeEvents = false)
         {
             var queue = GetQueue(role);
 
-            return queue.RemoveAll(s => (DateTime.UtcNow - s.QueueTime).TotalSeconds > secondsBeforeNow, overload: true)
-                .Select(s => s.Id);
+            lock (queue)
+            {
+                if (includeEvents)
+                {
+                    return queue
+                        .Where(s => string.IsNullOrEmpty(s.EventId))
+                        .ToList()
+                        .RemoveAll(s => (DateTime.UtcNow - s.QueueTime).TotalSeconds > secondsBeforeNow, overload: true)
+                        .Select(s => s.Id);
+                }
+                else
+                {
+                    return queue.RemoveAll(s => (DateTime.UtcNow - s.QueueTime).TotalSeconds > secondsBeforeNow, overload: true)
+                        .Select(s => s.Id);
+                }
+            }
         }
 
         protected IList<QueueSlot> GetQueue(FFXIVRole role) => role switch

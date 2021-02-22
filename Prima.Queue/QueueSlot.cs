@@ -53,7 +53,7 @@ namespace Prima.Queue
             ExpirationNotified = false;
             EventId = eventId;
             RoleIds = roleIds ?? new ulong[] { };
-            EventIds = eventIds ?? new string[] { };
+            EventIds = eventIds ?? new[] { eventId };
         }
     }
 }

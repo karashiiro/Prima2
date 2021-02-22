@@ -17,5 +17,10 @@ namespace Prima.Queue
                 .Concat(GetQueue(FFXIVRole.Healer))
                 .Concat(GetQueue(FFXIVRole.Tank));
         }
+
+        public IEnumerable<ulong> TryQueryTimeout(FFXIVRole role, double secondsBeforeNow, bool includeEvents = false)
+        {
+            return QueryTimeout(role, secondsBeforeNow, includeEvents);
+        }
     }
 }

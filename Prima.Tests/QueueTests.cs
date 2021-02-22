@@ -10,8 +10,84 @@ namespace Prima.Tests
 {
     public class QueueTests
     {
-        const ulong userId = 435164236432553542;
-        const string eventId = "483597092876052452";
+        private const double Second = 1;
+        private const double Minute = 60 * Second;
+        private const double Hour = 60 * Minute;
+
+        private const ulong userId = 435164236432553542;
+        private const string eventId = "483597092876052452";
+
+        [Test]
+        public void QueryTimeout_IncludeEvents_Works()
+        {
+            var rand = new Random(1234);
+            var queue = new TestQueue();
+            var counts = new Dictionary<FFXIVRole, int>
+            {
+                { FFXIVRole.DPS, 0 },
+                { FFXIVRole.Healer, 0 },
+                { FFXIVRole.Tank, 0 },
+            };
+            for (ulong i = 0; i < 1000; i++)
+            {
+                var nextRole = rand.Next(0, 3) switch
+                {
+                    0 => FFXIVRole.DPS,
+                    1 => FFXIVRole.Healer,
+                    2 => FFXIVRole.Tank,
+                    _ => throw new NotImplementedException(),
+                };
+                counts[nextRole]++;
+                queue.AddSlot(new QueueSlot(i, eventId)
+                {
+                    QueueTime = DateTime.UtcNow.AddHours(-5),
+                }, nextRole);
+            }
+
+            var roles = new[] { FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank };
+            var timeouts = new Dictionary<FFXIVRole, IEnumerable<ulong>>();
+            foreach (var role in roles)
+            {
+                timeouts[role] = queue.TryQueryTimeout(role, 4 * Hour, includeEvents: true);
+            }
+            Assert.That(!timeouts[FFXIVRole.DPS].Concat(timeouts[FFXIVRole.Healer]).Concat(timeouts[FFXIVRole.Tank]).Any());
+        }
+
+        [Test]
+        public void QueryTimeout_NoIncludeEvents_Works()
+        {
+            var rand = new Random(1234);
+            var queue = new TestQueue();
+            var counts = new Dictionary<FFXIVRole, int>
+            {
+                { FFXIVRole.DPS, 0 },
+                { FFXIVRole.Healer, 0 },
+                { FFXIVRole.Tank, 0 },
+            };
+            for (ulong i = 0; i < 1000; i++)
+            {
+                var nextRole = rand.Next(0, 3) switch
+                {
+                    0 => FFXIVRole.DPS,
+                    1 => FFXIVRole.Healer,
+                    2 => FFXIVRole.Tank,
+                    _ => throw new NotImplementedException(),
+                };
+                counts[nextRole]++;
+                queue.AddSlot(new QueueSlot(i, eventId)
+                {
+                    QueueTime = DateTime.UtcNow.AddHours(-5),
+                }, nextRole);
+            }
+
+            var roles = new[] { FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank };
+            var timeouts = new Dictionary<FFXIVRole, IEnumerable<ulong>>();
+            foreach (var role in roles)
+            {
+                timeouts[role] = queue.TryQueryTimeout(role, 4 * Hour);
+            }
+            Assert.That(timeouts[FFXIVRole.DPS].Concat(timeouts[FFXIVRole.Healer]).Concat(timeouts[FFXIVRole.Tank]).Count() == 1000);
+        }
 
         [Test]
         public void Dequeue_IsThreadSafe()
@@ -32,7 +108,7 @@ namespace Prima.Tests
                     0 => FFXIVRole.DPS,
                     1 => FFXIVRole.Healer,
                     2 => FFXIVRole.Tank,
-                    _ => FFXIVRole.None,
+                    _ => throw new NotImplementedException(),
                 };
                 counts[nextRole]++;
                 queue.Enqueue(curI, nextRole, "");
@@ -79,7 +155,7 @@ namespace Prima.Tests
                     0 => FFXIVRole.DPS,
                     1 => FFXIVRole.Healer,
                     2 => FFXIVRole.Tank,
-                    _ => FFXIVRole.None,
+                    _ => throw new NotImplementedException(),
                 };
                 var thread = new Thread(() =>
                 {
@@ -111,7 +187,7 @@ namespace Prima.Tests
                     0 => FFXIVRole.DPS,
                     1 => FFXIVRole.Healer,
                     2 => FFXIVRole.Tank,
-                    _ => FFXIVRole.None,
+                    _ => throw new NotImplementedException(),
                 };
                 queue.Enqueue(i, nextRole, eventId);
             }
@@ -134,7 +210,7 @@ namespace Prima.Tests
                     0 => FFXIVRole.DPS,
                     1 => FFXIVRole.Healer,
                     2 => FFXIVRole.Tank,
-                    _ => FFXIVRole.None,
+                    _ => throw new NotImplementedException(),
                 };
                 queue.Enqueue(i, nextRole, null);
             }
@@ -205,7 +281,7 @@ namespace Prima.Tests
                     0 => FFXIVRole.DPS,
                     1 => FFXIVRole.Healer,
                     2 => FFXIVRole.Tank,
-                    _ => FFXIVRole.None,
+                    _ => throw new NotImplementedException(),
                 };
                 queue.Enqueue(i, nextRole, i == (ulong)slotNotInEvent ? null : eventId);
                 await Task.Delay(rand.Next(1, 20));
@@ -235,7 +311,7 @@ namespace Prima.Tests
                     0 => FFXIVRole.DPS,
                     1 => FFXIVRole.Healer,
                     2 => FFXIVRole.Tank,
-                    _ => FFXIVRole.None,
+                    _ => throw new NotImplementedException(),
                 };
                 queue.Enqueue(i, nextRole, null);
                 await Task.Delay(rand.Next(1, 20));
