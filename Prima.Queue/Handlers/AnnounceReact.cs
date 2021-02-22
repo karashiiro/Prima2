@@ -1,7 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using Prima.Models;
-using Prima.Queue.Resources;
 using Prima.Queue.Services;
 using Prima.Resources;
 using Prima.Services;

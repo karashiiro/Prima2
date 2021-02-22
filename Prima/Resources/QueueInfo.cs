@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace Prima.Queue.Resources
+namespace Prima.Resources
 {
     public static class QueueInfo
     {

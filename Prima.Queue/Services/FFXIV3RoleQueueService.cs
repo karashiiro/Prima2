@@ -7,7 +7,7 @@ using Discord;
 using Discord.Net;
 using Discord.WebSocket;
 using Newtonsoft.Json;
-using Prima.Queue.Resources;
+using Prima.Resources;
 using Serilog;
 
 namespace Prima.Queue.Services

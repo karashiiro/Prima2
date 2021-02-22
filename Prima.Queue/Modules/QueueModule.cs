@@ -11,7 +11,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Prima.Queue.Resources;
 using Serilog;
 
 namespace Prima.Queue.Modules
