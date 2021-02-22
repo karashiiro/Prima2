@@ -21,42 +21,50 @@ namespace Prima.Queue
             if (!context.Guild.GetUser(userId).HasRole(discordRole)) return DiscordIntegratedEnqueueResult.DoesNotHaveRole;
 
             var queue = GetQueue(role);
-            if (queue.Any(s => s.Id == userId)) return DiscordIntegratedEnqueueResult.AlreadyInQueue;
 
-            eventId ??= "";
+            lock (queue)
+            {
+                if (queue.Any(s => s.Id == userId)) return DiscordIntegratedEnqueueResult.AlreadyInQueue;
 
-            var slot = new QueueSlot(userId, eventId, roleIds: new[] { discordRole.Id });
-            queue.Add(slot);
-            return DiscordIntegratedEnqueueResult.Success;
+                eventId ??= "";
+
+                var slot = new QueueSlot(userId, eventId, roleIds: new[] { discordRole.Id });
+                queue.Add(slot);
+                return DiscordIntegratedEnqueueResult.Success;
+            }
         }
 
         public ulong? DequeueWithDiscordRole(FFXIVRole role, IRole discordRole, SocketCommandContext context, string eventId)
         {
             if (context.Guild == null) return null;
             var queue = GetQueue(role);
-            if (queue.Count == 0) return null;
 
-            eventId ??= "";
-
-            ulong user;
             lock (queue)
             {
-                QueueSlot slot;
-                if (string.IsNullOrEmpty(eventId))
-                    slot = queue.FirstOrDefault(s => SlotHasRole(s, discordRole, context) && string.IsNullOrEmpty(s.EventId));
-                else
-                    slot = queue.FirstOrDefault(s => SlotHasRole(s, discordRole, context) && s.EventId == eventId);
+                if (queue.Count == 0) return null;
 
-                if (slot == null)
+                eventId ??= "";
+
+                ulong user;
+                lock (queue)
                 {
-                    return null;
+                    QueueSlot slot;
+                    if (string.IsNullOrEmpty(eventId))
+                        slot = queue.FirstOrDefault(s => SlotHasRole(s, discordRole, context) && string.IsNullOrEmpty(s.EventId));
+                    else
+                        slot = queue.FirstOrDefault(s => SlotHasRole(s, discordRole, context) && s.EventId == eventId);
+
+                    if (slot == null)
+                    {
+                        return null;
+                    }
+
+                    user = slot.Id;
                 }
 
-                user = slot.Id;
+                RemoveAll(user);
+                return user;
             }
-
-            RemoveAll(user);
-            return user;
         }
 
         public int CountWithDiscordRole(FFXIVRole role, IRole discordRole, SocketCommandContext context, string eventId)
