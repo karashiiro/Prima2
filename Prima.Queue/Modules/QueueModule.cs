@@ -1225,8 +1225,8 @@ namespace Prima.Queue.Modules
         {
             var messageTimestamp = Context.Message.Timestamp;
             var userChannel = await Context.User.GetOrCreateDMChannelAsync();
-            
-            var query = new TimedEvent(2 * Time.Hour, 0.5, async () =>
+
+            async Task<bool> WaitingAsyncPredicate()
             {
                 // ReSharper disable LoopCanBeConvertedToQuery
                 await foreach (var page in userChannel.GetMessagesAsync())
@@ -1242,14 +1242,28 @@ namespace Prima.Queue.Modules
                 // ReSharper restore LoopCanBeConvertedToQuery
 
                 return false;
-            });
+            }
 
             await ReplyAsync("There are 2 hours until event `INSERT EVENT ID HERE`.\n" +
-                             "Queues have opened; send anything in this channel to confirm your spot or you will be removed 30 minutes before the event begins.");
+                             "Queues have opened; reply to this message with `~confirm` to confirm your spot or you will be removed 30 minutes before the event begins.");
+            var query = new TimedEvent(1 * Time.Hour, 0.5, WaitingAsyncPredicate);
             var result = await query.GetResult();
-            if (!result) return;
+            if (!result)
+            {
+                await ReplyAsync("There are now 30 minutes until this confirmation window closes. Please confirm your queue position by using the command `~confirm` in this DM.");
+                query = new TimedEvent(30 * Time.Minute, 0.5, WaitingAsyncPredicate);
+                result = await query.GetResult();
 
-            await ReplyAsync("Passed.");
+                if (!result)
+                {
+                    await ReplyAsync("1 hour and 30 minutes have passed since the confirmation window opened; you have been removed from the queue.\n" +
+                                     "You may still rejoin the queue by using the message reaction on the event post, but you will be placed in the back of the queue.");
+                    // Remove from queue
+                    return;
+                }
+            }
+
+            await ReplyAsync("Queue position confirmed.");
         }
 #endif
 
