@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System.Globalization;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -29,6 +31,24 @@ namespace Prima.Stable.Modules
                              $"Role name: {newRole.Name}\n" +
                              $"Role ID: {newRole.Id}" +
                              "```");
+        }
+
+        [Command("setrolecolor")]
+        public async Task SetRoleColor(ulong roleId, string hexCode)
+        {
+            var regex = new Regex(@"[0-9a-fA-F]{6}");
+            var justHex = regex.Match(hexCode).Value;
+            var red = byte.Parse(justHex[..2], NumberStyles.HexNumber);
+            var green = byte.Parse(justHex[2..4], NumberStyles.HexNumber);
+            var blue = byte.Parse(justHex[4..], NumberStyles.HexNumber);
+
+            var role = Context.Guild.GetRole(roleId);
+            await role.ModifyAsync(props =>
+            {
+                props.Color = new Color(red, green, blue);
+            });
+
+            await ReplyAsync("Role color updated!");
         }
     }
 }
