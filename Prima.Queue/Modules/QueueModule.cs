@@ -1233,7 +1233,9 @@ namespace Prima.Queue.Modules
                 {
                     foreach (var message in page)
                     {
-                        if (message.Author.Id == Context.User.Id && message.Timestamp > messageTimestamp)
+                        if (message.Author.Id == Context.User.Id 
+                            && message.Timestamp > messageTimestamp
+                            && message.Content.ToLowerInvariant().Contains("confirm"))
                         {
                             return true;
                         }
