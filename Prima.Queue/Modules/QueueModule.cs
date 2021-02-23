@@ -1219,6 +1219,40 @@ namespace Prima.Queue.Modules
             return ReplyAsync($"User inserted in position {position}.");
         }
 
+#if DEBUG
+        [Command("testtimedevent", RunMode = RunMode.Async)]
+        public async Task TestTimedEvent()
+        {
+            var messageTimestamp = Context.Message.Timestamp;
+            var userChannel = await Context.User.GetOrCreateDMChannelAsync();
+            
+            var query = new TimedEvent(2 * Time.Hour, 0.5, async () =>
+            {
+                // ReSharper disable LoopCanBeConvertedToQuery
+                await foreach (var page in userChannel.GetMessagesAsync())
+                {
+                    foreach (var message in page)
+                    {
+                        if (message.Author.Id == Context.User.Id && message.Timestamp > messageTimestamp)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                // ReSharper restore LoopCanBeConvertedToQuery
+
+                return false;
+            });
+
+            await ReplyAsync("There are 2 hours until event `INSERT EVENT ID HERE`.\n" +
+                             "Queues have opened; send anything in this channel to confirm your spot or you will be removed 30 minutes before the event begins.");
+            var result = await query.GetResult();
+            if (!result) return;
+
+            await ReplyAsync("Passed.");
+        }
+#endif
+
         private async Task<bool> IsEventReal(string eventId)
         {
             var (m, _) = await GetEvent(eventId);
