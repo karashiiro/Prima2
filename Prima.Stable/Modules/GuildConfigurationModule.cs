@@ -14,7 +14,7 @@ namespace Prima.Stable.Modules
     [RequireUserPermission(GuildPermission.Administrator)]
     public class GuildConfigurationModule : ModuleBase<SocketCommandContext>
     {
-        public DbService Db { get; set; }
+        public IDbService Db { get; set; }
 
         [Command("configure", RunMode = RunMode.Async)]
         [Alias("config")]

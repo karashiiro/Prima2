@@ -10,7 +10,7 @@ namespace Prima.Stable.Modules
     [Name("Time")]
     public class TimeModule : ModuleBase<SocketCommandContext>
     {
-        public DbService Db { get; set; }
+        public IDbService Db { get; set; }
 
         [Command("settimezone")]
         [Description("Sets your own timezone for localized DMs and personal messages.")]

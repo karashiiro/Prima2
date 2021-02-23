@@ -25,7 +25,7 @@ namespace Prima.Scheduler
                 });
         }
 
-        public static async Task RebuildPosts(DbService db, DiscordSocketClient client, ulong guildId)
+        public static async Task RebuildPosts(IDbService db, DiscordSocketClient client, ulong guildId)
         {
             var guildConfig = db.Guilds.FirstOrDefault(g => g.Id == guildId);
             if (guildConfig == null)

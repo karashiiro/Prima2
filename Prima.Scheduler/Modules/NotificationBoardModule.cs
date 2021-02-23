@@ -22,7 +22,7 @@ namespace Prima.Scheduler.Modules
     public class NotificationBoardModule : ModuleBase<SocketCommandContext>
     {
         public CalendarApi Calendar { get; set; }
-        public DbService Db { get; set; }
+        public IDbService Db { get; set; }
 
         [Command("announce", RunMode = RunMode.Async)]
         [Description("Announce an event. Usage: `~announce Time | Description`")]

@@ -18,7 +18,7 @@ namespace Prima.Stable.Modules
     [Name("Census")]
     public class CensusModule : ModuleBase<SocketCommandContext>
     {
-        public DbService Db { get; set; }
+        public IDbService Db { get; set; }
         public XIVAPIService XIVAPI { get; set; }
 
         private const int MessageDeleteDelay = 10000;

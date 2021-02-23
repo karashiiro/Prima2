@@ -36,7 +36,7 @@ namespace Prima.Queue.Modules
         private static readonly IList<(ulong, DateTime)> LfmPullTimeLog = new List<(ulong, DateTime)>();
         private static readonly string[] Elements = { "Earth", "Wind", "Water", "Fire", "Lightning", "Ice" };
 
-        public DbService Db { get; set; }
+        public IDbService Db { get; set; }
         public FFXIV3RoleQueueService QueueService { get; set; }
         public PasswordGenerator PwGen { get; set; }
 

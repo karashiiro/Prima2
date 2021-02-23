@@ -17,7 +17,7 @@ namespace Prima.Stable.Modules
     [Name("Bozja Extra Module")]
     public class BozjaExtraModule : ModuleBase<SocketCommandContext>
     {
-        public DbService Db { get; set; }
+        public IDbService Db { get; set; }
         public HttpClient Http { get; set; }
         public IServiceProvider Services { get; set; }
 

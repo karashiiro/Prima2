@@ -23,7 +23,7 @@ namespace Prima.Scheduler.Modules
     {
         private const long Threshold = 10800000;
 
-        public DbService Db { get; set; }
+        public IDbService Db { get; set; }
         public SpreadsheetService Sheets { get; set; }
 
         [Command("schedule")]

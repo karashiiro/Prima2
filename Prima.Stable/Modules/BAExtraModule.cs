@@ -16,7 +16,7 @@ namespace Prima.Stable.Modules
     [Name("BA Extra Module")]
     public class BAExtraModule : ModuleBase<SocketCommandContext>
     {
-        public DbService Db { get; set; }
+        public IDbService Db { get; set; }
         public HttpClient Http { get; set; }
         public IServiceProvider Services { get; set; }
 

@@ -19,7 +19,7 @@ namespace Prima.Moderation.Modules
     [Name("Moderation")]
     public class ModerationModule : ModuleBase<SocketCommandContext>
     {
-        public DbService Db { get; set; }
+        public IDbService Db { get; set; }
         public ModerationEventService Events { get; set; }
 
         // Submit a report.

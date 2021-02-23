@@ -21,7 +21,7 @@ namespace Prima.Extra.Modules
     [Name("Extra")]
     public class ExtraModule : ModuleBase<SocketCommandContext>
     {
-        public DbService Db { get; set; }
+        public IDbService Db { get; set; }
         public FFXIVWeatherService Weather { get; set; }
         public HttpClient Http { get; set; }
         public XIVAPIService Xivapi { get; set; }
