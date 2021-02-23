@@ -217,7 +217,7 @@ namespace Prima.Stable.Modules
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task BozjaClustersAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/WANkcVe.jpeg");
         
-        [Command("qgreflect ", RunMode = RunMode.Async)]
+        [Command("qgreflect", RunMode = RunMode.Async)]
         [Description("Shows Queen's Guard reflect positions.")]
         [RateLimit(TimeSeconds = 1, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
