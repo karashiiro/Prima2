@@ -16,6 +16,9 @@ namespace Prima
             _query = query;
         }
 
+        public TimedEvent(double timeoutSeconds, double checkIntervalSeconds, Func<bool> query) : this(timeoutSeconds, checkIntervalSeconds,
+            () => Task.FromResult(query())) { }
+
         public async Task<bool> GetResult()
         {
             var endTime = DateTime.UtcNow.AddSeconds(_timeoutSeconds);
