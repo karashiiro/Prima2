@@ -6,14 +6,15 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Prima.Resources;
+using Prima.Tests.Mocks;
 
 namespace Prima.Tests
 {
     [TestFixture]
     public class QueueTests
     {
-        private const ulong userId = 435164236432553542;
-        private const string eventId = "483597092876052452";
+        private const ulong UserId = 435164236432553542;
+        private const string EventId = "483597092876052452";
 
         [Test]
         public void QueryTimeout_IncludeEvents_Works()
@@ -36,7 +37,7 @@ namespace Prima.Tests
                     _ => throw new NotImplementedException(),
                 };
                 counts[nextRole]++;
-                queue.AddSlot(new QueueSlot(i, eventId)
+                queue.AddSlot(new QueueSlot(i, EventId)
                 {
                     QueueTime = DateTime.UtcNow.AddHours(-5),
                 }, nextRole);
@@ -72,7 +73,7 @@ namespace Prima.Tests
                     _ => throw new NotImplementedException(),
                 };
                 counts[nextRole]++;
-                queue.AddSlot(new QueueSlot(i, eventId)
+                queue.AddSlot(new QueueSlot(i, EventId)
                 {
                     QueueTime = DateTime.UtcNow.AddHours(-5),
                 }, nextRole);
@@ -187,10 +188,10 @@ namespace Prima.Tests
                     2 => FFXIVRole.Tank,
                     _ => throw new NotImplementedException(),
                 };
-                queue.Enqueue(i, nextRole, eventId);
+                queue.Enqueue(i, nextRole, EventId);
             }
 
-            queue.ExpireEvent(eventId);
+            queue.ExpireEvent(EventId);
 
             var slots = queue.GetAllSlots();
             Assert.That(!slots.Any());
@@ -228,9 +229,9 @@ namespace Prima.Tests
         public void Insert_Works_Event(FFXIVRole role)
         {
             var queue = new FFXIV3RoleQueue();
-            queue.Enqueue(userId, role, eventId);
-            queue.Insert(userId, 0, role);
-            Assert.AreEqual(1, queue.GetPosition(userId, role, eventId));
+            queue.Enqueue(UserId, role, EventId);
+            queue.Insert(UserId, 0, role);
+            Assert.AreEqual(1, queue.GetPosition(UserId, role, EventId));
         }
 
         [TestCase(FFXIVRole.DPS)]
@@ -239,9 +240,9 @@ namespace Prima.Tests
         public void Insert_Works_NoEvent(FFXIVRole role)
         {
             var queue = new FFXIV3RoleQueue();
-            queue.Enqueue(userId, role, "");
-            queue.Insert(userId, 0, role);
-            Assert.AreEqual(1, queue.GetPosition(userId, role, null));
+            queue.Enqueue(UserId, role, "");
+            queue.Insert(UserId, 0, role);
+            Assert.AreEqual(1, queue.GetPosition(UserId, role, null));
         }
 
         [TestCase(FFXIVRole.DPS)]
@@ -250,9 +251,9 @@ namespace Prima.Tests
         public void Shove_Works_Event(FFXIVRole role)
         {
             var queue = new FFXIV3RoleQueue();
-            queue.Enqueue(userId, role, eventId);
-            queue.Shove(userId, role);
-            Assert.AreEqual(1, queue.GetPosition(userId, role, eventId));
+            queue.Enqueue(UserId, role, EventId);
+            queue.Shove(UserId, role);
+            Assert.AreEqual(1, queue.GetPosition(UserId, role, EventId));
         }
 
         [TestCase(FFXIVRole.DPS)]
@@ -261,9 +262,9 @@ namespace Prima.Tests
         public void Shove_Works_NoEvent(FFXIVRole role)
         {
             var queue = new FFXIV3RoleQueue();
-            queue.Enqueue(userId, role, "");
-            queue.Shove(userId, role);
-            Assert.AreEqual(1, queue.GetPosition(userId, role, null));
+            queue.Enqueue(UserId, role, "");
+            queue.Shove(UserId, role);
+            Assert.AreEqual(1, queue.GetPosition(UserId, role, null));
         }
 
         [Test]
@@ -281,10 +282,10 @@ namespace Prima.Tests
                     2 => FFXIVRole.Tank,
                     _ => throw new NotImplementedException(),
                 };
-                queue.Enqueue(i, nextRole, i == (ulong)slotNotInEvent ? null : eventId);
+                queue.Enqueue(i, nextRole, i == (ulong)slotNotInEvent ? null : EventId);
                 await Task.Delay(rand.Next(1, 20));
             }
-            queue.RefreshEvent(eventId);
+            queue.RefreshEvent(EventId);
             var timestamps = queue.GetAllSlots()
                 .ToList();
             var firstTimestamp = timestamps.First().QueueTime;
@@ -314,7 +315,7 @@ namespace Prima.Tests
                 queue.Enqueue(i, nextRole, null);
                 await Task.Delay(rand.Next(1, 20));
             }
-            queue.RefreshEvent(eventId);
+            queue.RefreshEvent(EventId);
             var timestamps = queue.GetAllSlots()
                 .ToList();
             var firstTimestamp = timestamps.First().QueueTime;
@@ -330,14 +331,14 @@ namespace Prima.Tests
         public async Task Refresh_Works_Event(FFXIVRole role)
         {
             var queue = new TestQueue();
-            var enqueuedSlot = new QueueSlot(userId, eventId, new List<ulong>())
+            var enqueuedSlot = new QueueSlot(UserId, EventId, new List<ulong>())
             {
                 QueueTime = DateTime.UtcNow.AddHours(-4).AddMinutes(-45),
             };
             queue.AddSlot(enqueuedSlot, role);
             await Task.Delay(1000);
             var now = DateTime.UtcNow;
-            queue.Refresh(userId);
+            queue.Refresh(UserId);
             var dequeuedSlot = queue.GetAllSlots().First();
             Assert.AreEqual(now.Hour, dequeuedSlot.QueueTime.Hour);
             Assert.AreEqual(now.Minute, dequeuedSlot.QueueTime.Minute);
@@ -349,14 +350,14 @@ namespace Prima.Tests
         public async Task Refresh_Works_NoEvent(FFXIVRole role)
         {
             var queue = new TestQueue();
-            var enqueuedSlot = new QueueSlot(userId, "", new List<ulong>())
+            var enqueuedSlot = new QueueSlot(UserId, "", new List<ulong>())
             {
                 QueueTime = DateTime.UtcNow.AddHours(-4).AddMinutes(-45),
             };
             queue.AddSlot(enqueuedSlot, role);
             await Task.Delay(1000);
             var now = DateTime.UtcNow;
-            queue.Refresh(userId);
+            queue.Refresh(UserId);
             var dequeuedSlot = queue.GetAllSlots().First();
             Assert.AreEqual(now.Hour, dequeuedSlot.QueueTime.Hour);
             Assert.AreEqual(now.Minute, dequeuedSlot.QueueTime.Minute);
@@ -368,9 +369,9 @@ namespace Prima.Tests
         public void SetEvent_Works(FFXIVRole role)
         {
             var queue = new FFXIV3RoleQueue();
-            queue.Enqueue(userId, role, eventId);
-            queue.SetEvent(userId, role, null);
-            var userEventId = queue.GetEvent(userId, role);
+            queue.Enqueue(UserId, role, EventId);
+            queue.SetEvent(UserId, role, null);
+            var userEventId = queue.GetEvent(UserId, role);
             Assert.That(string.IsNullOrEmpty(userEventId));
         }
 
@@ -378,29 +379,29 @@ namespace Prima.Tests
         public void GetEvents_Works_1()
         {
             var queue = new FFXIV3RoleQueue();
-            queue.Enqueue(userId, FFXIVRole.DPS, eventId);
-            queue.Enqueue(0, FFXIVRole.Tank, eventId);
-            queue.Enqueue(1, FFXIVRole.Healer, eventId);
+            queue.Enqueue(UserId, FFXIVRole.DPS, EventId);
+            queue.Enqueue(0, FFXIVRole.Tank, EventId);
+            queue.Enqueue(1, FFXIVRole.Healer, EventId);
             queue.Enqueue(2, FFXIVRole.Healer, null);
             queue.Enqueue(3, FFXIVRole.Tank, "");
 
             var eventIds = queue.GetEvents().ToList();
             Assert.That(eventIds.Count == 1);
-            Assert.That(eventIds[0] == eventId);
+            Assert.That(eventIds[0] == EventId);
         }
 
         [Test]
         public void GetEvents_Works_2()
         {
             var queue = new FFXIV3RoleQueue();
-            queue.Enqueue(userId, FFXIVRole.DPS, eventId);
+            queue.Enqueue(UserId, FFXIVRole.DPS, EventId);
             queue.Enqueue(0, FFXIVRole.Tank, "b");
             queue.Enqueue(1, FFXIVRole.Healer, "a");
             queue.Enqueue(2, FFXIVRole.Healer, null);
             queue.Enqueue(3, FFXIVRole.Tank, "");
 
             var eventIds = queue.GetEvents().ToList();
-            Assert.IsNotNull(eventIds.FirstOrDefault(eId => eId == eventId));
+            Assert.IsNotNull(eventIds.FirstOrDefault(eId => eId == EventId));
             Assert.IsNotNull(eventIds.FirstOrDefault(eId => eId == "b"));
             Assert.IsNotNull(eventIds.FirstOrDefault(eId => eId == "a"));
         }
@@ -409,26 +410,26 @@ namespace Prima.Tests
         public void CountDistinct_Event_Works()
         {
             var queue = new FFXIV3RoleQueue();
-            queue.Enqueue(userId, FFXIVRole.DPS, eventId);
-            queue.Enqueue(userId, FFXIVRole.Healer, eventId);
-            queue.Enqueue(39284729857983498, FFXIVRole.DPS, eventId);
-            queue.Enqueue(39284729857983498, FFXIVRole.Tank, eventId);
-            queue.Enqueue(11859824769135435, FFXIVRole.Healer, eventId);
+            queue.Enqueue(UserId, FFXIVRole.DPS, EventId);
+            queue.Enqueue(UserId, FFXIVRole.Healer, EventId);
+            queue.Enqueue(39284729857983498, FFXIVRole.DPS, EventId);
+            queue.Enqueue(39284729857983498, FFXIVRole.Tank, EventId);
+            queue.Enqueue(11859824769135435, FFXIVRole.Healer, EventId);
             queue.Enqueue(23147289374928357, FFXIVRole.Healer, null);
             queue.Enqueue(12437598275983457, FFXIVRole.Tank, "");
-            Assert.AreEqual(3, queue.CountDistinct(eventId));
+            Assert.AreEqual(3, queue.CountDistinct(EventId));
         }
 
         [Test]
         public void CountDistinct_Normal_Works()
         {
             var queue = new FFXIV3RoleQueue();
-            queue.Enqueue(userId, FFXIVRole.DPS, null);
-            queue.Enqueue(userId, FFXIVRole.Healer, "");
+            queue.Enqueue(UserId, FFXIVRole.DPS, null);
+            queue.Enqueue(UserId, FFXIVRole.Healer, "");
             queue.Enqueue(39284729857983498, FFXIVRole.DPS, "");
             queue.Enqueue(39284729857983498, FFXIVRole.Tank, "");
             queue.Enqueue(11859824769135435, FFXIVRole.Healer, null);
-            queue.Enqueue(23147289374928357, FFXIVRole.Healer, eventId);
+            queue.Enqueue(23147289374928357, FFXIVRole.Healer, EventId);
             Assert.AreEqual(3, queue.CountDistinct(null));
         }
 
@@ -438,10 +439,10 @@ namespace Prima.Tests
         public void Dequeue_Event_PullsForEvent(FFXIVRole role)
         {
             var queue = new FFXIV3RoleQueue();
-            var enqueueSuccess = queue.Enqueue(userId, role, eventId);
+            var enqueueSuccess = queue.Enqueue(UserId, role, EventId);
             Assert.IsTrue(enqueueSuccess);
 
-            var outUId = queue.Dequeue(role, eventId);
+            var outUId = queue.Dequeue(role, EventId);
             Assert.IsNotNull(outUId);
         }
 
@@ -451,10 +452,10 @@ namespace Prima.Tests
         public void Dequeue_Event_DoesNotPullForNormal(FFXIVRole role)
         {
             var queue = new FFXIV3RoleQueue();
-            var enqueueSuccess = queue.Enqueue(userId, role, null);
+            var enqueueSuccess = queue.Enqueue(UserId, role, null);
             Assert.IsTrue(enqueueSuccess);
 
-            var outUId = queue.Dequeue(role, eventId);
+            var outUId = queue.Dequeue(role, EventId);
             Assert.IsNull(outUId);
         }
 
@@ -464,7 +465,7 @@ namespace Prima.Tests
         public void Dequeue_Normal_PullsForNormal(FFXIVRole role)
         {
             var queue = new FFXIV3RoleQueue();
-            var enqueueSuccess = queue.Enqueue(userId, role, null);
+            var enqueueSuccess = queue.Enqueue(UserId, role, null);
             Assert.IsTrue(enqueueSuccess);
 
             var outUId = queue.Dequeue(role, null);
@@ -477,7 +478,7 @@ namespace Prima.Tests
         public void Dequeue_Normal_DoesNotPullForEvent(FFXIVRole role)
         {
             var queue = new FFXIV3RoleQueue();
-            var enqueueSuccess = queue.Enqueue(userId, role, eventId);
+            var enqueueSuccess = queue.Enqueue(UserId, role, EventId);
             Assert.IsTrue(enqueueSuccess);
 
             var outUId = queue.Dequeue(role, null);
@@ -490,17 +491,17 @@ namespace Prima.Tests
         public void Queue_EventId_NotCountedNormally(FFXIVRole role)
         {
             var queue = new FFXIV3RoleQueue();
-            var enqueueSuccess = queue.Enqueue(userId, role, eventId);
+            var enqueueSuccess = queue.Enqueue(UserId, role, EventId);
             Assert.IsTrue(enqueueSuccess);
 
-            var pos1 = queue.GetPosition(userId, role, null);
+            var pos1 = queue.GetPosition(UserId, role, null);
             Assert.AreEqual(0, pos1);
-            var pos2 = queue.GetPosition(userId, role, eventId);
+            var pos2 = queue.GetPosition(UserId, role, EventId);
             Assert.AreEqual(1, pos2);
 
             var count1 = queue.Count(role, null);
             Assert.AreEqual(0, count1);
-            var count2 = queue.Count(role, eventId);
+            var count2 = queue.Count(role, EventId);
             Assert.AreEqual(1, count2);
         }
 
@@ -508,11 +509,11 @@ namespace Prima.Tests
         public void Queue_NoneRole_FailsGracefully()
         {
             var queue = new FFXIV3RoleQueue();
-            queue.Enqueue(userId, FFXIVRole.None, null);
-            Assert.AreEqual(0, queue.GetPosition(userId, FFXIVRole.None, null));
-            Assert.AreEqual(0, queue.GetPosition(userId, FFXIVRole.DPS, null));
-            Assert.AreEqual(0, queue.GetPosition(userId, FFXIVRole.Healer, null));
-            Assert.AreEqual(0, queue.GetPosition(userId, FFXIVRole.Tank, null));
+            queue.Enqueue(UserId, FFXIVRole.None, null);
+            Assert.AreEqual(0, queue.GetPosition(UserId, FFXIVRole.None, null));
+            Assert.AreEqual(0, queue.GetPosition(UserId, FFXIVRole.DPS, null));
+            Assert.AreEqual(0, queue.GetPosition(UserId, FFXIVRole.Healer, null));
+            Assert.AreEqual(0, queue.GetPosition(UserId, FFXIVRole.Tank, null));
         }
 
         [TestCase(FFXIVRole.DPS)]
@@ -521,11 +522,11 @@ namespace Prima.Tests
         public void Queue_NoParameters_MaintainsState_NullEvent(FFXIVRole role)
         {
             var queue = new FFXIV3RoleQueue();
-            var enqueueSuccess = queue.Enqueue(userId, role, null);
+            var enqueueSuccess = queue.Enqueue(UserId, role, null);
             Assert.IsTrue(enqueueSuccess);
             var outUId = queue.Dequeue(role, null);
             Assert.IsTrue(outUId.HasValue);
-            Assert.AreEqual(userId, outUId.Value);
+            Assert.AreEqual(UserId, outUId.Value);
         }
 
         [TestCase(FFXIVRole.DPS)]
@@ -534,11 +535,11 @@ namespace Prima.Tests
         public void Queue_NoParameters_MaintainsState_EmptyEvent(FFXIVRole role)
         {
             var queue = new FFXIV3RoleQueue();
-            var enqueueSuccess = queue.Enqueue(userId, role, "");
+            var enqueueSuccess = queue.Enqueue(UserId, role, "");
             Assert.IsTrue(enqueueSuccess);
             var outUId = queue.Dequeue(role, "");
             Assert.IsTrue(outUId.HasValue);
-            Assert.AreEqual(userId, outUId.Value);
+            Assert.AreEqual(UserId, outUId.Value);
         }
     }
 }

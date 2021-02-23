@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Prima.Queue;
 
-namespace Prima.Queue
+namespace Prima.Tests.Mocks
 {
     public class TestQueue : FFXIV3RoleQueue
     {
