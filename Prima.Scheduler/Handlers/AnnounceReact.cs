@@ -8,7 +8,7 @@ namespace Prima.Scheduler.Handlers
 {
     public static class AnnounceReact
     {
-        public static async Task HandlerAdd(DiscordSocketClient client, DbService db, Cacheable<IUserMessage, ulong> cachedMessage, SocketReaction reaction)
+        public static async Task HandlerAdd(DiscordSocketClient client, IDbService db, Cacheable<IUserMessage, ulong> cachedMessage, SocketReaction reaction)
         {
             var userId = reaction.UserId;
             if (client.CurrentUser.Id == userId || reaction.Emote.Name != "📳") return;

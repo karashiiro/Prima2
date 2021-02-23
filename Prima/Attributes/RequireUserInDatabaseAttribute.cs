@@ -12,7 +12,7 @@ namespace Prima.Attributes
     {
         public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
-            var db = services.GetRequiredService<DbService>();
+            var db = services.GetRequiredService<IDbService>();
             try
             {
                 var user = db.Users

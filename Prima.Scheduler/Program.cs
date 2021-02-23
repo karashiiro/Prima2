@@ -23,7 +23,7 @@ namespace Prima.Scheduler
 
             var client = services.GetRequiredService<DiscordSocketClient>();
             var events = services.GetRequiredService<EventService>();
-            var db = services.GetRequiredService<DbService>();
+            var db = services.GetRequiredService<IDbService>();
             var calendar = services.GetRequiredService<CalendarApi>();
 
             client.MessageUpdated += events.OnMessageEdit;

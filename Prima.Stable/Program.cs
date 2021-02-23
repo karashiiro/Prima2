@@ -23,7 +23,7 @@ namespace Prima.Stable
             await CommonInitialize.ConfigureServicesAsync(services);
 
             var client = services.GetRequiredService<DiscordSocketClient>();
-            var db = services.GetRequiredService<DbService>();
+            var db = services.GetRequiredService<IDbService>();
             var moderationEvents = services.GetRequiredService<ModerationEventService>();
             var censusEvents = services.GetRequiredService<CensusEventService>();
             var mute = services.GetRequiredService<MuteService>();

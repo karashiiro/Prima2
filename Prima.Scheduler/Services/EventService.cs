@@ -12,7 +12,7 @@ namespace Prima.Scheduler.Services
 {
     public class EventService
     {
-        private readonly DbService _db;
+        private readonly IDbService _db;
         private readonly DiscordSocketClient _client;
         private readonly SpreadsheetService _sheets;
 

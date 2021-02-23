@@ -17,7 +17,7 @@ namespace Prima.Scheduler.Handlers
 {
     public static class AnnounceEdit
     {
-        public static async Task Handler(DiscordSocketClient client, CalendarApi calendar, DbService db, SocketMessage message)
+        public static async Task Handler(DiscordSocketClient client, CalendarApi calendar, IDbService db, SocketMessage message)
         {
             var guildConfig = db.Guilds.FirstOrDefault(g => g.Id == SpecialGuilds.CrystalExploratoryMissions);
             if (guildConfig == null)

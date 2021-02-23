@@ -11,7 +11,7 @@ namespace Prima.Stable.Handlers
 {
     public static class ReactionReceived
     {
-        public static async Task HandlerAdd(DbService db, Cacheable<IUserMessage, ulong> _, ISocketMessageChannel ichannel, SocketReaction reaction)
+        public static async Task HandlerAdd(IDbService db, Cacheable<IUserMessage, ulong> _, ISocketMessageChannel ichannel, SocketReaction reaction)
         {
             if (ichannel is SocketGuildChannel channel)
             {
@@ -40,7 +40,7 @@ namespace Prima.Stable.Handlers
             }
         }
 
-        public static async Task HandlerRemove(DbService db, Cacheable<IUserMessage, ulong> _, ISocketMessageChannel ichannel, SocketReaction reaction)
+        public static async Task HandlerRemove(IDbService db, Cacheable<IUserMessage, ulong> _, ISocketMessageChannel ichannel, SocketReaction reaction)
         {
             if (ichannel is SocketGuildChannel channel)
             {

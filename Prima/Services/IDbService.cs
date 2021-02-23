@@ -1,0 +1,74 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Prima.Models;
+
+namespace Prima.Services
+{
+    public interface IDbService
+    {
+        GlobalConfiguration Config { get; }
+
+        IEnumerable<DiscordGuildConfiguration> Guilds { get; }
+        IEnumerable<DiscordXIVUser> Users { get; }
+        IEnumerable<ScheduledEvent> Events { get; }
+        IEnumerable<CachedMessage> CachedMessages { get; }
+        IEnumerable<ChannelDescription> ChannelDescriptions { get; }
+        IAsyncEnumerable<EventReaction> EventReactions { get; }
+        IAsyncEnumerable<TimedRole> TimedRoles { get; }
+
+        Task SetGlobalConfigurationProperty(string key, string value);
+
+        Task SetGuildConfigurationProperty<T>(ulong guildId, string key, T value);
+
+        Task AddGuild(DiscordGuildConfiguration config);
+
+        Task<bool> AddEventReaction(ulong eventId, ulong userId);
+
+        Task UpdateEventReaction(EventReaction updated);
+
+        Task<bool> RemoveEventReaction(ulong eventId, ulong userId);
+
+        Task RemoveAllEventReactions(ulong eventId);
+
+        Task AddTimedRole(ulong roleId, ulong guildId, ulong userId, DateTime removalTime);
+
+        Task RemoveTimedRole(ulong roleId, ulong userId);
+
+        Task ConfigureRole(ulong guildId, string roleName, ulong roleId);
+
+        Task DeconfigureRole(ulong guildId, string roleName);
+
+        Task ConfigureRoleEmote(ulong guildId, ulong roleId, string emoteId);
+
+        Task DeconfigureRoleEmote(ulong guildId, string emoteId);
+
+        Task AddGuildTextBlacklistEntry(ulong guildId, string regexString);
+
+        Task RemoveGuildTextBlacklistEntry(ulong guildId, string regexString);
+
+        Task AddUser(DiscordXIVUser user);
+
+        Task UpdateUser(DiscordXIVUser user);
+
+        Task AddScheduledEvent(ScheduledEvent @event);
+
+        Task UpdateScheduledEvent(ScheduledEvent newEvent);
+
+        Task AddMemberToEvent(ScheduledEvent @event, ulong memberId);
+
+        Task RemoveMemberToEvent(ScheduledEvent @event, ulong memberId);
+
+        Task<ScheduledEvent> TryRemoveScheduledEvent(DateTime when, ulong userId);
+
+        Task CacheMessage(CachedMessage message);
+
+        Task DeleteMessage(ulong messageId);
+
+        Task UpdateCachedMessage(CachedMessage message);
+
+        Task AddChannelDescription(ulong channelId, string description);
+
+        Task DeleteChannelDescription(ulong channelId);
+    }
+}

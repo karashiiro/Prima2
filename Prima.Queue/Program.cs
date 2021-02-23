@@ -23,7 +23,7 @@ namespace Prima.Queue
             await CommonInitialize.ConfigureServicesAsync(services);
 
             var client = services.GetRequiredService<DiscordSocketClient>();
-            var db = services.GetRequiredService<DbService>();
+            var db = services.GetRequiredService<IDbService>();
             var queueService = services.GetRequiredService<FFXIV3RoleQueueService>();
             
             client.ReactionAdded += (message, channel, reaction)

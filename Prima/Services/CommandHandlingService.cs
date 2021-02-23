@@ -6,7 +6,6 @@ using Serilog;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -17,7 +16,7 @@ namespace Prima.Services
     public class CommandHandlingService
     {
         private readonly CommandService _commands;
-        private readonly DbService _db;
+        private readonly IDbService _db;
         private readonly IDictionary<string, long> _commandTimeouts; // Key: command name, value: use time
         private readonly DiscordSocketClient _discord;
         private readonly IServiceProvider _services;
@@ -25,7 +24,7 @@ namespace Prima.Services
         public CommandHandlingService(IServiceProvider services)
         {
             _commands = services.GetRequiredService<CommandService>();
-            _db = services.GetRequiredService<DbService>();
+            _db = services.GetRequiredService<IDbService>();
             _commandTimeouts = new ConcurrentDictionary<string, long>();
             _discord = services.GetRequiredService<DiscordSocketClient>();
             _services = services;

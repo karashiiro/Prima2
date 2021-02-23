@@ -14,7 +14,7 @@ namespace Prima.Stable.Services
     public class CensusEventService
     {
         private readonly DiscordSocketClient _client;
-        private readonly DbService _db;
+        private readonly IDbService _db;
         private readonly XIVAPIService _XIVAPI;
 
         private readonly List<ulong> _cemUnverifiedMembers;

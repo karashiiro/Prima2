@@ -11,7 +11,7 @@ namespace Prima.Stable.Services
 {
     public class MuteService
     {
-        private readonly DbService _db;
+        private readonly IDbService _db;
 
         private readonly IList<ulong> _usersToUnmute;
 

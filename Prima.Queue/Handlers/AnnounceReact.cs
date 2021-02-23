@@ -20,7 +20,7 @@ namespace Prima.Queue.Handlers
             { "tank", FFXIVRole.Tank },
         };
 
-        public static async Task HandlerAdd(DiscordSocketClient client, FFXIV3RoleQueueService queueService, DbService db, Cacheable<IUserMessage, ulong> cachedMessage, SocketReaction reaction)
+        public static async Task HandlerAdd(DiscordSocketClient client, FFXIV3RoleQueueService queueService, IDbService db, Cacheable<IUserMessage, ulong> cachedMessage, SocketReaction reaction)
         {
             var userId = reaction.UserId;
             if (client.CurrentUser.Id == userId || !RoleReactions.ContainsKey(reaction.Emote.Name)) return;

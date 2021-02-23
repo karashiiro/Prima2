@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Prima.Services
 {
-    public class DbService
+    public class DbService : IDbService
     {
         private const string ConnectionString = "mongodb://localhost:27017";
         private const string DbName = "PrimaDb";

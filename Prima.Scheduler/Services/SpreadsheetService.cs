@@ -33,7 +33,7 @@ namespace Prima.Scheduler.Services
             ? "token.json"
             : Path.Combine(Environment.GetEnvironmentVariable("HOME"), "token.json");
 
-        private readonly DbService _db;
+        private readonly IDbService _db;
         private readonly DiscordSocketClient _client;
         private readonly SheetsService _service;
 

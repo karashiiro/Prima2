@@ -19,7 +19,7 @@ namespace Prima.Stable.Services
 {
     public class ModerationEventService
     {
-        private readonly DbService _db;
+        private readonly IDbService _db;
         private readonly DiscordSocketClient _client;
         private readonly WebClient _wc;
 

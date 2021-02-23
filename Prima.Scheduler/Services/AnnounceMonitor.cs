@@ -14,7 +14,7 @@ namespace Prima.Scheduler.Services
 {
     public class AnnounceMonitor : IDisposable
     {
-        private readonly DbService _db;
+        private readonly IDbService _db;
         private readonly DiscordSocketClient _client;
 
         private readonly CancellationTokenSource _tokenSource;

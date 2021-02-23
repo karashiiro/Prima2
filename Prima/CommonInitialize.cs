@@ -8,7 +8,6 @@ using System;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Discord.Net;
 
 namespace Prima
 {
@@ -55,7 +54,7 @@ namespace Prima
                 .AddSingleton<CommandHandlingService>()
                 .AddSingleton<DiagnosticService>()
                 .AddSingleton<HttpClient>()
-                .AddSingleton<DbService>()
+                .AddSingleton<IDbService, DbService>()
                 .AddSingleton<FFXIVSheetService>()
                 .AddSingleton<PasswordGenerator>();
                 //.AddSingleton(new HttpServer(Log.Information))
