@@ -23,7 +23,7 @@ namespace Prima.Resources
 #endif
         };
 
-        public static IList<ulong> GetContingentRoles(ulong roleId)
+        public static IEnumerable<ulong> GetContingentRoles(ulong roleId)
         {
             var baseList = new ulong[] { 807854087092830259, 807854094286979082, 807854100204879902, 807854109608378368, 807854117053136896 };
             return roleId switch
