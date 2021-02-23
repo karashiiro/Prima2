@@ -185,15 +185,20 @@ namespace Prima.Queue
         /// Removes all members from the queues that are registered for an event.
         /// Does nothing if the event ID is null or an empty string.
         /// </summary>
-        public void ExpireEvent(string eventId)
+        public IEnumerable<ulong> ExpireEvent(string eventId)
         {
-            if (string.IsNullOrEmpty(eventId)) return;
+            var expiredUsers = new List<ulong>();
+            if (string.IsNullOrEmpty(eventId)) return expiredUsers;
 
             foreach (var role in Roles)
             {
                 var queue = GetQueue(role);
-                queue.RemoveAll(slot => slot.EventId == eventId, overload: true);
+                expiredUsers.AddRange(queue
+                    .RemoveAll(slot => slot.EventId == eventId, overload: true)
+                    .Select(slot => slot.Id));
             }
+
+            return expiredUsers.Distinct();
         }
 
         public void Shove(ulong uid, FFXIVRole role)

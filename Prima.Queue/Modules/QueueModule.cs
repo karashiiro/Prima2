@@ -1220,6 +1220,45 @@ namespace Prima.Queue.Modules
         }
 
 #if DEBUG
+        [Command("expirequeue", RunMode = RunMode.Async)]
+        [Description("Expires all members from a given event queue.")]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public async Task ExpireEventQueue([Remainder] string args = "")
+        {
+            var parameters = args.Split(' ');
+            var eventId = parameters.FirstOrDefault();
+            if (eventId == null)
+            {
+                await ReplyAsync("Please include an event ID with that command.");
+                return;
+            }
+
+            using var typing = Context.Channel.EnterTypingState();
+
+            var queueNames = QueueInfo.LfgChannels
+                .Select(kvp => kvp.Value);
+            var expiredMembers = new List<ulong>();
+            foreach (var queueName in queueNames)
+            {
+                var queue = QueueService.GetOrCreateQueue(queueName);
+                expiredMembers.AddRange(queue.ExpireEvent(eventId));
+            }
+
+            expiredMembers = expiredMembers
+                .Distinct()
+                .ToList();
+
+            const string expiryMessageFormat = "The host of run `{0}` has expired their queue. You have been removed from the queue.";
+            var responseTasks = expiredMembers
+                .Select(userId => Context.Guild.GetUser(userId))
+                .Select(member => member.SendMessageAsync(string.Format(expiryMessageFormat, eventId)))
+                .Cast<Task>()
+                .ToList();
+
+            await Task.WhenAll(responseTasks);
+            await ReplyAsync("Queue expiry notifications have been sent -- your queue has been emptied.");
+        }
+
         [Command("testtimedevent", RunMode = RunMode.Async)]
         public async Task TestTimedEvent()
         {
