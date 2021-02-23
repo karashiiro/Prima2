@@ -216,5 +216,17 @@ namespace Prima.Stable.Modules
         [RateLimit(TimeSeconds = 1, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task BozjaClustersAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/WANkcVe.jpeg");
+        
+        [Command("qgreflect", RunMode = RunMode.Async)]
+        [Description("Shows Queen's Guard reflect positions.")]
+        [RateLimit(TimeSeconds = 1, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public Task QueensGuardReflectAsync() => DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/808869784195563521/809107279697150012/robotstemplate2.png");
+
+        [Command("chess", RunMode = RunMode.Async)]
+        [Description("Shows Queen Chess strat.")]
+        [RateLimit(TimeSeconds = 1, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public Task QueenChessStratAsync() => DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/808869784195563521/809107442793185310/nJ4vHiK.png");
     }
 }
