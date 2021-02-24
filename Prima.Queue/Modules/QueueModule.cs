@@ -1230,6 +1230,11 @@ namespace Prima.Queue.Modules
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task ExpireEventQueue([Remainder] string args = "")
         {
+            const ulong mentor = 579916868035411968;
+            var sender = Context.Guild.GetUser(Context.User.Id);
+            if (sender.Roles.All(r => r.Id != mentor) && !sender.GuildPermissions.KickMembers)
+                return;
+
             var parameters = args.Split(' ');
             var eventId = parameters.FirstOrDefault();
             if (eventId == null)

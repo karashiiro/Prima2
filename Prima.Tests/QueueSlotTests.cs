@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using NUnit.Framework;
 using Prima.Queue;
-using Prima.Tests.Mocks;
 
 namespace Prima.Tests
 {
