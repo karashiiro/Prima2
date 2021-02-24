@@ -452,9 +452,6 @@ namespace Prima.Scheduler.Modules
         {
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
             if (guildConfig == null) return null;
-            if (Context.Channel.Id != guildConfig.CastrumScheduleInputChannel
-                && Context.Channel.Id != guildConfig.DelubrumScheduleInputChannel
-                && Context.Channel.Id != guildConfig.DelubrumNormalScheduleInputChannel) return null;
 
             ulong outputChannelId;
             if (Context.Channel.Id == guildConfig.CastrumScheduleInputChannel)
@@ -486,7 +483,9 @@ namespace Prima.Scheduler.Modules
                     var embed = restMessage.Embeds.FirstOrDefault();
                     if (embed?.Footer == null) continue;
 
-                    if (!(embed.Title.Contains(username) && embed.Title.Contains(time.ToShortTimeString()))) continue;
+                    if (!(embed.Title.Contains(username)
+                          && embed.Title.Contains(time.ToShortTimeString())
+                          && embed.Title.Contains(time.DayOfWeek.ToString()))) continue;
 
                     announcements.Add((restMessage, embed));
                 }
