@@ -86,6 +86,7 @@ namespace Prima.Tests
                 timeouts[role] = queue.TryQueryTimeout(role, 4 * Time.Hour);
             }
             Assert.That(timeouts[FFXIVRole.DPS].Concat(timeouts[FFXIVRole.Healer]).Concat(timeouts[FFXIVRole.Tank]).Count() == 1000);
+            Assert.That(!queue.GetAllSlots().Any());
         }
 
         [Test]

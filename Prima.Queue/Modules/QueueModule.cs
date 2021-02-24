@@ -1129,17 +1129,22 @@ namespace Prima.Queue.Modules
         {
             if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id) && Context.Guild != null)
                 return Task.CompletedTask;
+            if (Context.Guild != null)
+            {
+                var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
+                if (queueName != "lfg-castrum")
+                {
+                    return ReplyAsync($"`~refresh` has been removed, per <#550706420543389696>. Please queue in up to {QueueInfo.DelubrumQueueTimeout} hours before you are able to run.");
+                }
+            }
 
             RefreshQueuesEx();
-            return ReplyAsync($"{Context.User.Mention}, your timeouts in the Bozja queues have been refreshed!");
+            return ReplyAsync($"{Context.User.Mention}, your timeouts in the Castrum queue has been refreshed!");
         }
 
         private void RefreshQueuesEx()
         {
             QueueService.GetOrCreateQueue("lfg-castrum").Refresh(Context.User.Id);
-            QueueService.GetOrCreateQueue("lfg-delubrum-normal").Refresh(Context.User.Id);
-            QueueService.GetOrCreateQueue("lfg-drs-fresh-prog").Refresh(Context.User.Id);
-            QueueService.GetOrCreateQueue("lfg-delubrum-savage").Refresh(Context.User.Id);
             Log.Information("User {User} refreshed queue times.", Context.User.ToString());
         }
 

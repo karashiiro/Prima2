@@ -70,23 +70,13 @@ namespace Prima.Queue.Services
 
                 try
                 {
-#if DEBUG
-                    await AlertTimeouts(Queues["learning-and-frag-farm"]?.Timeout(QueueInfo.BAQueueTimeout, 0 * Time.Second, includeEvents: false), "learning-and-frag-farm", 4);
-                    await AlertTimeouts(Queues["av-and-ozma-prog"]?.Timeout(QueueInfo.BAQueueTimeout, 0 * Time.Second, includeEvents: false), "av-and-ozma-prog", 4);
-                    await AlertTimeouts(Queues["clears-and-farming"]?.Timeout(QueueInfo.BAQueueTimeout, 0 * Time.Second, includeEvents: false), "clears-and-farming", 4);
-                    await AlertTimeouts(Queues["lfg-castrum"]?.Timeout(QueueInfo.CastrumQueueTimeout, 0 * Time.Second, includeEvents: false), "lfg-castrum", 4);
-                    await AlertTimeouts(Queues["lfg-delubrum-savage"]?.Timeout(QueueInfo.DelubrumQueueTimeout, 0 * Time.Second, includeEvents: false), "lfg-delubrum-savage", 4);
-                    await AlertTimeouts(Queues["lfg-drs-fresh-prog"]?.Timeout(QueueInfo.DelubrumQueueTimeout, 0 * Time.Second, includeEvents: false), "lfg-drs-fresh-prog", 4);
-                    await AlertTimeouts(Queues["lfg-delubrum-normal"]?.Timeout(QueueInfo.DelubrumQueueTimeout, 0 * Time.Second, includeEvents: false), "lfg-delubrum-normal", 4);
-#else
                     await AlertTimeouts(Queues["learning-and-frag-farm"]?.Timeout(QueueInfo.BAQueueTimeout, 0 * Time.Second), "learning-and-frag-farm", 4);
                     await AlertTimeouts(Queues["av-and-ozma-prog"]?.Timeout(QueueInfo.BAQueueTimeout, 0 * Time.Second), "av-and-ozma-prog", 4);
                     await AlertTimeouts(Queues["clears-and-farming"]?.Timeout(QueueInfo.BAQueueTimeout, 0 * Time.Second), "clears-and-farming", 4);
-                    await AlertTimeouts(Queues["lfg-castrum"]?.Timeout(QueueInfo.CastrumQueueTimeout, 15 * Time.Minute), "lfg-castrum", 4);
-                    await AlertTimeouts(Queues["lfg-delubrum-savage"]?.Timeout(QueueInfo.DelubrumQueueTimeout, 15 * Time.Minute), "lfg-delubrum-savage", 4);
-                    await AlertTimeouts(Queues["lfg-drs-fresh-prog"]?.Timeout(QueueInfo.DelubrumQueueTimeout, 15 * Time.Minute), "lfg-drs-fresh-prog", 4);
-                    await AlertTimeouts(Queues["lfg-delubrum-normal"]?.Timeout(QueueInfo.DelubrumQueueTimeout, 15 * Time.Minute), "lfg-delubrum-normal", 4);
-#endif
+                    await AlertTimeouts(Queues["lfg-castrum"]?.Timeout(QueueInfo.CastrumQueueTimeout, 0 * Time.Second), "lfg-castrum", 4);
+                    await AlertTimeouts(Queues["lfg-delubrum-savage"]?.Timeout(QueueInfo.DelubrumQueueTimeout, 0 * Time.Second), "lfg-delubrum-savage", 4);
+                    await AlertTimeouts(Queues["lfg-drs-fresh-prog"]?.Timeout(QueueInfo.DelubrumQueueTimeout, 0 * Time.Second), "lfg-drs-fresh-prog", 4);
+                    await AlertTimeouts(Queues["lfg-delubrum-normal"]?.Timeout(QueueInfo.DelubrumQueueTimeout, 0 * Time.Second), "lfg-delubrum-normal", 4);
                 }
                 catch (Exception e)
                 {
