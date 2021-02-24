@@ -1134,7 +1134,7 @@ namespace Prima.Queue.Modules
                 var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
                 if (queueName != "lfg-castrum")
                 {
-                    return ReplyAsync($"`~refresh` has been removed, per <#550706420543389696>. Please queue in up to {QueueInfo.DelubrumQueueTimeout} hours before you want to run.");
+                    return ReplyAsync($"`~refresh` has been removed, per <#550706420543389696>. Please queue in up to {Math.Truncate(QueueInfo.DelubrumQueueTimeout / Time.Hour)} hours before you want to run.");
                 }
             }
 
