@@ -231,11 +231,11 @@ namespace Prima.Queue
             queue.RemoveAll(s => s == null, overload: true);
         }
 
-        public (IEnumerable<ulong>, IEnumerable<ulong>) Timeout(double secondsBeforeNow, double gracePeriod)
+        public (IEnumerable<ulong>, IEnumerable<ulong>) Timeout(double secondsBeforeNow, double gracePeriod, bool includeEvents = false)
         {
-            var dpsTimedOut = QueryTimeout(FFXIVRole.DPS, secondsBeforeNow);
-            var healersTimedOut = QueryTimeout(FFXIVRole.Healer, secondsBeforeNow);
-            var tanksTimedOut = QueryTimeout(FFXIVRole.Tank, secondsBeforeNow);
+            var dpsTimedOut = QueryTimeout(FFXIVRole.DPS, secondsBeforeNow, includeEvents);
+            var healersTimedOut = QueryTimeout(FFXIVRole.Healer, secondsBeforeNow, includeEvents);
+            var tanksTimedOut = QueryTimeout(FFXIVRole.Tank, secondsBeforeNow, includeEvents);
 
             // ReSharper disable once CompareOfFloatsByEqualityOperator
             if (gracePeriod == 0)
