@@ -285,7 +285,7 @@ namespace Prima.Scheduler.Modules
             return l.StartsWith("Message Link: https://discordapp.com/channels/");
         }
 
-        [Command("reactions")]
+        [Command("reactions", RunMode = RunMode.Async)]
         [Description("Get the number of reactions for an announcement.")]
         public async Task ReactionCount([Remainder] string args)
         {
