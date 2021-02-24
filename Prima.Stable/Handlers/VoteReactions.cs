@@ -16,6 +16,8 @@ namespace Prima.Stable.Handlers
             var userId = reaction.UserId;
             var reactionName = reaction.Emote.Name;
 
+            if (message.Author.Id == userId) return;
+
             var voteHost = await db.VoteHosts
                 .FirstOrDefaultAsync(vh => vh.MessageId == messageId);
             if (voteHost == null) return;
