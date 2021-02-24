@@ -1270,7 +1270,8 @@ namespace Prima.Queue.Modules
         }
 
         [Command("confirm", RunMode = RunMode.Async)]
-        public async Task ConfirmEvent()
+        [RequireContext(ContextType.DM)]
+        public Task ConfirmEvent()
         {
             const string eventId = "something";
 
@@ -1286,13 +1287,21 @@ namespace Prima.Queue.Modules
                     var @event = events.FirstOrDefault(e => e.EventId == eventId);
                     if (@event == null) continue;
                     if (@event.Confirmed)
-                        return;
+                    {
+                        return ReplyAsync("You are already confirmed for the event.");
+                    }
                     @event.Confirmed = true;
+                    queue = nextQueue;
                 }
             }
-            // confirm
-            await ReplyAsync("Queue position confirmed.");
+
+            if (queue == null)
+            {
+                return ReplyAsync("You are not in queue for any events starting in the next 2 hours.");
+            }
+
             Log.Information("{User} has confirmed their queue position.", Context.User);
+            return ReplyAsync("Queue position confirmed.");
         }
 #endif
 

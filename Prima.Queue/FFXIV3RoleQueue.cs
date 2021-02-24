@@ -122,7 +122,7 @@ namespace Prima.Queue
         {
             return GetQueue(role)
                 .FirstOrDefault(s => s.Id == userId)
-                ?.EventIds;
+                ?.EventIds ?? new List<EventSlotState>();
         }
 #endif
 
