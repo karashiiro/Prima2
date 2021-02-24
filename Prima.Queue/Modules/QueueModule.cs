@@ -1139,7 +1139,7 @@ namespace Prima.Queue.Modules
             }
 
             RefreshQueuesEx();
-            return ReplyAsync($"{Context.User.Mention}, your timeouts in the Castrum queue has been refreshed!");
+            return ReplyAsync($"{Context.User.Mention}, your timeouts in the Castrum queue have been refreshed!");
         }
 
         private void RefreshQueuesEx()
