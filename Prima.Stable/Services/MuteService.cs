@@ -15,7 +15,7 @@ namespace Prima.Stable.Services
 
         private readonly IList<ulong> _usersToUnmute;
 
-        public MuteService(DbService db)
+        public MuteService(IDbService db)
         {
             _db = db;
             _usersToUnmute = new List<ulong>();

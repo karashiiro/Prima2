@@ -16,12 +16,22 @@ namespace Prima.Services
         IEnumerable<ChannelDescription> ChannelDescriptions { get; }
         IAsyncEnumerable<EventReaction> EventReactions { get; }
         IAsyncEnumerable<TimedRole> TimedRoles { get; }
+        IAsyncEnumerable<Vote> Votes { get; }
+        IAsyncEnumerable<VoteHost> VoteHosts { get; }
 
         Task SetGlobalConfigurationProperty(string key, string value);
 
         Task SetGuildConfigurationProperty<T>(ulong guildId, string key, T value);
 
         Task AddGuild(DiscordGuildConfiguration config);
+
+        Task<bool> AddVoteHost(ulong messageId, ulong ownerId);
+
+        Task<bool> RemoveVoteHost(ulong messageId);
+
+        Task<bool> AddVote(ulong messageId, ulong userId, string reactionName);
+
+        Task<bool> RemoveVote(ulong messageId, ulong userId);
 
         Task<bool> AddEventReaction(ulong eventId, ulong userId);
 

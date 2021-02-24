@@ -25,7 +25,7 @@ namespace Prima.Stable.Services
 
         public string LastCaughtRegex { get; private set; }
 
-        public ModerationEventService(DbService db, DiscordSocketClient client, WebClient wc)
+        public ModerationEventService(IDbService db, DiscordSocketClient client, WebClient wc)
         {
             _db = db;
             _client = client;

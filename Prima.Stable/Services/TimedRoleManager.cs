@@ -15,7 +15,7 @@ namespace Prima.Stable.Services
 
         private readonly CancellationTokenSource _tokenSource;
         
-        public TimedRoleManager(DiscordSocketClient client, DbService db)
+        public TimedRoleManager(DiscordSocketClient client, IDbService db)
         {
             _db = db;
             _client = client;

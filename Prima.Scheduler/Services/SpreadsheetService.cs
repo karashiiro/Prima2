@@ -37,7 +37,7 @@ namespace Prima.Scheduler.Services
         private readonly DiscordSocketClient _client;
         private readonly SheetsService _service;
 
-        public SpreadsheetService(DbService db, DiscordSocketClient client)
+        public SpreadsheetService(IDbService db, DiscordSocketClient client)
         {
             _db = db;
             _client = client;

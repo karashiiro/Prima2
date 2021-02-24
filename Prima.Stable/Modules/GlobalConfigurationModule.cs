@@ -4,7 +4,7 @@ using ソケットなモジュールベース = Discord.Commands.ModuleBase<Disc
 using 名前Attribute = Discord.Commands.NameAttribute;
 using 一遍アドミンAttribute = Discord.Commands.RequireOwnerAttribute;
 using モードエグゼキュート = Discord.Commands.RunMode;
-using データベース = Prima.Services.DbService;
+using データベース = Prima.Services.IDbService;
 using ストリング = System.String;
 using タスク = System.Threading.Tasks.Task;
 

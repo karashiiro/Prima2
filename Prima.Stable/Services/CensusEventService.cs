@@ -19,7 +19,7 @@ namespace Prima.Stable.Services
 
         private readonly List<ulong> _cemUnverifiedMembers;
 
-        public CensusEventService(DiscordSocketClient client, XIVAPIService XIVAPI, DbService db)
+        public CensusEventService(DiscordSocketClient client, XIVAPIService XIVAPI, IDbService db)
         {
             _client = client;
             _db = db;

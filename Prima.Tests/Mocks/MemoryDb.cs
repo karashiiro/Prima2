@@ -19,6 +19,8 @@ namespace Prima.Tests.Mocks
         public IEnumerable<ChannelDescription> ChannelDescriptions => _channelDescriptions;
         public IAsyncEnumerable<EventReaction> EventReactions => _eventReactions.ToAsyncEnumerable();
         public IAsyncEnumerable<TimedRole> TimedRoles => _timedRoles.ToAsyncEnumerable();
+        public IAsyncEnumerable<Vote> Votes => throw new NotImplementedException();
+        public IAsyncEnumerable<VoteHost> VoteHosts { get; }
 
         private readonly IList<DiscordGuildConfiguration> _guilds;
         private readonly IList<DiscordXIVUser> _users;
@@ -74,6 +76,16 @@ namespace Prima.Tests.Mocks
                 return Task.CompletedTask;
             _guilds.Add(config);
             return Task.CompletedTask;
+        }
+
+        public Task<bool> AddVoteHost(ulong messageId, ulong ownerId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> RemoveVoteHost(ulong messageId)
+        {
+            throw new NotImplementedException();
         }
 
         public Task<bool> AddEventReaction(ulong eventId, ulong userId)
@@ -208,6 +220,16 @@ namespace Prima.Tests.Mocks
         public Task DeleteChannelDescription(ulong channelId)
         {
             return Task.CompletedTask;
+        }
+
+        public Task<bool> AddVote(ulong messageId, ulong userId, string reactionName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> RemoveVote(ulong messageId, ulong userId)
+        {
+            throw new NotImplementedException();
         }
     }
 }

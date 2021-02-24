@@ -19,7 +19,7 @@ namespace Prima.Scheduler.Services
 
         private readonly CancellationTokenSource _tokenSource;
 
-        public AnnounceMonitor(DbService db, DiscordSocketClient client)
+        public AnnounceMonitor(IDbService db, DiscordSocketClient client)
         {
             _db = db;
             _client = client;

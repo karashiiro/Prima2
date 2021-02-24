@@ -29,7 +29,7 @@ namespace Prima.Scheduler.Services
         private readonly IDbService _db;
         private readonly DiscordSocketClient _client;
 
-        public RunNotiferService(DbService db, DiscordSocketClient client)
+        public RunNotiferService(IDbService db, DiscordSocketClient client)
         {
             _tokenSource = new CancellationTokenSource();
             _db = db;

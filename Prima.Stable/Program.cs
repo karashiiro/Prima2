@@ -31,8 +31,13 @@ namespace Prima.Stable
 
             roleRemover.Initialize();
 
-            client.ReactionAdded += (message, channel, reaction) =>  ReactionReceived.HandlerAdd(db, message, channel, reaction);
-            client.ReactionRemoved += (message, channel, reaction) => ReactionReceived.HandlerRemove(db, message, channel, reaction);
+            client.ReactionAdded += (message, channel, reaction)
+                => ReactionReceived.HandlerAdd(db, message, channel, reaction);
+            client.ReactionRemoved += (message, channel, reaction)
+                => ReactionReceived.HandlerRemove(db, message, channel, reaction);
+
+            client.ReactionAdded += (message, channel, reaction)
+                => VoteReactions.HandlerAdd(client, db, message, reaction);
 
             client.MessageDeleted += moderationEvents.MessageDeleted;
             client.MessageReceived += moderationEvents.MessageRecieved;

@@ -31,6 +31,8 @@ namespace Prima.Services
         public IEnumerable<ChannelDescription> ChannelDescriptions => _channelDescriptions.AsQueryable().ToEnumerable();
         public IAsyncEnumerable<EventReaction> EventReactions => _eventReactions.AsQueryable().ToAsyncEnumerable();
         public IAsyncEnumerable<TimedRole> TimedRoles => _timedRoles.AsQueryable().ToAsyncEnumerable();
+        public IAsyncEnumerable<Vote> Votes => _votes.AsQueryable().ToAsyncEnumerable();
+        public IAsyncEnumerable<VoteHost> VoteHosts => _voteHosts.AsQueryable().ToAsyncEnumerable();
 
         private readonly IMongoCollection<GlobalConfiguration> _config;
         private readonly IMongoCollection<DiscordGuildConfiguration> _guildConfig;
@@ -40,6 +42,8 @@ namespace Prima.Services
         private readonly IMongoCollection<ChannelDescription> _channelDescriptions;
         private readonly IMongoCollection<EventReaction> _eventReactions;
         private readonly IMongoCollection<TimedRole> _timedRoles;
+        private readonly IMongoCollection<Vote> _votes;
+        private readonly IMongoCollection<VoteHost> _voteHosts;
 
         public DbService()
         {
@@ -69,6 +73,12 @@ namespace Prima.Services
 
             _timedRoles = database.GetCollection<TimedRole>("TimedRoles");
             Log.Information("Timed role collection status: {DbStatus} documents found.", _timedRoles.EstimatedDocumentCount());
+
+            _votes = database.GetCollection<Vote>("Votes");
+            Log.Information("Vote collection status: {DbStatus} documents found.", _votes.EstimatedDocumentCount());
+
+            _voteHosts = database.GetCollection<VoteHost>("VoteHosts");
+            Log.Information("Vote host collection status: {DbStatus} documents found.", _voteHosts.EstimatedDocumentCount());
         }
 
         public async Task SetGlobalConfigurationProperty(string key, string value)
@@ -109,12 +119,46 @@ namespace Prima.Services
             }
         }
 
+        public async Task<bool> AddVoteHost(ulong messageId, ulong ownerId)
+        {
+            var existingSet = await _voteHosts.FindAsync(v => v.MessageId == messageId);
+            if (await existingSet.AnyAsync()) return false;
+            var voteHost = new VoteHost { MessageId = messageId, OwnerId = ownerId };
+            await _voteHosts.InsertOneAsync(voteHost);
+            return true;
+        }
+
+        public async Task<bool> RemoveVoteHost(ulong messageId)
+        {
+            var existingSet = await _voteHosts.FindAsync(v => v.MessageId == messageId);
+            if (!await existingSet.AnyAsync()) return false;
+            await _voteHosts.DeleteManyAsync(v => v.MessageId == messageId);
+            return true;
+        }
+
         private async Task AddGuildIfAbsent(ulong guildId)
         {
             if (!await (await _guildConfig.FindAsync(guild => guild.Id == guildId)).AnyAsync().ConfigureAwait(false))
             {
                 await _guildConfig.InsertOneAsync(new DiscordGuildConfiguration(guildId));
             }
+        }
+
+        public async Task<bool> AddVote(ulong messageId, ulong userId, string reactionName)
+        {
+            var existingSet = await _votes.FindAsync(v => v.MessageId == messageId && v.ReactionUserId == userId);
+            if (await existingSet.AnyAsync()) return false;
+            var vote = new Vote { MessageId = messageId, ReactionUserId = userId, ReactionName = reactionName };
+            await _votes.InsertOneAsync(vote);
+            return true;
+        }
+
+        public async Task<bool> RemoveVote(ulong messageId, ulong userId)
+        {
+            var existingSet = await _votes.FindAsync(v => v.MessageId == messageId && v.ReactionUserId == userId);
+            if (!await existingSet.AnyAsync()) return false;
+            await _votes.DeleteManyAsync(v => v.MessageId == messageId && v.ReactionUserId == userId);
+            return true;
         }
 
         public async Task<bool> AddEventReaction(ulong eventId, ulong userId)
