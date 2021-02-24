@@ -33,7 +33,7 @@ namespace Prima.Queue
         public IEnumerable<ulong> RoleIds
         {
             get => roleIds ?? new List<ulong>();
-            private set => roleIds = value;
+            set => roleIds = value;
         }
 
         [JsonProperty("Item6")]
@@ -43,7 +43,7 @@ namespace Prima.Queue
         public IEnumerable<string> EventIds
         {
             get => eventIds ?? new List<string> { eventId };
-            private set => eventIds = value;
+            set => eventIds = value;
         }
 
         public QueueSlot(ulong id, string eventId = "", IEnumerable<ulong> roleIds = null, IEnumerable<string> eventIds = null)
