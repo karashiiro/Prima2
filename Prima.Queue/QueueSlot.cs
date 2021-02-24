@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Prima.Queue
 {
@@ -37,12 +38,21 @@ namespace Prima.Queue
         }
 
         [JsonProperty("Item6")]
-        private IEnumerable<string> eventIds;
+        private IEnumerable<EventSlotState> eventIds;
 
         [JsonIgnore]
-        public IEnumerable<string> EventIds
+        public IEnumerable<EventSlotState> EventIds
         {
-            get => eventIds ?? new List<string> { eventId };
+            get
+            {
+                if (eventIds != null)
+                    return eventIds;
+                eventIds = new List<EventSlotState>
+                {
+                    new EventSlotState(eventId),
+                };
+                return eventIds;
+            }
             set => eventIds = value;
         }
 
@@ -53,7 +63,7 @@ namespace Prima.Queue
             ExpirationNotified = false;
             EventId = eventId;
             RoleIds = roleIds ?? new ulong[] { };
-            EventIds = eventIds ?? new[] { eventId };
+            EventIds = eventIds?.Select(e => new EventSlotState(e)) ?? new[] { new EventSlotState(eventId) };
         }
     }
 }

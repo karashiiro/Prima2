@@ -45,7 +45,7 @@ namespace Prima.Scheduler.Services
             {
                 var guild = _client.GetGuild(guildConfig.Id);
 
-                var drsCheck = CheckRuns(guild, guildConfig.DelubrumScheduleOutputChannel, QueueInfo.DelubrumQueueTimeout, async (host, embedMessage, embed) =>
+                var drsCheck = CheckRuns(guild, guildConfig.DelubrumScheduleOutputChannel, 30, async (host, embedMessage, embed) =>
                 {
                     var success = await AssignHostRole(guild, host);
                     if (!success) return;
@@ -65,34 +65,67 @@ namespace Prima.Scheduler.Services
                         "▫️ The Queen Progression");
                 }, token);
 
-                var drnCheck = CheckRuns(guild, guildConfig.DelubrumNormalScheduleOutputChannel, QueueInfo.DelubrumQueueTimeout, async (host, embedMessage, embed) =>
-                {
-                    var success = await AssignHostRole(guild, host);
-                    if (!success) return;
-
-                    await NotifyLead(host);
-                    await NotifyMembers(host, embedMessage, embed, token);
-                }, token);
-
-                var castrumCheck = CheckRuns(guild, guildConfig.CastrumScheduleOutputChannel, -1, async (host, embedMessage, embed) =>
-                {
-                    var success = await AssignHostRole(guild, host);
-                    if (!success) return;
-
-                    await NotifyLead(host);
-                    await NotifyMembers(host, embedMessage, embed, token);
-                }, token);
-
-                await Task.WhenAll(drsCheck, drnCheck, castrumCheck);
 #if DEBUG
+                var drsCheck2 = CheckRuns(guild, guildConfig.DelubrumScheduleOutputChannel, (int)(QueueInfo.DelubrumQueueTimeout / Time.Minute), async (host, embedMessage, embed) =>
+                {
+                    if (!embed.Timestamp.HasValue) return;
+
+                    var timestamp = embed.Timestamp.Value;
+                    if (timestamp.AddSeconds(QueueInfo.DelubrumQueueTimeout) <= DateTimeOffset.Now && embed.Author.HasValue)
+                    {
+                        var eventId = ulong.Parse(embed.Footer?.Text ?? "0");
+                        var toNotify = _db.EventReactions
+                            .Where(er => er.EventId == eventId)
+                            .Where(er => !er.QueueOpenNotified);
+                        await foreach (var er in toNotify.WithCancellation(token))
+                        {
+                            var member = guild.GetUser(er.UserId);
+                            _ = member.SendMessageAsync($"The event you signed up for notifications on `(ID: {eventId})` is now open for queuing.\n" +
+                                                        "If the run host has declared that they are pulling from the queue, you can join the queue by " +
+                                                        "clicking on the appropriate role reaction on the event post.");
+                            er.QueueOpenNotified = true;
+                            await _db.UpdateEventReaction(er);
+                        }
+                    }
+                }, token);
+
+                var eventCheckDrs = CheckRuns(guild, guildConfig.DelubrumScheduleOutputChannel, (int)(2 * Time.Hour / Time.Minute), async (host, embedMessage, embed) =>
+                {
+                    if (!embed.Footer.HasValue) return;
+                    var eventId = embed.Footer?.Text;
+                    Log.Information("{EventId}", eventId);
+                }, token);
+#endif
+
+                var drnCheck = CheckRuns(guild, guildConfig.DelubrumNormalScheduleOutputChannel, 30, async (host, embedMessage, embed) =>
+                {
+                    var success = await AssignHostRole(guild, host);
+                    if (!success) return;
+
+                    await NotifyLead(host);
+                    await NotifyMembers(host, embedMessage, embed, token);
+                }, token);
+
+                var castrumCheck = CheckRuns(guild, guildConfig.CastrumScheduleOutputChannel, 30, async (host, embedMessage, embed) =>
+                {
+                    var success = await AssignHostRole(guild, host);
+                    if (!success) return;
+
+                    await NotifyLead(host);
+                    await NotifyMembers(host, embedMessage, embed, token);
+                }, token);
+
+#if DEBUG
+                await Task.WhenAll(drsCheck, drsCheck2, eventCheckDrs, drnCheck, castrumCheck);
                 await Task.Delay(1000, token);
 #else
+                await Task.WhenAll(drsCheck, drnCheck, castrumCheck);
                 await Task.Delay(new TimeSpan(0, 5, 0), token);
 #endif
             }
         }
 
-        private async Task CheckRuns(SocketGuild guild, ulong channelId, double queueTimeSeconds, Func<SocketGuildUser, IMessage, IEmbed, Task> onMatch, CancellationToken token)
+        private static async Task CheckRuns(SocketGuild guild, ulong channelId, int minutesBefore, Func<SocketGuildUser, IMessage, IEmbed, Task> onMatch, CancellationToken token)
         {
             var channel = guild?.GetTextChannel(channelId);
             if (channel == null)
@@ -119,27 +152,8 @@ namespace Prima.Scheduler.Services
                         continue;
                     }
 
-#if DEBUG
-                    if (queueTimeSeconds > 0 && timestamp.AddSeconds(queueTimeSeconds) <= DateTimeOffset.Now && embed.Author.HasValue)
-                    {
-                        var eventId = ulong.Parse(embed.Footer?.Text ?? "0");
-                        var toNotify = _db.EventReactions
-                            .Where(er => er.EventId == eventId)
-                            .Where(er => !er.QueueOpenNotified);
-                        await foreach (var er in toNotify.WithCancellation(token))
-                        {
-                            var member = guild.GetUser(er.UserId);
-                            _ = member.SendMessageAsync($"The event you signed up for notifications on `(ID: {eventId})` is now open for queuing.\n" +
-                                                        "If the run host has declared that they are pulling from the queue, you can join the queue by " +
-                                                        "clicking on the appropriate role reaction on the event post.");
-                            er.QueueOpenNotified = true;
-                            await _db.UpdateEventReaction(er);
-                        }
-                    }
-#endif
-
                     // ReSharper disable once InvertIf
-                    if (timestamp.AddMinutes(-30) <= DateTimeOffset.Now && embed.Author.HasValue)
+                    if (timestamp.AddMinutes(-minutesBefore) <= DateTimeOffset.Now && embed.Author.HasValue)
                     {
                         Log.Information("Run matched!");
 

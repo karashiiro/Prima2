@@ -15,10 +15,10 @@ namespace Prima.Tests
                 EventIds = null,
             };
             var eventIds = oldSlot.EventIds.ToList();
-            Assert.That(eventIds[0] == "something");
+            Assert.That(eventIds[0].EventId == "something");
             oldSlot.EventIds = oldSlot.EventIds.Append("dangerous");
             eventIds = oldSlot.EventIds.ToList();
-            Assert.That(eventIds[0] == "something" && eventIds[1] == "dangerous");
+            Assert.That(eventIds[0].EventId == "something" && eventIds[1].EventId == "dangerous");
         }
     }
 }

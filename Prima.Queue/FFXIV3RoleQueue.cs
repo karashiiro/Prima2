@@ -12,7 +12,7 @@ namespace Prima.Queue
         [JsonProperty] protected readonly IList<QueueSlot> _healerQueue;
         [JsonProperty] protected readonly IList<QueueSlot> _tankQueue;
 
-        private static IEnumerable<FFXIVRole> Roles => new[] {FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank};
+        public static IEnumerable<FFXIVRole> Roles => new[] {FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank};
 
         public FFXIV3RoleQueue()
         {
@@ -116,6 +116,15 @@ namespace Prima.Queue
                 .FirstOrDefault(s => s.Id == userId)
                 ?.EventId;
         }
+
+#if DEBUG
+        public IEnumerable<EventSlotState> GetEventStates(ulong userId, FFXIVRole role)
+        {
+            return GetQueue(role)
+                .FirstOrDefault(s => s.Id == userId)
+                ?.EventIds;
+        }
+#endif
 
         public void SetEvent(ulong userId, FFXIVRole role, string eventId)
         {
