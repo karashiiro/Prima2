@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -210,25 +211,25 @@ namespace Prima.Stable.Modules
             await ReplyAsync("Roles removed!");
         }
 
-#if DEBUG
         [Command("readlog")]
-        public async Task ReadLog(string logId)
+        [RequireOwner]
+        public async Task ReadLog(string logLink)
         {
+            using var typing = Context.Channel.EnterTypingState();
+
+            var logId = FFLogs.LogLinkToIdRegex.Match(logLink).Value;
             var req = FFLogs.BuildLogRequest(logId);
             var res = (await FFLogsAPI.MakeGraphQLRequest<LogInfo>(req)).Content.Data.ReportInfo;
 
             var encounters = res.Fights
                 .Where(f => f.Kill != null && f.FriendlyPlayers != null);
-
             var originalUsers = res.MasterData.Actors
                 .Where(a => a.Server != null)
                 .ToList();
-            
             var users = originalUsers.ToDictionary(a => a.Id, a => a)
                 .Select(kvp => new KeyValuePair<int, DiscordXIVUser>(kvp.Key, Db.Users.FirstOrDefault(u => u.Name == kvp.Value.Name && u.World == kvp.Value.Server)))
                 .Where(kvp => kvp.Value != null)
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-
             var missedUsers = originalUsers
                 .Where(a => !users.ContainsKey(a.Id))
                 .ToList();
@@ -267,9 +268,8 @@ namespace Prima.Stable.Modules
 
             await ReplyAsync("Roles added!");
             if (missedUsers.Any())
-                await ReplyAsync($"Missed users: {missedUsers.Aggregate("", (agg, next) => $"{agg}({next.Server}) {next.Name} ")}");
+                await ReplyAsync($"Missed users: ```{missedUsers.Aggregate("", (agg, next) => agg + $"({next.Server}) {next.Name}\n") + "```"}");
         }
-#endif
 
         [Command("star", RunMode = RunMode.Async)]
         [Description("Shows the Bozjan Southern Front star mob guide.")]
