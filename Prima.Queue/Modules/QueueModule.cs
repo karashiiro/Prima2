@@ -507,7 +507,7 @@ namespace Prima.Queue.Modules
 #endif
 
 #if DEBUG
-                        var (_, embed) = await GetEvent(eventId);
+                        /*var (_, embed) = await GetEvent(eventId);
                         if (embed.Timestamp == null)
                         {
                             Log.Error("Event {EventId} has no timestamp; aborting.", eventId);
@@ -519,7 +519,7 @@ namespace Prima.Queue.Modules
                         {
                             await ReplyAsync($"{Context.User.Mention}, the queue for this event has not yet opened. Please wait for the queue to open.");
                             return;
-                        }
+                        }*/
 #endif
 
                         IMessage postMessage = null;
@@ -1271,11 +1271,13 @@ namespace Prima.Queue.Modules
 
         [Command("confirm", RunMode = RunMode.Async)]
         [RequireContext(ContextType.DM)]
-        public Task ConfirmEvent()
+        public Task ConfirmEvent(string eventId, int inHours)
         {
-            const string eventId = "something";
+            if (inHours > 2)
+            {
+                return ReplyAsync("You are not in queue for any events starting in the next 2 hours.");
+            }
 
-            FFXIV3RoleQueue queue = null;
             var queueNames = QueueInfo.LfgChannels
                 .Select(kvp => kvp.Value);
             foreach (var queueName in queueNames)
@@ -1291,13 +1293,7 @@ namespace Prima.Queue.Modules
                         return ReplyAsync("You are already confirmed for the event.");
                     }
                     @event.Confirmed = true;
-                    queue = nextQueue;
                 }
-            }
-
-            if (queue == null)
-            {
-                return ReplyAsync("You are not in queue for any events starting in the next 2 hours.");
             }
 
             Log.Information("{User} has confirmed their queue position.", Context.User);

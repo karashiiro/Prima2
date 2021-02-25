@@ -56,14 +56,14 @@ namespace Prima.Queue
             set => eventIds = value;
         }
 
-        public QueueSlot(ulong id, string eventId = "", IEnumerable<ulong> roleIds = null, IEnumerable<string> eventIds = null)
+        public QueueSlot(ulong id, string eventId = "", IEnumerable<ulong> roleIds = null, IEnumerable<EventSlotState> eventIds = null)
         {
             Id = id;
             QueueTime = DateTime.UtcNow;
             ExpirationNotified = false;
             EventId = eventId;
             RoleIds = roleIds ?? new ulong[] { };
-            EventIds = eventIds?.Select(e => new EventSlotState(e)) ?? new[] { new EventSlotState(eventId) };
+            EventIds = eventIds ?? new[] { new EventSlotState(eventId) };
         }
     }
 }
