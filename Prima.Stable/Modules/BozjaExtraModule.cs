@@ -7,8 +7,12 @@ using Discord;
 using Discord.Commands;
 using Discord.Net;
 using Prima.Attributes;
+using Prima.Models;
 using Prima.Resources;
 using Prima.Services;
+using Prima.Stable.Models.FFLogs;
+using Prima.Stable.Resources;
+using Prima.Stable.Services;
 using Serilog;
 using Color = Discord.Color;
 
@@ -20,6 +24,7 @@ namespace Prima.Stable.Modules
         public IDbService Db { get; set; }
         public HttpClient Http { get; set; }
         public IServiceProvider Services { get; set; }
+        public FFLogsAPI FFLogsAPI { get; set; }
 
         [Command("bozhelp", RunMode = RunMode.Async)]
         [Description("Shows help information for the extra Bozja commands.")]
@@ -204,6 +209,67 @@ namespace Prima.Stable.Modules
 
             await ReplyAsync("Roles removed!");
         }
+
+#if DEBUG
+        [Command("readlog")]
+        public async Task ReadLog(string logId)
+        {
+            var req = FFLogs.BuildLogRequest(logId);
+            var res = (await FFLogsAPI.MakeGraphQLRequest<LogInfo>(req)).Content.Data.ReportInfo;
+
+            var encounters = res.Fights
+                .Where(f => f.Kill != null && f.FriendlyPlayers != null);
+
+            var originalUsers = res.MasterData.Actors
+                .Where(a => a.Server != null)
+                .ToList();
+            
+            var users = originalUsers.ToDictionary(a => a.Id, a => a)
+                .Select(kvp => new KeyValuePair<int, DiscordXIVUser>(kvp.Key, Db.Users.FirstOrDefault(u => u.Name == kvp.Value.Name && u.World == kvp.Value.Server)))
+                .Where(kvp => kvp.Value != null)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+            var missedUsers = originalUsers
+                .Where(a => !users.ContainsKey(a.Id))
+                .ToList();
+
+            foreach (var encounter in encounters)
+            {
+                var roleName = encounter.Name;
+                if (roleName == "The Queen's Guard")
+                    roleName = "Queen's Guard";
+                roleName += " Progression";
+                var role = Context.Guild.Roles.FirstOrDefault(r => r.Name == roleName);
+                if (role == null)
+                {
+                    Log.Error("Role {RoleName} does not exist!", roleName);
+                    return;
+                }
+
+                var contingentRoles = DelubrumProgressionRoles.GetContingentRoles(role.Id)
+                    .Select(r => Context.Guild.GetRole(r))
+                    .ToList();
+
+                foreach (var id in encounter.FriendlyPlayers)
+                {
+                    var user = Context.Guild.GetUser(users[id].DiscordId);
+                    if (user == null) continue;
+
+                    foreach (var progRole in contingentRoles)
+                    {
+                        if (!user.HasRole(progRole))
+                        {
+                            await user.AddRoleAsync(progRole);
+                        }
+                    }
+                }
+            }
+
+            await ReplyAsync("Roles added!");
+            if (missedUsers.Any())
+                await ReplyAsync($"Missed users: {missedUsers.Aggregate("", (agg, next) => $"{agg}({next.Server}) {next.Name} ")}");
+        }
+#endif
 
         [Command("star", RunMode = RunMode.Async)]
         [Description("Shows the Bozjan Southern Front star mob guide.")]

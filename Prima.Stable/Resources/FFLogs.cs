@@ -2,29 +2,26 @@
 {
     public static class FFLogs
     {
-        public static string BuildMembersRequest(string logId, int fightId)
+        public static string BuildLogRequest(string logId)
         {
-            return $@"
-            {{
-                reportData: {{
-                    report(code: ""{logId}"") {{
-                        fights(fightIDs: [{fightId}]) {{
-                            encounterID,
-                            kill,
-                            endTime,
-                            startTime,
-                            name,
-                            friendlyPlayers
-                        }},
-                        masterData {{
-                            actors {{
-                                name,
-                                server
-                            }}
-                        }}
-                    }}
+            return $@"{{
+    reportData {{
+        report(code: ""{logId}"") {{
+            fights {{
+                kill
+                name
+                friendlyPlayers
+            }}
+            masterData {{
+                actors {{
+                    id
+                    name
+                    server
                 }}
-            }}";
+            }}
+        }}
+    }}
+}}";
         }
     }
 }
