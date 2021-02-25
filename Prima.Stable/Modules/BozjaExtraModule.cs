@@ -260,7 +260,7 @@ namespace Prima.Stable.Modules
                     {
                         if (!user.HasRole(progRole))
                         {
-                            await user.AddRoleAsync(progRole);
+                            //await user.AddRoleAsync(progRole);
                         }
                     }
                 }
