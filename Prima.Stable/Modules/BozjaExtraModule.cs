@@ -91,11 +91,19 @@ namespace Prima.Stable.Modules
         }
 
         [Command("addprogrole", RunMode = RunMode.Async)]
-        [Description("(Rolers only) Adds a progression role to a user.")]
+        [Alias("addprogroles")]
+        [Description("Adds progression roles to server members from a log. Rolers can also manually add roles using this command.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task AddDelubrumProgRoleAsync([Remainder]string args)
         {
             if (Context.Guild == null) return;
+
+            var isFFLogs = FFLogs.IsLogLink.Match(args).Success;
+            if (isFFLogs)
+            {
+                await ReadLog(args);
+                return;
+            }
 
             var executor = Context.Guild.GetUser(Context.User.Id);
             if (!executor.HasRole(DelubrumProgressionRoles.Executor, Context)
@@ -210,16 +218,26 @@ namespace Prima.Stable.Modules
 
             await ReplyAsync("Roles removed!");
         }
-
-        [Command("readlog")]
-        [RequireOwner]
-        public async Task ReadLog(string logLink)
+        
+        private async Task ReadLog(string logLink)
         {
             using var typing = Context.Channel.EnterTypingState();
 
-            var logId = FFLogs.LogLinkToIdRegex.Match(logLink).Value;
+            var logMatch = FFLogs.LogLinkToIdRegex.Match(logLink);
+            if (!logMatch.Success)
+            {
+                await ReplyAsync("That doesn't look like a log link!");
+                return;
+            }
+
+            var logId = logMatch.Value;
             var req = FFLogs.BuildLogRequest(logId);
             var res = (await FFLogsAPI.MakeGraphQLRequest<LogInfo>(req)).Content.Data.ReportInfo;
+            if (res == null)
+            {
+                await ReplyAsync("That log is private; please make it unlisted or public.");
+                return;
+            }
 
             var encounters = res.Fights
                 .Where(f => f.Kill != null && f.FriendlyPlayers != null);
@@ -234,6 +252,7 @@ namespace Prima.Stable.Modules
                 .Where(a => !users.ContainsKey(a.Id))
                 .ToList();
 
+            var addedAny = false;
             foreach (var encounter in encounters)
             {
                 var roleName = encounter.Name;
@@ -251,8 +270,11 @@ namespace Prima.Stable.Modules
                     .Select(r => Context.Guild.GetRole(r))
                     .ToList();
 
+                var killRole = Context.Guild.GetRole(DelubrumProgressionRoles.GetKillRole(role.Name));
+
                 foreach (var id in encounter.FriendlyPlayers)
                 {
+                    if (!users.ContainsKey(id)) continue;
                     var user = Context.Guild.GetUser(users[id].DiscordId);
                     if (user == null) continue;
 
@@ -260,15 +282,31 @@ namespace Prima.Stable.Modules
                     {
                         if (!user.HasRole(progRole))
                         {
-                            //await user.AddRoleAsync(progRole);
+                            addedAny = true;
+                            await user.AddRoleAsync(progRole);
+                            Log.Information("Added role {RoleName} to {User}", progRole.Name, user);
+                        }
+                    }
+
+                    if (encounter.Kill == true)
+                    {
+                        if (!user.HasRole(killRole))
+                        {
+                            addedAny = true;
+                            await user.AddRoleAsync(killRole);
+                            Log.Information("Added role {RoleName} to {User}", killRole.Name, user);
                         }
                     }
                 }
             }
 
-            await ReplyAsync("Roles added!");
+            if (addedAny)
+                await ReplyAsync("Roles added!");
+            else
+                await ReplyAsync("No roles to add.");
+
             if (missedUsers.Any())
-                await ReplyAsync($"Missed users: ```{missedUsers.Aggregate("", (agg, next) => agg + $"({next.Server}) {next.Name}\n") + "```"}");
+                await ReplyAsync($"Missed users: ```{missedUsers.Aggregate("", (agg, next) => agg + $"({next.Server}) {next.Name}\n") + "```"}\nThey may need to re-register with `~iam`.");
         }
 
         [Command("star", RunMode = RunMode.Async)]

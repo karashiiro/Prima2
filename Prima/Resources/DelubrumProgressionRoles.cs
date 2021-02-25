@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Prima.Resources
@@ -10,6 +11,8 @@ namespace Prima.Resources
 #else
         public const ulong Executor = 807860249775702066;
 #endif
+
+        public const ulong ClearedDelubrumSavage = 806362589134454805;
 
         public static readonly IDictionary<ulong, string> Roles = new Dictionary<ulong, string>
         {
@@ -37,6 +40,19 @@ namespace Prima.Resources
                 807881434110754866 => new List<ulong> { 807881434110754866 },
 #endif
                 _ => new List<ulong>(),
+            };
+        }
+
+        public static ulong GetKillRole(string roleName)
+        {
+            return roleName switch
+            {
+                "Trinity Seeker Progression" => Roles.First(kvp => kvp.Value == "Queen's Guard Progression").Key,
+                "Queen's Guard Progression" => Roles.First(kvp => kvp.Value == "Trinity Avowed Progression").Key,
+                "Trinity Avowed Progression" => Roles.First(kvp => kvp.Value == "Stygimoloch Lord Progression").Key,
+                "Stygimoloch Lord Progression" => Roles.First(kvp => kvp.Value == "The Queen Progression").Key,
+                "The Queen Progression" => ClearedDelubrumSavage,
+                _ => throw new NotImplementedException(),
             };
         }
     }
