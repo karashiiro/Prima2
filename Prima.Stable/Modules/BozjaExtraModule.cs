@@ -309,7 +309,7 @@ namespace Prima.Stable.Modules
                 await ReplyAsync($"Missed users: ```{missedUsers.Aggregate("", (agg, next) => agg + $"({next.Server}) {next.Name}\n") + "```"}\nThey may need to re-register with `~iam`.");
         }
 
-        [Command("progcounts")]
+        [Command("progcounts", RunMode = RunMode.Async)]
         [Description("Get the progression counts of all guild members for Delubrum Reginae (Savage).")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task GetProgressionCounts()
