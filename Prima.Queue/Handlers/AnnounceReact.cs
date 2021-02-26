@@ -59,10 +59,23 @@ namespace Prima.Queue.Handlers
             var queueName = QueueInfo.LfgChannels[scheduleQueue];
             var queue = queueService.GetOrCreateQueue(queueName);
 
-            if (queue.Enqueue(userId, role, eventId.Value.ToString()))
+            var existingEventId = queue.GetEvent(userId, role);
+            if (!string.IsNullOrEmpty(existingEventId) && existingEventId != eventId.Value.ToString())
+            {
+                await user.SendMessageAsync($"You are already in queue for event `{existingEventId}` as that role. " +
+                                            "You can join this queue after leaving that one.");
+            }
+            else if (queue.Enqueue(userId, role, eventId.Value.ToString()))
             {
                 await user.SendMessageAsync($"You have been added to the {role} queue for event `{eventId}`. " +
-                    "You can check your position in queue with `~queue` in the queue channel.");
+                                            "You can check your position in queue with `~queue` in the queue channel.");
+                Log.Information("User {User} has been added to the {FFXIVRole} queue for {QueueName}, with event {Event}", user.ToString(), role.ToString(), queueName, eventId);
+            }
+            else if (queue.GetPosition(userId, role, null) != 0)
+            {
+                queue.SetEvent(userId, role, eventId.Value.ToString());
+                await user.SendMessageAsync($"You have been added to the {role} queue for event `{eventId}`. " +
+                                            "You can check your position in queue with `~queue` in the queue channel.");
                 Log.Information("User {User} has been added to the {FFXIVRole} queue for {QueueName}, with event {Event}", user.ToString(), role.ToString(), queueName, eventId);
             }
             else

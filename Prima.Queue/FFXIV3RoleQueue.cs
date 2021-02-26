@@ -27,7 +27,11 @@ namespace Prima.Queue
 
             lock (queue)
             {
-                if (queue.Any(tuple => tuple.Id == userId)) return false;
+                if (queue.Any(tuple => tuple.Id == userId))
+                {
+                    return false;
+                }
+
                 queue.Add(new QueueSlot(userId, eventId ?? ""));
                 return true;
             }
