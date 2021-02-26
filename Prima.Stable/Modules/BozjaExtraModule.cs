@@ -309,6 +309,47 @@ namespace Prima.Stable.Modules
                 await ReplyAsync($"Missed users: ```{missedUsers.Aggregate("", (agg, next) => agg + $"({next.Server}) {next.Name}\n") + "```"}\nThey may need to re-register with `~iam`.");
         }
 
+        [Command("progcounts")]
+        [Description("Get the progression counts of all guild members for Delubrum Reginae (Savage).")]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public Task GetProgressionCounts()
+        {
+            const ulong clearedRole = DelubrumProgressionRoles.ClearedDelubrumSavage;
+            var queenRole = DelubrumProgressionRoles.Roles.First(r => r.Value == "The Queen Progression").Key;
+            var stygLordRole = DelubrumProgressionRoles.Roles.First(r => r.Value == "Stygimoloch Lord Progression").Key;
+            var trinityAvowedRole = DelubrumProgressionRoles.Roles.First(r => r.Value == "Trinity Avowed Progression").Key;
+            var queensGuardRole = DelubrumProgressionRoles.Roles.First(r => r.Value == "Queen's Guard Progression").Key;
+            var trinitySeekerRole = DelubrumProgressionRoles.Roles.First(r => r.Value == "Trinity Seeker Progression").Key;
+            const ulong lfgRole = 806290575086845962;
+
+            var members = Context.Guild.Users;
+
+            var freshProgMembers = members.Where(m => m.HasRole(lfgRole) && !m.HasRole(trinitySeekerRole));
+            var trinitySeekerMembers = members.Where(m => m.HasRole(trinitySeekerRole) && !m.HasRole(queensGuardRole));
+            var queensGuardMembers = members.Where(m => m.HasRole(queensGuardRole) && !m.HasRole(trinityAvowedRole));
+            var trinityAvowedMembers = members.Where(m => m.HasRole(trinityAvowedRole) && !m.HasRole(stygLordRole));
+            var stygLordMembers = members.Where(m => m.HasRole(stygLordRole) && !m.HasRole(queenRole));
+            var queenMembers = members.Where(m => m.HasRole(queenRole) && !m.HasRole(clearedRole));
+            var clearedMembers = members.Where(m => m.HasRole(clearedRole));
+
+            const string outFormat = "Fresh Progression (Estimated): {0}\n" +
+                                     "Trinity Seeker Progression: {1}\n" +
+                                     "Queen's Guard Progression: {2}\n" +
+                                     "Trinity Avowed Progression: {3}\n" +
+                                     "Stygimoloch Lord Progression: {4}\n" +
+                                     "The Queen Progression: {5}\n" +
+                                     "Cleared: {6}";
+            return ReplyAsync(string.Format(
+                outFormat,
+                freshProgMembers.Count(),
+                trinitySeekerMembers.Count(),
+                queensGuardMembers.Count(),
+                trinityAvowedMembers.Count(),
+                stygLordMembers.Count(),
+                queenMembers.Count(),
+                clearedMembers.Count()));
+        }
+
         [Command("star", RunMode = RunMode.Async)]
         [Description("Shows the Bozjan Southern Front star mob guide.")]
         [RateLimit(TimeSeconds = 1, Global = true)]
