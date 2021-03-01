@@ -248,9 +248,7 @@ namespace Prima.Stable.Modules
                 .Select(kvp => new KeyValuePair<int, DiscordXIVUser>(kvp.Key, Db.Users.FirstOrDefault(u => u.Name == kvp.Value.Name && u.World == kvp.Value.Server)))
                 .Where(kvp => kvp.Value != null)
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-            var missedUsers = originalUsers
-                .Where(a => !users.ContainsKey(a.Id))
-                .ToList();
+            var missedUsers = new List<LogInfo.ReportDataWrapper.ReportData.Report.Master.Actor>();
 
             var addedAny = false;
             foreach (var encounter in encounters)
@@ -274,22 +272,33 @@ namespace Prima.Stable.Modules
 
                 foreach (var id in encounter.FriendlyPlayers)
                 {
-                    if (!users.ContainsKey(id)) continue;
+                    if (!users.ContainsKey(id))
+                    {
+                        var actor = originalUsers.Find(a => a.Id == id);
+                        if (actor != null)
+                        {
+                            missedUsers.Add(actor);
+                        }
+                        continue;
+                    }
+
                     var user = Context.Guild.GetUser(users[id].DiscordId);
                     if (user == null) continue;
 
                     foreach (var progRole in contingentRoles)
                     {
+                        Log.Information("Checking role {RoleName} on user {User}", progRole.Name, user);
                         if (!user.HasRole(progRole))
                         {
                             addedAny = true;
                             await user.AddRoleAsync(progRole);
-                            Log.Information("Added role {RoleName} to {User}", progRole.Name, user);
+                            Log.Information("Added role {RoleName} to user {User}", progRole.Name, user);
                         }
                     }
 
                     if (encounter.Kill == true)
                     {
+                        Log.Information("Checking role {RoleName} on user {User}", killRole.Name, user);
                         if (!user.HasRole(killRole))
                         {
                             addedAny = true;
@@ -306,7 +315,7 @@ namespace Prima.Stable.Modules
                 await ReplyAsync("No roles to add.");
 
             if (missedUsers.Any())
-                await ReplyAsync($"Missed users: ```{missedUsers.Aggregate("", (agg, next) => agg + $"({next.Server}) {next.Name}\n") + "```"}\nThey may need to re-register with `~iam`.");
+                await ReplyAsync($"Missed users: ```{missedUsers.Select(a => $"({a.Server}) {a.Name}").Distinct().Aggregate("", (agg, next) => agg + $"{next}\n") + "```"}\nThey may need to re-register with `~iam`.");
         }
 
         [Command("progcounts", RunMode = RunMode.Async)]
