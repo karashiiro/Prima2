@@ -12,9 +12,9 @@ namespace Prima.Resources
 
         public static readonly Regex Multiplier = new Regex(@"x\d", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-        public static readonly Regex Time = new Regex(@"\d+:\d+\s?(?:(?:a|p))?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        public static readonly Regex TimeHours = new Regex(@"\d+(?=:)", RegexOptions.Compiled);
-        public static readonly Regex TimeMinutes = new Regex(@"\d+(?=(?:$|a|p))", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        public static readonly Regex Time = new Regex(@"(\d{1,2}:\d{1,2}\s?(?:(?:a|p))?|\d{1,2}\s?(?:(?:a|p)))", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        public static readonly Regex TimeHours = new Regex(@"\d{1,2}(?=:|a|p)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        public static readonly Regex TimeMinutes = new Regex(@"(?<=:)\d{1,2}(?=(?:$|a|p))", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         public static readonly Regex TimeMeridiem = new Regex(@"[^\s\d:]+", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         public static readonly Regex Date = new Regex(@"(?:\d+\/\d+\/\d+)|(?:\d+\/\d+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);

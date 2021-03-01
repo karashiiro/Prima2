@@ -18,6 +18,7 @@ namespace Prima.Tests
 
         [Test]
         [TestCase("7/29 1:00PM", 7, 29, 13, 0, 0)]
+        [TestCase("7/29 3PM", 7, 29, 15, 0, 0)]
         public void GetDateTime_WorksAsExpected(string input, int expectedMonth, int expectedDay, int expectedHour, int expectedMinute, int expectedSecond)
         {
             var output = Util.GetDateTime(input);

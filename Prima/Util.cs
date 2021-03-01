@@ -71,8 +71,12 @@ namespace Prima
             {
                 var time = timeResult.Value.ToLowerInvariant().Replace(" ", "");
                 hour = int.Parse(RegexSearches.TimeHours.Match(time).Value);
-                minute = int.Parse(RegexSearches.TimeMinutes.Match(time).Value);
+
+                var minuteMatch = RegexSearches.TimeMinutes.Match(time);
+                minute = int.Parse(minuteMatch.Success ? minuteMatch.Value : "0");
+
                 var meridiem = RegexSearches.TimeMeridiem.Match(time).Value;
+
                 if (!meridiem.StartsWith("a") && hour != 12)
                 {
                     hour += 12;
