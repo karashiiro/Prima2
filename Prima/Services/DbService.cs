@@ -157,7 +157,7 @@ namespace Prima.Services
         {
             var existingSet = await _votes.FindAsync(v => v.MessageId == messageId && v.ReactionUserId == userId);
             if (!await existingSet.AnyAsync()) return false;
-            await _votes.DeleteManyAsync(v => v.MessageId == messageId && v.ReactionUserId == userId);
+            await _votes.DeleteOneAsync(v => v.MessageId == messageId && v.ReactionUserId == userId);
             return true;
         }
 
@@ -180,7 +180,7 @@ namespace Prima.Services
         {
             var existingSet = await _eventReactions.FindAsync(er => er.EventId == eventId && er.UserId == userId);
             if (!await existingSet.AnyAsync()) return false;
-            await _eventReactions.DeleteManyAsync(er => er.EventId == eventId && er.UserId == userId);
+            await _eventReactions.DeleteOneAsync(er => er.EventId == eventId && er.UserId == userId);
             return true;
         }
 
@@ -209,7 +209,7 @@ namespace Prima.Services
         {
             var existingSet = await _timedRoles.FindAsync(tr => tr.RoleId == roleId && tr.UserId == userId);
             if (!await existingSet.AnyAsync()) return;
-            await _timedRoles.DeleteManyAsync(tr => tr.RoleId == roleId && tr.UserId == userId);
+            await _timedRoles.DeleteOneAsync(tr => tr.RoleId == roleId && tr.UserId == userId);
         }
 
         public Task ConfigureRole(ulong guildId, string roleName, ulong roleId)
