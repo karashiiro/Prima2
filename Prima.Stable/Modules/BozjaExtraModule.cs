@@ -101,6 +101,7 @@ namespace Prima.Stable.Modules
             var isFFLogs = FFLogs.IsLogLink.Match(args).Success;
             if (isFFLogs)
             {
+                await Context.Guild.DownloadUsersAsync();
                 await ReadLog(args);
                 return;
             }
@@ -118,6 +119,7 @@ namespace Prima.Stable.Modules
 
             var words = args.Split(' ');
 
+            await Context.Guild.DownloadUsersAsync();
             var members = words
                 .Where(w => w.StartsWith('<'))
                 .Select(idStr => RegexSearches.NonNumbers.Replace(idStr, ""))
@@ -180,6 +182,7 @@ namespace Prima.Stable.Modules
 
             var words = args.Split(' ');
 
+            await Context.Guild.DownloadUsersAsync();
             var members = words
                 .Where(w => w.StartsWith('<'))
                 .Select(idStr => RegexSearches.NonNumbers.Replace(idStr, ""))
