@@ -64,38 +64,6 @@ namespace Prima.Scheduler.Services
                         "▫️ The Queen Progression");
                 }, token);
 
-#if DEBUG
-                var drsCheck2 = CheckRuns(guild, guildConfig.DelubrumScheduleOutputChannel, (int)(QueueInfo.DelubrumQueueTimeout / Time.Minute), async (host, embedMessage, embed) =>
-                {
-                    if (!embed.Timestamp.HasValue) return;
-
-                    var timestamp = embed.Timestamp.Value;
-                    if (timestamp.AddSeconds(QueueInfo.DelubrumQueueTimeout) <= DateTimeOffset.Now && embed.Author.HasValue)
-                    {
-                        var eventId = ulong.Parse(embed.Footer?.Text ?? "0");
-                        var toNotify = _db.EventReactions
-                            .Where(er => er.EventId == eventId)
-                            .Where(er => !er.QueueOpenNotified);
-                        await foreach (var er in toNotify.WithCancellation(token))
-                        {
-                            var member = guild.GetUser(er.UserId);
-                            _ = member.SendMessageAsync($"The event you signed up for notifications on `(ID: {eventId})` is now open for queuing.\n" +
-                                                        "If the run host has declared that they are pulling from the queue, you can join the queue by " +
-                                                        "clicking on the appropriate role reaction on the event post.");
-                            er.QueueOpenNotified = true;
-                            await _db.UpdateEventReaction(er);
-                        }
-                    }
-                }, token);
-
-                var eventCheckDrs = CheckRuns(guild, guildConfig.DelubrumScheduleOutputChannel, (int)(2 * Time.Hour / Time.Minute), async (host, embedMessage, embed) =>
-                {
-                    if (!embed.Footer.HasValue) return;
-                    var eventId = embed.Footer?.Text;
-                    Log.Information("{EventId}", eventId);
-                }, token);
-#endif
-
                 var drnCheck = CheckRuns(guild, guildConfig.DelubrumNormalScheduleOutputChannel, 30, async (host, embedMessage, embed) =>
                 {
                     var success = await AssignHostRole(guild, host);
@@ -113,14 +81,9 @@ namespace Prima.Scheduler.Services
                     await NotifyLead(host);
                     await NotifyMembers(host, embedMessage, embed, token);
                 }, token);
-
-#if DEBUG
-                await Task.WhenAll(drsCheck, drsCheck2, eventCheckDrs, drnCheck, castrumCheck);
-                await Task.Delay(1000, token);
-#else
+                
                 await Task.WhenAll(drsCheck, drnCheck, castrumCheck);
                 await Task.Delay(new TimeSpan(0, 5, 0), token);
-#endif
             }
         }
 

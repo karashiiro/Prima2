@@ -6,12 +6,12 @@ using Prima.Attributes;
 using Prima.Queue.Services;
 using Prima.Resources;
 using Prima.Services;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Serilog;
 
 namespace Prima.Queue.Modules
 {
@@ -209,7 +209,7 @@ namespace Prima.Queue.Modules
 
             // Queue stuff now
             Log.Information("Removed user {User} from queue {QueueName}.", Context.User.ToString(), queueName);
-            queue.RemoveAll(leader.Id);
+            queue.RemoveAll(leader.Id, eventId);
 
             var fetchedDps = new List<ulong>();
             for (var i = 0; i < dpsWanted; i++)
@@ -257,7 +257,7 @@ namespace Prima.Queue.Modules
             var fields = new List<EmbedFieldBuilder>();
 
             LfmAddUsersLeaderEmbed("DPS", fields, fetchedDps);
-            LfmAddUsersLeaderEmbed("Healers", fields, fetchedHealers); 
+            LfmAddUsersLeaderEmbed("Healers", fields, fetchedHealers);
             LfmAddUsersLeaderEmbed("Tanks", fields, fetchedTanks);
 
             fields.Add(new EmbedFieldBuilder()
@@ -641,86 +641,64 @@ namespace Prima.Queue.Modules
             var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
-            const string responseTemplate = "You are signed up for the following events:\n" +
-                                            "Tank: {0}\n" +
-                                            "Healer: {1}\n" +
-                                            "DPS: {2}";
+            const string responseTemplate = "```\n" +
+                                            "You are signed up for the following events:\n" +
+                                            "Tank:\n{0}\n" +
+                                            "Healer:\n{1}\n" +
+                                            "DPS:\n{2}\n" +
+                                            "```";
 
-            var tankEvent = queue.GetEvent(Context.User.Id, FFXIVRole.Tank) ?? "Not in queue";
-            var healerEvent = queue.GetEvent(Context.User.Id, FFXIVRole.Healer) ?? "Not in queue";
-            var dpsEvent = queue.GetEvent(Context.User.Id, FFXIVRole.DPS) ?? "Not in queue";
+            var tankEvents = queue.GetEventStates(Context.User.Id, FFXIVRole.Tank);
+            var healerEvents = queue.GetEventStates(Context.User.Id, FFXIVRole.Healer);
+            var dpsEvents = queue.GetEventStates(Context.User.Id, FFXIVRole.DPS);
+
+            var tankEventStr = tankEvents
+                .Aggregate("", (agg, next) =>
+                {
+                    var position = queue.GetPosition(Context.User.Id, FFXIVRole.Tank, next.EventId);
+                    if (position == 0)
+                        return agg;
+
+                    var total = queue.Count(FFXIVRole.Tank, next.EventId);
+                    if (string.IsNullOrEmpty(next.EventId))
+                        return agg + $"{position}/{total}\n";
+                    else
+                        return agg + $"{position}/{total} ({next.EventId})\n";
+                });
+
+            var healerEventStr = healerEvents
+                .Aggregate("", (agg, next) =>
+                {
+                    var position = queue.GetPosition(Context.User.Id, FFXIVRole.Healer, next.EventId);
+                    if (position == 0)
+                        return agg;
+
+                    var total = queue.Count(FFXIVRole.Healer, next.EventId);
+                    if (string.IsNullOrEmpty(next.EventId))
+                        return agg + $"{position}/{total}\n";
+                    else
+                        return agg + $"{position}/{total} ({next.EventId})\n";
+                });
+
+            var dpsEventStr = dpsEvents
+                .Aggregate("", (agg, next) =>
+                {
+                    var position = queue.GetPosition(Context.User.Id, FFXIVRole.DPS, next.EventId);
+                    if (position == 0)
+                        return agg;
+
+                    var total = queue.Count(FFXIVRole.DPS, next.EventId);
+                    if (string.IsNullOrEmpty(next.EventId))
+                        return agg + $"{position}/{total}\n";
+                    else
+                        return agg + $"{position}/{total} ({next.EventId})\n";
+                });
 
             await ReplyAsync(string.Format(
                 responseTemplate,
-                tankEvent.Length == 0 ? "None" : tankEvent,
-                healerEvent.Length == 0 ? "None" : healerEvent,
-                dpsEvent.Length == 0 ? "None" : dpsEvent));
-        }
-
-        [Command("setevent", RunMode = RunMode.Async)]
-        [Description("Check the events you're specifically in queue for, by role.")]
-        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task SetEvent([Remainder] string args = "")
-        {
-            if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id))
-                return;
-
-            var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
-            var queue = QueueService.GetOrCreateQueue(queueName);
-
-            var eventId = GetEventIdFromArgs(args);
-            if (eventId == null)
-            {
-                await ReplyAsync($"{Context.User.Mention}, that command requires an event ID!\n" +
-                                 "Usage: `~setevent <[d][h][t]> <event ID>`");
-                return;
-            }
-
-            args = RemoveEventIdFromArgs(args);
-
-            var roles = ParseRoles(args);
-            if (roles == FFXIVRole.None)
-            {
-                roles = FFXIVRole.Tank | FFXIVRole.Healer | FFXIVRole.DPS;
-            }
-
-            var rolesList = RolesToArray(roles);
-            foreach (var role in rolesList)
-            {
-                queue.SetEvent(Context.User.Id, role, eventId);
-                Log.Information("Event for role {RoleName} on user {User} set to {EventId}.", role, Context.User, eventId);
-            }
-
-            await ReplyAsync("Events updated!");
-        }
-
-        [Command("clearevent", RunMode = RunMode.Async)]
-        [Description("Clear the events you're specifically in queue for, by role.")]
-        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task ClearEvent([Remainder] string args = "")
-        {
-            if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id))
-                return;
-
-            var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
-            var queue = QueueService.GetOrCreateQueue(queueName);
-
-            args = RemoveEventIdFromArgs(args);
-
-            var roles = ParseRoles(args);
-            if (roles == FFXIVRole.None)
-            {
-                roles = FFXIVRole.Tank | FFXIVRole.Healer | FFXIVRole.DPS;
-            }
-
-            var rolesList = RolesToArray(roles);
-            foreach (var role in rolesList)
-            {
-                queue.SetEvent(Context.User.Id, role, "");
-                Log.Information("Event for role {RoleName} on user {User} cleared.", role, Context.User);
-            }
-
-            await ReplyAsync("Events updated!");
+                string.IsNullOrEmpty(tankEventStr) ? "None" : tankEventStr,
+                string.IsNullOrEmpty(healerEventStr) ? "None" : healerEventStr,
+                string.IsNullOrEmpty(dpsEventStr) ? "None" : dpsEventStr));
         }
 
         [Command("leavequeue", RunMode = RunMode.Async)]
@@ -735,6 +713,8 @@ namespace Prima.Queue.Modules
             var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
+            var eventId = GetEventIdFromArgs(args);
+
             var roles = ParseRoles(args);
             var removedRoles = FFXIVRole.None;
 
@@ -742,7 +722,7 @@ namespace Prima.Queue.Modules
             {
                 // Remove from all
                 foreach (var r in new[] { FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank })
-                    if (queue.Remove(Context.User.Id, r))
+                    if (queue.Remove(Context.User.Id, r, eventId))
                         removedRoles |= r;
             }
             else
@@ -750,7 +730,7 @@ namespace Prima.Queue.Modules
                 // Remove from specified
                 foreach (var r in new[] { FFXIVRole.DPS, FFXIVRole.Healer, FFXIVRole.Tank })
                     if (roles.HasFlag(r))
-                        if (queue.Remove(Context.User.Id, r))
+                        if (queue.Remove(Context.User.Id, r, eventId))
                             removedRoles |= r;
             }
 
@@ -812,12 +792,6 @@ namespace Prima.Queue.Modules
 
             var eventId = GetEventIdFromArgs(args);
 
-            // Get progression role if supplied in Savage queue
-            IRole requiredDiscordRole = null;
-            if (Context.Channel.Id == DelubrumSavageChannelId)
-            {
-                requiredDiscordRole = GetRoleFromArgs(args);
-            }
             var dumbArgs = RemoveRoleFromArgs(args);
             dumbArgs = RemoveEventIdFromArgs(dumbArgs).Trim();
 
@@ -861,7 +835,7 @@ namespace Prima.Queue.Modules
             var tankCount = tankRole == null
                 ? queue.Count(FFXIVRole.Tank, tankEventId)
                 : queue.CountWithDiscordRole(FFXIVRole.Tank, tankRole, Context, tankEventId);
-            
+
             var dpsPos = dpsRole == null
                 ? queue.GetPosition(uid, FFXIVRole.DPS, dpsEventId)
                 : queue.GetPositionWithDiscordRole(uid, FFXIVRole.DPS, dpsRole, Context, dpsEventId);
@@ -1271,40 +1245,138 @@ namespace Prima.Queue.Modules
 
         [Command("confirm", RunMode = RunMode.Async)]
         [RequireContext(ContextType.DM)]
-        public Task ConfirmEvent(string eventId, int inHours)
+        public async Task ConfirmEvent()
         {
-            if (inHours > 2)
+            var events = (await GetEvents(2)).ToList();
+            if (!events.Any())
             {
-                return ReplyAsync("You are not in queue for any events starting in the next 2 hours.");
+                await ReplyAsync("You are not in queue for any events starting in the next 2 hours.");
+                return;
             }
 
-            var queueNames = QueueInfo.LfgChannels
-                .Select(kvp => kvp.Value);
-            foreach (var queueName in queueNames)
+            var queues = QueueInfo.LfgChannels
+                .Select(kvp => kvp.Value)
+                .Select(QueueService.GetOrCreateQueue);
+            var notInQueue = true;
+            var confirmedNone = true;
+            foreach (var queue in queues)
             {
-                var nextQueue = QueueService.GetOrCreateQueue(queueName);
-                foreach (var role in FFXIV3RoleQueue.Roles)
+                notInQueue &= queue.GetEventStates(Context.User.Id, FFXIVRole.DPS)
+                    .Any(es => !string.IsNullOrEmpty(es.EventId));
+                notInQueue &= queue.GetEventStates(Context.User.Id, FFXIVRole.Healer)
+                    .Any(es => !string.IsNullOrEmpty(es.EventId));
+                notInQueue &= queue.GetEventStates(Context.User.Id, FFXIVRole.Tank)
+                    .Any(es => !string.IsNullOrEmpty(es.EventId));
+                foreach (var (_, embed) in events)
                 {
-                    var events = nextQueue.GetEventStates(Context.User.Id, role);
-                    var @event = events.FirstOrDefault(e => e.EventId == eventId);
-                    if (@event == null) continue;
-                    if (@event.Confirmed)
-                    {
-                        return ReplyAsync("You are already confirmed for the event.");
-                    }
-                    @event.Confirmed = true;
+                    var eventId = embed?.Footer?.Text;
+                    confirmedNone &= queue.ConfirmEvent(Context.User.Id, eventId);
                 }
             }
 
+            if (notInQueue)
+            {
+                await ReplyAsync("You are not in queue for any events starting in the next 2 hours.");
+                return;
+            }
+
+            if (confirmedNone)
+            {
+                await ReplyAsync("You are already confirmed for the event.");
+                return;
+            }
+
             Log.Information("{User} has confirmed their queue position.", Context.User);
-            return ReplyAsync("Queue position confirmed.");
+            await ReplyAsync("Queue position confirmed.");
+        }
+
+        [Command("confirmedfor", RunMode = RunMode.Async)]
+        [RequireContext(ContextType.DM)]
+        public async Task ConfirmEvent([Remainder] string args = "")
+        {
+            var eventId = args;
+            if (string.IsNullOrEmpty(eventId))
+            {
+                await ReplyAsync($"{Context.User.Mention}, that command requires an event ID!");
+                return;
+            }
+
+            var queues = QueueInfo.LfgChannels
+                .Select(kvp => kvp.Value)
+                .Select(QueueService.GetOrCreateQueue);
+            foreach (var queue in queues)
+            {
+                foreach (var role in FFXIV3RoleQueue.Roles)
+                {
+                    var eventStates = queue.GetEventStates(Context.User.Id, role);
+                    var eventState = eventStates.FirstOrDefault(es => es.EventId == eventId);
+                    if (eventState != null)
+                    {
+                        await ReplyAsync($"{Context.User.Mention}, you are confirmed for that event!");
+                        return;
+                    }
+                }
+            }
+
+            await ReplyAsync("You are not confirmed for that event.");
         }
 #endif
+
+        private IEnumerable<FFXIV3RoleQueue> GetQueues()
+        {
+            return null;
+        }
 
         private async Task<bool> IsEventReal(string eventId)
         {
             var (m, _) = await GetEvent(eventId);
             return m != null;
+        }
+
+        private IEnumerable<ITextChannel> GetOutputChannels()
+        {
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == (Context.Guild?.Id ?? 0));
+            if (guildConfig == null) return new List<ITextChannel>();
+
+            var drsOutputChannel = Context.Guild.GetTextChannel(guildConfig.DelubrumScheduleOutputChannel);
+            var drnOutputChannel = Context.Guild.GetTextChannel(guildConfig.DelubrumNormalScheduleOutputChannel);
+            var cllOutputChannel = Context.Guild.GetTextChannel(guildConfig.CastrumScheduleOutputChannel);
+
+            return new[] { drsOutputChannel, drnOutputChannel, cllOutputChannel };
+        }
+
+        private async Task<IEnumerable<(IMessage, IEmbed)>> GetEvents(int inHours)
+        {
+            if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id) || Context.Guild == null)
+                return new List<(IMessage, IEmbed)>();
+
+            var guildConfig = Db.Guilds.FirstOrDefault(conf => conf.Id == Context.Guild.Id);
+            if (guildConfig == null) return new List<(IMessage, IEmbed)>();
+
+            var channels = GetOutputChannels();
+
+            var events = new List<(IMessage, IEmbed)>();
+            foreach (var channel in channels)
+            {
+                if (channel == null) continue;
+                await foreach (var page in channel.GetMessagesAsync())
+                {
+                    // ReSharper disable once LoopCanBeConvertedToQuery
+                    foreach (var message in page)
+                    {
+                        var embed = message.Embeds.FirstOrDefault(e => e.Type == EmbedType.Rich);
+                        if (embed?.Footer == null) continue;
+
+                        if (embed.Timestamp == null) continue;
+                        var timestamp = embed.Timestamp.Value;
+                        if ((DateTimeOffset.UtcNow - timestamp).TotalHours > inHours) continue;
+
+                        events.Add((message, embed));
+                    }
+                }
+            }
+
+            return events;
         }
 
         private async Task<(IMessage, IEmbed)> GetEvent(string eventId)
@@ -1315,16 +1387,10 @@ namespace Prima.Queue.Modules
             var guildConfig = Db.Guilds.FirstOrDefault(conf => conf.Id == Context.Guild.Id);
             if (guildConfig == null) return (null, null);
 
-            var channels = new[]
-            {
-                guildConfig.DelubrumScheduleOutputChannel,
-                guildConfig.DelubrumNormalScheduleOutputChannel,
-                guildConfig.CastrumScheduleOutputChannel,
-            };
+            var channels = GetOutputChannels();
 
-            foreach (var channelId in channels)
+            foreach (var channel in channels)
             {
-                var channel = Context.Guild.GetTextChannel(channelId);
                 if (channel == null) continue;
                 await foreach (var page in channel.GetMessagesAsync())
                 {

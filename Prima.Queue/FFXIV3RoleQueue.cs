@@ -27,7 +27,7 @@ namespace Prima.Queue
 
             lock (queue)
             {
-                if (queue.Any(tuple => tuple.Id == userId))
+                if (queue.Any(s => EventValid(eventId)(s) && s.Id == userId))
                 {
                     return false;
                 }
@@ -69,11 +69,24 @@ namespace Prima.Queue
                 .Remove(s => s.Id == userId);
         }
 
+        public bool Remove(ulong userId, FFXIVRole role, string eventId)
+        {
+            return GetQueue(role)
+                .Remove(s => EventValid(eventId)(s) && s.Id == userId);
+        }
+
         public void RemoveAll(ulong user)
         {
             Remove(user, FFXIVRole.DPS);
             Remove(user, FFXIVRole.Healer);
             Remove(user, FFXIVRole.Tank);
+        }
+
+        public void RemoveAll(ulong user, string eventId)
+        {
+            Remove(user, FFXIVRole.DPS, eventId);
+            Remove(user, FFXIVRole.Healer, eventId);
+            Remove(user, FFXIVRole.Tank, eventId);
         }
 
         public IEnumerable<string> GetEvents()
@@ -125,19 +138,32 @@ namespace Prima.Queue
         public IEnumerable<EventSlotState> GetEventStates(ulong userId, FFXIVRole role)
         {
             return GetQueue(role)
-                .FirstOrDefault(s => s.Id == userId)
-                ?.EventIds ?? new List<EventSlotState>();
+                .Where(s => s.Id == userId)
+                .Select(s => new EventSlotState
+                {
+                    Confirmed = s.Confirmed,
+                    EventId = s.EventId,
+                })
+                .Append(new EventSlotState());
         }
 #endif
 
-        public void SetEvent(ulong userId, FFXIVRole role, string eventId)
+        public bool ConfirmEvent(ulong userId, string eventId)
         {
-            var slot = GetQueue(role)
-                .FirstOrDefault(s => s.Id == userId);
-            if (slot != null)
+            if (string.IsNullOrEmpty(eventId)) return false;
+
+            var slots = GetQueue(FFXIVRole.DPS)
+                .Concat(GetQueue(FFXIVRole.Healer))
+                .Concat(GetQueue(FFXIVRole.Tank))
+                .Where(s => s.EventId == eventId && s.Id == userId);
+            var confirmedAny = false;
+            foreach (var slot in slots)
             {
-                slot.EventId = eventId;
+                if (slot.Confirmed) continue;
+                slot.Confirmed = true;
+                confirmedAny = true;
             }
+            return confirmedAny;
         }
 
         protected static Func<QueueSlot, bool> EventValid(string eventId)

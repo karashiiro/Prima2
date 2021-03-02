@@ -37,33 +37,17 @@ namespace Prima.Queue
             set => roleIds = value;
         }
 
-        [JsonProperty("Item6")]
-        private IEnumerable<EventSlotState> eventIds;
+        [JsonProperty("Item7")]
+        public bool Confirmed { get; set; }
 
-        [JsonIgnore]
-        public IEnumerable<EventSlotState> EventIds
-        {
-            get
-            {
-                if (eventIds != null)
-                    return eventIds;
-                eventIds = new List<EventSlotState>
-                {
-                    new EventSlotState(eventId),
-                };
-                return eventIds;
-            }
-            set => eventIds = value;
-        }
-
-        public QueueSlot(ulong id, string eventId = "", IEnumerable<ulong> roleIds = null, IEnumerable<EventSlotState> eventIds = null)
+        public QueueSlot(ulong id, string eventId = "", IEnumerable<ulong> roleIds = null)
         {
             Id = id;
             QueueTime = DateTime.UtcNow;
             ExpirationNotified = false;
             EventId = eventId;
             RoleIds = roleIds ?? new ulong[] { };
-            EventIds = eventIds ?? new[] { new EventSlotState(eventId) };
+            Confirmed = false;
         }
     }
 }

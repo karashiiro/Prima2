@@ -71,13 +71,6 @@ namespace Prima.Queue.Handlers
                                             "You can check your position in queue with `~queue` in the queue channel.");
                 Log.Information("User {User} has been added to the {FFXIVRole} queue for {QueueName}, with event {Event}", user.ToString(), role.ToString(), queueName, eventId);
             }
-            else if (queue.GetPosition(userId, role, null) != 0)
-            {
-                queue.SetEvent(userId, role, eventId.Value.ToString());
-                await user.SendMessageAsync($"You have been added to the {role} queue for event `{eventId}`. " +
-                                            "You can check your position in queue with `~queue` in the queue channel.");
-                Log.Information("User {User} has been added to the {FFXIVRole} queue for {QueueName}, with event {Event}", user.ToString(), role.ToString(), queueName, eventId);
-            }
             else
             {
                 await user.SendMessageAsync("You are already in that queue, in position " +

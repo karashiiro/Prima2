@@ -24,7 +24,7 @@ namespace Prima.Queue
 
             lock (queue)
             {
-                if (queue.Any(s => s.Id == userId)) return DiscordIntegratedEnqueueResult.AlreadyInQueue;
+                if (queue.Any(s => EventValid(eventId)(s) && s.Id == userId)) return DiscordIntegratedEnqueueResult.AlreadyInQueue;
 
                 eventId ??= "";
 
@@ -89,6 +89,14 @@ namespace Prima.Queue
                 .Where(EventValid(eventId))
                 .ToList()
                 .IndexOf(s => s.Id == userId) + 1;
+        }
+
+        public void SetRole(ulong userId, FFXIVRole role, IRole discordRole)
+        {
+            var slot = GetQueue(role)
+                .FirstOrDefault(s => s.Id == userId);
+            if (slot == null) return;
+            slot.RoleIds = discordRole == null ? new List<ulong>() : new List<ulong> {discordRole.Id};
         }
 
         private static bool SlotHasRole(QueueSlot s, IRole discordRole, SocketCommandContext context)

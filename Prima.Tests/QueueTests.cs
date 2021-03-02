@@ -364,18 +364,6 @@ namespace Prima.Tests
             Assert.AreEqual(now.Minute, dequeuedSlot.QueueTime.Minute);
         }
 
-        [TestCase(FFXIVRole.DPS)]
-        [TestCase(FFXIVRole.Healer)]
-        [TestCase(FFXIVRole.Tank)]
-        public void SetEvent_Works(FFXIVRole role)
-        {
-            var queue = new FFXIV3RoleQueue();
-            queue.Enqueue(UserId, role, EventId);
-            queue.SetEvent(UserId, role, null);
-            var userEventId = queue.GetEvent(UserId, role);
-            Assert.That(string.IsNullOrEmpty(userEventId));
-        }
-
         [Test]
         public void GetEvents_Works_1()
         {
@@ -405,6 +393,36 @@ namespace Prima.Tests
             Assert.IsNotNull(eventIds.FirstOrDefault(eId => eId == EventId));
             Assert.IsNotNull(eventIds.FirstOrDefault(eId => eId == "b"));
             Assert.IsNotNull(eventIds.FirstOrDefault(eId => eId == "a"));
+        }
+
+        [Test]
+        public void Remove_Old_Works()
+        {
+            var queue = new FFXIV3RoleQueue();
+            queue.Enqueue(UserId, FFXIVRole.DPS, EventId);
+            queue.Remove(UserId, FFXIVRole.DPS);
+            var userId = queue.Dequeue(FFXIVRole.DPS, EventId);
+            Assert.Null(userId);
+        }
+
+        [Test]
+        public void Remove_Event_Works()
+        {
+            var queue = new FFXIV3RoleQueue();
+            queue.Enqueue(UserId, FFXIVRole.DPS, EventId);
+            queue.Remove(UserId, FFXIVRole.DPS, null);
+            var userId = queue.Dequeue(FFXIVRole.DPS, EventId);
+            Assert.NotNull(userId);
+        }
+
+        [Test]
+        public void Remove_NoEvent_Works()
+        {
+            var queue = new FFXIV3RoleQueue();
+            queue.Enqueue(UserId, FFXIVRole.DPS, null);
+            queue.Remove(UserId, FFXIVRole.DPS, EventId);
+            var userId = queue.Dequeue(FFXIVRole.DPS, null);
+            Assert.NotNull(userId);
         }
 
         [Test]
