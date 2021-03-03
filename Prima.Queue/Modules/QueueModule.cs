@@ -743,7 +743,7 @@ namespace Prima.Queue.Modules
 
             var response = Context.User.Mention;
             var removedRolesList = RolesToArray(removedRoles);
-            const string removed0 = ", you weren't found in any queues in this channel.";
+            const string removed0 = ", you weren't found in the non-event queue in this channel.";
             const string removedCommon = ", you have been removed from this channel's queue";
             const string removed1 = " for {0}.";
             const string removed2 = "s for {0} and {1}.";
