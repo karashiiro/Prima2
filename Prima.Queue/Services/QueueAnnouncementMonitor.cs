@@ -37,6 +37,8 @@ namespace Prima.Queue.Services
 
         private async Task CheckLoop(CancellationToken token)
         {
+            Log.Information("Starting queue announcement check loop.");
+
             var guildConfig = _db.Guilds.FirstOrDefault(g => g.Id == SpecialGuilds.CrystalExploratoryMissions);
             if (guildConfig == null)
             {
@@ -44,21 +46,17 @@ namespace Prima.Queue.Services
                 return;
             }
 
-            var guild = _client.GetGuild(guildConfig.Id);
-            var scheduleChannels = GetScheduleOutputChannels().ToList();
-
-            try
-            {
-                await guild.DownloadUsersAsync();
-            }
-            catch (Exception e)
-            {
-                Log.Error(e, "Error when fetching users!");
-            }
-
             while (!token.IsCancellationRequested)
             {
                 var tasks = new List<Task>();
+
+                var guild = _client.GetGuild(guildConfig.Id);
+                var scheduleChannels = GetScheduleOutputChannels().ToList();
+                if (scheduleChannels.Any(c => c == null)) continue;
+
+#if DEBUG
+                Log.Information("Checking events.");
+#endif
 
                 foreach (var channel in scheduleChannels)
                 {
@@ -80,8 +78,10 @@ namespace Prima.Queue.Services
 
                         var queueSlots = queue.GetEventSlots(eventId.ToString())
                             .Select(s => s.Id)
-                            .Distinct();
+                            .Distinct()
+                            .ToList();
 
+                        Log.Information("Sending {SlotCount} notifications for event {EventId}.", queueSlots.Count, eventId);
                         var notificationTasks = new List<Task>();
                         notificationTasks.AddRange(queueSlots
                             .Select(userId => SendUserDM(_client.GetUser(userId), $"There are 2 hours until event `{eventId}`.\n" +
@@ -108,8 +108,10 @@ namespace Prima.Queue.Services
                         var queueSlots = queue.GetEventSlots(eventId.ToString())
                             .Where(s => !s.Confirmed)
                             .Select(s => s.Id)
-                            .Distinct();
+                            .Distinct()
+                            .ToList();
 
+                        Log.Information("Sending {SlotCount} second round notifications for event {EventId}.", queueSlots.Count, eventId);
                         var notificationTasks = new List<Task>();
                         notificationTasks.AddRange(queueSlots
                             .Select(userId => SendUserDM(_client.GetUser(userId), "There are now 30 minutes until this confirmation window closes. " +
@@ -138,8 +140,10 @@ namespace Prima.Queue.Services
                         var queueSlots = queue.GetEventSlots(eventId.ToString())
                             .Where(s => !s.Confirmed)
                             .Select(s => s.Id)
-                            .Distinct();
+                            .Distinct()
+                            .ToList();
 
+                        Log.Information("Sending {SlotCount} timeout notifications for event {EventId}.", queueSlots.Count, eventId);
                         var notificationTasks = new List<Task>();
                         notificationTasks.AddRange(queueSlots
                             .Select(userId => SendUserDM(_client.GetUser(userId), "The confirmation window has closed; you have been removed from the queue.\n" +
@@ -221,6 +225,9 @@ namespace Prima.Queue.Services
 
         private async Task<FFXIVDiscordIntegratedQueue> GetEventQueue(DiscordGuildConfiguration guildConfig, IMessage embedMessage, IEmbed eventInfo)
         {
+#if DEBUG
+            return _queueService.GetOrCreateQueue(QueueInfo.LfgChannels[766712049316265985]);
+#else
             var channelId = embedMessage.Channel.Id;
             if (channelId == guildConfig.DelubrumScheduleOutputChannel)
             {
@@ -243,6 +250,7 @@ namespace Prima.Queue.Services
             {
                 return null;
             }
+#endif
         }
 
         private IEnumerable<ITextChannel> GetScheduleOutputChannels()
@@ -256,12 +264,16 @@ namespace Prima.Queue.Services
 
             var guild = _client.GetGuild(guildConfig.Id);
 
-            return new[]
+            return new ulong[]
             {
+#if DEBUG
+                572084654069514241,
+#else
                 guildConfig.DelubrumScheduleOutputChannel,
                 guildConfig.DelubrumNormalScheduleOutputChannel,
                 guildConfig.CastrumScheduleOutputChannel,
-            }.Select(c => guild.GetTextChannel(c));
+#endif
+            }.Select(c => guild?.GetTextChannel(c));
         }
 
         private static ulong GetScheduleInputChannel(DiscordGuildConfiguration guildConfig, ulong channelId)
@@ -279,6 +291,10 @@ namespace Prima.Queue.Services
 
         private static async Task SendUserDM(IUser user, string message)
         {
+#if DEBUG
+            Log.Information("Sending direct message to user {User}.", user.ToString());
+#endif
+
             try
             {
                 await user.SendMessageAsync(message);

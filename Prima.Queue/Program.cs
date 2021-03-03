@@ -25,7 +25,9 @@ namespace Prima.Queue
             var client = services.GetRequiredService<DiscordSocketClient>();
             var db = services.GetRequiredService<IDbService>();
             var queueService = services.GetRequiredService<FFXIV3RoleQueueService>();
-            
+
+            services.GetRequiredService<QueueAnnouncementMonitor>().Initialize();
+
             client.ReactionAdded += (message, channel, reaction)
                 => AnnounceReact.HandlerAdd(client, queueService, db, message, reaction);
 
@@ -38,6 +40,7 @@ namespace Prima.Queue
         {
             return sc
                 .AddSingleton<FFXIV3RoleQueueService>()
+                .AddSingleton<QueueAnnouncementMonitor>()
                 .BuildServiceProvider();
         }
     }

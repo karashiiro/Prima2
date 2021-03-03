@@ -3,6 +3,7 @@ using Prima.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Serilog;
 
 namespace Prima.Queue
 {
@@ -166,17 +167,13 @@ namespace Prima.Queue
 
         public IEnumerable<QueueSlot> GetEventSlots(string eventId)
         {
+            if (string.IsNullOrEmpty(eventId))
+                return new List<QueueSlot>();
             var slots = GetQueue(FFXIVRole.DPS)
                 .Concat(GetQueue(FFXIVRole.Healer))
-                .Concat(GetQueue(FFXIVRole.Tank));
-            if (string.IsNullOrEmpty(eventId))
-            {
-                return new List<QueueSlot>();
-            }
-            else
-            {
-                return slots.Where(s => s.EventId == eventId);
-            }
+                .Concat(GetQueue(FFXIVRole.Tank))
+                .Where(s => s.EventId == eventId);
+            return slots;
         }
 
         public void DropUnconfirmed(string eventId)
