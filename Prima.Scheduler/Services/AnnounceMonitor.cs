@@ -4,6 +4,7 @@ using Prima.Resources;
 using Prima.Services;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -175,6 +176,13 @@ namespace Prima.Scheduler.Services
             }
         }
 
+        private IAsyncEnumerable<SocketUser> GetRunReactors(ulong eventId)
+        {
+            return _db.EventReactions
+                .Where(er => er.EventId == eventId)
+                .Select(er => _client.GetUser(er.UserId));
+        }
+
         private async Task NotifyMembers(IGuildUser host, IMessage embedMessage, IEmbed embed, CancellationToken token)
         {
             Log.Information("Notifying reactors...", embedMessage.Reactions.Count);
@@ -182,10 +190,9 @@ namespace Prima.Scheduler.Services
             if (!embed.Footer.HasValue) return;
             var eventId = ulong.Parse(embed.Footer.Value.Text);
 
-            var reactors = _db.EventReactions.Where(er => er.EventId == eventId);
-            await foreach (var reactor in reactors.WithCancellation(token))
+            var reactors = GetRunReactors(eventId);
+            await foreach (var user in reactors.WithCancellation(token))
             {
-                var user = _client.GetUser(reactor.UserId);
                 if (user == null || user.IsBot) continue;
 
                 try

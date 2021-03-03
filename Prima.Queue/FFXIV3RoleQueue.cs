@@ -133,8 +133,7 @@ namespace Prima.Queue
                 .FirstOrDefault(s => s.Id == userId)
                 ?.EventId;
         }
-
-#if DEBUG
+        
         public IEnumerable<EventSlotState> GetEventStates(ulong userId, FFXIVRole role)
         {
             return GetQueue(role)
@@ -146,7 +145,6 @@ namespace Prima.Queue
                 })
                 .Append(new EventSlotState());
         }
-#endif
 
         public bool ConfirmEvent(ulong userId, string eventId)
         {
@@ -164,6 +162,34 @@ namespace Prima.Queue
                 confirmedAny = true;
             }
             return confirmedAny;
+        }
+
+        public IEnumerable<QueueSlot> GetEventSlots(string eventId)
+        {
+            var slots = GetQueue(FFXIVRole.DPS)
+                .Concat(GetQueue(FFXIVRole.Healer))
+                .Concat(GetQueue(FFXIVRole.Tank));
+            if (string.IsNullOrEmpty(eventId))
+            {
+                return slots.Where(s => string.IsNullOrEmpty(s.EventId));
+            }
+            else
+            {
+                return slots.Where(s => s.EventId == eventId);
+            }
+        }
+
+        public void DropUnconfirmed(string eventId)
+        {
+            if (string.IsNullOrEmpty(eventId)) return;
+            foreach (var role in Roles)
+            {
+                var queue = GetQueue(role);
+                lock (queue)
+                {
+                    queue.RemoveAll(s => !s.Confirmed, overload: true);
+                }
+            }
         }
 
         protected static Func<QueueSlot, bool> EventValid(string eventId)
