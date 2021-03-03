@@ -135,13 +135,13 @@ namespace Prima.Queue.Services
                         }
                         var eventId = ulong.Parse(embed.Footer.Value.Text);
 
-                        queue.DropUnconfirmed(eventId.ToString());
-
                         var queueSlots = queue.GetEventSlots(eventId.ToString())
                             .Where(s => !s.Confirmed)
                             .Select(s => s.Id)
                             .Distinct()
                             .ToList();
+
+                        queue.DropUnconfirmed(eventId.ToString());
 
                         Log.Information("Sending {SlotCount} timeout notifications for event {EventId}.", queueSlots.Count, eventId);
                         var notificationTasks = new List<Task>();
