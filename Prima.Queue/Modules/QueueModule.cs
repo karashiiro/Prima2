@@ -1242,6 +1242,7 @@ namespace Prima.Queue.Modules
             await Task.WhenAll(responseTasks);
             await ReplyAsync("Queue expiry notifications have been sent -- your queue has been emptied.");
         }
+#endif
 
         [Command("confirm", RunMode = RunMode.Async)]
         [RequireContext(ContextType.DM)]
@@ -1292,7 +1293,7 @@ namespace Prima.Queue.Modules
 
         [Command("confirmedfor", RunMode = RunMode.Async)]
         [RequireContext(ContextType.DM)]
-        public async Task ConfirmEvent([Remainder] string args = "")
+        public async Task ConfirmedForEvent([Remainder] string args = "")
         {
             var eventId = args;
             if (string.IsNullOrEmpty(eventId))
@@ -1320,7 +1321,6 @@ namespace Prima.Queue.Modules
 
             await ReplyAsync("You are not confirmed for that event.");
         }
-#endif
 
         private IEnumerable<FFXIV3RoleQueue> GetQueues()
         {
