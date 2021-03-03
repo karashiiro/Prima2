@@ -396,6 +396,56 @@ namespace Prima.Tests
         }
 
         [Test]
+        public void GetEventSlots_Works_Event()
+        {
+            var queue = new FFXIV3RoleQueue();
+            queue.Enqueue(UserId, FFXIVRole.DPS, EventId);
+            queue.Enqueue(0, FFXIVRole.Tank, EventId);
+            queue.Enqueue(1, FFXIVRole.Healer, EventId);
+            queue.Enqueue(2, FFXIVRole.Healer, EventId);
+            queue.Enqueue(3, FFXIVRole.Tank, EventId);
+            Assert.IsNotEmpty(queue.GetEventSlots(EventId));
+        }
+
+        [Test]
+        public void GetEventSlots_DoesNothing_NoEvent()
+        {
+            var queue = new FFXIV3RoleQueue();
+            queue.Enqueue(UserId, FFXIVRole.DPS, EventId);
+            queue.Enqueue(0, FFXIVRole.Tank, EventId);
+            queue.Enqueue(1, FFXIVRole.Healer, null);
+            queue.Enqueue(2, FFXIVRole.Healer, EventId);
+            queue.Enqueue(3, FFXIVRole.Tank, null);
+            Assert.IsEmpty(queue.GetEventSlots(null));
+        }
+
+        [Test]
+        public void DropUnconfirmed_Works_Event()
+        {
+            var queue = new TestQueue();
+            queue.Enqueue(UserId, FFXIVRole.DPS, EventId);
+            queue.Enqueue(0, FFXIVRole.Tank, EventId);
+            queue.Enqueue(1, FFXIVRole.Healer, EventId);
+            queue.Enqueue(2, FFXIVRole.Healer, EventId);
+            queue.Enqueue(3, FFXIVRole.Tank, EventId);
+            queue.DropUnconfirmed(EventId);
+            Assert.IsEmpty(queue.GetAllSlots());
+        }
+
+        [Test]
+        public void DropUnconfirmed_DoesNothing_NoEvent()
+        {
+            var queue = new TestQueue();
+            queue.Enqueue(UserId, FFXIVRole.DPS, null);
+            queue.Enqueue(0, FFXIVRole.Tank, "");
+            queue.Enqueue(1, FFXIVRole.Healer, null);
+            queue.Enqueue(2, FFXIVRole.Healer, null);
+            queue.Enqueue(3, FFXIVRole.Tank, null);
+            queue.DropUnconfirmed(null);
+            Assert.IsNotEmpty(queue.GetAllSlots());
+        }
+
+        [Test]
         public void Remove_Old_Works()
         {
             var queue = new FFXIV3RoleQueue();

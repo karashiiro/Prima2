@@ -171,7 +171,7 @@ namespace Prima.Queue
                 .Concat(GetQueue(FFXIVRole.Tank));
             if (string.IsNullOrEmpty(eventId))
             {
-                return slots.Where(s => string.IsNullOrEmpty(s.EventId));
+                return new List<QueueSlot>();
             }
             else
             {
