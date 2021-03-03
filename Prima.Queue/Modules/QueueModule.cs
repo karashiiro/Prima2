@@ -713,6 +713,13 @@ namespace Prima.Queue.Modules
             var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
             var queue = QueueService.GetOrCreateQueue(queueName);
 
+            if (args.StartsWith("all"))
+            {
+                queue.RemoveAll(Context.User.Id);
+                await ReplyAsync($"{Context.User.Mention}, you have been removed from all queues in this channel.");
+                return;
+            }
+
             var eventId = GetEventIdFromArgs(args);
 
             var roles = ParseRoles(args);
