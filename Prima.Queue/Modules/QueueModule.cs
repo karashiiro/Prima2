@@ -1266,7 +1266,7 @@ namespace Prima.Queue.Modules
                 .Select(kvp => kvp.Value)
                 .Select(QueueService.GetOrCreateQueue);
             var notInQueue = true;
-            var confirmedNone = true;
+            var confirmedNone = false;
             foreach (var queue in queues)
             {
                 notInQueue &= queue.GetEventStates(Context.User.Id, FFXIVRole.DPS)
@@ -1278,9 +1278,10 @@ namespace Prima.Queue.Modules
                 foreach (var (_, embed) in events)
                 {
                     var eventId = embed?.Footer?.Text;
-                    confirmedNone &= queue.ConfirmEvent(Context.User.Id, eventId);
+                    confirmedNone |= queue.ConfirmEvent(Context.User.Id, eventId);
                 }
             }
+            Log.Information("{Confirmed}", confirmedNone);
 
             if (notInQueue)
             {
@@ -1299,7 +1300,6 @@ namespace Prima.Queue.Modules
         }
 
         [Command("confirmedfor", RunMode = RunMode.Async)]
-        [RequireContext(ContextType.DM)]
         public async Task ConfirmedForEvent([Remainder] string args = "")
         {
             var eventId = args;
@@ -1340,27 +1340,26 @@ namespace Prima.Queue.Modules
             return m != null;
         }
 
-        private IEnumerable<ITextChannel> GetOutputChannels()
+        private IEnumerable<ITextChannel> GetOutputChannels(SocketGuild guild)
         {
-            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == (Context.Guild?.Id ?? 0));
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == (guild?.Id ?? 0));
             if (guildConfig == null) return new List<ITextChannel>();
 
-            var drsOutputChannel = Context.Guild.GetTextChannel(guildConfig.DelubrumScheduleOutputChannel);
-            var drnOutputChannel = Context.Guild.GetTextChannel(guildConfig.DelubrumNormalScheduleOutputChannel);
-            var cllOutputChannel = Context.Guild.GetTextChannel(guildConfig.CastrumScheduleOutputChannel);
+            var drsOutputChannel = guild.GetTextChannel(guildConfig.DelubrumScheduleOutputChannel);
+            var drnOutputChannel = guild.GetTextChannel(guildConfig.DelubrumNormalScheduleOutputChannel);
+            var cllOutputChannel = guild.GetTextChannel(guildConfig.CastrumScheduleOutputChannel);
 
             return new[] { drsOutputChannel, drnOutputChannel, cllOutputChannel };
         }
 
         private async Task<IEnumerable<(IMessage, IEmbed)>> GetEvents(int inHours)
         {
-            if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id) || Context.Guild == null)
-                return new List<(IMessage, IEmbed)>();
+            var guild = Context.Client.GetGuild(SpecialGuilds.CrystalExploratoryMissions);
 
-            var guildConfig = Db.Guilds.FirstOrDefault(conf => conf.Id == Context.Guild.Id);
+            var guildConfig = Db.Guilds.FirstOrDefault(conf => conf.Id == guild.Id);
             if (guildConfig == null) return new List<(IMessage, IEmbed)>();
 
-            var channels = GetOutputChannels();
+            var channels = GetOutputChannels(guild);
 
             var events = new List<(IMessage, IEmbed)>();
             foreach (var channel in channels)
@@ -1388,13 +1387,11 @@ namespace Prima.Queue.Modules
 
         private async Task<(IMessage, IEmbed)> GetEvent(string eventId)
         {
-            if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id) || Context.Guild == null)
-                return (null, null);
-
-            var guildConfig = Db.Guilds.FirstOrDefault(conf => conf.Id == Context.Guild.Id);
+            var guild = Context.Client.GetGuild(SpecialGuilds.CrystalExploratoryMissions);
+            var guildConfig = Db.Guilds.FirstOrDefault(conf => conf.Id == guild.Id);
             if (guildConfig == null) return (null, null);
 
-            var channels = GetOutputChannels();
+            var channels = GetOutputChannels(guild);
 
             foreach (var channel in channels)
             {
