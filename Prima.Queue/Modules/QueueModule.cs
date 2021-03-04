@@ -479,7 +479,7 @@ namespace Prima.Queue.Modules
             }
             args = RemoveRoleFromArgs(args);
 
-            // Here we go again
+            var autoConfirmForEvent = false;
             var eventId = GetEventIdFromArgs(args);
             if (eventId != null)
             {
@@ -505,9 +505,8 @@ namespace Prima.Queue.Modules
                             guildConfig.CastrumScheduleInputChannel,
                         };
 #endif
-
-#if DEBUG
-                        /*var (_, embed) = await GetEvent(eventId);
+                        
+                        var (_, embed) = await GetEvent(eventId);
                         if (embed.Timestamp == null)
                         {
                             Log.Error("Event {EventId} has no timestamp; aborting.", eventId);
@@ -515,12 +514,10 @@ namespace Prima.Queue.Modules
                         }
 
                         var eventTime = embed.Timestamp.Value;
-                        if (eventTime.AddSeconds(QueueInfo.DelubrumQueueTimeout) > DateTimeOffset.Now)
+                        if (eventTime.AddHours(2) <= DateTimeOffset.Now)
                         {
-                            await ReplyAsync($"{Context.User.Mention}, the queue for this event has not yet opened. Please wait for the queue to open.");
-                            return;
-                        }*/
-#endif
+                            autoConfirmForEvent = true;
+                        }
 
                         IMessage postMessage = null;
                         foreach (var c in channels)
@@ -617,6 +614,11 @@ namespace Prima.Queue.Modules
             if (!new ulong[] { 765994301850779709, DelubrumSavageChannelId, 806957742056013895, 809241125373739058 }.Contains(Context.Channel.Id))
             {
                 response += extra;
+            }
+
+            if (autoConfirmForEvent)
+            {
+                queue.ConfirmEvent(Context.User.Id, eventId);
             }
 
             QueueService.Save();

@@ -137,14 +137,17 @@ namespace Prima.Queue
         
         public IEnumerable<EventSlotState> GetEventStates(ulong userId, FFXIVRole role)
         {
-            return GetQueue(role)
+            var eventStates = GetQueue(role)
                 .Where(s => s.Id == userId)
                 .Select(s => new EventSlotState
                 {
                     Confirmed = s.Confirmed,
                     EventId = s.EventId,
                 })
-                .Append(new EventSlotState());
+                .ToList();
+            if (!eventStates.Any(e => string.IsNullOrEmpty(e.EventId)))
+                eventStates.Add(new EventSlotState());
+            return eventStates;
         }
 
         public bool ConfirmEvent(ulong userId, string eventId)
