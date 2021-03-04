@@ -4,6 +4,7 @@ using Prima.Models;
 using Prima.Stable.Services;
 using Prima.Services;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -82,6 +83,52 @@ namespace Prima.Moderation.Modules
         public async Task WhenAsync(IUser user)
         {
             await ReplyAsync(user.CreatedAt.UtcDateTime.ToString());
+        }
+
+        [Command("timeout")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        public async Task TimeoutAsync(IUser user)
+        {
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == (Context.Guild?.Id ?? 0));
+            if (guildConfig == null)
+            {
+                await ReplyAsync("This command needs to be executed in a guild!");
+                return;
+            }
+
+            var timeoutRole = Context.Guild.GetRole(573340288815333386);
+            var memberRole = Context.Guild.GetRole(573347763287228436);
+            var bozjaRole = Context.Guild.GetRole(588913532410527754);
+            var eurekaRole = Context.Guild.GetRole(588913087818498070);
+            var diademRole = Context.Guild.GetRole(588913444712087564);
+
+            var member = Context.Guild.GetUser(user.Id);
+            await member.AddRoleAsync(timeoutRole);
+            await member.RemoveRolesAsync(new List<IRole> { memberRole, bozjaRole, eurekaRole, diademRole });
+
+            await ReplyAsync("User timed out. You may end their timeout at any time with `~untimeout`.");
+        }
+
+        [Command("untimeout")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        public async Task UntimeoutAsync(IUser user)
+        {
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == (Context.Guild?.Id ?? 0));
+            if (guildConfig == null)
+            {
+                await ReplyAsync("This command needs to be executed in a guild!");
+                return;
+            }
+
+            var timeoutRole = Context.Guild.GetRole(573340288815333386);
+            var memberRole = Context.Guild.GetRole(573347763287228436);
+            var bozjaRole = Context.Guild.GetRole(588913532410527754);
+
+            var member = Context.Guild.GetUser(user.Id);
+            await member.RemoveRoleAsync(timeoutRole);
+            await member.AddRolesAsync(new List<IRole> { memberRole, bozjaRole });
+
+            await ReplyAsync("User timeout ended.");
         }
 
         // Add a regex to the blacklist.
