@@ -644,7 +644,7 @@ namespace Prima.Queue.Modules
             var queue = QueueService.GetOrCreateQueue(queueName);
 
             const string responseTemplate = "```\n" +
-                                            "You are signed up for the following events:\n" +
+                                            "You are in the following queues:\n" +
                                             "Tank:\n{0}\n" +
                                             "Healer:\n{1}\n" +
                                             "DPS:\n{2}\n" +
@@ -806,18 +806,7 @@ namespace Prima.Queue.Modules
 
             if (args.Length == 0 || args.Split(' ').Length == 1 && eventId != null || string.IsNullOrEmpty(dumbArgs))
             {
-                // Regular command body:
-                if (!QueueInfo.LfgChannels.ContainsKey(Context.Channel.Id))
-                    return;
-
-                var queueName = QueueInfo.LfgChannels[Context.Channel.Id];
-                var queue = QueueService.GetOrCreateQueue(queueName);
-
-                var tankEvent = queue.GetEvent(Context.User.Id, FFXIVRole.Tank);
-                var healerEvent = queue.GetEvent(Context.User.Id, FFXIVRole.Healer);
-                var dpsEvent = queue.GetEvent(Context.User.Id, FFXIVRole.DPS);
-
-                await ReplyAsync(GetPositionStringAllEvents(queue, Context.User.Id, dpsEvent, healerEvent, tankEvent));
+                await MyEvents();
             }
             else // Because people always try to type "~queue dps" etc., just give it to them.
             {
