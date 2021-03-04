@@ -176,12 +176,9 @@ namespace Prima.Queue.Services
                     if (!nullableTimestamp.HasValue) continue;
 
                     var timestamp = nullableTimestamp.Value;
-                    
-                    if (timestamp.AddMinutes(60) < DateTimeOffset.Now)
-                        continue;
 
                     // ReSharper disable once InvertIf
-                    if (timestamp.AddMinutes(-minutesBefore) <= DateTimeOffset.Now && embed.Author.HasValue)
+                    if (timestamp.AddMinutes(-minutesBefore) <= DateTimeOffset.Now && timestamp.AddMinutes(-minutesBefore + 4.95) > DateTimeOffset.Now && embed.Author.HasValue)
                     {
                         Log.Information("Run matched!");
 
