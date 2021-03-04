@@ -296,11 +296,11 @@ namespace Prima.Queue
             queue.RemoveAll(s => s == null, overload: true);
         }
 
-        public (IEnumerable<ulong>, IEnumerable<ulong>) Timeout(double secondsBeforeNow, double gracePeriod, bool includeEvents = false)
+        public (IEnumerable<ulong>, IEnumerable<ulong>) Timeout(double secondsBeforeNow, double gracePeriod, bool excludeEvents = false)
         {
-            var dpsTimedOut = QueryTimeout(FFXIVRole.DPS, secondsBeforeNow, includeEvents);
-            var healersTimedOut = QueryTimeout(FFXIVRole.Healer, secondsBeforeNow, includeEvents);
-            var tanksTimedOut = QueryTimeout(FFXIVRole.Tank, secondsBeforeNow, includeEvents);
+            var dpsTimedOut = QueryTimeout(FFXIVRole.DPS, secondsBeforeNow, excludeEvents);
+            var healersTimedOut = QueryTimeout(FFXIVRole.Healer, secondsBeforeNow, excludeEvents);
+            var tanksTimedOut = QueryTimeout(FFXIVRole.Tank, secondsBeforeNow, excludeEvents);
 
             // ReSharper disable once CompareOfFloatsByEqualityOperator
             if (gracePeriod == 0)
@@ -330,18 +330,16 @@ namespace Prima.Queue
             return almostTimedOut.Select(tuple => tuple.Id);
         }
 
-        protected IEnumerable<ulong> QueryTimeout(FFXIVRole role, double secondsBeforeNow, bool includeEvents = false)
+        protected IEnumerable<ulong> QueryTimeout(FFXIVRole role, double secondsBeforeNow, bool excludeEvents = false)
         {
             var queue = GetQueue(role);
 
             lock (queue)
             {
-                if (includeEvents)
+                if (excludeEvents)
                 {
                     return queue
-                        .Where(s => string.IsNullOrEmpty(s.EventId))
-                        .ToList()
-                        .RemoveAll(s => (DateTime.UtcNow - s.QueueTime).TotalSeconds > secondsBeforeNow, overload: true)
+                        .RemoveAll(s => string.IsNullOrEmpty(s.EventId) && (DateTime.UtcNow - s.QueueTime).TotalSeconds > secondsBeforeNow, overload: true)
                         .Select(s => s.Id);
                 }
                 else
