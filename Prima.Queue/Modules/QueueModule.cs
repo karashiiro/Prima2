@@ -661,9 +661,9 @@ namespace Prima.Queue.Modules
 
                     var total = queue.Count(FFXIVRole.Tank, next.EventId);
                     if (string.IsNullOrEmpty(next.EventId))
-                        return agg + $"{position}/{total}\n";
+                        return agg + $"  {position}/{total}\n";
                     else
-                        return agg + $"{position}/{total} ({next.EventId})\n";
+                        return agg + $"  {position}/{total} ({next.EventId})\n";
                 });
 
             var healerEventStr = healerEvents
@@ -675,9 +675,9 @@ namespace Prima.Queue.Modules
 
                     var total = queue.Count(FFXIVRole.Healer, next.EventId);
                     if (string.IsNullOrEmpty(next.EventId))
-                        return agg + $"{position}/{total}\n";
+                        return agg + $"  {position}/{total}\n";
                     else
-                        return agg + $"{position}/{total} ({next.EventId})\n";
+                        return agg + $"  {position}/{total} ({next.EventId})\n";
                 });
 
             var dpsEventStr = dpsEvents
@@ -689,16 +689,16 @@ namespace Prima.Queue.Modules
 
                     var total = queue.Count(FFXIVRole.DPS, next.EventId);
                     if (string.IsNullOrEmpty(next.EventId))
-                        return agg + $"{position}/{total}\n";
+                        return agg + $"  {position}/{total}\n";
                     else
-                        return agg + $"{position}/{total} ({next.EventId})\n";
+                        return agg + $"  {position}/{total} ({next.EventId})\n";
                 });
 
             await ReplyAsync(string.Format(
                 responseTemplate,
-                string.IsNullOrEmpty(tankEventStr) ? "None" : tankEventStr,
-                string.IsNullOrEmpty(healerEventStr) ? "None" : healerEventStr,
-                string.IsNullOrEmpty(dpsEventStr) ? "None" : dpsEventStr));
+                string.IsNullOrEmpty(tankEventStr) ? "  None" : tankEventStr,
+                string.IsNullOrEmpty(healerEventStr) ? "  None" : healerEventStr,
+                string.IsNullOrEmpty(dpsEventStr) ? "  None" : dpsEventStr));
         }
 
         [Command("leavequeue", RunMode = RunMode.Async)]
