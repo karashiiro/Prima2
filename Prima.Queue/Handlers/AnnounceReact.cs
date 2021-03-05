@@ -58,13 +58,8 @@ namespace Prima.Queue.Handlers
 
             var queueName = QueueInfo.LfgChannels[scheduleQueue];
             var queue = queueService.GetOrCreateQueue(queueName);
-
-            var existingEventId = queue.GetEvent(userId, role);
-            if (!string.IsNullOrEmpty(existingEventId) && existingEventId == eventId.Value.ToString())
-            {
-                await user.SendMessageAsync($"You are already in queue for event `{existingEventId}` as that role.");
-            }
-            else if (queue.Enqueue(userId, role, eventId.Value.ToString()))
+            
+            if (queue.Enqueue(userId, role, eventId.Value.ToString()))
             {
                 await user.SendMessageAsync($"You have been added to the {role} queue for event `{eventId}`. " +
                                             "You can check your position in queue with `~queue` in the queue channel.");
