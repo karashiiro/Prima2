@@ -516,6 +516,9 @@ namespace Prima.Queue.Modules
                         var eventTime = embed.Timestamp.Value;
                         if (eventTime.AddHours(2) <= DateTimeOffset.Now)
                         {
+#if DEBUG
+                            Log.Information("Auto-confirmed.");
+#endif
                             autoConfirmForEvent = true;
                         }
 

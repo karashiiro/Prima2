@@ -62,8 +62,7 @@ namespace Prima.Queue.Handlers
             var existingEventId = queue.GetEvent(userId, role);
             if (!string.IsNullOrEmpty(existingEventId) && existingEventId == eventId.Value.ToString())
             {
-                await user.SendMessageAsync($"You are already in queue for event `{existingEventId}` as that role. " +
-                                            "You can join this queue after leaving that one.");
+                await user.SendMessageAsync($"You are already in queue for event `{existingEventId}` as that role.");
             }
             else if (queue.Enqueue(userId, role, eventId.Value.ToString()))
             {
