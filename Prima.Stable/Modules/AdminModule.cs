@@ -4,6 +4,8 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Prima.Resources;
+using Color = Discord.Color;
 
 namespace Prima.Stable.Modules
 {
@@ -12,6 +14,39 @@ namespace Prima.Stable.Modules
     [RequireUserPermission(ChannelPermission.ManageRoles)]
     public class AdminModule : ModuleBase<SocketCommandContext>
     {
+        [Command("changehost")]
+        public async Task ChangeAnnouncementHost(ulong scheduleChannelId, ulong messageId, ulong newHostId)
+        {
+            var guild = Context.Client.GetGuild(SpecialGuilds.CrystalExploratoryMissions);
+            var channel = guild.GetTextChannel(scheduleChannelId);
+            var embedMessage = await channel.GetMessageAsync(messageId) as IUserMessage;
+            var embed = embedMessage?.Embeds.FirstOrDefault();
+
+            if (embed == null)
+            {
+                await ReplyAsync("Embed message not found.");
+                return;
+            }
+
+            var newHost = Context.Guild.GetUser(newHostId);
+            if (newHost == null)
+            {
+                await ReplyAsync("New host not found.");
+                return;
+            }
+
+            await embedMessage.ModifyAsync(props =>
+            {
+                props.Embed = embed.ToEmbedBuilder()
+                    .WithAuthor(new EmbedAuthorBuilder()
+                        .WithIconUrl(newHost.GetAvatarUrl())
+                        .WithName(newHost.ToString()))
+                    .Build();
+            });
+
+            await ReplyAsync("Announcement host changed.");
+        }
+
         [Command("createrole")]
         public async Task CreateRole([Remainder] string name)
         {

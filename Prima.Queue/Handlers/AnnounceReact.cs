@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using System;
+using Discord;
 using Discord.WebSocket;
 using Prima.Models;
 using Prima.Queue.Services;
@@ -61,6 +62,27 @@ namespace Prima.Queue.Handlers
             
             if (queue.Enqueue(userId, role, eventId.Value.ToString()))
             {
+                var embed = message.Embeds.FirstOrDefault(e => e.Type == EmbedType.Rich);
+                var eventTime = embed?.Timestamp;
+                if (eventTime != null && eventTime.Value.AddHours(-2) <= DateTimeOffset.Now)
+                {
+                    queue.ConfirmEvent(userId, eventId.Value.ToString());
+#if DEBUG
+                    Log.Information("Auto-confirmed.");
+#endif
+                }
+#if DEBUG
+                else
+                {
+                    if (eventTime != null)
+                    {
+                        Log.Information((eventTime.Value - DateTimeOffset.Now).ToString());
+                    }
+
+                    Log.Information("Not auto-confirmed.");
+                }
+#endif
+
                 await user.SendMessageAsync($"You have been added to the {role} queue for event `{eventId}`. " +
                                             "You can check your position in queue with `~queue` in the queue channel.");
                 Log.Information("User {User} has been added to the {FFXIVRole} queue for {QueueName}, with event {Event}", user.ToString(), role.ToString(), queueName, eventId);
@@ -69,7 +91,7 @@ namespace Prima.Queue.Handlers
             {
                 await user.SendMessageAsync("You are already in that queue, in position " +
                                             $"{queue.GetPosition(userId, role, eventId.Value.ToString())}/{queue.Count(role, eventId.Value.ToString())}.\n" +
-                                            "If you would like to leave the queue, please use `~leavequeue` in the queue channel.");
+                                            $"If you would like to leave the queue, please use `~leavequeue {eventId}` in the queue channel.");
             }
 
             queueService.Save();

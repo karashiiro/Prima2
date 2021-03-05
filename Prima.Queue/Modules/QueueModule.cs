@@ -514,7 +514,7 @@ namespace Prima.Queue.Modules
                         }
 
                         var eventTime = embed.Timestamp.Value;
-                        if (eventTime.AddHours(2) <= DateTimeOffset.Now)
+                        if (eventTime.AddHours(-2) <= DateTimeOffset.Now)
                         {
 #if DEBUG
                             Log.Information("Auto-confirmed.");
@@ -623,6 +623,12 @@ namespace Prima.Queue.Modules
             {
                 queue.ConfirmEvent(Context.User.Id, eventId);
             }
+#if DEBUG
+            else
+            {
+                Log.Information("Not auto-confirmed.");
+            }
+#endif
 
             QueueService.Save();
             RefreshQueuesEx();
@@ -668,7 +674,7 @@ namespace Prima.Queue.Modules
                     if (string.IsNullOrEmpty(next.EventId))
                         return agg + $"  {position}/{total}\n";
                     else
-                        return agg + $"  {position}/{total} ({next.EventId})\n";
+                        return agg + $"  {position}/{total} ({next.EventId}){(next.Confirmed ? " CONFIRMED" : " ")}\n";
                 });
 
             var healerEventStr = healerEvents
@@ -682,7 +688,7 @@ namespace Prima.Queue.Modules
                     if (string.IsNullOrEmpty(next.EventId))
                         return agg + $"  {position}/{total}\n";
                     else
-                        return agg + $"  {position}/{total} ({next.EventId})\n";
+                        return agg + $"  {position}/{total} ({next.EventId}){(next.Confirmed ? " CONFIRMED" : " ")}\n";
                 });
 
             var dpsEventStr = dpsEvents
@@ -696,14 +702,14 @@ namespace Prima.Queue.Modules
                     if (string.IsNullOrEmpty(next.EventId))
                         return agg + $"  {position}/{total}\n";
                     else
-                        return agg + $"  {position}/{total} ({next.EventId})\n";
+                        return agg + $"  {position}/{total} ({next.EventId}){(next.Confirmed ? " CONFIRMED" : " ")}\n";
                 });
 
             await ReplyAsync(string.Format(
                 responseTemplate,
-                string.IsNullOrEmpty(tankEventStr) ? "  None" : tankEventStr,
-                string.IsNullOrEmpty(healerEventStr) ? "  None" : healerEventStr,
-                string.IsNullOrEmpty(dpsEventStr) ? "  None" : dpsEventStr));
+                string.IsNullOrEmpty(tankEventStr) ? "  None\n" : tankEventStr,
+                string.IsNullOrEmpty(healerEventStr) ? "  None\n" : healerEventStr,
+                string.IsNullOrEmpty(dpsEventStr) ? "  None\n" : dpsEventStr));
         }
 
         [Command("leavequeue", RunMode = RunMode.Async)]
@@ -750,7 +756,7 @@ namespace Prima.Queue.Modules
             var response = Context.User.Mention;
             var removedRolesList = RolesToArray(removedRoles);
             const string removed0 = ", you weren't found in the non-event queue in this channel.";
-            const string removedCommon = ", you have been removed from this channel's queue";
+            const string removedCommon = ", you have been removed from the queue";
             const string removed1 = " for {0}.";
             const string removed2 = "s for {0} and {1}.";
             const string removed3 = "s for {0}, {1}, and {2}.";
@@ -773,10 +779,11 @@ namespace Prima.Queue.Modules
             QueueService.Save();
 
             Log.Information(
-                "User {User} dropped-out of queue {QueueName} for the roles [{Roles}].",
+                "User {User} dropped-out of queue {QueueName} for the roles [{Roles}] (Event ID: {EventID}).",
                 Context.User.ToString(),
                 queueName,
-                string.Join(',', removedRolesList.Select(r => r.ToString()).ToArray()));
+                string.Join(',', removedRolesList.Select(r => r.ToString()).ToArray()),
+                eventId);
             await ReplyAsync(response);
         }
 
@@ -1247,7 +1254,6 @@ namespace Prima.Queue.Modules
 #endif
 
         [Command("confirm", RunMode = RunMode.Async)]
-        [RequireContext(ContextType.DM)]
         public async Task ConfirmEvent()
         {
             var events = (await GetEvents(2)).ToList();
@@ -1273,6 +1279,9 @@ namespace Prima.Queue.Modules
                 foreach (var (_, embed) in events)
                 {
                     var eventId = embed?.Footer?.Text;
+                    var timestamp = embed?.Timestamp;
+                    if (timestamp.HasValue && timestamp.Value.AddHours(-2) > DateTimeOffset.Now)
+                        continue;
                     confirmedNone |= queue.ConfirmEvent(Context.User.Id, eventId);
                 }
             }
@@ -1290,6 +1299,7 @@ namespace Prima.Queue.Modules
                 return;
             }
 
+            QueueService.Save();
             Log.Information("{User} has confirmed their queue position.", Context.User);
             await ReplyAsync("Queue position confirmed.");
         }
@@ -1313,7 +1323,10 @@ namespace Prima.Queue.Modules
                 {
                     var eventStates = queue.GetEventStates(Context.User.Id, role);
                     var eventState = eventStates.FirstOrDefault(es => es.EventId == eventId);
-                    if (eventState != null)
+#if DEBUG
+                    Log.Information("Queue {HashCode}, role {Role}, event {EventID}, confirmed: {Confirmed}.", queue.GetHashCode(), role, eventState?.EventId ?? eventId, eventState?.Confirmed ?? false);
+#endif
+                    if (eventState?.Confirmed == true)
                     {
                         await ReplyAsync($"{Context.User.Mention}, you are confirmed for that event!");
                         return;
