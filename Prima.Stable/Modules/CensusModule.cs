@@ -332,7 +332,7 @@ namespace Prima.Stable.Modules
             var clearedDRS = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Delubrum Savage"]));
             var savageQueen = guild.GetRole(ulong.Parse(guildConfig.Roles["Savage Queen"]));
 
-            if (member.Roles.Contains(arsenalMaster) && member.Roles.Contains(siegeLiege))
+            if (member.HasRole(arsenalMaster) && member.HasRole(siegeLiege) && member.HasRole(savageQueen))
             {
                 await ReplyAsync(Properties.Resources.MemberAlreadyHasRoleError);
                 return;
