@@ -84,7 +84,11 @@ namespace Prima.Scheduler.Services
                 }, token);
                 
                 await Task.WhenAll(drsCheck, drnCheck, castrumCheck);
+#if DEBUG
+                await Task.Delay(3000, token);
+#else
                 await Task.Delay(new TimeSpan(0, 5, 0), token);
+#endif
             }
         }
 
@@ -108,6 +112,8 @@ namespace Prima.Scheduler.Services
 
                     var timestamp = nullableTimestamp.Value;
                     
+                    Log.Information(timestamp.ToString());
+
                     // Remove expired posts
                     if (timestamp.AddMinutes(60) < DateTimeOffset.Now)
                     {
