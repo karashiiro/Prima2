@@ -721,6 +721,7 @@ namespace Prima.Queue.Modules
             if (args.StartsWith("all"))
             {
                 queue.RemoveAll(Context.User.Id);
+                QueueService.Save();
                 await ReplyAsync($"{Context.User.Mention}, you have been removed from all queues in this channel.");
                 return;
             }
