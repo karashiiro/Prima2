@@ -12,6 +12,13 @@ namespace Prima.Tests.Mocks
             queue.Add(slot);
         }
 
+        public bool EnqueueAndConfirm(ulong userId, FFXIVRole role, string eventId)
+        {
+            var success = base.Enqueue(userId, role, eventId);
+            GetAllSlots().First(s => s.Id == userId).Confirmed = true;
+            return success;
+        }
+
         public IEnumerable<QueueSlot> GetAllSlots()
         {
             return GetQueue(FFXIVRole.DPS)
