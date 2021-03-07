@@ -458,8 +458,9 @@ namespace Prima.Tests
         [Test]
         public void Remove_Event_Works()
         {
-            var queue = new FFXIV3RoleQueue();
+            var queue = new TestQueue();
             queue.Enqueue(UserId, FFXIVRole.DPS, EventId);
+            queue.GetAllSlots().First(s => s.Id == UserId).Confirmed = true;
             queue.Remove(UserId, FFXIVRole.DPS, null);
             var userId = queue.Dequeue(FFXIVRole.DPS, EventId);
             Assert.NotNull(userId);
@@ -468,8 +469,9 @@ namespace Prima.Tests
         [Test]
         public void Remove_NoEvent_Works()
         {
-            var queue = new FFXIV3RoleQueue();
+            var queue = new TestQueue();
             queue.Enqueue(UserId, FFXIVRole.DPS, null);
+            queue.GetAllSlots().First(s => s.Id == UserId).Confirmed = true;
             queue.Remove(UserId, FFXIVRole.DPS, EventId);
             var userId = queue.Dequeue(FFXIVRole.DPS, null);
             Assert.NotNull(userId);
