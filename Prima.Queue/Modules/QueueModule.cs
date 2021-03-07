@@ -247,7 +247,7 @@ namespace Prima.Queue.Modules
             var fetchedSum = fetchedDps.Count + fetchedHealers.Count + fetchedTanks.Count;
             if (fetchedSum == 0)
             {
-                await ReplyAsync($"{Context.User.Mention}, the queues you're trying to pull from are empty" +
+                await ReplyAsync($"{Context.User.Mention}, the queues you're trying to pull from are empty or unconfirmed" +
                                  (requiredDiscordRole == null ? "" : " for that role") +
                                  "!");
                 return;

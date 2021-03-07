@@ -50,7 +50,7 @@ namespace Prima.Queue
                 if (string.IsNullOrEmpty(eventId))
                     slot = queue.FirstOrDefault(s => !s.RoleIds.Any() && string.IsNullOrEmpty(s.EventId));
                 else
-                    slot = queue.FirstOrDefault(s => !s.RoleIds.Any() && s.EventId == eventId);
+                    slot = queue.FirstOrDefault(s => !s.RoleIds.Any() && s.EventId == eventId && s.Confirmed);
 
                 if (slot != null)
                 {

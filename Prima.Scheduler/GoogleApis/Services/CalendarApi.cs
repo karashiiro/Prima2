@@ -11,6 +11,7 @@ namespace Prima.Scheduler.GoogleApis.Services
     public class CalendarApi
     {
         private const string BaseAddress = "http://localhost:7552/calendar";
+        private const string CannotConnectMessage = "Could not connect to Calendar API service.";
 
         private readonly HttpClient _http;
 
@@ -26,7 +27,7 @@ namespace Prima.Scheduler.GoogleApis.Services
             }
             catch (HttpRequestException)
             {
-                Log.Warning("Could not connect to API server.");
+                Log.Warning(CannotConnectMessage);
                 return new MiniEvent[0];
             }
         }
@@ -44,7 +45,7 @@ namespace Prima.Scheduler.GoogleApis.Services
             }
             catch (HttpRequestException)
             {
-                Log.Warning("Could not connect to API server.");
+                Log.Warning(CannotConnectMessage);
                 return null;
             }
         }
@@ -60,7 +61,7 @@ namespace Prima.Scheduler.GoogleApis.Services
             }
             catch (HttpRequestException)
             {
-                Log.Warning("Could not connect to API server.");
+                Log.Warning(CannotConnectMessage);
                 return false;
             }
         }
@@ -76,7 +77,7 @@ namespace Prima.Scheduler.GoogleApis.Services
             }
             catch (HttpRequestException)
             {
-                Log.Warning("Could not connect to API server.");
+                Log.Warning(CannotConnectMessage);
                 return null;
             }
         }
@@ -93,7 +94,7 @@ namespace Prima.Scheduler.GoogleApis.Services
             }
             catch (HttpRequestException)
             {
-                Log.Warning("Could not connect to API server.");
+                Log.Warning(CannotConnectMessage);
                 return false;
             }
         }

@@ -49,7 +49,7 @@ namespace Prima.Queue
                 if (string.IsNullOrEmpty(eventId))
                     slot = queue.FirstOrDefault(s => SlotHasRole(s, discordRole, context) && string.IsNullOrEmpty(s.EventId));
                 else
-                    slot = queue.FirstOrDefault(s => SlotHasRole(s, discordRole, context) && s.EventId == eventId);
+                    slot = queue.FirstOrDefault(s => SlotHasRole(s, discordRole, context) && s.EventId == eventId && s.Confirmed);
 
                 if (slot == null)
                 {
