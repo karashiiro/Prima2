@@ -58,7 +58,7 @@ namespace Prima.Queue
 
                 var user = slot.Id;
 
-                RemoveAll(user);
+                RemoveAll(user, eventId);
                 return user;
             }
         }

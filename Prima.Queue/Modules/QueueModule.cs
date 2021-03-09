@@ -211,15 +211,15 @@ namespace Prima.Queue.Modules
             Log.Information("Removed user {User} from queue {QueueName}.", Context.User.ToString(), queueName);
             queue.RemoveAll(leader.Id, eventId);
 
-            var fetchedDps = new List<ulong>();
-            for (var i = 0; i < dpsWanted; i++)
+            var fetchedTanks = new List<ulong>();
+            for (var i = 0; i < tanksWanted; i++)
             {
-                var nextDps = requiredDiscordRole == null
-                    ? queue.Dequeue(FFXIVRole.DPS, eventId)
-                    : queue.DequeueWithDiscordRole(FFXIVRole.DPS, requiredDiscordRole, Context, eventId);
-                if (nextDps == null) break;
-                Log.Information("Removed user {User} from queue {QueueName}.", nextDps.ToString(), queueName);
-                fetchedDps.Add(nextDps.Value);
+                var nextTank = requiredDiscordRole == null
+                    ? queue.Dequeue(FFXIVRole.Tank, eventId)
+                    : queue.DequeueWithDiscordRole(FFXIVRole.Tank, requiredDiscordRole, Context, eventId);
+                if (nextTank == null) break;
+                Log.Information("Removed user {User} from queue {QueueName}.", nextTank.ToString(), queueName);
+                fetchedTanks.Add(nextTank.Value);
             }
             var fetchedHealers = new List<ulong>();
             for (var i = 0; i < healersWanted; i++)
@@ -231,15 +231,15 @@ namespace Prima.Queue.Modules
                 Log.Information("Removed user {User} from queue {QueueName}.", nextHealer.ToString(), queueName);
                 fetchedHealers.Add(nextHealer.Value);
             }
-            var fetchedTanks = new List<ulong>();
-            for (var i = 0; i < tanksWanted; i++)
+            var fetchedDps = new List<ulong>();
+            for (var i = 0; i < dpsWanted; i++)
             {
-                var nextTank = requiredDiscordRole == null
-                    ? queue.Dequeue(FFXIVRole.Tank, eventId)
-                    : queue.DequeueWithDiscordRole(FFXIVRole.Tank, requiredDiscordRole, Context, eventId);
-                if (nextTank == null) break;
-                Log.Information("Removed user {User} from queue {QueueName}.", nextTank.ToString(), queueName);
-                fetchedTanks.Add(nextTank.Value);
+                var nextDps = requiredDiscordRole == null
+                    ? queue.Dequeue(FFXIVRole.DPS, eventId)
+                    : queue.DequeueWithDiscordRole(FFXIVRole.DPS, requiredDiscordRole, Context, eventId);
+                if (nextDps == null) break;
+                Log.Information("Removed user {User} from queue {QueueName}.", nextDps.ToString(), queueName);
+                fetchedDps.Add(nextDps.Value);
             }
 
             QueueService.Save();
@@ -1206,8 +1206,7 @@ namespace Prima.Queue.Modules
             Log.Information("User {User} inserted at position {Position} in queue {QueueName}.", user.ToString(), position, queueName);
             return ReplyAsync($"User inserted in position {position}.");
         }
-
-#if DEBUG
+        
         [Command("expirequeue", RunMode = RunMode.Async)]
         [Description("Expires all members from a given event queue.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
@@ -1251,7 +1250,6 @@ namespace Prima.Queue.Modules
             await Task.WhenAll(responseTasks);
             await ReplyAsync("Queue expiry notifications have been sent -- your queue has been emptied.");
         }
-#endif
 
         [Command("confirm", RunMode = RunMode.Async)]
         public async Task ConfirmEvent()

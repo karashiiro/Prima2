@@ -54,7 +54,7 @@ namespace Prima.Queue
 
                 if (slot != null)
                 {
-                    RemoveAll(slot.Id);
+                    RemoveAll(slot.Id, eventId);
                     return slot.Id;
                 }
                 else
