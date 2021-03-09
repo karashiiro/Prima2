@@ -24,7 +24,7 @@ namespace Prima.Stable.Handlers
                 await message.AddReactionAsync(emote);
             }
 
-            if (isCEMChannel && (HasWord(message.Content, "intercardinals") || HasWord(message.Content, "intercards") || message.Content.Contains("<@383805961216983061>")))
+            if (isCEMChannel && (HasWord(message.Content, "intercardinals") || HasWord(message.Content, "intercards") || message.Content.Contains("383805961216983061")))
             {
                 var emotes = new[] {new Emoji("↖️"), new Emoji("↙️"), new Emoji("↘️"), new Emoji("↗️") };
                 foreach (var emote in emotes)
