@@ -104,7 +104,7 @@ namespace Prima.Scheduler.Handlers
                 props.Embed = embed
                     .ToEmbedBuilder()
                     .WithTimestamp(time.AddHours(-tzi.BaseUtcOffset.Hours))
-                    .WithTitle($"Event scheduled by {message.Author} on {time.DayOfWeek} at {time.ToShortTimeString()} ({tzAbbr})!")
+                    .WithTitle($"Event scheduled by {message.Author.Username ?? message.Author.ToString()} on {time.DayOfWeek} at {time.ToShortTimeString()} ({tzAbbr})!")
                     .WithDescription(trimmedDescription + (calendarLinkLine != null
                         ? $"\n\n{calendarLinkLine}"
                         : "") + (messageLinkLine != null

@@ -86,7 +86,7 @@ namespace Prima.Scheduler.Modules
                     .WithName(Context.User.ToString()))
                 .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
                 .WithTimestamp(time.AddHours(-tzi.BaseUtcOffset.Hours))
-                .WithTitle($"Event scheduled by {Context.User} on {time.DayOfWeek} at {time.ToShortTimeString()} ({tzAbbr})!")
+                .WithTitle($"Event scheduled by {Context.User.Username ?? Context.User.ToString()} on {time.DayOfWeek} at {time.ToShortTimeString()} ({tzAbbr})!")
                 .WithDescription(trimmedDescription + $"\n\n[Copy to Google Calendar]({eventLink})\nMessage Link: {Context.Message.GetJumpUrl()}")
                 .WithFooter(Context.Message.Id.ToString())
                 .Build());
@@ -291,11 +291,10 @@ namespace Prima.Scheduler.Modules
         {
             var outputChannel = GetOutputChannel();
             if (outputChannel == null) return;
-
-            var username = Context.User.ToString();
+            
             var time = Util.GetDateTime(args);
 
-            var (embedMessage, embed) = await FindAnnouncement(outputChannel, username, time);
+            var (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, time);
             if (embedMessage != null && embed?.Footer != null && ulong.TryParse(embed.Footer?.Text, out var originalMessageId))
             {
                 var count = await Db.EventReactions
@@ -333,7 +332,7 @@ namespace Prima.Scheduler.Modules
                 return;
             }
 
-            var (embedMessage, embed) = await FindAnnouncement(outputChannel, username, curTime);
+            var (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, curTime);
             if (embedMessage != null)
             {
                 var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
@@ -345,7 +344,7 @@ namespace Prima.Scheduler.Modules
                     props.Embed = embed
                         .ToEmbedBuilder()
                         .WithTimestamp(newTime.AddHours(-tzi.BaseUtcOffset.Hours))
-                        .WithTitle($"Event scheduled by {Context.User} on {newTime.DayOfWeek} at {newTime.ToShortTimeString()} ({tzAbbr})!")
+                        .WithTitle($"Event scheduled by {Context.User.Username ?? Context.User.ToString()} on {newTime.DayOfWeek} at {newTime.ToShortTimeString()} ({tzAbbr})!")
                         .Build();
                 });
                 
@@ -389,7 +388,7 @@ namespace Prima.Scheduler.Modules
 
             var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
 
-            var (embedMessage, embed) = await FindAnnouncement(outputChannel, username, time);
+            var (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, time);
             if (embedMessage != null)
             {
                 await embedMessage.ModifyAsync(props =>
@@ -470,7 +469,7 @@ namespace Prima.Scheduler.Modules
             return Context.Guild.GetTextChannel(outputChannelId);
         }
 
-        private async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, string username, DateTime time)
+        private async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, SocketUser user, DateTime time)
         {
             var announcements = new List<(IUserMessage, IEmbed)>();
 
@@ -483,7 +482,7 @@ namespace Prima.Scheduler.Modules
                     var embed = restMessage.Embeds.FirstOrDefault();
                     if (embed?.Footer == null) continue;
 
-                    if (!(embed.Title.Contains(username)
+                    if (!((embed.Title.Contains(user.ToString()) || embed.Title.Contains(user.Username))
                           && embed.Title.Contains(time.ToShortTimeString())
                           && embed.Title.Contains(time.DayOfWeek.ToString()))) continue;
 
