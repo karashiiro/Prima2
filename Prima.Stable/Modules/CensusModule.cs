@@ -289,17 +289,17 @@ namespace Prima.Stable.Modules
             await finalReply.DeleteAsync();
         }
 
-        private async Task ActivateUser(SocketGuildUser member, DiscordGuildConfiguration guildConfig)
+        private static async Task ActivateUser(SocketGuildUser member, DiscordGuildConfiguration guildConfig)
         {
             var memberRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
             await member.AddRoleAsync(memberRole);
-            Log.Information("Added {DiscordName} to {Role}.", Context.User.ToString(), memberRole.Name);
+            Log.Information("Added {DiscordName} to {Role}.", member.ToString(), memberRole.Name);
             
             var contentRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles[MostRecentZoneRole]));
             if (contentRole != null)
             {
                 await member.AddRoleAsync(contentRole);
-                Log.Information("Added {DiscordName} to {Role}.", Context.User.ToString(), contentRole.Name);
+                Log.Information("Added {DiscordName} to {Role}.", member.ToString(), contentRole.Name);
             }
         }
 
@@ -364,7 +364,7 @@ namespace Prima.Stable.Modules
             var hasCastrumLLAchievement2 = false;
             var hasDRSAchievement1 = false;
             var hasDRSAchievement2 = false;
-            if (!character["Bio"].Contains(Context.User.Id.ToString()))
+            if (!character["Bio"].ToObject<string>().Contains(Context.User.Id.ToString()))
             {
                 await ReplyAsync(Properties.Resources.LodestoneDiscordIdNotFoundError);
                 return;
