@@ -24,11 +24,11 @@ namespace Prima.Stable
 
             var client = services.GetRequiredService<DiscordSocketClient>();
             var db = services.GetRequiredService<IDbService>();
-            var moderationEvents = services.GetRequiredService<ModerationEventService>();
             var censusEvents = services.GetRequiredService<CensusEventService>();
             var mute = services.GetRequiredService<MuteService>();
             var roleRemover = services.GetRequiredService<TimedRoleManager>();
             var ffLogs = services.GetRequiredService<FFLogsAPI>();
+            var web = services.GetRequiredService<WebClient>();
 
             roleRemover.Initialize();
             await ffLogs.Initialize();
@@ -41,8 +41,8 @@ namespace Prima.Stable
             client.ReactionAdded += (message, channel, reaction)
                 => VoteReactions.HandlerAdd(client, db, message, reaction);
 
-            client.MessageDeleted += moderationEvents.MessageDeleted;
-            client.MessageReceived += moderationEvents.MessageRecieved;
+            client.MessageDeleted += (message, channel) => AuditDeletion.Handler(db, client, message, channel);
+            client.MessageReceived += message => ChatCleanup.Handler(db, web, message);
 
             client.MessageReceived += message => MessageCache.Handler(db, message);
             client.MessageReceived += message => ExtraMessageReceived.Handler(client, message);
@@ -60,7 +60,6 @@ namespace Prima.Stable
         {
             sc
                 .AddSingleton<WebClient>()
-                .AddSingleton<ModerationEventService>()
                 .AddSingleton<CensusEventService>()
                 .AddSingleton<PresenceService>()
                 .AddSingleton<XIVAPIService>()

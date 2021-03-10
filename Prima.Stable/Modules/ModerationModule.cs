@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Prima.Attributes;
+using Prima.Stable.Handlers;
 
 namespace Prima.Moderation.Modules
 {
@@ -21,7 +22,6 @@ namespace Prima.Moderation.Modules
     public class ModerationModule : ModuleBase<SocketCommandContext>
     {
         public IDbService Db { get; set; }
-        public ModerationEventService Events { get; set; }
 
         // Submit a report.
         [Command("modmail", RunMode = RunMode.Async)]
@@ -167,7 +167,8 @@ namespace Prima.Moderation.Modules
 
             if (string.IsNullOrEmpty(regexString)) // Remove the last regex that was matched if none was specified.
             {
-                var entry = guildConfig.TextBlacklist.Single(rs => rs == Events.LastCaughtRegex);
+                var lastCaughtRegex = ChatCleanup.LastCaughtRegex;
+                var entry = guildConfig.TextBlacklist.Single(rs => rs == lastCaughtRegex);
                 await Db.RemoveGuildTextBlacklistEntry(Context.Guild.Id, entry);
             }
             else
