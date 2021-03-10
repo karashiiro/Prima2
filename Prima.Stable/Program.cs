@@ -60,6 +60,7 @@ namespace Prima.Stable
         {
             sc
                 .AddSingleton<WebClient>()
+                .AddSingleton<CharacterLookup>()
                 .AddSingleton<CensusEventService>()
                 .AddSingleton<PresenceService>()
                 .AddSingleton<XIVAPIService>()
