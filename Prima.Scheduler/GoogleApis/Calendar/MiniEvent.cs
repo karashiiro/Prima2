@@ -15,5 +15,8 @@ namespace Prima.Scheduler.GoogleApis.Calendar
 
         [JsonProperty("startTime")]
         public string StartTime { get; set; }
+
+        [JsonProperty("color")]
+        public int Color { get; set; }
     }
 }
