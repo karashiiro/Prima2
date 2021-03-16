@@ -230,10 +230,12 @@ namespace Prima.Stable.Modules
             public DiscordXIVUser User { get; set; }
         }
 
-        private async Task RegisterUser(PotentialDbUser potentialUser)
+        private async Task RegisterUser(IEnumerable<IGuildUser> members, PotentialDbUser potentialUser)
         {
             if (potentialUser.User != null)
                 return;
+            var member = members.FirstOrDefault(m => m.Nickname == $"({potentialUser.World}) {potentialUser.Name}");
+            if (member == null) return;
             var userInfo = await Lodestone.GetDiscordXIVUser(potentialUser.World, potentialUser.Name, 0);
             if (userInfo != null)
             {
@@ -267,23 +269,26 @@ namespace Prima.Stable.Modules
             var originalUsers = res.MasterData.Actors
                 .Where(a => a.Server != null)
                 .ToList();
+            var members = Context.Guild.Users;
             var potentialUsers = originalUsers.ToDictionary(a => a.Id, a => a)
                 .Select(kvp => new KeyValuePair<int, PotentialDbUser>(kvp.Key, new PotentialDbUser
                 {
                     Name = kvp.Value.Name,
                     World = kvp.Value.Server,
                     User = Db.Users.FirstOrDefault(u => u.Name == kvp.Value.Name && u.World == kvp.Value.Server),
-                }));
+                }))
+                .Select(async kvp =>
+                {
+                    var (id, potentialUser) = kvp;
+                    await RegisterUser(members, potentialUser);
+                    return new KeyValuePair<int, DiscordXIVUser>(id, potentialUser.User);
+                })
+                .ToList();
             // We can't cleanly go from a KeyValuePair<int, Task<DiscordXIVUser>>
             // to a KeyValuePair<int, DiscordXIVUser>, so let's break it up into
             // multiple queries.
-            var users = new Dictionary<int, DiscordXIVUser>();
-            foreach (var (id, potentialUser) in potentialUsers)
-            {
-                await RegisterUser(potentialUser);
-                users.Add(id, potentialUser.User);
-            }
-            users = users.Where(kvp => kvp.Value != null)
+            var users = (await Task.WhenAll(potentialUsers))
+                .Where(kvp => kvp.Value != null)
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);;
             var missedUsers = new List<LogInfo.ReportDataWrapper.ReportData.Report.Master.Actor>();
 
