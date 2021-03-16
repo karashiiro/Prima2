@@ -15,6 +15,7 @@ using Prima.Scheduler.GoogleApis.Services;
 using Serilog;
 using TimeZoneNames;
 using Color = Discord.Color;
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace Prima.Scheduler.Modules
 {
@@ -112,6 +113,46 @@ namespace Prima.Scheduler.Modules
                 var eventStartTime = XmlConvert.ToDateTime(e.StartTime, XmlDateTimeSerializationMode.Utc);
                 return e.Title == title && eventStartTime == startTime;
             });
+        }
+
+        [Command("setruntime")]
+        [RequireUserPermission(GuildPermission.BanMembers)]
+        [RequireContext(ContextType.Guild)]
+        public async Task SetRunTimestamp(ulong outputChannelId, ulong eventId, [Remainder]string args)
+        {
+            var outputChannel = Context.Guild.GetTextChannel(outputChannelId);
+            var (embedMessage, embed) = await FindAnnouncement(outputChannel, eventId);
+            if (embed == null)
+            {
+                await ReplyAsync("No run was found matching that event ID in that channel.");
+                return;
+            }
+
+            var newRunTime = Util.GetDateTime(args);
+
+            var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
+            var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
+            var isDST = tzi.IsDaylightSavingTime(DateTime.Now);
+            var tzAbbr = isDST ? tzAbbrs.Daylight : tzAbbrs.Standard;
+            var timeMod = -tzi.BaseUtcOffset.Hours;
+            if (isDST)
+                timeMod -= 1;
+
+            var host = Context.Guild.Users.FirstOrDefault(u => u.ToString() == embed.Author?.Name);
+            await embedMessage.ModifyAsync(props =>
+            {
+                var builder = embed.ToEmbedBuilder();
+                if (host != null)
+                {
+                    builder = builder.WithTitle(
+                        $"Event scheduled by {host.Username ?? host.ToString()} on {newRunTime.DayOfWeek} at {newRunTime.ToShortTimeString()} ({tzAbbr})!");
+                }
+                props.Embed = builder
+                    .WithTimestamp(newRunTime.AddHours(timeMod))
+                    .Build();
+            });
+
+            await ReplyAsync("Updated.");
         }
 
         [Command("sortembeds", RunMode = RunMode.Async)]
