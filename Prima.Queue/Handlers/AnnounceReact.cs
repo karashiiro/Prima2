@@ -43,6 +43,7 @@ namespace Prima.Queue.Handlers
 
             var message = await cachedMessage.GetOrDownloadAsync();
             var inputChannel = guild.GetTextChannel(GetScheduleInputChannel(guildConfig, message.Channel.Id));
+            if (inputChannel == null) return;
             var eventMessage = await inputChannel.GetMessageAsync(eventId.Value);
 
             var host = guild.GetUser(eventMessage.Author.Id);
