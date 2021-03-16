@@ -69,7 +69,11 @@ namespace Prima.Scheduler.Modules
 
             var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
-            var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
+            var isDST = tzi.IsDaylightSavingTime(DateTime.Now);
+            var tzAbbr = isDST ? tzAbbrs.Daylight : tzAbbrs.Standard;
+            var timeMod = -tzi.BaseUtcOffset.Hours;
+            if (isDST)
+                timeMod -= 1;
 
             var eventLink =
 #if DEBUG
@@ -89,7 +93,7 @@ namespace Prima.Scheduler.Modules
                     .WithIconUrl(Context.User.GetAvatarUrl())
                     .WithName(Context.User.ToString()))
                 .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
-                .WithTimestamp(time.AddHours(-tzi.BaseUtcOffset.Hours))
+                .WithTimestamp(time.AddHours(timeMod))
                 .WithTitle($"Event scheduled by {Context.User.Username ?? Context.User.ToString()} on {time.DayOfWeek} at {time.ToShortTimeString()} ({tzAbbr})!")
                 .WithDescription(trimmedDescription + $"\n\n[Copy to Google Calendar]({eventLink})\nMessage Link: {Context.Message.GetJumpUrl()}")
                 .WithFooter(Context.Message.Id.ToString())
@@ -97,7 +101,7 @@ namespace Prima.Scheduler.Modules
             
             await ReplyAsync($"Event announced! Announcement posted in <#{outputChannel.Id}>. React to the announcement in " +
                              $"<#{outputChannel.Id}> with :vibration_mode: to be notified before the event begins.");
-            await SortEmbeds(outputChannel, Context.Guild);
+            await SortEmbeds(guildConfig, Context.Guild, outputChannel);
         }
 
         private async Task<MiniEvent> FindEvent(string calendarClass, string title, DateTime startTime)
@@ -115,8 +119,11 @@ namespace Prima.Scheduler.Modules
         [RequireOwner]
         public async Task SortEmbedsCommand(ulong id)
         {
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return;
+
             var channel = Context.Guild.GetTextChannel(id);
-            await SortEmbeds(channel, Context.Guild);
+            await SortEmbeds(guildConfig, Context.Guild, channel);
             await ReplyAsync("Done!");
         }
 
@@ -199,7 +206,7 @@ namespace Prima.Scheduler.Modules
             }
         }
 
-        private async Task SortEmbeds(IMessageChannel channel, IGuild guild)
+        private async Task SortEmbeds(DiscordGuildConfiguration guildConfig, IGuild guild, IMessageChannel channel)
         {
             var progress = await ReplyAsync("Sorting announcements...");
             using var typing = Context.Channel.EnterTypingState();
@@ -263,7 +270,9 @@ namespace Prima.Scheduler.Modules
 
                     try
                     {
-                        await m.AddReactionsAsync(new IEmote[] {new Emoji("📳"), dps, healer, tank});
+                        await m.AddReactionAsync(new Emoji("📳"));
+                        if (channel.Id != guildConfig.BozjaClusterScheduleOutputChannel)
+                            await m.AddReactionsAsync(new IEmote[] {dps, healer, tank});
                     }
                     catch (Exception e)
                     {
@@ -370,7 +379,7 @@ namespace Prima.Scheduler.Modules
                 await Calendar.UpdateEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), @event);
 #endif
 
-                await SortEmbeds(outputChannel, Context.Guild);
+                await SortEmbeds(guildConfig, Context.Guild, outputChannel);
 
                 Log.Information("Rescheduled announcement from {OldTime} to {NewTime}", curTime.ToShortTimeString(), newTime.ToShortTimeString());
                 await ReplyAsync("Announcement rescheduled!");
