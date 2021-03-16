@@ -1207,8 +1207,8 @@ namespace Prima.Queue.Modules
             return ReplyAsync($"User inserted in position {position}.");
         }
         
-        [Command("expirequeue", RunMode = RunMode.Async)]
-        [Description("Expires all members from a given event queue.")]
+        [Command("expirequeues", RunMode = RunMode.Async)]
+        [Description("Expires all members from nonexistent events.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task ExpireEventQueue([Remainder] string args = "")
         {
@@ -1217,38 +1217,36 @@ namespace Prima.Queue.Modules
             if (sender.Roles.All(r => r.Id != mentor) && !sender.GuildPermissions.KickMembers)
                 return;
 
-            var parameters = args.Split(' ');
-            var eventId = parameters.FirstOrDefault();
-            if (eventId == null)
-            {
-                await ReplyAsync("Please include an event ID with that command.");
-                return;
-            }
-
             using var typing = Context.Channel.EnterTypingState();
 
-            var queueNames = QueueInfo.LfgChannels
-                .Select(kvp => kvp.Value);
-            var expiredMembers = new List<ulong>();
-            foreach (var queueName in queueNames)
+            var eventIds = (await GetEvents(int.MaxValue))
+                .Select(@event => @event.Item2.Footer?.Text)
+                .Where(id => id != null)
+                .ToList();
+            var queueEventIds = new List<string>();
+
+            var queues = QueueInfo.LfgChannels
+                .Select(kvp => kvp.Value)
+                .Select(QueueService.GetOrCreateQueue)
+                .ToList();
+            foreach (var queue in queues)
             {
-                var queue = QueueService.GetOrCreateQueue(queueName);
-                expiredMembers.AddRange(queue.ExpireEvent(eventId));
+                queueEventIds.AddRange(queue.GetEvents());
             }
 
-            expiredMembers = expiredMembers
+            var inactiveEventIds = eventIds
+                .Except(queueEventIds)
                 .Distinct()
                 .ToList();
+            foreach (var queue in queues)
+            {
+                foreach (var eventId in inactiveEventIds)
+                {
+                    queue.ExpireEvent(eventId);
+                }
+            }
 
-            const string expiryMessageFormat = "The host of run `{0}` has expired their queue. You have been removed from the queue.";
-            var responseTasks = expiredMembers
-                .Select(userId => Context.Guild.GetUser(userId))
-                .Select(member => member.SendMessageAsync(string.Format(expiryMessageFormat, eventId)))
-                .Cast<Task>()
-                .ToList();
-
-            await Task.WhenAll(responseTasks);
-            await ReplyAsync("Queue expiry notifications have been sent -- your queue has been emptied.");
+            await ReplyAsync($"Done! Events cleared:```\n{inactiveEventIds.Aggregate("", (agg, next) => agg += $"{next}\n")}```");
         }
 
         [Command("confirm", RunMode = RunMode.Async)]
