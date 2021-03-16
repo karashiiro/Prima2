@@ -239,6 +239,7 @@ namespace Prima.Stable.Modules
             var userInfo = await Lodestone.GetDiscordXIVUser(potentialUser.World, potentialUser.Name, 0);
             if (userInfo != null)
             {
+                userInfo.DiscordId = member.Id;
                 await Db.AddUser(userInfo);
                 potentialUser.User = userInfo;
             }
