@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
+using Prima.Models;
 using Prima.Resources;
 using Prima.Services;
 using Serilog;
@@ -12,6 +13,37 @@ namespace Prima.Scheduler
 {
     public static class ScheduleUtils
     {
+        public static IMessageChannel GetOutputChannel(DiscordGuildConfiguration guildConfig, SocketGuild guild, IMessageChannel inputChannel)
+        {
+            ulong outputChannelId;
+            if (inputChannel.Id == guildConfig.CastrumScheduleInputChannel)
+                outputChannelId = guildConfig.CastrumScheduleOutputChannel;
+            else if (inputChannel.Id == guildConfig.BozjaClusterScheduleInputChannel)
+                outputChannelId = guildConfig.BozjaClusterScheduleOutputChannel;
+            else if (inputChannel.Id == guildConfig.DelubrumScheduleInputChannel)
+                outputChannelId = guildConfig.DelubrumScheduleOutputChannel;
+            else // inputChannel.Id == guildConfig.DelubrumNormalScheduleInputChannel
+                outputChannelId = guildConfig.DelubrumNormalScheduleOutputChannel;
+
+            return guild.GetTextChannel(outputChannelId);
+        }
+
+        public static string GetCalendarCodeForOutputChannel(DiscordGuildConfiguration guildConfig, ulong channelId)
+        {
+            if (guildConfig == null) return null;
+
+            if (channelId == guildConfig.CastrumScheduleOutputChannel)
+                return "cll";
+            else if (channelId == guildConfig.BozjaClusterScheduleOutputChannel)
+                return "bcf";
+            else if (channelId == guildConfig.DelubrumScheduleOutputChannel)
+                return "drs";
+            else if (channelId == guildConfig.DelubrumNormalScheduleOutputChannel)
+                return "dr";
+            else
+                return null;
+        }
+
         public static TimeZoneInfo TimeZoneFromAbbr(string abbr)
         {
             abbr = abbr.ToLowerInvariant();

@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
 using Discord.WebSocket;
+using Prima.Models;
 using Prima.Scheduler.GoogleApis.Calendar;
 using Prima.Scheduler.GoogleApis.Services;
 using Serilog;
@@ -28,7 +29,10 @@ namespace Prima.Scheduler.Modules
         [Description("Announce an event. Usage: `~announce Time | Description`")]
         public async Task Announce([Remainder]string args)
         {
-            var outputChannel = GetOutputChannel();
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return;
+
+            var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, Context.Guild, Context.Channel);
             if (outputChannel == null) return;
 
             var prefix = Db.Config.Prefix;
@@ -71,7 +75,7 @@ namespace Prima.Scheduler.Modules
 #if DEBUG
             await Calendar.PostEvent("drs", new MiniEvent
 #else
-            await Calendar.PostEvent(GetCalendarCode(outputChannel.Id), new MiniEvent
+            await Calendar.PostEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), new MiniEvent
 #endif
             {
                 Title = Context.User.ToString(),
@@ -289,7 +293,10 @@ namespace Prima.Scheduler.Modules
         [Description("Get the number of reactions for an announcement.")]
         public async Task ReactionCount([Remainder] string args)
         {
-            var outputChannel = GetOutputChannel();
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return;
+
+            var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, Context.Guild, Context.Channel);
             if (outputChannel == null) return;
             
             var time = Util.GetDateTime(args);
@@ -312,7 +319,10 @@ namespace Prima.Scheduler.Modules
         [Description("Reschedule an announcement. Usage: `~reannounce Old Time | New Time`")]
         public async Task Reannounce([Remainder] string args)
         {
-            var outputChannel = GetOutputChannel();
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return;
+
+            var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, Context.Guild, Context.Channel);
             if (outputChannel == null) return;
 
             var username = Context.User.ToString();
@@ -354,10 +364,10 @@ namespace Prima.Scheduler.Modules
                     XmlDateTimeSerializationMode.Utc);
                 await Calendar.UpdateEvent("drs", @event);
 #else
-                var @event = await FindEvent(GetCalendarCode(outputChannel.Id), username, curTime.AddHours(-tzi.BaseUtcOffset.Hours));
+                var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), username, curTime.AddHours(-tzi.BaseUtcOffset.Hours));
                 @event.StartTime = XmlConvert.ToString(newTime.AddHours(-tzi.BaseUtcOffset.Hours),
                     XmlDateTimeSerializationMode.Utc);
-                await Calendar.UpdateEvent(GetCalendarCode(outputChannel.Id), @event);
+                await Calendar.UpdateEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), @event);
 #endif
 
                 await SortEmbeds(outputChannel, Context.Guild);
@@ -375,7 +385,10 @@ namespace Prima.Scheduler.Modules
         [Description("Cancel an event. Usage: `~unannounce Time`")]
         public async Task Unannounce([Remainder]string args)
         {
-            var outputChannel = GetOutputChannel();
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return;
+
+            var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, Context.Guild, Context.Channel);
             if (outputChannel == null) return;
 
             var username = Context.User.ToString();
@@ -408,14 +421,14 @@ namespace Prima.Scheduler.Modules
 #if DEBUG
                 var @event = await FindEvent("drs", username, time.AddHours(-tzi.BaseUtcOffset.Hours));
 #else
-                var @event = await FindEvent(GetCalendarCode(outputChannel.Id), username, time.AddHours(-tzi.BaseUtcOffset.Hours));
+                var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), username, time.AddHours(-tzi.BaseUtcOffset.Hours));
 #endif
                 if (@event != null)
                 {
 #if DEBUG
                     await Calendar.DeleteEvent("drs", @event.ID);
 #else
-                    await Calendar.DeleteEvent(GetCalendarCode(outputChannel.Id), @event.ID);
+                    await Calendar.DeleteEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), @event.ID);
 #endif
                 }
 
@@ -430,43 +443,6 @@ namespace Prima.Scheduler.Modules
             {
                 await ReplyAsync("No event by you was found at that time!");
             }
-        }
-
-        private string GetCalendarCode(ulong channelId)
-        {
-            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
-            if (guildConfig == null) return null;
-
-            if (channelId == guildConfig.CastrumScheduleOutputChannel)
-                return "cll";
-            else if (channelId == guildConfig.DelubrumScheduleOutputChannel)
-                return "drs";
-            else if (channelId == guildConfig.DelubrumNormalScheduleOutputChannel)
-                return "dr";
-            else
-                return null;
-        }
-
-        private IMessageChannel GetOutputChannel()
-        {
-            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
-            if (guildConfig == null) return null;
-
-            ulong outputChannelId;
-            if (Context.Channel.Id == guildConfig.CastrumScheduleInputChannel)
-            {
-                outputChannelId = guildConfig.CastrumScheduleOutputChannel;
-            }
-            else if (Context.Channel.Id == guildConfig.DelubrumScheduleInputChannel)
-            {
-                outputChannelId = guildConfig.DelubrumScheduleOutputChannel;
-            }
-            else // Context.Channel.Id == guildConfig.DelubrumNormalScheduleInputChannel
-            {
-                outputChannelId = guildConfig.DelubrumNormalScheduleOutputChannel;
-            }
-
-            return Context.Guild.GetTextChannel(outputChannelId);
         }
 
         private async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, SocketUser user, DateTime time)
@@ -525,7 +501,7 @@ namespace Prima.Scheduler.Modules
             }
         }
 
-        private async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, ulong eventId)
+        private static async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, ulong eventId)
         {
             await foreach (var page in channel.GetMessagesAsync())
             {

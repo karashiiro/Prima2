@@ -74,6 +74,15 @@ namespace Prima.Scheduler.Services
                     await NotifyMembers(host, embedMessage, embed, token);
                 }, token);
 
+                var clusterCheck = CheckRuns(guild, guildConfig.BozjaClusterScheduleOutputChannel, 30, async (host, embedMessage, embed) =>
+                {
+                    var success = await AssignHostRole(guild, host);
+                    if (!success) return;
+
+                    await NotifyLead(host);
+                    await NotifyMembers(host, embedMessage, embed, token);
+                }, token);
+
                 var castrumCheck = CheckRuns(guild, guildConfig.CastrumScheduleOutputChannel, 30, async (host, embedMessage, embed) =>
                 {
                     var success = await AssignHostRole(guild, host);
@@ -83,7 +92,7 @@ namespace Prima.Scheduler.Services
                     await NotifyMembers(host, embedMessage, embed, token);
                 }, token);
                 
-                await Task.WhenAll(drsCheck, drnCheck, castrumCheck);
+                await Task.WhenAll(drsCheck, drnCheck, clusterCheck, castrumCheck);
 #if DEBUG
                 await Task.Delay(3000, token);
 #else

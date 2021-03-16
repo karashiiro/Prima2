@@ -33,7 +33,7 @@ namespace Prima.Scheduler.Handlers
 
             Log.Information("Announcement message being edited.");
 
-            var outputChannel = GetOutputChannel(guildConfig, guild, message.Channel);
+            var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, guild, message.Channel);
             if (outputChannel == null)
             {
                 Log.Information("Could not get output channel; aborting.");
@@ -74,7 +74,7 @@ namespace Prima.Scheduler.Handlers
 #if DEBUG
             var @event = await FindEvent(calendar, "drs", message.Author.ToString(), time);
 #else
-            var calendarCode = GetCalendarCode(guildConfig, outputChannel.Id);
+            var calendarCode = ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id);
             var @event = await FindEvent(calendar, calendarCode, message.Author.ToString(), time);
 #endif
 
@@ -116,20 +116,6 @@ namespace Prima.Scheduler.Handlers
             Log.Information("Updated announcement embed.");
         }
 
-        private static string GetCalendarCode(DiscordGuildConfiguration guildConfig, ulong channelId)
-        {
-            if (guildConfig == null) return null;
-
-            if (channelId == guildConfig.CastrumScheduleOutputChannel)
-                return "cll";
-            else if (channelId == guildConfig.DelubrumScheduleOutputChannel)
-                return "drs";
-            else if (channelId == guildConfig.DelubrumNormalScheduleOutputChannel)
-                return "dr";
-            else
-                return null;
-        }
-
         private static async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, ulong eventId)
         {
             await foreach (var page in channel.GetMessagesAsync())
@@ -159,25 +145,6 @@ namespace Prima.Scheduler.Handlers
                 var eventStartTime = XmlConvert.ToDateTime(e.StartTime, XmlDateTimeSerializationMode.Utc).AddHours(tzi.BaseUtcOffset.Hours);
                 return e.Title == title && eventStartTime == startTime;
             });
-        }
-
-        private static IMessageChannel GetOutputChannel(DiscordGuildConfiguration guildConfig, SocketGuild guild, IMessageChannel inputChannel)
-        {
-            ulong outputChannelId;
-            if (inputChannel.Id == guildConfig.CastrumScheduleInputChannel)
-            {
-                outputChannelId = guildConfig.CastrumScheduleOutputChannel;
-            }
-            else if (inputChannel.Id == guildConfig.DelubrumScheduleInputChannel)
-            {
-                outputChannelId = guildConfig.DelubrumScheduleOutputChannel;
-            }
-            else // inputChannel.Id == guildConfig.DelubrumNormalScheduleInputChannel
-            {
-                outputChannelId = guildConfig.DelubrumNormalScheduleOutputChannel;
-            }
-
-            return guild.GetTextChannel(outputChannelId);
         }
     }
 }
