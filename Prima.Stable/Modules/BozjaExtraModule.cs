@@ -12,7 +12,6 @@ using Prima.Models;
 using Prima.Resources;
 using Prima.Services;
 using Prima.Stable.Models.FFLogs;
-using Prima.Stable.Resources;
 using Prima.Stable.Services;
 using Serilog;
 using Color = Discord.Color;
