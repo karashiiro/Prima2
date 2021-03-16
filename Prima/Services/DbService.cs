@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MongoDB.Bson;
 
 namespace Prima.Services
 {
@@ -260,6 +261,13 @@ namespace Prima.Services
         }
 
         public Task UpdateUser(DiscordXIVUser user) => AddUser(user);
+
+        public Task RemoveBrokenUsers()
+        {
+            // I don't trust that just checking it for 0 won't drop all users.
+            // I think it did something like that in another database.
+            return _users.DeleteManyAsync(u => "a" + u.DiscordId == "a0");
+        }
 
         public Task AddScheduledEvent(ScheduledEvent @event)
             => _events.InsertOneAsync(@event);

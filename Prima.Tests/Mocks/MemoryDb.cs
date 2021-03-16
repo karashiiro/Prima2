@@ -172,6 +172,11 @@ namespace Prima.Tests.Mocks
             return Task.CompletedTask;
         }
 
+        public Task RemoveBrokenUsers()
+        {
+            return Task.CompletedTask;
+        }
+
         public Task AddScheduledEvent(ScheduledEvent @event)
         {
             return Task.CompletedTask;

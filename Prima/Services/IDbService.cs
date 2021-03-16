@@ -61,6 +61,8 @@ namespace Prima.Services
 
         Task UpdateUser(DiscordXIVUser user);
 
+        Task RemoveBrokenUsers();
+
         Task AddScheduledEvent(ScheduledEvent @event);
 
         Task UpdateScheduledEvent(ScheduledEvent newEvent);

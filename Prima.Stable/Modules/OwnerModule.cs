@@ -3,6 +3,8 @@ using Discord;
 using Discord.Commands;
 using System.Threading.Tasks;
 using Prima.Resources;
+using Prima.Services;
+// ReSharper disable StringLiteralTypo
 
 namespace Prima.Stable.Modules
 {
@@ -10,9 +12,18 @@ namespace Prima.Stable.Modules
     [RequireOwner]
     public class OwnerModule : ModuleBase<SocketCommandContext>
     {
+        public IDbService Db { get; set; }
+
         [Command("sendmessage")]
         public Task SudoMessage(ITextChannel channel, [Remainder] string message)
             => channel.SendMessageAsync(message);
+
+        [Command("clearbrokenusers")]
+        public async Task ClearBrokenUsers()
+        {
+            await Db.RemoveBrokenUsers();
+            await ReplyAsync("Done!");
+        }
 
         [Command("sancheckdrsur")]
         [RequireContext(ContextType.Guild)]
