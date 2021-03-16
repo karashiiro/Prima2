@@ -337,14 +337,21 @@ namespace Prima.Scheduler.Modules
                 
 #if DEBUG
                 var @event = await FindEvent("drs", username, curTime.AddHours(timeMod));
-                @event.StartTime = XmlConvert.ToString(newTime.AddHours(timeMod),
-                    XmlDateTimeSerializationMode.Utc);
-                await Calendar.UpdateEvent("drs", @event);
+                if (@event != null)
+                {
+                    @event.StartTime = XmlConvert.ToString(newTime.AddHours(timeMod),
+                        XmlDateTimeSerializationMode.Utc);
+                    await Calendar.UpdateEvent("drs", @event);
+                }
 #else
                 var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), username, curTime.AddHours(-tzi.BaseUtcOffset.Hours));
-                @event.StartTime = XmlConvert.ToString(newTime.AddHours(-tzi.BaseUtcOffset.Hours),
-                    XmlDateTimeSerializationMode.Utc);
-                await Calendar.UpdateEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), @event);
+                if (@event != null)
+                {
+                    @event.StartTime = XmlConvert.ToString(newTime.AddHours(-tzi.BaseUtcOffset.Hours),
+                        XmlDateTimeSerializationMode.Utc);
+                    await Calendar.UpdateEvent(
+                        ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), @event);
+                }
 #endif
 
                 await SortEmbeds(guildConfig, Context.Guild, outputChannel);
@@ -434,10 +441,10 @@ namespace Prima.Scheduler.Modules
 
                     var embed = restMessage.Embeds.FirstOrDefault();
                     if (embed?.Footer == null) continue;
-
-                    if (!((embed.Title.Contains(user.ToString()) || embed.Title.Contains(user.Username))
-                          && embed.Title.Contains(time.ToShortTimeString())
-                          && embed.Title.Contains(time.DayOfWeek.ToString()))) continue;
+                    
+                    if (embed.Author?.Name != user.ToString()
+                          || !embed.Title.Contains(time.ToShortTimeString())
+                          || !embed.Title.Contains(time.DayOfWeek.ToString())) continue;
 
                     announcements.Add((restMessage, embed));
                 }
