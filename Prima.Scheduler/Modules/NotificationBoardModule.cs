@@ -318,7 +318,11 @@ namespace Prima.Scheduler.Modules
             {
                 var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
                 var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
-                var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
+                var isDST = tzi.IsDaylightSavingTime(DateTime.Now);
+                var tzAbbr = isDST ? tzAbbrs.Daylight : tzAbbrs.Standard;
+                var timeMod = -tzi.BaseUtcOffset.Hours;
+                if (isDST)
+                    timeMod -= 1;
 
                 await embedMessage.ModifyAsync(props =>
                 {
@@ -330,8 +334,8 @@ namespace Prima.Scheduler.Modules
                 });
                 
 #if DEBUG
-                var @event = await FindEvent("drs", username, curTime.AddHours(-tzi.BaseUtcOffset.Hours));
-                @event.StartTime = XmlConvert.ToString(newTime.AddHours(-tzi.BaseUtcOffset.Hours),
+                var @event = await FindEvent("drs", username, curTime.AddHours(timeMod));
+                @event.StartTime = XmlConvert.ToString(newTime.AddHours(timeMod),
                     XmlDateTimeSerializationMode.Utc);
                 await Calendar.UpdateEvent("drs", @event);
 #else
