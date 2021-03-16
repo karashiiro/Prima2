@@ -15,6 +15,7 @@ using Prima.Stable.Models.FFLogs;
 using Prima.Stable.Services;
 using Serilog;
 using Color = Discord.Color;
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace Prima.Stable.Modules
 {
@@ -25,6 +26,7 @@ namespace Prima.Stable.Modules
         public HttpClient Http { get; set; }
         public IServiceProvider Services { get; set; }
         public FFLogsAPI FFLogsAPI { get; set; }
+        public CharacterLookup Lodestone { get; set; }
 
         [Command("bozhelp", RunMode = RunMode.Async)]
         [Description("Shows help information for the extra Bozja commands.")]
@@ -220,7 +222,26 @@ namespace Prima.Stable.Modules
 
             await ReplyAsync("Roles removed!");
         }
-        
+
+        private class PotentialDbUser
+        {
+            public string Name { get; set; }
+            public string World { get; set; }
+            public DiscordXIVUser User { get; set; }
+        }
+
+        private async Task RegisterUser(PotentialDbUser potentialUser)
+        {
+            if (potentialUser.User != null)
+                return;
+            var userInfo = await Lodestone.GetDiscordXIVUser(potentialUser.World, potentialUser.Name, 0);
+            if (userInfo != null)
+            {
+                await Db.AddUser(userInfo);
+                potentialUser.User = userInfo;
+            }
+        }
+
         private async Task ReadLog(string logLink)
         {
             using var typing = Context.Channel.EnterTypingState();
@@ -246,10 +267,24 @@ namespace Prima.Stable.Modules
             var originalUsers = res.MasterData.Actors
                 .Where(a => a.Server != null)
                 .ToList();
-            var users = originalUsers.ToDictionary(a => a.Id, a => a)
-                .Select(kvp => new KeyValuePair<int, DiscordXIVUser>(kvp.Key, Db.Users.FirstOrDefault(u => u.Name == kvp.Value.Name && u.World == kvp.Value.Server)))
-                .Where(kvp => kvp.Value != null)
-                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            var potentialUsers = originalUsers.ToDictionary(a => a.Id, a => a)
+                .Select(kvp => new KeyValuePair<int, PotentialDbUser>(kvp.Key, new PotentialDbUser
+                {
+                    Name = kvp.Value.Name,
+                    World = kvp.Value.Server,
+                    User = Db.Users.FirstOrDefault(u => u.Name == kvp.Value.Name && u.World == kvp.Value.Server),
+                }));
+            // We can't cleanly go from a KeyValuePair<int, Task<DiscordXIVUser>>
+            // to a KeyValuePair<int, DiscordXIVUser>, so let's break it up into
+            // multiple queries.
+            var users = new Dictionary<int, DiscordXIVUser>();
+            foreach (var (id, potentialUser) in potentialUsers)
+            {
+                await RegisterUser(potentialUser);
+                users.Add(id, potentialUser.User);
+            }
+            users = users.Where(kvp => kvp.Value != null)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);;
             var missedUsers = new List<LogInfo.ReportDataWrapper.ReportData.Report.Master.Actor>();
 
             var addedAny = false;
@@ -283,7 +318,7 @@ namespace Prima.Stable.Modules
                         }
                         continue;
                     }
-
+                    
                     var user = Context.Guild.GetUser(users[id].DiscordId);
                     if (user == null) continue;
 
