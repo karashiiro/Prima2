@@ -99,12 +99,13 @@ namespace Prima.Scheduler.Handlers
             var lines = embed.Description.Split('\n');
             var messageLinkLine = lines.LastOrDefault(l => l.StartsWith("Message Link: https://discordapp.com/channels/"));
             var calendarLinkLine = lines.LastOrDefault(l => l.StartsWith("[Copy to Google Calendar]"));
+            var member = guild.GetUser(message.Author.Id);
             await embedMessage.ModifyAsync(props =>
             {
                 props.Embed = embed
                     .ToEmbedBuilder()
                     .WithTimestamp(time.AddHours(-tzi.BaseUtcOffset.Hours))
-                    .WithTitle($"Event scheduled by {message.Author.Username ?? message.Author.ToString()} on {time.DayOfWeek} at {time.ToShortTimeString()} ({tzAbbr})!")
+                    .WithTitle($"Event scheduled by {member?.Nickname ?? message.Author.ToString()} on {time.DayOfWeek} at {time.ToShortTimeString()} ({tzAbbr})!")
                     .WithDescription(trimmedDescription + (calendarLinkLine != null
                         ? $"\n\n{calendarLinkLine}"
                         : "") + (messageLinkLine != null

@@ -88,6 +88,7 @@ namespace Prima.Scheduler.Modules
                 StartTime = XmlConvert.ToString(time.AddHours(-tzi.BaseUtcOffset.Hours), XmlDateTimeSerializationMode.Utc),
             });
 
+            var member = Context.Guild.GetUser(Context.User.Id);
             var color = RunDisplayTypes.GetColorCastrum();
             await outputChannel.SendMessageAsync(Context.Message.Id.ToString(), embed: new EmbedBuilder()
                 .WithAuthor(new EmbedAuthorBuilder()
@@ -95,7 +96,7 @@ namespace Prima.Scheduler.Modules
                     .WithName(Context.User.ToString()))
                 .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
                 .WithTimestamp(time.AddHours(timeMod))
-                .WithTitle($"Event scheduled by {Context.User.Username ?? Context.User.ToString()} on {time.DayOfWeek} at {time.ToShortTimeString()} ({tzAbbr})!")
+                .WithTitle($"Event scheduled by {member?.Nickname ?? Context.User.ToString()} on {time.DayOfWeek} at {time.ToShortTimeString()} ({tzAbbr})!")
                 .WithDescription(trimmedDescription + $"\n\n[Copy to Google Calendar]({eventLink})\nMessage Link: {Context.Message.GetJumpUrl()}")
                 .WithFooter(Context.Message.Id.ToString())
                 .Build());
@@ -145,7 +146,7 @@ namespace Prima.Scheduler.Modules
                 if (host != null)
                 {
                     builder = builder.WithTitle(
-                        $"Event scheduled by {host.Username ?? host.ToString()} on {newRunTime.DayOfWeek} at {newRunTime.ToShortTimeString()} ({tzAbbr})!");
+                        $"Event scheduled by {host.Nickname ?? host.ToString()} on {newRunTime.DayOfWeek} at {newRunTime.ToShortTimeString()} ({tzAbbr})!");
                 }
                 props.Embed = builder
                     .WithTimestamp(newRunTime.AddHours(timeMod))
@@ -324,12 +325,13 @@ namespace Prima.Scheduler.Modules
                 if (isDST)
                     timeMod -= 1;
 
+                var member = Context.Guild.GetUser(Context.User.Id);
                 await embedMessage.ModifyAsync(props =>
                 {
                     props.Embed = embed
                         .ToEmbedBuilder()
                         .WithTimestamp(newTime.AddHours(-tzi.BaseUtcOffset.Hours))
-                        .WithTitle($"Event scheduled by {Context.User.Username ?? Context.User.ToString()} on {newTime.DayOfWeek} at {newTime.ToShortTimeString()} ({tzAbbr})!")
+                        .WithTitle($"Event scheduled by {member?.Nickname ?? Context.User.ToString()} on {newTime.DayOfWeek} at {newTime.ToShortTimeString()} ({tzAbbr})!")
                         .Build();
                 });
                 
