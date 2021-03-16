@@ -330,7 +330,7 @@ namespace Prima.Scheduler.Modules
                 {
                     props.Embed = embed
                         .ToEmbedBuilder()
-                        .WithTimestamp(newTime.AddHours(-tzi.BaseUtcOffset.Hours))
+                        .WithTimestamp(newTime.AddHours(timeMod))
                         .WithTitle($"Event scheduled by {member?.Nickname ?? Context.User.ToString()} on {newTime.DayOfWeek} at {newTime.ToShortTimeString()} ({tzAbbr})!")
                         .Build();
                 });
@@ -347,7 +347,7 @@ namespace Prima.Scheduler.Modules
                 var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), username, curTime.AddHours(-tzi.BaseUtcOffset.Hours));
                 if (@event != null)
                 {
-                    @event.StartTime = XmlConvert.ToString(newTime.AddHours(-tzi.BaseUtcOffset.Hours),
+                    @event.StartTime = XmlConvert.ToString(newTime.AddHours(timeMod),
                         XmlDateTimeSerializationMode.Utc);
                     await Calendar.UpdateEvent(
                         ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), @event);
