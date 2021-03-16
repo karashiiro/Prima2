@@ -264,9 +264,8 @@ namespace Prima.Services
 
         public Task RemoveBrokenUsers()
         {
-            // I don't trust that just checking it for 0 won't drop all users.
-            // I think it did something like that in another database.
-            return _users.DeleteManyAsync(u => "a" + u.DiscordId == "a0");
+            var deleteFilter = Builders<DiscordXIVUser>.Filter.Eq("DiscordId", 0UL);
+            return _users.DeleteManyAsync(deleteFilter);
         }
 
         public Task AddScheduledEvent(ScheduledEvent @event)
