@@ -384,6 +384,10 @@ namespace Prima.Scheduler.Modules
             }
 
             var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
+            var isDST = tzi.IsDaylightSavingTime(DateTime.Now);
+            var timeMod = -tzi.BaseUtcOffset.Hours;
+            if (isDST)
+                timeMod -= 1;
 
             var (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, time);
             if (embedMessage != null)
@@ -403,9 +407,9 @@ namespace Prima.Scheduler.Modules
                 }).Start();
                 
 #if DEBUG
-                var @event = await FindEvent("drs", username, time.AddHours(-tzi.BaseUtcOffset.Hours));
+                var @event = await FindEvent("drs", username, time.AddHours(timeMod));
 #else
-                var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), username, time.AddHours(-tzi.BaseUtcOffset.Hours));
+                var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), username, time.AddHours(timeMod));
 #endif
                 if (@event != null)
                 {
