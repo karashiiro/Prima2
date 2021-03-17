@@ -1234,8 +1234,8 @@ namespace Prima.Queue.Modules
                 queueEventIds.AddRange(queue.GetEvents());
             }
 
-            var inactiveEventIds = eventIds
-                .Except(queueEventIds)
+            var inactiveEventIds = queueEventIds
+                .Except(eventIds)
                 .Distinct()
                 .ToList();
             foreach (var queue in queues)
