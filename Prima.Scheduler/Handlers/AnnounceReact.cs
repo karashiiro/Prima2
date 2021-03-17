@@ -18,7 +18,7 @@ namespace Prima.Scheduler.Handlers
             if (await db.AddEventReaction(eventId.Value, userId))
             {
                 var user = client.GetUser(userId);
-                await user.SendMessageAsync($"You have signed up for notifications for run {eventId}!");
+                await user.SendMessageAsync($"You have signed up for notifications for event {eventId}!");
                 Log.Information("User {User} has signed up for notifications for event {EventId}.", user.ToString(), eventId);
             }
             else if (await db.RemoveEventReaction(eventId.Value, userId))
