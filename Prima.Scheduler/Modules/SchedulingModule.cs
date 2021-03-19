@@ -137,7 +137,11 @@ namespace Prima.Scheduler.Modules
 
                 var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
                 var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
-                var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
+                var isDST = tzi.IsDaylightSavingTime(DateTime.Now);
+                var tzAbbr = isDST ? tzAbbrs.Daylight : tzAbbrs.Standard;
+                var timeMod = -tzi.BaseUtcOffset.Hours;
+                if (isDST)
+                    timeMod -= 1;
 
                 await Context.Channel.SendMessageAsync(
                     $"{Context.User.Mention} has just scheduled a run on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({tzAbbr})!\n" +
@@ -160,7 +164,7 @@ namespace Prima.Scheduler.Modules
                             $"{new string(@event.Description.Take(1650).ToArray())}{(@event.Description.Length > 1650 ? "..." : "")}\n\n" +
                             $"**Schedule Overview: <{guildConfig.BASpreadsheetLink}>**")
                         .WithFooter(footer => { footer.Text = "Localized time:"; })
-                        .WithTimestamp(runTime.AddHours(-tzi.BaseUtcOffset.Hours))
+                        .WithTimestamp(runTime.AddHours(timeMod))
                         .Build();
 
                     var scheduleOutputChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
@@ -376,7 +380,11 @@ namespace Prima.Scheduler.Modules
 
             var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
-            var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
+            var isDST = tzi.IsDaylightSavingTime(DateTime.Now);
+            var tzAbbr = isDST ? tzAbbrs.Daylight : tzAbbrs.Standard;
+            var timeMod = -tzi.BaseUtcOffset.Hours;
+            if (isDST)
+                timeMod -= 1;
 
             var leaderName = (Context.User as IGuildUser)?.Nickname ?? Context.User.Username;
             var embedChannel = Context.Guild.GetTextChannel(@event.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.ScheduleOutputChannel : guildConfig.CastrumScheduleOutputChannel);
@@ -385,7 +393,7 @@ namespace Prima.Scheduler.Modules
             var embed = embedMessage.Embeds.FirstOrDefault()?.ToEmbedBuilder()
                 .WithTitle($"Run scheduled by {leaderName} on {newRunTime.DayOfWeek} at {newRunTime.ToShortTimeString()} ({tzAbbr}) " +
                            $"[{newRunTime.DayOfWeek}, {(Month)newRunTime.Month} {newRunTime.Day}]!")
-                .WithTimestamp(newRunTime.AddHours(-tzi.BaseUtcOffset.Hours))
+                .WithTimestamp(newRunTime.AddHours(timeMod))
                 .Build();
             await embedMessage.ModifyAsync(properties => properties.Embed = embed);
 
