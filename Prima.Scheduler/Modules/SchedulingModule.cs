@@ -409,6 +409,51 @@ namespace Prima.Scheduler.Modules
             }
         }
 
+        [Command("setruntimeba")]
+        [RequireUserPermission(GuildPermission.BanMembers)]
+        [RequireContext(ContextType.Guild)]
+        public async Task SetRunTimestamp(ulong outputChannelId, ulong messageId, [Remainder] string args)
+        {
+            var outputChannel = Context.Guild.GetTextChannel(outputChannelId);
+
+            IUserMessage embedMessage = null;
+            await foreach (var page in outputChannel.GetMessagesAsync())
+            {
+                foreach (var message in page)
+                {
+                    if (message.Id == messageId)
+                    {
+                        embedMessage = (IUserMessage)message;
+                        break;
+                    }
+                }
+            }
+
+            var embed = embedMessage?.Embeds.FirstOrDefault(e => e.Type == EmbedType.Rich);
+            if (embedMessage == null || embed == null)
+            {
+                await ReplyAsync("No run was found matching that message ID in that channel.");
+                return;
+            }
+
+            var newRunTime = Util.GetDateTime(args);
+
+            var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
+            var isDST = tzi.IsDaylightSavingTime(DateTime.Now);
+            var timeMod = -tzi.BaseUtcOffset.Hours;
+            if (isDST)
+                timeMod -= 1;
+            
+            await embedMessage.ModifyAsync(props =>
+            {
+                props.Embed = embed.ToEmbedBuilder()
+                    .WithTimestamp(newRunTime.AddHours(timeMod))
+                    .Build();
+            });
+
+            await ReplyAsync("Updated.");
+        }
+
         [Command("rundst")]
         [Alias("rundistribution", "rundstr")]
         [Description("See the historical distribution of runs across the day.")]
