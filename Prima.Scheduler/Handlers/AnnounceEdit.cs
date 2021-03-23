@@ -75,30 +75,6 @@ namespace Prima.Scheduler.Handlers
             if (isDST)
                 timeMod -= 1;
 
-#if DEBUG
-            var @event = await FindEvent(calendar, "drs", message.Author.ToString(), time.AddHours(timeMod));
-#else
-            var calendarCode = ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id);
-            var @event = await FindEvent(calendar, calendarCode, message.Author.ToString(), time.AddHours(timeMod));
-#endif
-
-            if (@event != null)
-            {
-#if DEBUG
-                await calendar.UpdateEvent("drs", new MiniEvent
-#else
-                await calendar.UpdateEvent(calendarCode, new MiniEvent
-#endif
-                {
-                    Title = message.Author.ToString(),
-                    Description = description,
-                    StartTime = XmlConvert.ToString(time.AddHours(timeMod), XmlDateTimeSerializationMode.Utc),
-                    ID = @event.ID,
-                });
-
-                Log.Information("Updated calendar entry.");
-            }
-
             var (embedMessage, embed) = await FindAnnouncement(outputChannel, message.Id);
             var lines = embed.Description.Split('\n');
             var messageLinkLine = lines.LastOrDefault(l => l.StartsWith("Message Link: https://discordapp.com/channels/"));
@@ -117,6 +93,31 @@ namespace Prima.Scheduler.Handlers
                         : ""))
                     .Build();
             });
+
+            if (isDST)
+                timeMod += 1;
+#if DEBUG
+            var @event = await FindEvent(calendar, "drs", message.Author.ToString(), time.AddHours(timeMod));
+#else
+            var calendarCode = ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id);
+            var @event = await FindEvent(calendar, calendarCode, message.Author.ToString(), time.AddHours(timeMod));
+#endif
+            if (@event != null)
+            {
+#if DEBUG
+                await calendar.UpdateEvent("drs", new MiniEvent
+#else
+                await calendar.UpdateEvent(calendarCode, new MiniEvent
+#endif
+                {
+                    Title = message.Author.ToString(),
+                    Description = description,
+                    StartTime = XmlConvert.ToString(time.AddHours(timeMod), XmlDateTimeSerializationMode.Utc),
+                    ID = @event.ID,
+                });
+
+                Log.Information("Updated calendar entry.");
+            }
 
             Log.Information("Updated announcement embed.");
         }
