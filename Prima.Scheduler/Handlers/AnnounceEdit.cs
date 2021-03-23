@@ -71,6 +71,9 @@ namespace Prima.Scheduler.Handlers
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
             var isDST = tzi.IsDaylightSavingTime(DateTime.Now);
             var tzAbbr = isDST ? tzAbbrs.Daylight : tzAbbrs.Standard;
+            var timeMod = -tzi.BaseUtcOffset.Hours;
+            if (isDST)
+                timeMod -= 1;
 
             var (embedMessage, embed) = await FindAnnouncement(outputChannel, message.Id);
             var lines = embed.Description.Split('\n');
@@ -90,6 +93,27 @@ namespace Prima.Scheduler.Handlers
                     .Build();
             });
             
+#if DEBUG
+            var @event = await FindEvent(calendar, "drs", message.Author.ToString(), time.AddHours(timeMod));
+#else
+            var calendarCode = ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id);
+            var @event = await FindEvent(calendar, calendarCode, message.Author.ToString(), time.AddHours(timeMod));
+#endif
+            if (@event != null)
+            {
+#if DEBUG
+                await calendar.UpdateEvent("drs", new MiniEvent
+#else
+                await calendar.UpdateEvent(calendarCode, new MiniEvent
+#endif
+                {
+                    Title = message.Author.ToString(),
+                    Description = description,
+                    ID = @event.ID,
+                });
+
+                Log.Information("Updated calendar entry.");
+            }
 
             Log.Information("Updated announcement embed.");
         }
