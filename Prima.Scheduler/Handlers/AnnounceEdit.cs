@@ -76,10 +76,10 @@ namespace Prima.Scheduler.Handlers
                 timeMod -= 1;
 
 #if DEBUG
-            var @event = await FindEvent(calendar, "drs", message.Author.ToString(), time);
+            var @event = await FindEvent(calendar, "drs", message.Author.ToString(), time.AddHours(timeMod));
 #else
             var calendarCode = ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id);
-            var @event = await FindEvent(calendar, calendarCode, message.Author.ToString(), time);
+            var @event = await FindEvent(calendar, calendarCode, message.Author.ToString(), time.AddHours(timeMod));
 #endif
 
             if (@event != null)
@@ -147,7 +147,7 @@ namespace Prima.Scheduler.Handlers
             var events = await calendar.GetEvents(calendarClass);
             return events.FirstOrDefault(e =>
             {
-                var eventStartTime = XmlConvert.ToDateTime(e.StartTime, XmlDateTimeSerializationMode.Utc).AddHours(tzi.BaseUtcOffset.Hours);
+                var eventStartTime = XmlConvert.ToDateTime(e.StartTime, XmlDateTimeSerializationMode.Utc);
                 return e.Title == title && eventStartTime == startTime;
             });
         }
