@@ -85,7 +85,7 @@ namespace Prima.Scheduler.Modules
             {
                 Title = Context.User.ToString(),
                 Description = description,
-                StartTime = XmlConvert.ToString(time.AddHours(-tzi.BaseUtcOffset.Hours), XmlDateTimeSerializationMode.Utc),
+                StartTime = XmlConvert.ToString(time.AddHours(timeMod), XmlDateTimeSerializationMode.Utc),
             });
 
             var member = Context.Guild.GetUser(Context.User.Id);
@@ -344,7 +344,7 @@ namespace Prima.Scheduler.Modules
                     await Calendar.UpdateEvent("drs", @event);
                 }
 #else
-                var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), username, curTime.AddHours(-tzi.BaseUtcOffset.Hours));
+                var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), username, curTime.AddHours(timeMod));
                 if (@event != null)
                 {
                     @event.StartTime = XmlConvert.ToString(newTime.AddHours(timeMod),
