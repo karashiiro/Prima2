@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Commands;
 using Discord.WebSocket;
 using Prima.Models;
 using Prima.Resources;
@@ -13,6 +15,25 @@ namespace Prima.Scheduler
 {
     public static class ScheduleUtils
     {
+        public static async Task<IEnumerable<(IMessage, IEmbed)>> GetEvents(IMessageChannel channel)
+        {
+            var events = new List<(IMessage, IEmbed)>();
+            if (channel != null)
+            {
+                await foreach (var page in channel.GetMessagesAsync())
+                {
+                    // ReSharper disable once LoopCanBeConvertedToQuery
+                    foreach (var message in page)
+                    {
+                        var embed = message.Embeds.FirstOrDefault(e => e.Type == EmbedType.Rich);
+                        events.Add((message, embed));
+                    }
+                }
+            }
+
+            return events;
+        }
+        
         public static IMessageChannel GetOutputChannel(DiscordGuildConfiguration guildConfig, SocketGuild guild, IMessageChannel inputChannel)
         {
             ulong outputChannelId;

@@ -936,7 +936,7 @@ namespace Prima.Queue.Modules
             if (delubrumAllRoles)
             {
                 var roleIds = DelubrumProgressionRoles.Roles.Keys;
-                var events = queue.GetEvents().Append("");
+                var events = string.IsNullOrEmpty(eventId) ? queue.GetEvents().Append("") : new []{ eventId };
                 foreach (var eId in events)
                 {
                     var response = roleIds

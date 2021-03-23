@@ -26,6 +26,16 @@ namespace Prima.Resources
 #endif
         };
 
+        public static readonly IDictionary<ulong, string> LFGRoles = new Dictionary<ulong, string>
+        {
+            {810201516291653643, "Fresh Progression"},
+            {810201667814948877, "Trinity Seeker Progression"},
+            {810201853333602335, "Queen's Guard Progression"},
+            {810201890775629877, "Trinity Avowed Progression"},
+            {810201946249232384, "The Queen Progression"},
+            {810202020279615520, "Stygimoloch Lord Progression"},
+        };
+
         public static IEnumerable<ulong> GetContingentRoles(ulong roleId)
         {
             var baseList = new ulong[] { 807854087092830259, 807854094286979082, 807854100204879902, 807854109608378368, 807854117053136896 };

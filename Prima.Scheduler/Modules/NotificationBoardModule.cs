@@ -433,6 +433,49 @@ namespace Prima.Scheduler.Modules
             }
         }
 
+        [Command("drsruns")]
+        [Description("Lists the estimated number of runs of each type for Delubrum Reginae (Savage) right now.")]
+        public async Task ListDRSRunCountsByType([Remainder] string args = "")
+        {
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return;
+
+            var outputChannel = Context.Guild.GetTextChannel(guildConfig.DelubrumScheduleOutputChannel);
+            var events = await ScheduleUtils.GetEvents(outputChannel);
+
+            var eventCounts = events
+                .Select(@event => @event.Item2)
+                .Select(embed => embed.Description)
+                .GroupBy(description =>
+                {
+                    foreach (var (role, roleName) in DelubrumProgressionRoles.LFGRoles)
+                    {
+                        if (description.Contains(role.ToString()))
+                        {
+                            return roleName;
+                        }
+                    }
+
+                    return "Unknown";
+                })
+                .ToDictionary(group => group.Key, group => group.Count());
+
+            var typeOrder = new[]
+            {
+                "Fresh Progression",
+                "Trinity Seeker Progression",
+                "Queen's Guard Progression",
+                "Trinity Avowed Progression",
+                "Stygimoloch Lord Progression",
+                "The Queen Progression",
+                "Unknown",
+            };
+
+            await ReplyAsync(typeOrder.Aggregate("Estimated run counts by type:\n```", 
+                                 (agg, type) => agg + $"\n{type}: {(eventCounts.ContainsKey(type) ? eventCounts[type] : 0)}") +
+                             "\n```");
+        }
+
         private async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, SocketUser user, DateTime time)
         {
             var announcements = new List<(IUserMessage, IEmbed)>();
