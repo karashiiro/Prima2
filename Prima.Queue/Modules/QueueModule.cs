@@ -1243,10 +1243,13 @@ namespace Prima.Queue.Modules
                 foreach (var eventId in inactiveEventIds)
                 {
                     queue.ExpireEvent(eventId);
+                    Log.Information("Cleared queue for event {EventId}", eventId);
                 }
             }
 
-            await ReplyAsync($"Done! Events cleared:```\n{inactiveEventIds.Aggregate("", (agg, next) => agg += $"{next}\n")}```");
+            QueueService.Save();
+
+            await ReplyAsync($"Done! Events cleared:```\n{inactiveEventIds.Aggregate("", (agg, next) => agg + $"{next}\n")}```");
         }
 
         [Command("confirm", RunMode = RunMode.Async)]
