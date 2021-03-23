@@ -73,9 +73,7 @@ namespace Prima.Scheduler.Modules
             var isDST = tzi.IsDaylightSavingTime(DateTime.Now);
             var tzAbbr = isDST ? tzAbbrs.Daylight : tzAbbrs.Standard;
             var timeMod = -tzi.BaseUtcOffset.Hours;
-            if (isDST)
-                timeMod -= 1;
-
+            
             var eventLink =
 #if DEBUG
             await Calendar.PostEvent("drs", new MiniEvent
@@ -87,6 +85,9 @@ namespace Prima.Scheduler.Modules
                 Description = description,
                 StartTime = XmlConvert.ToString(time.AddHours(timeMod), XmlDateTimeSerializationMode.Utc),
             });
+
+            if (isDST)
+                timeMod -= 1;
 
             var member = Context.Guild.GetUser(Context.User.Id);
             var color = RunDisplayTypes.GetColorCastrum();
@@ -339,6 +340,8 @@ namespace Prima.Scheduler.Modules
                 var @event = await FindEvent("drs", username, curTime.AddHours(timeMod));
                 if (@event != null)
                 {
+                    if (isDST)
+                        timeMod += 1;
                     @event.StartTime = XmlConvert.ToString(newTime.AddHours(timeMod),
                         XmlDateTimeSerializationMode.Utc);
                     await Calendar.UpdateEvent("drs", @event);
@@ -347,6 +350,8 @@ namespace Prima.Scheduler.Modules
                 var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), username, curTime.AddHours(timeMod));
                 if (@event != null)
                 {
+                    if (isDST)
+                        timeMod += 1;
                     @event.StartTime = XmlConvert.ToString(newTime.AddHours(timeMod),
                         XmlDateTimeSerializationMode.Utc);
                     await Calendar.UpdateEvent(
