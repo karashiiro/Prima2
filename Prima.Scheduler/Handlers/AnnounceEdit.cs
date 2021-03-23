@@ -69,7 +69,11 @@ namespace Prima.Scheduler.Handlers
 
             var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
-            var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
+            var isDST = tzi.IsDaylightSavingTime(DateTime.Now);
+            var tzAbbr = isDST ? tzAbbrs.Daylight : tzAbbrs.Standard;
+            var timeMod = -tzi.BaseUtcOffset.Hours;
+            if (isDST)
+                timeMod -= 1;
 
 #if DEBUG
             var @event = await FindEvent(calendar, "drs", message.Author.ToString(), time);
@@ -88,7 +92,7 @@ namespace Prima.Scheduler.Handlers
                 {
                     Title = message.Author.ToString(),
                     Description = description,
-                    StartTime = XmlConvert.ToString(time.AddHours(-tzi.BaseUtcOffset.Hours), XmlDateTimeSerializationMode.Utc),
+                    StartTime = XmlConvert.ToString(time.AddHours(timeMod), XmlDateTimeSerializationMode.Utc),
                     ID = @event.ID,
                 });
 
