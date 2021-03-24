@@ -108,11 +108,7 @@ namespace Prima.Stable.Modules
             }
 
             var member = guild.GetUser(Context.User.Id);
-            if (member.Roles.Any(r => r.Name == "Time Out"))
-            {
-                return;
-            }
-
+            
             using var typing = Context.Channel.EnterTypingState();
 
             DiscordXIVUser foundCharacter;
@@ -176,7 +172,10 @@ namespace Prima.Stable.Modules
             Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
 
             var finalReply = await Context.Channel.SendMessageAsync(embed: responseEmbed);
-            await ActivateUser(member, guildConfig);
+            if (member.Roles.All(r => r.Name != "Time Out"))
+            {
+                await ActivateUser(member, guildConfig);
+            }
             
             // Cleanup
             await Task.Delay(MessageDeleteDelay);
