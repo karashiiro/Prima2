@@ -431,5 +431,19 @@ namespace Prima.Stable.Modules
         [RateLimit(TimeSeconds = 1, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task FatefulWordsAsync() => DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/808869784195563521/813152064342589443/Fateful_Words_debuffs.png");
+
+        [Command("brands", RunMode = RunMode.Async)]
+        [Alias("hotcold")]
+        [Description("Shows the Trinity Avowed debuff guide. Also `~hotcold`.")]
+        [RateLimit(TimeSeconds = 1, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public Task BrandsHotColdAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/un5nvg4.png");
+
+        [Command("pipegame", RunMode = RunMode.Async)]
+        [Alias("ladders")]
+        [Description("Shows the Trinity Avowed ladder guide. Also `~ladders`.")]
+        [RateLimit(TimeSeconds = 1, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public Task PipeGameAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/i2ms13x.png");
     }
 }
