@@ -43,13 +43,17 @@ namespace Prima.Stable.Modules
                 fields.Add(fieldBuilder);
             }
 
-            var embed = new EmbedBuilder()
-                .WithTitle("These are the commands you can use with Prima in that server:")
-                .WithColor(Color.DarkGreen)
-                .WithFields(fields)
-                .Build();
+            var fieldsArr = fields.ToArray();
+            for (var i = 0; i < Math.Ceiling(fields.Count / 25.0); i++)
+            {
+                var embed = new EmbedBuilder()
+                    .WithTitle("These are the commands you can use with Prima in that server:")
+                    .WithColor(Color.DarkGreen)
+                    .WithFields(fieldsArr[(i * 25)..Math.Min(fields.Count, (i + 1) * 25)])
+                    .Build();
+                await Context.User.SendMessageAsync(embed: embed);
+            }
 
-            await Context.User.SendMessageAsync(embed: embed);
             await ReplyAsync($"{Context.User.Mention}, a list of commands you can use in this server was sent to you via DM.");
         }
     }
