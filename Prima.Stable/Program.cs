@@ -29,12 +29,13 @@ namespace Prima.Stable
             var roleRemover = services.GetRequiredService<TimedRoleManager>();
             var ffLogs = services.GetRequiredService<FFLogsAPI>();
             var web = services.GetRequiredService<WebClient>();
+            var lodestone = services.GetRequiredService<CharacterLookup>();
 
             roleRemover.Initialize();
             await ffLogs.Initialize();
 
             client.ReactionAdded += (message, channel, reaction)
-                => ReactionReceived.HandlerAdd(db, message, channel, reaction);
+                => ReactionReceived.HandlerAdd(db, lodestone, message, channel, reaction);
             client.ReactionRemoved += (message, channel, reaction)
                 => ReactionReceived.HandlerRemove(db, message, channel, reaction);
 
