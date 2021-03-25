@@ -339,7 +339,6 @@ namespace Prima.Stable.Modules
             var diademRole = Context.Guild.GetRole(DiademRole);
             var eurekaRole = Context.Guild.GetRole(EurekaRole);
             var bozjaRole = Context.Guild.GetRole(BozjaRole);
-            var roles = new[] { diademRole, eurekaRole, bozjaRole };
 
             var offDc = Db.Users
                 .Where(u => !Worlds.List.Contains(u.World))
@@ -352,11 +351,24 @@ namespace Prima.Stable.Modules
 
             var tasks = offDc.Select(async member =>
                 {
-                    await member.RemoveRolesAsync(roles);
-                    count--;
+                    if (member.HasRole(diademRole))
+                    {
+                        await member.RemoveRoleAsync(diademRole);
+                    }
+
+                    if (member.HasRole(eurekaRole))
+                    {
+                        await member.RemoveRoleAsync(eurekaRole);
+                    }
+
+                    if (member.HasRole(bozjaRole))
+                    {
+                        await member.RemoveRoleAsync(bozjaRole);
+                    }
+
                     await message.ModifyAsync(props =>
                     {
-                        props.Content = $"Removing roles from {count} more users...";
+                        props.Content = $"Removing roles from {--count} more users...";
                     });
                 })
                 .ToList();
