@@ -409,6 +409,7 @@ namespace Prima.Stable.Modules
         public Task StarMobsAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/muvBR1Z.png");
 
         [Command("cluster", RunMode = RunMode.Async)]
+        [Alias("clusters")]
         [Description("Shows the Bozjan Southern Front cluster path guide.")]
         [RateLimit(TimeSeconds = 1, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
