@@ -341,14 +341,28 @@ namespace Prima.Stable.Modules
             var bozjaRole = Context.Guild.GetRole(BozjaRole);
             var roles = new[] { diademRole, eurekaRole, bozjaRole };
 
-            var tasks = Db.Users
+            var offDc = Db.Users
                 .Where(u => !Worlds.List.Contains(u.World))
                 .Select(u => Context.Guild.GetUser(u.DiscordId))
                 .Where(u => u != null)
-                .Select(member => member.RemoveRolesAsync(roles))
+                .ToList();
+
+            var count = offDc.Count;
+            var message = await ReplyAsync($"Removing roles from {count} more users...");
+
+            var tasks = offDc.Select(async member =>
+                {
+                    await member.RemoveRolesAsync(roles);
+                    count--;
+                    await message.ModifyAsync(props =>
+                    {
+                        props.Content = $"Removing roles from {count} more users...";
+                    });
+                })
                 .ToList();
 
             await Task.WhenAll(tasks);
+
             await ReplyAsync("Off-DC members stripped of non-Member content roles.");
         }
 
