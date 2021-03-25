@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -317,6 +318,28 @@ namespace Prima.Stable.Modules
                 await member.AddRoleAsync(contentRole);
                 Log.Information("Added {DiscordName} to {Role}.", member.ToString(), contentRole.Name);
             }
+        }
+
+        [Command("scrfodc", RunMode = RunMode.Async)]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        public async Task StripContentRolesFromOffDC()
+        {
+            var guildConfig = Db.Guilds.First(g => g.Id == Context.Guild.Id);
+
+            var diademRole = Context.Guild.GetRole(ulong.Parse(guildConfig.Roles["Diadem"]));
+            var eurekaRole = Context.Guild.GetRole(ulong.Parse(guildConfig.Roles["Eureka"]));
+            var bozjaRole = Context.Guild.GetRole(ulong.Parse(guildConfig.Roles["Bozja"]));
+            var roles = new[] { diademRole, eurekaRole, bozjaRole };
+
+            var tasks = Db.Users
+                .Where(u => !Worlds.List.Contains(u.World))
+                .Select(u => Context.Guild.GetUser(u.DiscordId))
+                .Where(u => u != null)
+                .Select(member => member.RemoveRolesAsync(roles))
+                .ToList();
+
+            await Task.WhenAll(tasks);
+            await ReplyAsync("Off-DC members stripped of non-Member content roles.");
         }
 
         // Verify BA clear status.
