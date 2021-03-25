@@ -412,7 +412,7 @@ namespace Prima.Stable.Modules
         [Description("Shows the Bozjan Southern Front cluster path guide.")]
         [RateLimit(TimeSeconds = 1, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task BozjaClustersAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/WANkcVe.jpeg");
+        public Task BozjaClustersAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/FuG4wDK.png");
         
         [Command("qgreflect", RunMode = RunMode.Async)]
         [Description("Shows Queen's Guard reflect positions.")]
