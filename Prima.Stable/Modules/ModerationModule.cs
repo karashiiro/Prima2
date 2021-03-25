@@ -6,6 +6,7 @@ using Prima.Services;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -80,9 +81,33 @@ namespace Prima.Moderation.Modules
         // Check when a user joined Discord.
         [Command("when")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        public async Task WhenAsync(IUser user)
+        public Task WhenAsync([Remainder] string user = "")
         {
-            await ReplyAsync(user.CreatedAt.UtcDateTime.ToString());
+            if (!ulong.TryParse(Util.CleanDiscordMention(user), out var uid))
+            {
+                return ReplyAsync("Could not read user ID.");
+            }
+
+            var unixTimestamp = (uid >> 22) + 1288834974657;
+            var unixTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+            unixTime = unixTime.AddMilliseconds(unixTimestamp);
+
+            return ReplyAsync(unixTime.ToString(CultureInfo.InvariantCulture));
+        }
+
+        [Command("ban")]
+        [RequireUserPermission(GuildPermission.BanMembers)]
+        [RequireContext(ContextType.Guild)]
+        public async Task BanAsync(string user, [Remainder] string reason)
+        {
+            if (!ulong.TryParse(Util.CleanDiscordMention(user), out var uid))
+            {
+                await ReplyAsync("Could not read user ID.");
+                return;
+            }
+
+            await Context.Guild.AddBanAsync(uid, reason: reason);
+            await ReplyAsync("User banned.");
         }
 
         [Command("timeout")]

@@ -496,21 +496,16 @@ namespace Prima.Stable.Modules
         // Check who a user is.
         [Command("whois", RunMode = RunMode.Async)]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        public async Task WhoIsAsync(IUser member)
+        public async Task WhoIsAsync([Remainder] string user = "")
         {
-            if (member == null)
+            if (!ulong.TryParse(Util.CleanDiscordMention(user), out var uid))
             {
                 await ReplyAsync(Properties.Resources.MentionNotProvidedError);
                 return;
             }
 
-            DiscordXIVUser found;
-            try
-            {
-                found = Db.Users
-                    .Single(user => user.DiscordId == member.Id);
-            }
-            catch (InvalidOperationException)
+            var found = Db.Users.SingleOrDefault(u => u.DiscordId == uid);
+            if (found == null)
             {
                 await ReplyAsync(Properties.Resources.UserNotInDatabaseError);
                 return;
@@ -524,7 +519,6 @@ namespace Prima.Stable.Modules
                 .Build();
 
             await ReplyAsync(embed: responseEmbed);
-            Log.Information("Successfully responded to whoami.");
         }
 
         // Check the number of database entries.

@@ -261,6 +261,23 @@ namespace Prima
         public static string ToAbbreviation(string input)
             => input.Split(" ").Select(word => char.ToUpperInvariant(word[0]).ToString()).Aggregate((str, c) => str + c);
 
+        public static string CleanDiscordMention(string user)
+        {
+            var userId = user;
+
+            while (!char.IsDigit(userId[0]))
+            {
+                userId = userId[1..];
+            }
+
+            while (!char.IsDigit(userId[^1]))
+            {
+                userId = userId[..^1];
+            }
+
+            return userId;
+        }
+
         /// <summary>
         /// Get the value of an object property by its string name.
         /// </summary>
