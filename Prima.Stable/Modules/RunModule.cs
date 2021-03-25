@@ -5,6 +5,7 @@ using Discord;
 using Discord.Commands;
 using Prima.Attributes;
 using Prima.Resources;
+using Prima.Services;
 using Prima.Stable.Services;
 using Serilog;
 
@@ -13,6 +14,7 @@ namespace Prima.Stable.Modules
     [Name("Run")]
     public class RunModule : ModuleBase<SocketCommandContext>
     {
+        public IDbService Db { get; set; }
         public MuteService Mute { get; set; }
 
         private const ulong HostSpeakerRoleId = 762072215356702741;
@@ -32,12 +34,8 @@ namespace Prima.Stable.Modules
             var prioritySpeakerRole = Context.Guild.GetRole(PrioritySpeakerRoleId);
             var member = Context.Guild.GetUser(other.Id);
             await member.AddRoleAsync(prioritySpeakerRole);
+            await Db.AddTimedRole(PrioritySpeakerRoleId, Context.Guild.Id, member.Id, DateTime.UtcNow.AddHours(4.5));
             await ReplyAsync("Priority speaker permissions set!");
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(1000 * 60 * 60 * 3);
-                await member.RemoveRoleAsync(prioritySpeakerRole);
-            });
         }
 
         [Command("removepriority")]
