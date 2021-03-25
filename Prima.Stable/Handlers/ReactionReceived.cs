@@ -5,6 +5,7 @@ using Discord;
 using Discord.WebSocket;
 using Prima.Models;
 using Prima.Services;
+using Prima.Stable.Resources;
 using Prima.Stable.Services;
 using Serilog;
 
@@ -15,17 +16,6 @@ namespace Prima.Stable.Handlers
         private const ulong BozjaRole = 588913532410527754;
         private const ulong EurekaRole = 588913087818498070;
         private const ulong DiademRole = 588913444712087564;
-
-        private static string[] CrystalWorlds => new[] {
-            "Balmung",
-            "Brynhildr",
-            "Coeurl",
-            "Diabolos",
-            "Goblin",
-            "Malboro",
-            "Mateus",
-            "Zalera",
-        };
 
         public static async Task HandlerAdd(IDbService db, CharacterLookup lodestone, Cacheable<IUserMessage, ulong> _, ISocketMessageChannel ichannel, SocketReaction reaction)
         {
@@ -54,7 +44,7 @@ namespace Prima.Stable.Handlers
                             return;
                         }
 
-                        if (!CrystalWorlds.Contains(dbEntry.World))
+                        if (!Worlds.List.Contains(dbEntry.World))
                         {
                             await member.SendMessageAsync("Off-DC characters may not access our organization tools.");
                             return;

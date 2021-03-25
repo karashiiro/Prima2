@@ -10,6 +10,7 @@ using Prima.Attributes;
 using Prima.Models;
 using Prima.Resources;
 using Prima.Services;
+using Prima.Stable.Resources;
 using Prima.Stable.Services;
 using Prima.XIVAPI;
 using Serilog;
@@ -174,7 +175,7 @@ namespace Prima.Stable.Modules
             var finalReply = await Context.Channel.SendMessageAsync(embed: responseEmbed);
             if (member.Roles.All(r => r.Name != "Time Out"))
             {
-                await ActivateUser(member, guildConfig);
+                await ActivateUser(member, foundCharacter, guildConfig);
             }
             
             // Cleanup
@@ -281,22 +282,38 @@ namespace Prima.Stable.Modules
             Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
 
             var finalReply = await Context.Channel.SendMessageAsync(embed: responseEmbed);
-            await ActivateUser(member, guildConfig);
+            await ActivateUser(member, foundCharacter, guildConfig);
 
             // Cleanup
             await Task.Delay(MessageDeleteDelay);
             await finalReply.DeleteAsync();
         }
 
-        private static async Task ActivateUser(SocketGuildUser member, DiscordGuildConfiguration guildConfig)
+        private async Task ActivateUser(SocketGuildUser member, DiscordXIVUser dbEntry, DiscordGuildConfiguration guildConfig)
         {
             var memberRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
             await member.AddRoleAsync(memberRole);
             Log.Information("Added {DiscordName} to {Role}.", member.ToString(), memberRole.Name);
             
             var contentRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles[MostRecentZoneRole]));
-            if (contentRole != null)
+            if (contentRole != null && Worlds.List.Contains(dbEntry.World))
             {
+                var data = await Lodestone.GetCharacter(ulong.Parse(dbEntry.LodestoneId));
+                var highestCombatLevel = 0;
+                foreach (var classJob in data["ClassJobs"].ToObject<CharacterLookup.ClassJob[]>())
+                {
+                    if (classJob.JobID >= 8 && classJob.JobID <= 18) continue;
+                    if (classJob.Level > highestCombatLevel)
+                    {
+                        highestCombatLevel = classJob.Level;
+                    }
+                }
+
+                if (highestCombatLevel < 80)
+                {
+                    return;
+                }
+
                 await member.AddRoleAsync(contentRole);
                 Log.Information("Added {DiscordName} to {Role}.", member.ToString(), contentRole.Name);
             }
