@@ -19,7 +19,7 @@ namespace Prima.Stable.Modules
         private const ulong PrioritySpeakerRoleId = 762071904273432628;
 
         [Command("setpriority")]
-        [Description("A command for BA hosts to use that sets a priority speaker for 3 hours.")]
+        [Description("A command for hosts to use that sets a priority speaker for 3 hours.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task SetPrioritySpeaker(IUser other)
         {
@@ -41,7 +41,7 @@ namespace Prima.Stable.Modules
         }
 
         [Command("removepriority")]
-        [Description("A command for BA hosts to use that removes the priority speaker role from someone.")]
+        [Description("A command for hosts to use that removes the priority speaker role from someone.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task RemovePrioritySpeaker(IUser other)
         {
@@ -59,7 +59,7 @@ namespace Prima.Stable.Modules
         }
 
         [Command("mute")]
-        [Description("A command for BA hosts to use that VC-mutes a user until unmuted, or for 3 hours.")]
+        [Description("A command for hosts to use that VC-mutes a user until unmuted, or for 3 hours.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task MuteUser(IUser other)
         {
@@ -91,7 +91,7 @@ namespace Prima.Stable.Modules
         }
 
         [Command("unmute")]
-        [Description("A command for BA hosts to use that unmutes a user that they have previously muted.")]
+        [Description("A command for hosts to use that unmutes a user that they have previously muted.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task UnmuteUser(IUser other)
         {
