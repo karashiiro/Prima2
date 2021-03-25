@@ -290,6 +290,10 @@ namespace Prima.Stable.Modules
             await finalReply.DeleteAsync();
         }
 
+        private const ulong BozjaRole = 588913532410527754;
+        private const ulong EurekaRole = 588913087818498070;
+        private const ulong DiademRole = 588913444712087564;
+
         private async Task ActivateUser(SocketGuildUser member, DiscordXIVUser dbEntry, DiscordGuildConfiguration guildConfig)
         {
             var memberRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
@@ -318,11 +322,15 @@ namespace Prima.Stable.Modules
                 await member.AddRoleAsync(contentRole);
                 Log.Information("Added {DiscordName} to {Role}.", member.ToString(), contentRole.Name);
             }
+            else if (!Worlds.List.Contains(dbEntry.World))
+            {
+                var diademRole = Context.Guild.GetRole(DiademRole);
+                var eurekaRole = Context.Guild.GetRole(EurekaRole);
+                var bozjaRole = Context.Guild.GetRole(BozjaRole);
+                var roles = new[] { diademRole, eurekaRole, bozjaRole };
+                await member.RemoveRolesAsync(roles);
+            }
         }
-
-        private const ulong BozjaRole = 588913532410527754;
-        private const ulong EurekaRole = 588913087818498070;
-        private const ulong DiademRole = 588913444712087564;
 
         [Command("scrfodc", RunMode = RunMode.Async)]
         [RequireUserPermission(GuildPermission.KickMembers)]
