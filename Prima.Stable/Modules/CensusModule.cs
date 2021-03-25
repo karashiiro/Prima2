@@ -344,6 +344,7 @@ namespace Prima.Stable.Modules
                 .Where(u => !Worlds.List.Contains(u.World))
                 .Select(u => Context.Guild.GetUser(u.DiscordId))
                 .Where(u => u != null)
+                .Where(u => u.HasRole(diademRole) || u.HasRole(eurekaRole) || u.HasRole(bozjaRole))
                 .ToList();
 
             var count = offDc.Count;
