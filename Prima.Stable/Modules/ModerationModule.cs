@@ -88,7 +88,7 @@ namespace Prima.Moderation.Modules
                 return ReplyAsync("Could not read user ID.");
             }
 
-            var unixTimestamp = (uid >> 22) + 1288834974657;
+            var unixTimestamp = (uid / 4194304) + 1420070400000;
             var unixTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
             unixTime = unixTime.AddMilliseconds(unixTimestamp);
 
