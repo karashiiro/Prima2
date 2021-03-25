@@ -135,7 +135,7 @@ namespace Prima.Stable.Services
             };
         }
 
-        private class ClassJob
+        public class ClassJob
         {
             public int ClassID { get; set; }
             public long ExpLevel { get; set; }

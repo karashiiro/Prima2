@@ -5,13 +5,29 @@ using Discord;
 using Discord.WebSocket;
 using Prima.Models;
 using Prima.Services;
+using Prima.Stable.Services;
 using Serilog;
 
 namespace Prima.Stable.Handlers
 {
     public static class ReactionReceived
     {
-        public static async Task HandlerAdd(IDbService db, Cacheable<IUserMessage, ulong> _, ISocketMessageChannel ichannel, SocketReaction reaction)
+        private const ulong BozjaRole = 588913532410527754;
+        private const ulong EurekaRole = 588913087818498070;
+        private const ulong DiademRole = 588913444712087564;
+
+        private static string[] CrystalWorlds => new[] {
+            "Balmung",
+            "Brynhildr",
+            "Coeurl",
+            "Diabolos",
+            "Goblin",
+            "Malboro",
+            "Mateus",
+            "Zalera",
+        };
+
+        public static async Task HandlerAdd(IDbService db, CharacterLookup lodestone, Cacheable<IUserMessage, ulong> _, ISocketMessageChannel ichannel, SocketReaction reaction)
         {
             if (ichannel is SocketGuildChannel channel)
             {
@@ -26,6 +42,50 @@ namespace Prima.Stable.Handlers
                 {
                     var roleId = ulong.Parse(roleIdString);
                     var role = member.Guild.GetRole(roleId);
+                    var dbEntry = db.Users.FirstOrDefault(u => u.DiscordId == reaction.UserId);
+
+                    if (roleId == BozjaRole || roleId == EurekaRole || roleId == DiademRole)
+                    {
+                        if (dbEntry == null)
+                        {
+                            await member.SendMessageAsync("You are not currently registered in the system (potential data loss).\n" +
+                                                          "Please register again in `#welcome` before adding one of these roles.");
+                            Log.Information("User {User} tried to get a content role and is not registered.");
+                            return;
+                        }
+
+                        if (!CrystalWorlds.Contains(dbEntry.World))
+                        {
+                            await member.SendMessageAsync("Off-DC characters may not access our organization tools.");
+                            return;
+                        }
+
+                        var data = await lodestone.GetCharacter(ulong.Parse(dbEntry.LodestoneId));
+                        var highestCombatLevel = 0;
+                        foreach (var classJob in data["ClassJobs"].ToObject<CharacterLookup.ClassJob[]>())
+                        {
+                            if (classJob.JobID >= 8 && classJob.JobID <= 18) continue;
+                            if (classJob.Level > highestCombatLevel)
+                            {
+                                highestCombatLevel = classJob.Level;
+                            }
+                        }
+
+                        if (roleId == BozjaRole && highestCombatLevel < 80)
+                        {
+                            await member.SendMessageAsync("You must be at least level 80 to access that category.");
+                            return;
+                        }
+
+                        if (roleId == EurekaRole && highestCombatLevel < 70)
+                        {
+                            await member.SendMessageAsync("You must be at least level 70 to access that category.");
+                            return;
+                        }
+
+                        // 60 is already the minimum requirement to register.
+                    }
+
                     await member.AddRoleAsync(role);
                     Log.Information("Role {Role} was added to {DiscordUser}", role.Name, member.ToString());
                 }
