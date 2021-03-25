@@ -320,15 +320,17 @@ namespace Prima.Stable.Modules
             }
         }
 
+        private const ulong BozjaRole = 588913532410527754;
+        private const ulong EurekaRole = 588913087818498070;
+        private const ulong DiademRole = 588913444712087564;
+
         [Command("scrfodc", RunMode = RunMode.Async)]
         [RequireUserPermission(GuildPermission.KickMembers)]
         public async Task StripContentRolesFromOffDC()
         {
-            var guildConfig = Db.Guilds.First(g => g.Id == Context.Guild.Id);
-
-            var diademRole = Context.Guild.GetRole(ulong.Parse(guildConfig.Roles["Diadem"]));
-            var eurekaRole = Context.Guild.GetRole(ulong.Parse(guildConfig.Roles["Eureka"]));
-            var bozjaRole = Context.Guild.GetRole(ulong.Parse(guildConfig.Roles["Bozja"]));
+            var diademRole = Context.Guild.GetRole(DiademRole);
+            var eurekaRole = Context.Guild.GetRole(EurekaRole);
+            var bozjaRole = Context.Guild.GetRole(BozjaRole);
             var roles = new[] { diademRole, eurekaRole, bozjaRole };
 
             var tasks = Db.Users
