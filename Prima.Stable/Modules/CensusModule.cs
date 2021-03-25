@@ -349,31 +349,28 @@ namespace Prima.Stable.Modules
             var count = offDc.Count;
             var message = await ReplyAsync($"Removing roles from {count} more users...");
 
-            var tasks = offDc.Select(async member =>
+            foreach (var member in offDc)
+            {
+                if (member.HasRole(diademRole))
                 {
-                    if (member.HasRole(diademRole))
-                    {
-                        await member.RemoveRoleAsync(diademRole);
-                    }
+                    await member.RemoveRoleAsync(diademRole);
+                }
 
-                    if (member.HasRole(eurekaRole))
-                    {
-                        await member.RemoveRoleAsync(eurekaRole);
-                    }
+                if (member.HasRole(eurekaRole))
+                {
+                    await member.RemoveRoleAsync(eurekaRole);
+                }
 
-                    if (member.HasRole(bozjaRole))
-                    {
-                        await member.RemoveRoleAsync(bozjaRole);
-                    }
+                if (member.HasRole(bozjaRole))
+                {
+                    await member.RemoveRoleAsync(bozjaRole);
+                }
 
-                    await message.ModifyAsync(props =>
-                    {
-                        props.Content = $"Removing roles from {--count} more users...";
-                    });
-                })
-                .ToList();
-
-            await Task.WhenAll(tasks);
+                await message.ModifyAsync(props =>
+                {
+                    props.Content = $"Removing roles from {--count} more users...";
+                });
+            }
 
             await ReplyAsync("Off-DC members stripped of non-Member content roles.");
         }
