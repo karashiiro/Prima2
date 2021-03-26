@@ -88,11 +88,50 @@ namespace Prima.Moderation.Modules
                 return ReplyAsync("Could not read user ID.");
             }
 
-            var unixTimestamp = (uid / 4194304) + 1420070400000;
+            var unixTimestamp = uid / 4194304 + 1420070400000;
             var unixTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
             unixTime = unixTime.AddMilliseconds(unixTimestamp);
 
             return ReplyAsync(unixTime.ToString(CultureInfo.InvariantCulture));
+        }
+
+        // Check when a user created their FFXIV character.
+        [Command("lwhen")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        public Task WhenLodestone([Remainder] string lodestoneIdOrUrl = "")
+        {
+            if (!ulong.TryParse(lodestoneIdOrUrl, out var uid))
+            {
+                var lodestonePageRegex = new Regex(@"(?<=lodestone\/character\/)\d+");
+                var match = lodestonePageRegex.Match(lodestoneIdOrUrl);
+                if (!match.Success)
+                {
+                    return ReplyAsync("Could not read Lodestone ID.");
+                }
+
+                uid = ulong.Parse(match.Value);
+            }
+
+            var creationTime = LodestoneIdTime(uid);
+            return ReplyAsync(creationTime.ToString(CultureInfo.InvariantCulture));
+        }
+
+        // https://github.com/karashiiro/lodestone-id-time
+        private static DateTime LodestoneIdTime(ulong id)
+        {
+            double excelTime;
+            if (id <= 5000000)
+                excelTime = 37.44 / 5000000 * id + 41539.93;
+            else if (id > 28208601)
+                excelTime = 305.01 / 4775200 * id + 42030.57;
+            else
+                excelTime = 4.10315437 * Math.Pow(10, 4)
+                            + 1.00993557 * Math.Pow(10, -4) * id
+                            + 31.5417054 * Math.Sin(8.57105764 * Math.Pow(10, -7) * id);
+            var unixTimestamp = (ulong)Math.Floor((excelTime - 25569) * 86400);
+            var unixTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+            unixTime = unixTime.AddMilliseconds(unixTimestamp);
+            return unixTime;
         }
 
         [Command("ban")]
