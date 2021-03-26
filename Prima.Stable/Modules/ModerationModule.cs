@@ -130,7 +130,7 @@ namespace Prima.Moderation.Modules
                             + 31.5417054 * Math.Sin(8.57105764 * Math.Pow(10, -7) * id);
             var unixTimestamp = (ulong)Math.Floor((excelTime - 25569) * 86400);
             var unixTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-            unixTime = unixTime.AddMilliseconds(unixTimestamp);
+            unixTime = unixTime.AddSeconds(unixTimestamp);
             return unixTime;
         }
 
