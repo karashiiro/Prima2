@@ -44,10 +44,28 @@ namespace Prima.Stable.Services
         public async Task<GodestoneCharacterSearchResult> SearchCharacter(string world, string name)
         {
             var response = await _http.GetStringAsync(ServiceLocation + $"/character/search/{world}/{name}");
-            var results = JsonConvert.DeserializeObject<GodestoneCharacterSearchResult[]>(response);
-            return results.FirstOrDefault(c =>
-                string.Equals(c.World, world, StringComparison.InvariantCultureIgnoreCase) &&
-                string.Equals(c.Name, name, StringComparison.InvariantCultureIgnoreCase));
+            var results = JsonConvert.DeserializeObject<GodestoneCharacterSearchResult[]>(response)
+                .Where(c =>
+                    string.Equals(c.World, world, StringComparison.InvariantCultureIgnoreCase) &&
+                    string.Equals(c.Name, name, StringComparison.InvariantCultureIgnoreCase))
+                .ToList();
+
+            if (results.Count <= 1)
+            {
+                return results.FirstOrDefault();
+            }
+
+            // Multiple characters with the same name and world, for some reason
+            var finalResult = results.First();
+            foreach (var result in results.Skip(1))
+            {
+                if (result.Rank > finalResult.Rank)
+                {
+                    finalResult = result;
+                }
+            }
+
+            return finalResult;
         }
 
         public async Task<JObject> GetCharacter(ulong id)
