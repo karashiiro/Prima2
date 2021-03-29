@@ -276,7 +276,8 @@ namespace Prima.Stable.Modules
                 {
                     Name = kvp.Value.Name,
                     World = kvp.Value.Server,
-                    User = Db.Users.FirstOrDefault(u => u.Name == kvp.Value.Name && u.World == kvp.Value.Server),
+                    User = Db.Users.FirstOrDefault(u => string.Equals(u.Name, kvp.Value.Name, StringComparison.InvariantCultureIgnoreCase)
+                                                        && string.Equals(u.World, kvp.Value.Server, StringComparison.InvariantCultureIgnoreCase)),
                 }))
                 .Select(async kvp =>
                 {
