@@ -305,7 +305,7 @@ namespace Prima.Stable.Modules
                 if (role == null)
                 {
                     Log.Error("Role {RoleName} does not exist!", roleName);
-                    return;
+                    continue;
                 }
 
                 var contingentRoles = DelubrumProgressionRoles.GetContingentRoles(role.Id)
