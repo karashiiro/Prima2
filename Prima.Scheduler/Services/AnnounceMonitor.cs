@@ -163,10 +163,17 @@ namespace Prima.Scheduler.Services
             Log.Information("Assigning roles...");
             if (host != null && !host.HasRole(currentHost))
             {
-                await host.AddRoleAsync(currentHost);
-                await _db.AddTimedRole(currentHost.Id, guild.Id, host.Id, DateTime.UtcNow.AddHours(4.5));
+                try
+                {
+                    await host.AddRoleAsync(currentHost);
+                    await _db.AddTimedRole(currentHost.Id, guild.Id, host.Id, DateTime.UtcNow.AddHours(4.5));
 
-                return true;
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, "Failed to add host role to {User}!", currentHost?.ToString() ?? "null");
+                }
             }
 
             return false;
