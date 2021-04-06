@@ -30,7 +30,9 @@ namespace Prima.Stable
             var ffLogs = services.GetRequiredService<FFLogsAPI>();
             var web = services.GetRequiredService<WebClient>();
             var lodestone = services.GetRequiredService<CharacterLookup>();
+            var keepClean = services.GetRequiredService<KeepClean>();
 
+            keepClean.Initialize();
             roleRemover.Initialize();
             await ffLogs.Initialize();
 
@@ -68,7 +70,8 @@ namespace Prima.Stable
                 .AddSingleton<FFXIVWeatherService>()
                 .AddSingleton<MuteService>()
                 .AddSingleton<TimedRoleManager>()
-                .AddSingleton<FFLogsAPI>();
+                .AddSingleton<FFLogsAPI>()
+                .AddSingleton<KeepClean>();
             return sc.BuildServiceProvider();
         }
     }
