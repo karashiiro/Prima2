@@ -403,6 +403,40 @@ namespace Prima.Stable.Modules
                 clearedMembers.Count()));
         }
 
+        [Command("lfgcountsdrs", RunMode = RunMode.Async)]
+        [Description("Get the LFG role counts of all guild members for Delubrum Reginae (Savage).")]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public Task GetBAProgressionCounts()
+        {
+            var members = Context.Guild.Users;
+
+            var lfgFragMembers = members.Where(m => m.HasRole(810201516291653643));
+            var lfgTrinitySeekerMembers = members.Where(m => m.HasRole(810201667814948877));
+            var lfgQueensGuardMembers = members.Where(m => m.HasRole(810201946249232384));
+            var lfgStygLordMembers = members.Where(m => m.HasRole(810202020279615520));
+            var lfgTrinityAvowedMembers = members.Where(m => m.HasRole(810201890775629877));
+            var lfgQueenMembers = members.Where(m => m.HasRole(810201946249232384));
+            var lfgReclearMembers = members.Where(m => m.HasRole(829005698322661447));
+
+            const string outFormat = "LFG Counts (includes overlap):\n" +
+                                     "LFG DRS Fresh Prog: {0}\n" +
+                                     "LFG DRS Trinity Seeker Prog: {1}\n" +
+                                     "LFG DRS Queen's Guard Prog: {2}\n" +
+                                     "LFG DRS Stygimoloch Lord Prog: {3}\n" +
+                                     "LFG DRS Trinity Avowed Prog: {4}\n" +
+                                     "LFG DRS The Queen Prog: {5}\n" +
+                                     "LFG DRS Reclear: {6}";
+            return ReplyAsync(string.Format(
+                outFormat,
+                lfgFragMembers.Count(),
+                lfgTrinitySeekerMembers.Count(),
+                lfgQueensGuardMembers.Count(),
+                lfgStygLordMembers.Count(),
+                lfgTrinityAvowedMembers.Count(),
+                lfgQueenMembers.Count(),
+                lfgReclearMembers.Count()));
+        }
+
         [Command("star", RunMode = RunMode.Async)]
         [Description("Shows the Bozjan Southern Front star mob guide.")]
         [RateLimit(TimeSeconds = 1, Global = true)]
