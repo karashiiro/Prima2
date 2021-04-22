@@ -354,7 +354,7 @@ namespace Prima.Stable.Modules
 #endif
 
             var guild = Context.Guild ?? Context.User.MutualGuilds.First(g => Db.Guilds.Any(gc => gc.Id == g.Id));
-            Log.Information("Mututal guild ID: {GuildId}", guild.Id);
+            Log.Information("Mutual guild ID: {GuildId}", guild.Id);
 
             var guildConfig = Db.Guilds.First(g => g.Id == guild.Id);
             var prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
