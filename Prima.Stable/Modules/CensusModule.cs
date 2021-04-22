@@ -332,50 +332,6 @@ namespace Prima.Stable.Modules
             }
         }
 
-        [Command("scrfodc", RunMode = RunMode.Async)]
-        [RequireUserPermission(GuildPermission.KickMembers)]
-        public async Task StripContentRolesFromOffDC()
-        {
-            var diademRole = Context.Guild.GetRole(DiademRole);
-            var eurekaRole = Context.Guild.GetRole(EurekaRole);
-            var bozjaRole = Context.Guild.GetRole(BozjaRole);
-
-            var offDc = Db.Users
-                .Where(u => !Worlds.List.Contains(u.World))
-                .Select(u => Context.Guild.GetUser(u.DiscordId))
-                .Where(u => u != null)
-                .Where(u => u.HasRole(diademRole) || u.HasRole(eurekaRole) || u.HasRole(bozjaRole))
-                .ToList();
-
-            var count = offDc.Count;
-            var message = await ReplyAsync($"Removing roles from {count} more users...");
-
-            foreach (var member in offDc)
-            {
-                if (member.HasRole(diademRole))
-                {
-                    await member.RemoveRoleAsync(diademRole);
-                }
-
-                if (member.HasRole(eurekaRole))
-                {
-                    await member.RemoveRoleAsync(eurekaRole);
-                }
-
-                if (member.HasRole(bozjaRole))
-                {
-                    await member.RemoveRoleAsync(bozjaRole);
-                }
-
-                await message.ModifyAsync(props =>
-                {
-                    props.Content = $"Removing roles from {--count} more users...";
-                });
-            }
-
-            await ReplyAsync("Off-DC members stripped of non-Member content roles.");
-        }
-
         // Verify BA clear status.
         [Command("verify", RunMode = RunMode.Async)]
         [Description("[FFXIV] Get content completion vanity roles.")]
