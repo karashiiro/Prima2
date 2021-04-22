@@ -145,6 +145,10 @@ namespace Prima.Stable.Modules
                 return;
             }
 
+            // Get the existing database entry, if it exists.
+            var existingLodestoneId = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id)?.LodestoneId;
+
+            // Insert them into the DB.
             var user = foundCharacter;
             foundCharacter.DiscordId = Context.User.Id;
             await Db.AddUser(user);
@@ -176,7 +180,7 @@ namespace Prima.Stable.Modules
             var finalReply = await Context.Channel.SendMessageAsync(embed: responseEmbed);
             if (member.Roles.All(r => r.Name != "Time Out"))
             {
-                await ActivateUser(member, foundCharacter, guildConfig);
+                await ActivateUser(member, existingLodestoneId, foundCharacter, guildConfig);
             }
             
             // Cleanup
@@ -248,6 +252,9 @@ namespace Prima.Stable.Modules
                 return;
             }
 
+            // Get the existing database entry, if it exists.
+            var existingLodestoneId = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id)?.LodestoneId;
+
             // Add the user and character to the database.
             var user = foundCharacter;
             foundCharacter.DiscordId = userMention.Id;
@@ -283,7 +290,7 @@ namespace Prima.Stable.Modules
             Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
 
             var finalReply = await Context.Channel.SendMessageAsync(embed: responseEmbed);
-            await ActivateUser(member, foundCharacter, guildConfig);
+            await ActivateUser(member, existingLodestoneId, foundCharacter, guildConfig);
 
             // Cleanup
             await Task.Delay(MessageDeleteDelay);
@@ -294,7 +301,7 @@ namespace Prima.Stable.Modules
         private const ulong EurekaRole = 588913087818498070;
         private const ulong DiademRole = 588913444712087564;
 
-        private async Task ActivateUser(SocketGuildUser member, DiscordXIVUser dbEntry, DiscordGuildConfiguration guildConfig)
+        private async Task ActivateUser(SocketGuildUser member, string oldLodestoneId, DiscordXIVUser dbEntry, DiscordGuildConfiguration guildConfig)
         {
             var memberRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
             await member.AddRoleAsync(memberRole);
@@ -324,10 +331,27 @@ namespace Prima.Stable.Modules
             }
             else if (!Worlds.List.Contains(dbEntry.World))
             {
-                var diademRole = Context.Guild.GetRole(DiademRole);
-                var eurekaRole = Context.Guild.GetRole(EurekaRole);
-                var bozjaRole = Context.Guild.GetRole(BozjaRole);
-                var roles = new[] { diademRole, eurekaRole, bozjaRole };
+                var guild = Context.Guild;
+                var roles = new[]
+                {
+                    guild.GetRole(DiademRole),
+                    guild.GetRole(EurekaRole),
+                    guild.GetRole(BozjaRole),
+                };
+
+                if (oldLodestoneId != dbEntry.LodestoneId)
+                {
+                    roles = roles.Concat(new[]
+                    {
+                        guild.GetRole(ulong.Parse(guildConfig.Roles["Arsenal Master"])),
+                        guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared"])),
+                        guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Castrum"])),
+                        guild.GetRole(ulong.Parse(guildConfig.Roles["Siege Liege"])),
+                        guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Delubrum Savage"])),
+                        guild.GetRole(ulong.Parse(guildConfig.Roles["Savage Queen"]))
+                    }).ToArray();
+                }
+
                 await member.RemoveRolesAsync(roles);
             }
         }
