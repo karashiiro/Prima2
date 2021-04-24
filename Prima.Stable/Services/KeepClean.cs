@@ -62,6 +62,7 @@ namespace Prima.Stable.Services
             {
                 foreach (var message in page)
                 {
+                    if (message.Id == 835621994753294456) continue;
                     if (DateTimeOffset.UtcNow - message.Timestamp <= limit) continue;
                     try
                     {
