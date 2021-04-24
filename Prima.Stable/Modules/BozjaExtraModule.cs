@@ -410,6 +410,7 @@ namespace Prima.Stable.Modules
         {
             var members = Context.Guild.Users;
 
+            var lfgDrsMembers = members.Where(m => m.HasRole(806290575086845962));
             var lfgFragMembers = members.Where(m => m.HasRole(810201516291653643));
             var lfgTrinitySeekerMembers = members.Where(m => m.HasRole(810201667814948877));
             var lfgQueensGuardMembers = members.Where(m => m.HasRole(810201946249232384));
@@ -419,15 +420,17 @@ namespace Prima.Stable.Modules
             var lfgReclearMembers = members.Where(m => m.HasRole(829005698322661447));
 
             const string outFormat = "LFG Counts (includes overlap):\n" +
-                                     "LFG DRS Fresh Prog: {0}\n" +
-                                     "LFG DRS Trinity Seeker Prog: {1}\n" +
-                                     "LFG DRS Queen's Guard Prog: {2}\n" +
-                                     "LFG DRS Stygimoloch Lord Prog: {3}\n" +
-                                     "LFG DRS Trinity Avowed Prog: {4}\n" +
-                                     "LFG DRS The Queen Prog: {5}\n" +
-                                     "LFG DRS Reclear: {6}";
+                                     "LFG Delubrum Reginae (Savage): {0}\n" +
+                                     "LFG DRS Fresh Prog: {1}\n" +
+                                     "LFG DRS Trinity Seeker Prog: {2}\n" +
+                                     "LFG DRS Queen's Guard Prog: {3}\n" +
+                                     "LFG DRS Stygimoloch Lord Prog: {4}\n" +
+                                     "LFG DRS Trinity Avowed Prog: {5}\n" +
+                                     "LFG DRS The Queen Prog: {6}\n" +
+                                     "LFG DRS Reclear: {7}";
             return ReplyAsync(string.Format(
                 outFormat,
+                lfgDrsMembers.Count(),
                 lfgFragMembers.Count(),
                 lfgTrinitySeekerMembers.Count(),
                 lfgQueensGuardMembers.Count(),
