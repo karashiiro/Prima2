@@ -483,6 +483,10 @@ namespace Prima.Stable.Modules
         [Description("Shows the Trinity Avowed ladder guide. Also `~ladders`.")]
         [RateLimit(TimeSeconds = 1, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task PipeGameAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/i2ms13x.png");
+        public async Task PipeGameAsync()
+        {
+            await DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/i2ms13x.png");
+            await DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/JgiTTK9.png");
+        }
     }
 }
