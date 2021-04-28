@@ -147,6 +147,14 @@ namespace Prima.Stable.Modules
 
             // Get the existing database entry, if it exists.
             var existingLodestoneId = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id)?.LodestoneId;
+            var existingDiscordUser = Db.Users.FirstOrDefault(u => u.LodestoneId == foundCharacter.LodestoneId);
+
+            // Disallow duplicate characters (CEM policy).
+            if (existingDiscordUser?.DiscordId != member.Id)
+            {
+                await ReplyAsync("That character is already registered to another user.");
+                return;
+            }
 
             // Insert them into the DB.
             var user = foundCharacter;
@@ -196,7 +204,7 @@ namespace Prima.Stable.Modules
             var guildConfig = Db.Guilds.Single(g => g.Id == Context.Guild.Id);
             var prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
 
-            if (userMention == null || parameters.Length != 3)
+            if (userMention == null || parameters.Length < 3)
             {
                 var reply = await ReplyAsync($"{Context.User.Mention}, please enter that command in the format `{prefix}iam Mention World Name Surname`.");
                 await Task.Delay(MessageDeleteDelay);
@@ -228,6 +236,8 @@ namespace Prima.Stable.Modules
                 world = "Diabolos";
             }
 
+            var force = parameters.Length >= 4 && parameters[3].ToLower() == "force";
+
             var guild = Context.Guild ?? userMention.MutualGuilds.First();
             var member = guild.GetUser(userMention.Id);
             if (member == null)
@@ -246,14 +256,32 @@ namespace Prima.Stable.Modules
             }
             catch (CharacterNotFound)
             {
-                var reply = await ReplyAsync($"{Context.User.Mention}, no character matching that name and world was found. Are you sure you typed your world name correctly?");
-                await Task.Delay(MessageDeleteDelay);
-                await reply.DeleteAsync();
+                await ReplyAsync($"{Context.User.Mention}, no character matching that name and world was found. Are you sure you typed their world name correctly?");
                 return;
             }
 
-            // Get the existing database entry, if it exists.
+            // Get the existing database entries, if they exist.
             var existingLodestoneId = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id)?.LodestoneId;
+            var existingDiscordUser = Db.Users.FirstOrDefault(u => u.LodestoneId == foundCharacter.LodestoneId);
+
+            // Disallow duplicate characters (CEM policy).
+            if (existingDiscordUser?.DiscordId != member.Id)
+            {
+                if (!force)
+                {
+                    await ReplyAsync($"That character is already registered to <@{existingDiscordUser?.DiscordId}>. " +
+                                     "If you would like to register this character to someone else, please add the `force` parameter to the end of this command.");
+                    return;
+                }
+
+                Log.Information("Lodestone character forced off of {UserId}.", existingDiscordUser?.DiscordId);
+                var memberRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
+                var existingMember = member.Guild.GetUser(existingDiscordUser?.DiscordId ?? 0);
+                if (existingMember != null)
+                {
+                    await existingMember.RemoveRoleAsync(memberRole);
+                }
+            }
 
             // Add the user and character to the database.
             var user = foundCharacter;
