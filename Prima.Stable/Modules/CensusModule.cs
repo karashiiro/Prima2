@@ -150,7 +150,7 @@ namespace Prima.Stable.Modules
             var existingDiscordUser = Db.Users.FirstOrDefault(u => u.LodestoneId == foundCharacter.LodestoneId);
 
             // Disallow duplicate characters (CEM policy).
-            if (existingDiscordUser?.DiscordId != member.Id)
+            if (existingDiscordUser != null && existingDiscordUser.DiscordId != member.Id)
             {
                 await ReplyAsync("That character is already registered to another user.");
                 return;
@@ -265,22 +265,19 @@ namespace Prima.Stable.Modules
             var existingDiscordUser = Db.Users.FirstOrDefault(u => u.LodestoneId == foundCharacter.LodestoneId);
 
             // Disallow duplicate characters (CEM policy).
-            if (existingDiscordUser?.DiscordId != member.Id)
+            if (existingDiscordUser != null && existingDiscordUser.DiscordId != member.Id)
             {
                 if (!force)
                 {
-                    await ReplyAsync($"That character is already registered to <@{existingDiscordUser?.DiscordId}>. " +
+                    await ReplyAsync($"That character is already registered to <@{existingDiscordUser.DiscordId}>. " +
                                      "If you would like to register this character to someone else, please add the `force` parameter to the end of this command.");
                     return;
                 }
 
-                Log.Information("Lodestone character forced off of {UserId}.", existingDiscordUser?.DiscordId);
+                Log.Information("Lodestone character forced off of {UserId}.", existingDiscordUser.DiscordId);
                 var memberRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
-                var existingMember = member.Guild.GetUser(existingDiscordUser?.DiscordId ?? 0);
-                if (existingMember != null)
-                {
-                    await existingMember.RemoveRoleAsync(memberRole);
-                }
+                var existingMember = member.Guild.GetUser(existingDiscordUser.DiscordId);
+                await existingMember.RemoveRoleAsync(memberRole);
             }
 
             // Add the user and character to the database.
