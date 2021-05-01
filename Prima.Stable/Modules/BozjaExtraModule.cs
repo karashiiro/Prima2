@@ -477,6 +477,12 @@ namespace Prima.Stable.Modules
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task BrandsHotColdAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/un5nvg4.png");
 
+        [Command("slimes", RunMode = RunMode.Async)]
+        [Description("Shows the Delubrum Reginae slimes guide.")]
+        [RateLimit(TimeSeconds = 1, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public Task SlimesAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/wUrvKtr.gif");
+
         [Command("pipegame", RunMode = RunMode.Async)]
         [Alias("ladders")]
         [Description("Shows the Trinity Avowed ladder guide. Also `~ladders`.")]
