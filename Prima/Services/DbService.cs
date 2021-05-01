@@ -33,7 +33,7 @@ namespace Prima.Services
         public IAsyncEnumerable<TimedRole> TimedRoles => _timedRoles.AsQueryable().ToAsyncEnumerable();
         public IAsyncEnumerable<Vote> Votes => _votes.AsQueryable().ToAsyncEnumerable();
         public IAsyncEnumerable<VoteHost> VoteHosts => _voteHosts.AsQueryable().ToAsyncEnumerable();
-        public IAsyncEnumerable<EphemeralPin> EphemeralPins { get; }
+        public IAsyncEnumerable<EphemeralPin> EphemeralPins => _ephemeralPins.AsQueryable().ToAsyncEnumerable();
 
         private readonly IMongoCollection<GlobalConfiguration> _config;
         private readonly IMongoCollection<DiscordGuildConfiguration> _guildConfig;
