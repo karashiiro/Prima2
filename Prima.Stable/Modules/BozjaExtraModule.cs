@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -99,7 +98,7 @@ namespace Prima.Stable.Modules
         {
             if (Context.Guild == null) return;
 
-            var isFFLogs = FFLogs.IsLogLink.Match(args).Success;
+            var isFFLogs = FFLogs.IsLogLink(args);
             if (isFFLogs)
             {
                 await Context.Guild.DownloadUsersAsync();
