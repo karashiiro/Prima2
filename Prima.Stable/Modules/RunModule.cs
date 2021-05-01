@@ -64,8 +64,8 @@ namespace Prima.Stable.Modules
             if (pinInfo?.PinnerRoleId != RunHostData.PinnerRoleId) return;
 
             await Db.RemoveEphemeralPin(messageId);
-
             await userMessage.UnpinAsync();
+            await ReplyAsync("Message unpinned.");
         }
 
         [Command("setpriority")]
