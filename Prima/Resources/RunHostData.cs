@@ -8,6 +8,6 @@
         public const ulong RoleId = 762072215356702741;
 #endif
 
-        private const ulong PinnerRoleId = 838109848867569695;
+        public const ulong PinnerRoleId = 838109848867569695;
     }
 }

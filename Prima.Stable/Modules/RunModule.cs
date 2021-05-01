@@ -20,6 +20,51 @@ namespace Prima.Stable.Modules
         private const ulong HostSpeakerRoleId = 762072215356702741;
         private const ulong PrioritySpeakerRoleId = 762071904273432628;
 
+        [Command("pin")]
+        [Description("Temporarily pins a message in a run channel.")]
+        public async Task PinMessage(ulong messageId)
+        {
+            if (Context.Guild == null) return;
+            if (!Context.Channel.Name.Contains("group-chat")) return;
+
+            var member = Context.Guild.GetUser(Context.User.Id);
+            if (!member.HasRole(RunHostData.PinnerRoleId)) return;
+
+            var message = await Context.Channel.GetMessageAsync(messageId);
+            if (message is not IUserMessage userMessage)
+            {
+                await ReplyAsync("That message is not in this channel!");
+                return;
+            }
+
+            // TODO: register in database for automatic removal
+
+            await userMessage.PinAsync();
+        }
+
+        [Command("unpin")]
+        [Description("Unpins a message pinned by a run member in a run channel.")]
+        public async Task UnpinMessage(ulong messageId)
+        {
+            if (Context.Guild == null) return;
+            if (!Context.Channel.Name.Contains("group-chat")) return;
+
+            var member = Context.Guild.GetUser(Context.User.Id);
+            if (!member.HasRole(RunHostData.PinnerRoleId)) return;
+
+            var message = await Context.Channel.GetMessageAsync(messageId);
+            if (message is not IUserMessage userMessage)
+            {
+                await ReplyAsync("That message is not in this channel!");
+                return;
+            }
+
+            // Pinners may only unpin messages that pinners have pinned
+            // TODO: that.
+
+            await userMessage.UnpinAsync();
+        }
+
         [Command("setpriority")]
         [Description("A command for hosts to use that sets a priority speaker for 3 hours.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
