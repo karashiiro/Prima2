@@ -31,9 +31,11 @@ namespace Prima.Stable
             var web = services.GetRequiredService<WebClient>();
             var lodestone = services.GetRequiredService<CharacterLookup>();
             var keepClean = services.GetRequiredService<KeepClean>();
+            var ephemeralPinner = services.GetRequiredService<EphemeralPinManager>();
 
             keepClean.Initialize();
             roleRemover.Initialize();
+            ephemeralPinner.Initialize();
             await ffLogs.Initialize();
 
             client.ReactionAdded += (message, channel, reaction)
@@ -71,7 +73,8 @@ namespace Prima.Stable
                 .AddSingleton<MuteService>()
                 .AddSingleton<TimedRoleManager>()
                 .AddSingleton<FFLogsAPI>()
-                .AddSingleton<KeepClean>();
+                .AddSingleton<KeepClean>()
+                .AddSingleton<EphemeralPinManager>();
             return sc.BuildServiceProvider();
         }
     }
