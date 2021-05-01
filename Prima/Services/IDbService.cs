@@ -18,12 +18,17 @@ namespace Prima.Services
         IAsyncEnumerable<TimedRole> TimedRoles { get; }
         IAsyncEnumerable<Vote> Votes { get; }
         IAsyncEnumerable<VoteHost> VoteHosts { get; }
+        IAsyncEnumerable<EphemeralPin> EphemeralPins { get; }
 
         Task SetGlobalConfigurationProperty(string key, string value);
 
         Task SetGuildConfigurationProperty<T>(ulong guildId, string key, T value);
 
         Task AddGuild(DiscordGuildConfiguration config);
+
+        Task<bool> AddEphemeralPin(ulong messageId, ulong pinnerRoleId, ulong pinnerId, DateTime pinTime);
+
+        Task<bool> RemoveEphemeralPin(ulong messageId);
 
         Task<bool> AddVoteHost(ulong messageId, ulong ownerId);
 

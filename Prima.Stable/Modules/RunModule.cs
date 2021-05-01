@@ -37,7 +37,7 @@ namespace Prima.Stable.Modules
                 return;
             }
 
-            // TODO: register in database for automatic removal
+            await Db.AddEphemeralPin(messageId, RunHostData.PinnerRoleId, Context.User.Id, DateTime.UtcNow);
 
             await userMessage.PinAsync();
         }
@@ -60,7 +60,10 @@ namespace Prima.Stable.Modules
             }
 
             // Pinners may only unpin messages that pinners have pinned
-            // TODO: that.
+            var pinInfo = await Db.EphemeralPins.FirstOrDefaultAsync(e => e.MessageId == messageId);
+            if (pinInfo?.PinnerRoleId != RunHostData.PinnerRoleId) return;
+
+            await Db.RemoveEphemeralPin(messageId);
 
             await userMessage.UnpinAsync();
         }

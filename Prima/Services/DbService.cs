@@ -34,6 +34,7 @@ namespace Prima.Services
         public IAsyncEnumerable<TimedRole> TimedRoles => _timedRoles.AsQueryable().ToAsyncEnumerable();
         public IAsyncEnumerable<Vote> Votes => _votes.AsQueryable().ToAsyncEnumerable();
         public IAsyncEnumerable<VoteHost> VoteHosts => _voteHosts.AsQueryable().ToAsyncEnumerable();
+        public IAsyncEnumerable<EphemeralPin> EphemeralPins { get; }
 
         private readonly IMongoCollection<GlobalConfiguration> _config;
         private readonly IMongoCollection<DiscordGuildConfiguration> _guildConfig;
@@ -45,6 +46,7 @@ namespace Prima.Services
         private readonly IMongoCollection<TimedRole> _timedRoles;
         private readonly IMongoCollection<Vote> _votes;
         private readonly IMongoCollection<VoteHost> _voteHosts;
+        private readonly IMongoCollection<EphemeralPin> _ephemeralPins;
 
         public DbService()
         {
@@ -80,6 +82,9 @@ namespace Prima.Services
 
             _voteHosts = database.GetCollection<VoteHost>("VoteHosts");
             Log.Information("Vote host collection status: {DbStatus} documents found.", _voteHosts.EstimatedDocumentCount());
+
+            _ephemeralPins = database.GetCollection<EphemeralPin>("EphemeralPins");
+            Log.Information("Ephemeral pin collection status: {DbStatus} documents found.", _ephemeralPins.EstimatedDocumentCount());
         }
 
         public async Task SetGlobalConfigurationProperty(string key, string value)
@@ -118,6 +123,29 @@ namespace Prima.Services
             {
                 await _guildConfig.InsertOneAsync(config);
             }
+        }
+
+        public async Task<bool> AddEphemeralPin(ulong messageId, ulong pinnerRoleId, ulong pinnerId, DateTime pinTime)
+        {
+            var existingSet = await _ephemeralPins.FindAsync(e => e.MessageId == messageId);
+            if (await existingSet.AnyAsync())
+            {
+                var update = Builders<EphemeralPin>.Update.Set("PinTime", pinTime);
+                await _ephemeralPins.UpdateOneAsync(e => e.MessageId == messageId, update);
+                return true;
+            }
+
+            var newEphemeralPin = new EphemeralPin { MessageId = messageId, PinnerRoleId = pinnerRoleId, PinnerId = pinnerId, PinTime = pinTime };
+            await _ephemeralPins.InsertOneAsync(newEphemeralPin);
+            return true;
+        }
+
+        public async Task<bool> RemoveEphemeralPin(ulong messageId)
+        {
+            var existingSet = await _ephemeralPins.FindAsync(e => e.MessageId == messageId);
+            if (!await existingSet.AnyAsync()) return false;
+            await _ephemeralPins.DeleteManyAsync(e => e.MessageId == messageId);
+            return true;
         }
 
         public async Task<bool> AddVoteHost(ulong messageId, ulong ownerId)

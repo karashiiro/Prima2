@@ -20,7 +20,8 @@ namespace Prima.Tests.Mocks
         public IAsyncEnumerable<EventReaction> EventReactions => _eventReactions.ToAsyncEnumerable();
         public IAsyncEnumerable<TimedRole> TimedRoles => _timedRoles.ToAsyncEnumerable();
         public IAsyncEnumerable<Vote> Votes => throw new NotImplementedException();
-        public IAsyncEnumerable<VoteHost> VoteHosts { get; }
+        public IAsyncEnumerable<VoteHost> VoteHosts => throw new NotImplementedException();
+        public IAsyncEnumerable<EphemeralPin> EphemeralPins => throw new NotImplementedException();
 
         private readonly IList<DiscordGuildConfiguration> _guilds;
         private readonly IList<DiscordXIVUser> _users;
@@ -76,6 +77,16 @@ namespace Prima.Tests.Mocks
                 return Task.CompletedTask;
             _guilds.Add(config);
             return Task.CompletedTask;
+        }
+
+        public Task<bool> AddEphemeralPin(ulong messageId, ulong pinnerRoleId, ulong pinnerId, DateTime pinTime)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> RemoveEphemeralPin(ulong messageId)
+        {
+            throw new NotImplementedException();
         }
 
         public Task<bool> AddVoteHost(ulong messageId, ulong ownerId)
