@@ -37,7 +37,7 @@ namespace Prima.Stable.Modules
                 return;
             }
 
-            await Db.AddEphemeralPin(messageId, RunHostData.PinnerRoleId, Context.User.Id, DateTime.UtcNow);
+            await Db.AddEphemeralPin(Context.Guild.Id, Context.Channel.Id, messageId, RunHostData.PinnerRoleId, Context.User.Id, DateTime.UtcNow);
 
             await userMessage.PinAsync();
         }

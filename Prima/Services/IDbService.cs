@@ -26,7 +26,7 @@ namespace Prima.Services
 
         Task AddGuild(DiscordGuildConfiguration config);
 
-        Task<bool> AddEphemeralPin(ulong messageId, ulong pinnerRoleId, ulong pinnerId, DateTime pinTime);
+        Task<bool> AddEphemeralPin(ulong guildId, ulong channelId, ulong messageId, ulong pinnerRoleId, ulong pinnerId, DateTime pinTime);
 
         Task<bool> RemoveEphemeralPin(ulong messageId);
 

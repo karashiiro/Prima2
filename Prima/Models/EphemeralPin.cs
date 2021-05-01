@@ -17,6 +17,14 @@ namespace Prima.Models
 
         [BsonRequired]
         [BsonRepresentation(BsonType.String)]
+        public ulong GuildId { get; set; }
+
+        [BsonRequired]
+        [BsonRepresentation(BsonType.String)]
+        public ulong ChannelId { get; set; }
+
+        [BsonRequired]
+        [BsonRepresentation(BsonType.String)]
         public ulong MessageId { get; set; }
 
         [BsonRequired]
