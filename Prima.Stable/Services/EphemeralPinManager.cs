@@ -41,7 +41,13 @@ namespace Prima.Stable.Services
                     foreach (var e in toRemove)
                     {
                         var guild = _client.GetGuild(e.GuildId);
-                        var channel = guild.GetTextChannel(e.ChannelId);
+                        var channel = guild?.GetTextChannel(e.ChannelId);
+                        if (channel == null)
+                        {
+                            Log.Warning("Could not access channel {ChannelId}, skipping...", e.ChannelId);
+                            continue;
+                        }
+
                         var message = await channel.GetMessageAsync(e.MessageId) as IUserMessage;
                         Log.Information("Removing pinned message {MessageId}.", e.MessageId);
                         try
