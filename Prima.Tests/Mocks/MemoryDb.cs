@@ -79,7 +79,7 @@ namespace Prima.Tests.Mocks
             return Task.CompletedTask;
         }
 
-        public Task<bool> AddEphemeralPin(ulong messageId, ulong pinnerRoleId, ulong pinnerId, DateTime pinTime)
+        public Task<bool> AddEphemeralPin(ulong guildId, ulong channelId, ulong messageId, ulong pinnerRoleId, ulong pinnerId, DateTime pinTime)
         {
             throw new NotImplementedException();
         }

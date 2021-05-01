@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MongoDB.Bson;
 
 namespace Prima.Services
 {
@@ -125,7 +124,7 @@ namespace Prima.Services
             }
         }
 
-        public async Task<bool> AddEphemeralPin(ulong messageId, ulong pinnerRoleId, ulong pinnerId, DateTime pinTime)
+        public async Task<bool> AddEphemeralPin(ulong guildId, ulong channelId, ulong messageId, ulong pinnerRoleId, ulong pinnerId, DateTime pinTime)
         {
             var existingSet = await _ephemeralPins.FindAsync(e => e.MessageId == messageId);
             if (await existingSet.AnyAsync())
@@ -135,7 +134,7 @@ namespace Prima.Services
                 return true;
             }
 
-            var newEphemeralPin = new EphemeralPin { MessageId = messageId, PinnerRoleId = pinnerRoleId, PinnerId = pinnerId, PinTime = pinTime };
+            var newEphemeralPin = new EphemeralPin { GuildId = guildId, ChannelId = channelId, MessageId = messageId, PinnerRoleId = pinnerRoleId, PinnerId = pinnerId, PinTime = pinTime };
             await _ephemeralPins.InsertOneAsync(newEphemeralPin);
             return true;
         }
