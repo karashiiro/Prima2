@@ -130,7 +130,7 @@ namespace Prima.Scheduler.Services
                         continue;
                     }
 
-                    Log.Information("{Username} - ETA {TimeUntil} hrs.", embed.Author?.Name, (DateTimeOffset.Now - timestamp).TotalHours);
+                    Log.Information("{Username} - ETA {TimeUntil} hrs.", embed.Author?.Name, (timestamp - DateTimeOffset.Now).TotalHours);
 
                     // ReSharper disable once InvertIf
                     if (timestamp.AddMinutes(-minutesBefore) <= DateTimeOffset.Now && embed.Author.HasValue)
