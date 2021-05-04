@@ -138,7 +138,6 @@ namespace Prima.Scheduler.Services
                             await Task.Delay((int)Threshold, token);
                             await AssignHost(leader);
                             await embedMessage.DeleteAsync();
-                            await _db.AddTimedRole(HostRole, guild.Id, leader.Id, DateTime.UtcNow.AddHours(4.5));
                         }, token);
                     }
                 }
@@ -182,10 +181,17 @@ namespace Prima.Scheduler.Services
             if (success) Log.Information($"Info sent to {member} about {leader}'s run.");
         }
 
-        private static async Task AssignHost(IGuildUser host)
+        private async Task AssignHost(IGuildUser host)
         {
-            var hostRole = host.Guild.GetRole(HostRole);
-            await host.AddRoleAsync(hostRole);
+            var guild = host.Guild;
+
+            var hostRole = guild.GetRole(HostRole);
+            var runPinner = guild.GetRole(RunHostData.PinnerRoleId);
+
+            await host.AddRolesAsync(new [] { hostRole, runPinner });
+
+            await _db.AddTimedRole(HostRole, guild.Id, host.Id, DateTime.UtcNow.AddHours(4.5));
+            await _db.AddTimedRole(runPinner.Id, guild.Id, host.Id, DateTime.UtcNow.AddHours(4.5));
         }
 
         private bool _disposed;

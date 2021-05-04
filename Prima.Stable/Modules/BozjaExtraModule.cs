@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -52,7 +51,7 @@ namespace Prima.Stable.Modules
         }
 
         [Command("setroler", RunMode = RunMode.Async)]
-        [Description("(Hosts only) Gives the Delubrum Roler role to the specified user.")]
+        [Description("(Hosts only) Gives the Delubrum Roler and Run Pinner roles to the specified user.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task SetLeadAsync(IUser user)
         {
@@ -64,10 +63,15 @@ namespace Prima.Stable.Modules
                 return;
             }
 
-            var role = Context.Guild.GetRole(DelubrumProgressionRoles.Executor);
+            var executorRole = Context.Guild.GetRole(DelubrumProgressionRoles.Executor);
+            var runPinner = Context.Guild.GetRole(RunHostData.PinnerRoleId);
+
             var member = Context.Guild.GetUser(user.Id);
-            await member.AddRoleAsync(role);
-            await ReplyAsync($"Added roler role to {member.Mention}!");
+            await member.AddRolesAsync(new[] { executorRole, runPinner });
+            await Db.AddTimedRole(executorRole.Id, Context.Guild.Id, member.Id, DateTime.UtcNow.AddHours(4.5));
+            await Db.AddTimedRole(runPinner.Id, Context.Guild.Id, member.Id, DateTime.UtcNow.AddHours(4.5));
+
+            await ReplyAsync($"Added lead roles to {member.Mention}!");
 
             try
             {
@@ -87,8 +91,6 @@ namespace Prima.Stable.Modules
             {
                 Log.Warning("Can't send direct message to user {User}.", member.ToString());
             }
-
-            await Db.AddTimedRole(role.Id, Context.Guild.Id, member.Id, DateTime.UtcNow.AddHours(4.5));
         }
 
         [Command("addprogrole", RunMode = RunMode.Async)]
@@ -99,7 +101,7 @@ namespace Prima.Stable.Modules
         {
             if (Context.Guild == null) return;
 
-            var isFFLogs = FFLogs.IsLogLink.Match(args).Success;
+            var isFFLogs = FFLogs.IsLogLink(args);
             if (isFFLogs)
             {
                 await Context.Guild.DownloadUsersAsync();
@@ -477,6 +479,12 @@ namespace Prima.Stable.Modules
         [RateLimit(TimeSeconds = 1, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task BrandsHotColdAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/un5nvg4.png");
+
+        [Command("slimes", RunMode = RunMode.Async)]
+        [Description("Shows the Delubrum Reginae slimes guide.")]
+        [RateLimit(TimeSeconds = 1, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public Task SlimesAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/wUrvKtr.gif");
 
         [Command("pipegame", RunMode = RunMode.Async)]
         [Alias("ladders")]

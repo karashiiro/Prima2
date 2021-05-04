@@ -7,5 +7,7 @@
 #else
         public const ulong RoleId = 762072215356702741;
 #endif
+
+        public const ulong PinnerRoleId = 838109848867569695;
     }
 }

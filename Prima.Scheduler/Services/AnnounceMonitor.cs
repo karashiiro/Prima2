@@ -161,24 +161,23 @@ namespace Prima.Scheduler.Services
         private async Task<bool> AssignHostRole(SocketGuild guild, SocketGuildUser host)
         {
             var currentHost = guild.GetRole(RunHostData.RoleId);
+            var runPinner = guild.GetRole(RunHostData.PinnerRoleId);
 
             Log.Information("Assigning roles...");
-            if (host != null && !host.HasRole(currentHost))
+            if (host == null || host.HasRole(currentHost)) return false;
+
+            try
             {
-                try
-                {
-                    await host.AddRoleAsync(currentHost);
-                    await _db.AddTimedRole(currentHost.Id, guild.Id, host.Id, DateTime.UtcNow.AddHours(4.5));
-
-                    return true;
-                }
-                catch (Exception e)
-                {
-                    Log.Error(e, "Failed to add host role to {User}!", currentHost?.ToString() ?? "null");
-                }
+                await host.AddRolesAsync(new []{currentHost, runPinner});
+                await _db.AddTimedRole(currentHost.Id, guild.Id, host.Id, DateTime.UtcNow.AddHours(4.5));
+                await _db.AddTimedRole(runPinner.Id, guild.Id, host.Id, DateTime.UtcNow.AddHours(4.5));
+                return true;
             }
-
-            return false;
+            catch (Exception e)
+            {
+                Log.Error(e, "Failed to add host role to {User}!", currentHost?.ToString() ?? "null");
+                return false;
+            }
         }
 
         private async Task AssignExecutorRole(SocketGuild guild, IGuildUser host)

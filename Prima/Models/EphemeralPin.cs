@@ -5,7 +5,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Prima.Models
 {
-    public class TimedRole
+    public class EphemeralPin
     {
         [BsonId]
         [BsonRequired]
@@ -17,17 +17,25 @@ namespace Prima.Models
 
         [BsonRequired]
         [BsonRepresentation(BsonType.String)]
-        public ulong RoleId { get; set; }
-
-        [BsonRequired]
-        [BsonRepresentation(BsonType.String)]
         public ulong GuildId { get; set; }
 
         [BsonRequired]
         [BsonRepresentation(BsonType.String)]
-        public ulong UserId { get; set; }
+        public ulong ChannelId { get; set; }
 
         [BsonRequired]
-        public DateTime RemovalTime { get; set; } // This is bad and you should feel bad
+        [BsonRepresentation(BsonType.String)]
+        public ulong MessageId { get; set; }
+
+        [BsonRequired]
+        [BsonRepresentation(BsonType.String)]
+        public ulong PinnerRoleId { get; set; }
+
+        [BsonRequired]
+        [BsonRepresentation(BsonType.String)]
+        public ulong PinnerId { get; set; }
+
+        [BsonRequired]
+        public DateTime PinTime { get; set; }
     }
 }
