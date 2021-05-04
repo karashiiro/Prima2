@@ -52,10 +52,9 @@ namespace Prima.Stable.Services
                         Log.Information("Removing pinned message {MessageId}.", e.MessageId);
                         try
                         {
-                            var task = message?.UnpinAsync();
-                            if (task != null)
+                            if (message?.IsPinned ?? false)
                             {
-                                await task;
+                                await message.UnpinAsync();
                             }
                         }
                         catch { /* ignored */ }
