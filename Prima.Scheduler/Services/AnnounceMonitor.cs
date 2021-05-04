@@ -110,6 +110,8 @@ namespace Prima.Scheduler.Services
                 return;
             }
 
+            Log.Information("Checking runs...");
+
             await foreach (var page in channel.GetMessagesAsync().WithCancellation(token))
             {
                 foreach (var message in page)
@@ -121,14 +123,14 @@ namespace Prima.Scheduler.Services
 
                     var timestamp = nullableTimestamp.Value;
                     
-                    Log.Information(timestamp.ToString());
-
                     // Remove expired posts
                     if (timestamp.AddMinutes(60) < DateTimeOffset.Now)
                     {
                         await message.DeleteAsync();
                         continue;
                     }
+
+                    Log.Information("{Username} - ETA {TimeUntil} hrs.", embed.Author?.Name, (DateTimeOffset.Now - timestamp).TotalHours);
 
                     // ReSharper disable once InvertIf
                     if (timestamp.AddMinutes(-minutesBefore) <= DateTimeOffset.Now && embed.Author.HasValue)
