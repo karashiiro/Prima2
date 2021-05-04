@@ -98,7 +98,11 @@ namespace Prima.Stable.Modules
 
             // Pinners may only unpin messages that pinners have pinned
             var pinInfo = await Db.EphemeralPins.FirstOrDefaultAsync(e => e.MessageId == messageId);
-            if (pinInfo?.PinnerRoleId != RunHostData.PinnerRoleId) return;
+            if (pinInfo?.PinnerRoleId != RunHostData.PinnerRoleId)
+            {
+                await ReplyAsync("That message wasn't pinned with `~pin`!");
+                return;
+            }
 
             await Db.RemoveEphemeralPin(messageId);
             await userMessage.UnpinAsync();
