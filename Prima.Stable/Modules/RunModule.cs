@@ -22,7 +22,7 @@ namespace Prima.Stable.Modules
         private const ulong PrioritySpeakerRoleId = 762071904273432628;
 
         private static readonly Regex MessageRef =
-            new(@"http.?:\/\/\w*\.?discord\.com\/channels\/\d+\/\d+\/(?<MessageID>\d+)", RegexOptions.Compiled);
+            new(@"discord(?:app)?\.com\/channels\/\d+\/\d+\/(?<MessageID>\d+)", RegexOptions.Compiled);
 
         [Command("pin")]
         [Description("Temporarily pins a message in a run channel.")]
