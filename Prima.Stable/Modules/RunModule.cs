@@ -58,6 +58,7 @@ namespace Prima.Stable.Modules
             await Db.AddEphemeralPin(Context.Guild.Id, Context.Channel.Id, messageId, RunHostData.PinnerRoleId, Context.User.Id, DateTime.UtcNow);
 
             await userMessage.PinAsync();
+            await ReplyAsync($"Message pinned for {EphemeralPinManager.HoursUntilRemoval} hours.");
         }
 
         [Command("unpin")]

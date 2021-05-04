@@ -11,6 +11,8 @@ namespace Prima.Stable.Services
 {
     public class EphemeralPinManager
     {
+        public const double HoursUntilRemoval = 4.5;
+
         private readonly IDbService _db;
         private readonly DiscordSocketClient _client;
 
@@ -33,7 +35,7 @@ namespace Prima.Stable.Services
             while (!token.IsCancellationRequested)
             {
                 var toRemove = await _db.EphemeralPins
-                    .Where(tr => tr.PinTime.AddHours(4.5) <= DateTime.UtcNow)
+                    .Where(tr => tr.PinTime.AddHours(HoursUntilRemoval) <= DateTime.UtcNow)
                     .ToListAsync(token);
                 if (toRemove.Any())
                 {
