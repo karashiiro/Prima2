@@ -20,6 +20,7 @@ namespace Prima.Stable.Modules
 
         private const ulong HostSpeakerRoleId = 762072215356702741;
         private const ulong PrioritySpeakerRoleId = 762071904273432628;
+        private const ulong CEMMentorRoleId = 579916868035411968;
 
         private static readonly Regex MessageRef =
             new(@"discord(?:app)?\.com\/channels\/\d+\/\d+\/(?<MessageID>\d+)", RegexOptions.Compiled);
@@ -32,7 +33,9 @@ namespace Prima.Stable.Modules
             if (!Context.Channel.Name.Contains("group-chat")) return;
 
             var member = Context.Guild.GetUser(Context.User.Id);
-            if (!member.HasRole(RunHostData.PinnerRoleId)) return;
+            if (!member.HasRole(RunHostData.PinnerRoleId)
+                && !member.HasRole(CEMMentorRoleId)
+                && !member.GuildPermissions.KickMembers) return;
 
             ulong messageId;
             var match = MessageRef.Match(messageRef);
@@ -65,7 +68,9 @@ namespace Prima.Stable.Modules
             if (!Context.Channel.Name.Contains("group-chat")) return;
 
             var member = Context.Guild.GetUser(Context.User.Id);
-            if (!member.HasRole(RunHostData.PinnerRoleId)) return;
+            if (!member.HasRole(RunHostData.PinnerRoleId)
+                && !member.HasRole(CEMMentorRoleId)
+                && !member.GuildPermissions.KickMembers) return;
 
             ulong messageId;
             var match = MessageRef.Match(messageRef);
