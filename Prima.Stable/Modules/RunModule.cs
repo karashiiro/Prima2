@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -20,15 +21,29 @@ namespace Prima.Stable.Modules
         private const ulong HostSpeakerRoleId = 762072215356702741;
         private const ulong PrioritySpeakerRoleId = 762071904273432628;
 
+        private static readonly Regex MessageRef =
+            new(@"http.?:\/\/\w*\.?discord\.com\/channels\/\d+\/\d+\/(?<MessageID>\d+)", RegexOptions.Compiled);
+
         [Command("pin")]
         [Description("Temporarily pins a message in a run channel.")]
-        public async Task PinMessage(ulong messageId)
+        public async Task PinMessage(string messageRef)
         {
             if (Context.Guild == null) return;
             if (!Context.Channel.Name.Contains("group-chat")) return;
 
             var member = Context.Guild.GetUser(Context.User.Id);
             if (!member.HasRole(RunHostData.PinnerRoleId)) return;
+
+            ulong messageId;
+            var match = MessageRef.Match(messageRef);
+            if (match.Success)
+            {
+                ulong.TryParse(match.Groups["MessageID"].Value, out messageId);
+            }
+            else
+            {
+                ulong.TryParse(messageRef, out messageId);
+            }
 
             var message = await Context.Channel.GetMessageAsync(messageId);
             if (message is not IUserMessage userMessage)
@@ -44,13 +59,24 @@ namespace Prima.Stable.Modules
 
         [Command("unpin")]
         [Description("Unpins a message pinned by a run member in a run channel.")]
-        public async Task UnpinMessage(ulong messageId)
+        public async Task UnpinMessage(string messageRef)
         {
             if (Context.Guild == null) return;
             if (!Context.Channel.Name.Contains("group-chat")) return;
 
             var member = Context.Guild.GetUser(Context.User.Id);
             if (!member.HasRole(RunHostData.PinnerRoleId)) return;
+
+            ulong messageId;
+            var match = MessageRef.Match(messageRef);
+            if (match.Success)
+            {
+                ulong.TryParse(match.Groups["MessageID"].Value, out messageId);
+            }
+            else
+            {
+                ulong.TryParse(messageRef, out messageId);
+            }
 
             var message = await Context.Channel.GetMessageAsync(messageId);
             if (message is not IUserMessage userMessage)
