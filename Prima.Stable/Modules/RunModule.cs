@@ -29,13 +29,32 @@ namespace Prima.Stable.Modules
         [Description("Temporarily pins a message in a run channel.")]
         public async Task PinMessage(string messageRef)
         {
-            if (Context.Guild == null) return;
-            if (!Context.Channel.Name.Contains("group-chat")) return;
+            if (Context.Guild == null)
+            {
+                Log.Warning("Command not used in a guild!");
+                return;
+            }
+
+            if (!Context.Channel.Name.Contains("group-chat"))
+            {
+                Log.Warning("Command not used in a guild channel!");
+                return;
+            }
 
             var member = Context.Guild.GetUser(Context.User.Id);
             if (!member.HasRole(RunHostData.PinnerRoleId)
                 && !member.HasRole(CEMMentorRoleId)
-                && !member.GuildPermissions.KickMembers) return;
+                && !member.GuildPermissions.KickMembers)
+            {
+                Log.Warning("User does not have permission to use that command!\n" +
+                            "Pinner? {IsPinned}\n" +
+                            "Mentor? {IsMentor}\n" +
+                            "Mod+? {IsMod}",
+                    member.HasRole(RunHostData.PinnerRoleId),
+                    member.HasRole(CEMMentorRoleId),
+                    member.GuildPermissions.KickMembers);
+                return;
+            }
 
             ulong messageId;
             var match = MessageRef.Match(messageRef);
@@ -65,13 +84,32 @@ namespace Prima.Stable.Modules
         [Description("Unpins a message pinned by a run member in a run channel.")]
         public async Task UnpinMessage(string messageRef)
         {
-            if (Context.Guild == null) return;
-            if (!Context.Channel.Name.Contains("group-chat")) return;
+            if (Context.Guild == null)
+            {
+                Log.Warning("Command not used in a guild!");
+                return;
+            }
+
+            if (!Context.Channel.Name.Contains("group-chat"))
+            {
+                Log.Warning("Command not used in a guild channel!");
+                return;
+            }
 
             var member = Context.Guild.GetUser(Context.User.Id);
             if (!member.HasRole(RunHostData.PinnerRoleId)
                 && !member.HasRole(CEMMentorRoleId)
-                && !member.GuildPermissions.KickMembers) return;
+                && !member.GuildPermissions.KickMembers)
+            {
+                Log.Warning("User does not have permission to use that command!\n" +
+                            "Pinner? {IsPinned}\n" +
+                            "Mentor? {IsMentor}\n" +
+                            "Mod+? {IsMod}",
+                    member.HasRole(RunHostData.PinnerRoleId),
+                    member.HasRole(CEMMentorRoleId),
+                    member.GuildPermissions.KickMembers);
+                return;
+            }
 
             ulong messageId;
             var match = MessageRef.Match(messageRef);
