@@ -25,7 +25,7 @@ namespace Prima.Stable.Modules
         private static readonly Regex MessageRef =
             new(@"discord(?:app)?\.com\/channels\/\d+\/\d+\/(?<MessageID>\d+)", RegexOptions.Compiled);
 
-        [Command("pin")]
+        [Command("pin", RunMode = RunMode.Async)]
         [Description("Temporarily pins a message in a run channel.")]
         public async Task PinMessage(string messageRef)
         {
