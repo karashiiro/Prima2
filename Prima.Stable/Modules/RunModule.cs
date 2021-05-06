@@ -80,7 +80,7 @@ namespace Prima.Stable.Modules
             await ReplyAsync($"Message pinned for {EphemeralPinManager.HoursUntilRemoval} hours.");
         }
 
-        [Command("unpin")]
+        [Command("unpin", RunMode = RunMode.Async)]
         [Description("Unpins a message pinned by a run member in a run channel.")]
         public async Task UnpinMessage(string messageRef)
         {
