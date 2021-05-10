@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -19,16 +20,52 @@ namespace Prima.Stable.Modules
 
         private const ulong HostSpeakerRoleId = 762072215356702741;
         private const ulong PrioritySpeakerRoleId = 762071904273432628;
+        private const ulong CEMMentorRoleId = 579916868035411968;
 
-        [Command("pin")]
+        private static readonly Regex MessageRef =
+            new(@"discord(?:app)?\.com\/channels\/\d+\/\d+\/(?<MessageID>\d+)", RegexOptions.Compiled);
+
+        [Command("pin", RunMode = RunMode.Async)]
         [Description("Temporarily pins a message in a run channel.")]
-        public async Task PinMessage(ulong messageId)
+        public async Task PinMessage(string messageRef)
         {
-            if (Context.Guild == null) return;
-            if (!Context.Channel.Name.Contains("group-chat")) return;
+            if (Context.Guild == null)
+            {
+                Log.Warning("Command not used in a guild!");
+                return;
+            }
+
+            if (!Context.Channel.Name.Contains("group-chat"))
+            {
+                Log.Warning("Command not used in a guild channel!");
+                return;
+            }
 
             var member = Context.Guild.GetUser(Context.User.Id);
-            if (!member.HasRole(RunHostData.PinnerRoleId)) return;
+            if (!member.HasRole(RunHostData.PinnerRoleId)
+                && !member.HasRole(CEMMentorRoleId)
+                && !member.GuildPermissions.KickMembers)
+            {
+                Log.Warning("User does not have permission to use that command!\n" +
+                            "Pinner? {IsPinned}\n" +
+                            "Mentor? {IsMentor}\n" +
+                            "Mod+? {IsMod}",
+                    member.HasRole(RunHostData.PinnerRoleId),
+                    member.HasRole(CEMMentorRoleId),
+                    member.GuildPermissions.KickMembers);
+                return;
+            }
+
+            ulong messageId;
+            var match = MessageRef.Match(messageRef);
+            if (match.Success)
+            {
+                ulong.TryParse(match.Groups["MessageID"].Value, out messageId);
+            }
+            else
+            {
+                ulong.TryParse(messageRef, out messageId);
+            }
 
             var message = await Context.Channel.GetMessageAsync(messageId);
             if (message is not IUserMessage userMessage)
@@ -40,17 +77,50 @@ namespace Prima.Stable.Modules
             await Db.AddEphemeralPin(Context.Guild.Id, Context.Channel.Id, messageId, RunHostData.PinnerRoleId, Context.User.Id, DateTime.UtcNow);
 
             await userMessage.PinAsync();
+            await ReplyAsync($"Message pinned for {EphemeralPinManager.HoursUntilRemoval} hours.");
         }
 
-        [Command("unpin")]
+        [Command("unpin", RunMode = RunMode.Async)]
         [Description("Unpins a message pinned by a run member in a run channel.")]
-        public async Task UnpinMessage(ulong messageId)
+        public async Task UnpinMessage(string messageRef)
         {
-            if (Context.Guild == null) return;
-            if (!Context.Channel.Name.Contains("group-chat")) return;
+            if (Context.Guild == null)
+            {
+                Log.Warning("Command not used in a guild!");
+                return;
+            }
+
+            if (!Context.Channel.Name.Contains("group-chat"))
+            {
+                Log.Warning("Command not used in a guild channel!");
+                return;
+            }
 
             var member = Context.Guild.GetUser(Context.User.Id);
-            if (!member.HasRole(RunHostData.PinnerRoleId)) return;
+            if (!member.HasRole(RunHostData.PinnerRoleId)
+                && !member.HasRole(CEMMentorRoleId)
+                && !member.GuildPermissions.KickMembers)
+            {
+                Log.Warning("User does not have permission to use that command!\n" +
+                            "Pinner? {IsPinned}\n" +
+                            "Mentor? {IsMentor}\n" +
+                            "Mod+? {IsMod}",
+                    member.HasRole(RunHostData.PinnerRoleId),
+                    member.HasRole(CEMMentorRoleId),
+                    member.GuildPermissions.KickMembers);
+                return;
+            }
+
+            ulong messageId;
+            var match = MessageRef.Match(messageRef);
+            if (match.Success)
+            {
+                ulong.TryParse(match.Groups["MessageID"].Value, out messageId);
+            }
+            else
+            {
+                ulong.TryParse(messageRef, out messageId);
+            }
 
             var message = await Context.Channel.GetMessageAsync(messageId);
             if (message is not IUserMessage userMessage)
@@ -59,9 +129,19 @@ namespace Prima.Stable.Modules
                 return;
             }
 
+            if (!message.IsPinned)
+            {
+                await ReplyAsync("That message is not pinned!");
+                return;
+            }
+
             // Pinners may only unpin messages that pinners have pinned
             var pinInfo = await Db.EphemeralPins.FirstOrDefaultAsync(e => e.MessageId == messageId);
-            if (pinInfo?.PinnerRoleId != RunHostData.PinnerRoleId) return;
+            if (pinInfo?.PinnerRoleId != RunHostData.PinnerRoleId)
+            {
+                await ReplyAsync("That message wasn't pinned with `~pin`!");
+                return;
+            }
 
             await Db.RemoveEphemeralPin(messageId);
             await userMessage.UnpinAsync();
