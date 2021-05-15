@@ -40,7 +40,8 @@ namespace Prima.Stable.Modules
             {
                 const ulong welcome = 573350095903260673;
                 const ulong botSpam = 551586630478331904;
-                if (Context.Channel.Id != welcome && Context.Channel.Id != botSpam)
+                const ulong timeOut = 651966972132851712;
+                if (Context.Channel.Id != welcome && Context.Channel.Id != botSpam && Context.Channel.Id != timeOut)
                 {
                     await Context.Message.DeleteAsync();
                     var reply = await ReplyAsync("That command is disabled in this channel.");
