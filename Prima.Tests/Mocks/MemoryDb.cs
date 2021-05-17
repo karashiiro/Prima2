@@ -163,12 +163,12 @@ namespace Prima.Tests.Mocks
             return Task.CompletedTask;
         }
 
-        public Task AddGuildTextBlacklistEntry(ulong guildId, string regexString)
+        public Task AddGuildTextDenylistEntry(ulong guildId, string regexString)
         {
             return Task.CompletedTask;
         }
 
-        public Task RemoveGuildTextBlacklistEntry(ulong guildId, string regexString)
+        public Task RemoveGuildTextDenylistEntry(ulong guildId, string regexString)
         {
             return Task.CompletedTask;
         }

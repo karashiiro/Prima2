@@ -1,11 +1,8 @@
 ﻿using Discord;
 using Discord.Commands;
-using Prima.Models;
-using Prima.Stable.Services;
 using Prima.Services;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -210,7 +207,7 @@ namespace Prima.Moderation.Modules
                 return;
             }
 
-            await Db.AddGuildTextBlacklistEntry(Context.Guild.Id, regexString);
+            await Db.AddGuildTextDenylistEntry(Context.Guild.Id, regexString);
             await ReplyAsync(Properties.Resources.GenericSuccess);
         }
 
@@ -226,20 +223,20 @@ namespace Prima.Moderation.Modules
             if (string.IsNullOrEmpty(regexString)) // Remove the last regex that was matched if none was specified.
             {
                 var lastCaughtRegex = ChatCleanup.LastCaughtRegex; // TODO: Make this a guild-keyed Dictionary
-                var entry = guildConfig.TextBlacklist.FirstOrDefault(rs => rs == lastCaughtRegex);
+                var entry = guildConfig.TextDenylist.FirstOrDefault(rs => rs == lastCaughtRegex);
                 if (entry == null)
                 {
                     await ReplyAsync(Properties.Resources.RegexNotFoundError);
                     return;
                 }
-                await Db.RemoveGuildTextBlacklistEntry(Context.Guild.Id, entry);
+                await Db.RemoveGuildTextDenylistEntry(Context.Guild.Id, entry);
             }
             else
             {
                 try
                 {
                     var entry = guildConfig.TextBlacklist.Single(rs => rs == regexString);
-                     await Db.RemoveGuildTextBlacklistEntry(Context.Guild.Id, entry);
+                     await Db.RemoveGuildTextDenylistEntry(Context.Guild.Id, entry);
                 }
                 catch (InvalidOperationException)
                 {
@@ -260,7 +257,7 @@ namespace Prima.Moderation.Modules
             if (guildConfig == null) return;
 
             var output = $"These are the blocked expressions in the guild {Context.Guild.Name}:" +
-                         "```\n" + guildConfig.TextBlacklist.Aggregate("", (agg, next) => $"{agg}{next}\n") + "```";
+                         "```\n" + guildConfig.TextDenylist.Aggregate("", (agg, next) => $"{agg}{next}\n") + "```";
 
             await Context.User.SendMessageAsync(output);
         }

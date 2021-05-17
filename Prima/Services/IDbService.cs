@@ -58,9 +58,9 @@ namespace Prima.Services
 
         Task DeconfigureRoleEmote(ulong guildId, string emoteId);
 
-        Task AddGuildTextBlacklistEntry(ulong guildId, string regexString);
+        Task AddGuildTextDenylistEntry(ulong guildId, string regexString);
 
-        Task RemoveGuildTextBlacklistEntry(ulong guildId, string regexString);
+        Task RemoveGuildTextDenylistEntry(ulong guildId, string regexString);
 
         Task AddUser(DiscordXIVUser user);
 
