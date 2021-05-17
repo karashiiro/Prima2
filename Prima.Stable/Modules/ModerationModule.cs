@@ -196,6 +196,7 @@ namespace Prima.Moderation.Modules
 
         // Add a regex to the blacklist.
         [Command("blocktext")]
+        [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.BanMembers)]
         public async Task BlockTextAsync([Remainder] string regexString)
         {
@@ -215,23 +216,22 @@ namespace Prima.Moderation.Modules
 
         // Remove a regex from the blacklist.
         [Command("unblocktext")]
+        [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.BanMembers)]
-        public async Task UnblockTextAsync([Remainder] string regexString)
+        public async Task UnblockTextAsync([Remainder] string regexString = "")
         {
-            DiscordGuildConfiguration guildConfig;
-            try
-            {
-                guildConfig = Db.Guilds.Single(g => g.Id == Context.Guild.Id);
-            }
-            catch (InvalidOperationException)
-            {
-                return;
-            }
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return;
 
             if (string.IsNullOrEmpty(regexString)) // Remove the last regex that was matched if none was specified.
             {
-                var lastCaughtRegex = ChatCleanup.LastCaughtRegex;
-                var entry = guildConfig.TextBlacklist.Single(rs => rs == lastCaughtRegex);
+                var lastCaughtRegex = ChatCleanup.LastCaughtRegex; // TODO: Make this a guild-keyed Dictionary
+                var entry = guildConfig.TextBlacklist.FirstOrDefault(rs => rs == lastCaughtRegex);
+                if (entry == null)
+                {
+                    await ReplyAsync(Properties.Resources.RegexNotFoundError);
+                    return;
+                }
                 await Db.RemoveGuildTextBlacklistEntry(Context.Guild.Id, entry);
             }
             else
@@ -248,6 +248,21 @@ namespace Prima.Moderation.Modules
                 }
             }
             await ReplyAsync(Properties.Resources.GenericSuccess);
+        }
+
+        [Command("blockedtext")]
+        [Alias("blockedtexts")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.BanMembers)]
+        public async Task SeeBlockedTexts([Remainder] string args = "")
+        {
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return;
+
+            var output = $"These are the blocked expressions in the guild {Context.Guild.Name}:" +
+                         "```\n" + guildConfig.TextBlacklist.Aggregate("", (agg, next) => $"{agg}{next}\n") + "```";
+
+            await Context.User.SendMessageAsync(output);
         }
     }
 }
