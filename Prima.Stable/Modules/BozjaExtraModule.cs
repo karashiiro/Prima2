@@ -496,5 +496,11 @@ namespace Prima.Stable.Modules
             await DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/i2ms13x.png");
             await DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/JgiTTK9.png");
         }
+
+        [Command("minotrap", RunMode = RunMode.Async)]
+        [Description("Shows the Stygimoloch Lord trap handling for tanks.")]
+        [RateLimit(TimeSeconds = 1, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public Task MinoTrapAsync() => ReplyAsync("https://clips.twitch.tv/PoisedCovertDumplingsItsBoshyTime-Vu4V6JZqHzM9LPUf");
     }
 }
