@@ -39,6 +39,7 @@ namespace Prima.Stable.Handlers
             {
                 var emote = await emoteStorage1.GetEmoteAsync(844635607354966036);
                 await message.AddReactionAsync(emote);
+                await message.AddReactionAsync(new Emoji("🦶"));
             }
         }
 
