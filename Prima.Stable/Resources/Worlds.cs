@@ -1,8 +1,10 @@
-﻿namespace Prima.Stable.Resources
+﻿using System.Collections.Generic;
+
+namespace Prima.Stable.Resources
 {
     public static class Worlds
     {
-        public static string[] List => new[] {
+        public static IEnumerable<string> List => new[] {
             "Balmung",
             "Brynhildr",
             "Coeurl",
