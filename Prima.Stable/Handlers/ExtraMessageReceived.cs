@@ -13,8 +13,6 @@ namespace Prima.Stable.Handlers
             var cem = client.GetGuild(SpecialGuilds.CrystalExploratoryMissions);
             var isCEMChannel = cem?.GetTextChannel(message.Channel.Id) != null;
 
-            var emoteStorage1 = client.GetGuild(SpecialGuilds.EmoteStorage1);
-
             var tasks = new List<Task>();
 
             if (isCEMChannel && (HasWord(message.Content, "intercardinals") || HasWord(message.Content, "intercards") || message.Content.Contains("383805961216983061")))
@@ -37,10 +35,8 @@ namespace Prima.Stable.Handlers
                 tasks.Add(message.AddReactionAsync(emote));
             }
 
-            if (isCEMChannel && emoteStorage1 != null && message.Content.Contains("383805961216983061"))
+            if (isCEMChannel && message.Content.Contains("383805961216983061"))
             {
-                var emote = await emoteStorage1.GetEmoteAsync(844635607354966036);
-                tasks.Add(message.AddReactionAsync(emote));
                 tasks.Add(message.AddReactionAsync(new Emoji("🦶")));
             }
 
