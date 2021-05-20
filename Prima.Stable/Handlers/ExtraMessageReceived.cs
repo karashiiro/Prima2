@@ -10,7 +10,9 @@ namespace Prima.Stable.Handlers
         public static async Task Handler(DiscordSocketClient client, SocketMessage message)
         {
             var cem = client.GetGuild(SpecialGuilds.CrystalExploratoryMissions);
-            var isCEMChannel = cem.GetTextChannel(message.Channel.Id) != null;
+            var isCEMChannel = cem?.GetTextChannel(message.Channel.Id) != null;
+
+            var emoteStorage1 = client.GetGuild(SpecialGuilds.EmoteStorage1);
 
             if (message.Content == "(╯°□°）╯︵ ┻━┻")
             {
@@ -31,6 +33,12 @@ namespace Prima.Stable.Handlers
                 {
                     await message.AddReactionAsync(emote);
                 }
+            }
+
+            if (isCEMChannel && emoteStorage1 != null && message.Content.Contains("383805961216983061"))
+            {
+                var emote = await emoteStorage1.GetEmoteAsync(844635607354966036);
+                await message.AddReactionAsync(emote);
             }
         }
 

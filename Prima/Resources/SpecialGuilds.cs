@@ -9,5 +9,7 @@
             550702475112480769
 #endif
             ;
+
+        public const ulong EmoteStorage1 = 596753120051200027;
     }
 }
