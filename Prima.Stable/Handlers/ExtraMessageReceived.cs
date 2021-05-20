@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
@@ -32,7 +31,10 @@ namespace Prima.Stable.Handlers
             if (isCEMChannel && (HasWord(message.Content, "intercardinals") || HasWord(message.Content, "intercards") || message.Content.Contains("383805961216983061")))
             {
                 var emotes = new[] {new Emoji("↖️"), new Emoji("↙️"), new Emoji("↘️"), new Emoji("↗️") };
-                tasks.AddRange(emotes.Select(emote => message.AddReactionAsync(emote)));
+                foreach (var emote in emotes)
+                {
+                    await message.AddReactionAsync(emote);
+                }
             }
 
             if (isCEMChannel && emoteStorage1 != null && message.Content.Contains("383805961216983061"))
@@ -41,8 +43,6 @@ namespace Prima.Stable.Handlers
                 tasks.Add(message.AddReactionAsync(emote));
                 tasks.Add(message.AddReactionAsync(new Emoji("🦶")));
             }
-
-            await Task.WhenAll(tasks);
         }
 
         private static bool HasWord(string phrase, string word)
