@@ -43,6 +43,8 @@ namespace Prima.Stable.Handlers
                 tasks.Add(message.AddReactionAsync(emote));
                 tasks.Add(message.AddReactionAsync(new Emoji("🦶")));
             }
+
+            await Task.WhenAll(tasks);
         }
 
         private static bool HasWord(string phrase, string word)
