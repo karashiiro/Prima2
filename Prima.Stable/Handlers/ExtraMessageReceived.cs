@@ -17,6 +17,15 @@ namespace Prima.Stable.Handlers
 
             var tasks = new List<Task>();
 
+            if (isCEMChannel && (HasWord(message.Content, "intercardinals") || HasWord(message.Content, "intercards") || message.Content.Contains("383805961216983061")))
+            {
+                var emotes = new[] {new Emoji("↖️"), new Emoji("↙️"), new Emoji("↘️"), new Emoji("↗️") };
+                foreach (var emote in emotes)
+                {
+                    await message.AddReactionAsync(emote);
+                }
+            }
+
             if (message.Content == "(╯°□°）╯︵ ┻━┻")
             {
                 tasks.Add(message.Channel.SendMessageAsync("┬─┬ ノ( ゜-゜ノ)"));
@@ -26,15 +35,6 @@ namespace Prima.Stable.Handlers
             {
                 var emote = await cem.GetEmoteAsync(573531927613800459); // SCH emote
                 tasks.Add(message.AddReactionAsync(emote));
-            }
-
-            if (isCEMChannel && (HasWord(message.Content, "intercardinals") || HasWord(message.Content, "intercards") || message.Content.Contains("383805961216983061")))
-            {
-                var emotes = new[] {new Emoji("↖️"), new Emoji("↙️"), new Emoji("↘️"), new Emoji("↗️") };
-                foreach (var emote in emotes)
-                {
-                    await message.AddReactionAsync(emote);
-                }
             }
 
             if (isCEMChannel && emoteStorage1 != null && message.Content.Contains("383805961216983061"))
