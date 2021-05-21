@@ -33,6 +33,8 @@ namespace Prima.Queue.Modules
 #endif
             ;
 
+        private const ulong ZadnorThingChannelId = 845106113082818560;
+
         private static readonly IList<(ulong, DateTime)> LfmPullTimeLog = new List<(ulong, DateTime)>();
         private static readonly string[] Elements = { "Earth", "Wind", "Water", "Fire", "Lightning", "Ice" };
 
@@ -87,6 +89,7 @@ namespace Prima.Queue.Modules
                 803636739343908894 => "Delubrum Reginae (Savage)",
                 809241125373739058 => "fresh Delubrum Reginae (Savage) progression",
                 806957742056013895 => "Delubrum Reginae (Normal)",
+                845106113082818560 => "Zadnor Thing",
                 _ => throw new NotSupportedException(),
             };
 
@@ -160,7 +163,7 @@ namespace Prima.Queue.Modules
                 const ulong castrumLfg = 765994301850779709;
 #endif
                 await leader.SendMessageAsync($"Your Party Finder password is {pw}.\n" +
-                    $"Please join {(new ulong[] { castrumLfg, DelubrumSavageChannelId, 806957742056013895, 809241125373739058 }.Contains(Context.Channel.Id) ? "a" : "an elemental")} voice channel within the next 30 seconds to continue matching.\n" +
+                    $"Please join {(new ulong[] { castrumLfg, DelubrumSavageChannelId, ZadnorThingChannelId, 806957742056013895, 809241125373739058 }.Contains(Context.Channel.Id) ? "a" : "an elemental")} voice channel within the next 30 seconds to continue matching.\n" +
                     "Create the listing in Party Finder now; matching will begin in 30 seconds.");
             }
             catch (HttpException)
@@ -614,7 +617,7 @@ namespace Prima.Queue.Modules
                     break;
             }
 
-            if (!new ulong[] { 765994301850779709, DelubrumSavageChannelId, 806957742056013895, 809241125373739058 }.Contains(Context.Channel.Id))
+            if (!new ulong[] { 765994301850779709, DelubrumSavageChannelId, ZadnorThingChannelId, 806957742056013895, 809241125373739058 }.Contains(Context.Channel.Id))
             {
                 response += extra;
             }
