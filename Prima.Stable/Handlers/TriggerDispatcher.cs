@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Discord.WebSocket;
 using Prima.Stable.Handlers.Triggers;
 using Prima.Stable.Handlers.Triggers.Attributes;
+using Serilog;
 
 namespace Prima.Stable.Handlers
 {
@@ -19,6 +20,8 @@ namespace Prima.Stable.Handlers
 
         public static async Task Handler(DiscordSocketClient client, SocketMessage message)
         {
+            if (message.Author.Id == client.CurrentUser.Id) return;
+
             SocketGuild guild = null;
             if (message.Channel is SocketGuildChannel guildChannel)
             {
@@ -26,7 +29,7 @@ namespace Prima.Stable.Handlers
             }
             
             var applicableTriggers = Triggers
-                .Where(t => t.GetApplicableGuildId() == (guild?.Id ?? 0))
+                .Where(t => t.IsGuildApplicable(guild))
                 .Where(t => t.Condition(message))
                 .ToList();
 

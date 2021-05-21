@@ -27,6 +27,11 @@ namespace Prima.Stable.Handlers.Triggers
             return _guildId;
         }
 
+        public bool IsGuildApplicable(SocketGuild guild)
+        {
+            return _guildId == 0 || _guildId == guild?.Id;
+        }
+
         /// <summary>
         /// Helper method for detecting if a phrase contains a certain word.
         /// </summary>
