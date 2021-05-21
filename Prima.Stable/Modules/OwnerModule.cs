@@ -4,7 +4,6 @@ using Discord.Commands;
 using System.Threading.Tasks;
 using Prima.Resources;
 using Prima.Services;
-// ReSharper disable StringLiteralTypo
 
 namespace Prima.Stable.Modules
 {
@@ -23,30 +22,6 @@ namespace Prima.Stable.Modules
         {
             await Db.RemoveBrokenUsers();
             await ReplyAsync("Done!");
-        }
-
-        [Command("sancheckdrsur")]
-        [RequireContext(ContextType.Guild)]
-        public async Task SanCheckDRSUR([Remainder] string roleName)
-        {
-            var role = Context.Guild.Roles.FirstOrDefault(r => r.Name == roleName);
-            if (role == null)
-            {
-                await ReplyAsync("No role by that name exists!");
-                return;
-            }
-
-            if (!DelubrumProgressionRoles.Roles.ContainsKey(role.Id))
-            {
-                await ReplyAsync("Not a valid DRS role!");
-                return;
-            }
-
-            var contingentRoles = DelubrumProgressionRoles.GetContingentRoles(role.Id)
-                .Select(cr => Context.Guild.GetRole(cr))
-                .Aggregate("", (s, socketRole) => s + socketRole.Name + "\n");
-
-            await ReplyAsync(contingentRoles);
         }
 
         [Command("drsupgraderoles", RunMode = RunMode.Async)]
