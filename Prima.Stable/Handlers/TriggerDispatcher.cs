@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Discord.WebSocket;
 using Prima.Stable.Handlers.Triggers;
 using Prima.Stable.Handlers.Triggers.Attributes;
-using Serilog;
 
 namespace Prima.Stable.Handlers
 {
