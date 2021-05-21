@@ -37,7 +37,11 @@ namespace Prima.Scheduler
         public static IMessageChannel GetOutputChannel(DiscordGuildConfiguration guildConfig, SocketGuild guild, IMessageChannel inputChannel)
         {
             ulong outputChannelId;
-            if (inputChannel.Id == guildConfig.CastrumScheduleInputChannel)
+            if (inputChannel.Id == guildConfig.SocialScheduleInputChannel)
+                outputChannelId = guildConfig.SocialScheduleOutputChannel;
+            else if (inputChannel.Id == guildConfig.ZadnorThingScheduleInputChannel)
+                outputChannelId = guildConfig.ZadnorThingScheduleOutputChannel;
+            else if (inputChannel.Id == guildConfig.CastrumScheduleInputChannel)
                 outputChannelId = guildConfig.CastrumScheduleOutputChannel;
             else if (inputChannel.Id == guildConfig.BozjaClusterScheduleInputChannel)
                 outputChannelId = guildConfig.BozjaClusterScheduleOutputChannel;
@@ -61,6 +65,10 @@ namespace Prima.Scheduler
                 return "drs";
             else if (channelId == guildConfig.DelubrumNormalScheduleOutputChannel)
                 return "dr";
+            else if (channelId == guildConfig.ZadnorThingScheduleOutputChannel)
+                return "zad";
+            else if (channelId == guildConfig.SocialScheduleOutputChannel)
+                return "social";
             else
                 return null;
         }
