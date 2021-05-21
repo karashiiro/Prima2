@@ -28,27 +28,17 @@ namespace Prima.Services
             _commandTimeouts = new ConcurrentDictionary<string, long>();
             _discord = services.GetRequiredService<DiscordSocketClient>();
             _services = services;
-
-            // Hook CommandExecuted to handle post-command-execution logic.
+            
             _commands.CommandExecuted += CommandExecutedAsync;
-            // Hook MessageReceived so we can process each message to see
-            // if it qualifies as a command.
             _discord.MessageReceived += MessageReceivedAsync;
         }
 
         public Task InitializeAsync()
         {
-            // Register modules that are public and inherit ModuleBase<T>.
             return _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
         }
 
-        public async Task ReinitalizeAsync()
-        {
-            await _commands.RemoveModuleAsync<ModuleBase>();
-            await InitializeAsync();
-        }
-
-        public async Task MessageReceivedAsync(SocketMessage rawMessage)
+        private async Task MessageReceivedAsync(SocketMessage rawMessage)
         {
             // Ignore system messages, or messages from other bots
             if (!(rawMessage is SocketUserMessage message)) return;
@@ -96,46 +86,31 @@ namespace Prima.Services
             var commandName = context.Message.Content.Substring(argPos, endOfCommandNameIndex);
             var commands = await _commands.GetExecutableCommandsAsync(context, _services);
             var command = commands.FirstOrDefault(c => c.Name == commandName);
-            if (command != null)
+            var rateLimitInfo = (RateLimitAttribute) command?.Attributes.FirstOrDefault(attr => attr is RateLimitAttribute);
+            if (rateLimitInfo != null)
             {
-                var restrictedToAttr = (RestrictToGuildsAttribute)command.Attributes.FirstOrDefault(attr => attr is RestrictToGuildsAttribute);
-                if (restrictedToAttr != null && (context.Guild == null || !restrictedToAttr.GuildIds.Contains(context.Guild.Id)))
+                // TODO handle non-global rate limits
+                if (_commandTimeouts.ContainsKey(commandName) && _commandTimeouts[commandName] >= DateTimeOffset.Now.ToUnixTimeSeconds())
                     return;
 
-                var restrictedFromAttr = (RestrictFromGuildsAttribute)command.Attributes.FirstOrDefault(attr => attr is RestrictFromGuildsAttribute);
-                if (restrictedFromAttr != null && (context.Guild != null && restrictedFromAttr.GuildIds.Contains(context.Guild.Id)))
-                    return;
-
-                var rateLimitInfo = (RateLimitAttribute)command.Attributes.FirstOrDefault(attr => attr is RateLimitAttribute);
-                if (rateLimitInfo != null)
-                {
-                    // TODO handle non-global rate limits
-                    if (_commandTimeouts.ContainsKey(commandName) && _commandTimeouts[commandName] >= DateTimeOffset.Now.ToUnixTimeSeconds())
-                        return;
-
-                    _commandTimeouts.Remove(commandName);
-                    _commandTimeouts.Add(commandName, DateTimeOffset.Now.ToUnixTimeSeconds() + rateLimitInfo.TimeSeconds);
-                }
+                _commandTimeouts.Remove(commandName);
+                _commandTimeouts.Add(commandName, DateTimeOffset.Now.ToUnixTimeSeconds() + rateLimitInfo.TimeSeconds);
             }
-
-            // Perform the execution of the command. In this method,
-            // the command service will perform precondition and parsing check
-            // then execute the command if one is matched.
+            
             await _commands.ExecuteAsync(context, argPos, _services);
-            // Note that normally a result will be returned by this format, but here
-            // we will handle the result in CommandExecutedAsync,
         }
 
-        public static async Task CommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)
+        private static Task CommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)
         {
             if (!command.IsSpecified)
-                return;
+                return Task.CompletedTask;
 
             if (result != null && result.IsSuccess)
-                return;
+                return Task.CompletedTask;
 
             Log.Error($"error: {result}");
-            await Task.Delay(1);
+
+            return Task.CompletedTask;
         }
     }
 }

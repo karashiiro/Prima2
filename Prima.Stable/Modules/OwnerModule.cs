@@ -1,8 +1,6 @@
-﻿using System.Linq;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
 using System.Threading.Tasks;
-using Prima.Resources;
 using Prima.Services;
 
 namespace Prima.Stable.Modules

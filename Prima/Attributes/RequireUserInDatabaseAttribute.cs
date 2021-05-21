@@ -1,6 +1,5 @@
 ﻿using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
-using Prima.Models;
 using Prima.Services;
 using System;
 using System.Linq;

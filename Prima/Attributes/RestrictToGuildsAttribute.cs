@@ -1,18 +1,34 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Discord;
+using Discord.Commands;
 
 namespace Prima.Attributes
 {
     /// <summary>
-    /// Restricts usage of the attached command to a particular guild.
+    /// Restricts usage of the attached command to certain guilds.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method)]
-    public class RestrictToGuildsAttribute : Attribute
+    public class RestrictToGuildsAttribute : PreconditionAttribute
     {
-        public ulong[] GuildIds { get; set; }
+        public IEnumerable<ulong> GuildIds { get; }
 
         public RestrictToGuildsAttribute(params ulong[] guildIds)
         {
             GuildIds = guildIds;
+        }
+
+        public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
+        {
+            if (!(context.User is IGuildUser guildUser))
+            {
+                return Task.FromResult(PreconditionResult.FromError("This command cannot be executed outside of a guild."));
+            }
+
+            return Task.FromResult(GuildIds.Contains(guildUser.GuildId)
+                ? PreconditionResult.FromSuccess()
+                : PreconditionResult.FromError("This guild does not support usage of this command."));
         }
     }
 }
