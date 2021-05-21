@@ -50,7 +50,7 @@ namespace Prima.Stable
             client.MessageReceived += message => ChatCleanup.Handler(db, web, message);
 
             client.MessageReceived += message => MessageCache.Handler(db, message);
-            client.MessageReceived += message => ExtraMessageReceived.Handler(client, message);
+            client.MessageReceived += message => TriggerDispatcher.Handler(client, message);
 
             client.GuildMemberUpdated += censusEvents.GuildMemberUpdated;
 
