@@ -8,6 +8,7 @@ namespace Prima.Resources
         {
             { "drs", 828366805621538826 },
             { "bozfarm", 828366965109424148 },
+            { "zadnorthing", 845216308689633280 },
         };
     }
 }
