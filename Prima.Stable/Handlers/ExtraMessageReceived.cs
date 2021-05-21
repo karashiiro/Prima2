@@ -37,6 +37,8 @@ namespace Prima.Stable.Handlers
 
             if (isCEMChannel && message.Content.Contains("383805961216983061"))
             {
+                var sadge = await cem.GetEmoteAsync(845161446547521566);
+                tasks.Add(message.AddReactionAsync(sadge));
                 tasks.Add(message.AddReactionAsync(new Emoji("🦶")));
             }
 
