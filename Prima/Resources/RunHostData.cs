@@ -9,5 +9,7 @@
 #endif
 
         public const ulong PinnerRoleId = 838109848867569695;
+
+        public const ulong SocialHostRoleId = 845217720017747970;
     }
 }
