@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
+using Prima.Stable.Handlers.Triggers.Attributes;
 
 namespace Prima.Stable.Handlers.Triggers.CrystalExploratoryMissions
 {
@@ -13,6 +14,7 @@ namespace Prima.Stable.Handlers.Triggers.CrystalExploratoryMissions
                    || message.Content.Contains("383805961216983061");
         }
 
+        [ShouldRunFirst]
         public override async Task Execute(DiscordSocketClient client, SocketMessage message)
         {
             var emotes = new[] { new Emoji("↖️"), new Emoji("↙️"), new Emoji("↘️"), new Emoji("↗️") };

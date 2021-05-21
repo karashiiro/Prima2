@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using Prima.Stable.Handlers.Triggers;
+using Prima.Stable.Handlers.Triggers.Attributes;
 
 namespace Prima.Stable.Handlers
 {
@@ -26,9 +27,23 @@ namespace Prima.Stable.Handlers
             
             var applicableTriggers = Triggers
                 .Where(t => t.GetApplicableGuildId() == (guild?.Id ?? 0))
-                .Where(t => t.Condition(message));
+                .Where(t => t.Condition(message))
+                .ToList();
 
-            await Task.WhenAll(applicableTriggers.Select(t => t.Execute(client, message)));
+            foreach (var trigger in applicableTriggers.Where(ShouldRunFirst))
+            {
+                await trigger.Execute(client, message);
+            }
+
+            await Task.WhenAll(applicableTriggers
+                .Where(t => !ShouldRunFirst(t))
+                .Select(t => t.Execute(client, message)));
+        }
+
+        private static bool ShouldRunFirst(BaseTrigger trigger)
+        {
+            var execute = (Func<DiscordSocketClient, SocketMessage, Task>)trigger.Execute;
+            return execute.Method.GetCustomAttribute<ShouldRunFirstAttribute>() != null;
         }
     }
 }
