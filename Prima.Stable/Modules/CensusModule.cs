@@ -1,19 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
-using Newtonsoft.Json.Linq;
 using Prima.Attributes;
 using Prima.Models;
 using Prima.Resources;
 using Prima.Services;
 using Prima.Stable.Resources;
 using Prima.Stable.Services;
-using Prima.XIVAPI;
 using Serilog;
 using Color = Discord.Color;
 
@@ -153,7 +150,9 @@ namespace Prima.Stable.Modules
             // Disallow duplicate characters (CEM policy).
             if (existingDiscordUser != null && existingDiscordUser.DiscordId != member.Id)
             {
-                await ReplyAsync("That character is already registered to another user.");
+                var res = await ReplyAsync("That character is already registered to another user.");
+                await Task.Delay(new TimeSpan(0, 0, 30));
+                await res.DeleteAsync();
                 return;
             }
 
