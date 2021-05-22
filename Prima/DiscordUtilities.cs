@@ -46,6 +46,16 @@ namespace Prima
 
     public static class DiscordUserExtensions
     {
+        public static bool MemberHasRole(this IGuildUser member, ulong roleId, ICommandContext context)
+        {
+            return member.RoleIds.FirstOrDefault(rId => rId == roleId) != default;
+        }
+
+        public static bool MemberHasRole(this IGuildUser member, IRole role, ICommandContext context)
+        {
+            return member.MemberHasRole(role.Id, context);
+        }
+
         public static bool HasRole(this IUser user, ulong roleId, SocketCommandContext context)
         {
             var member = context.Guild.GetUser(user.Id);

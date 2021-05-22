@@ -53,16 +53,9 @@ namespace Prima.Stable.Modules
         [Command("setroler", RunMode = RunMode.Async)]
         [Description("(Hosts only) Gives the Delubrum Roler and Run Pinner roles to the specified user.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        [CEMRequireRoleOrMentorPlus(RunHostData.RoleId)]
         public async Task SetLeadAsync(IUser user)
         {
-            if (!Context.User.HasRole(RunHostData.RoleId, Context))
-            {
-                var res = await ReplyAsync($"{Context.User.Mention}, you don't have a run host role!");
-                await Task.Delay(5000);
-                await res.DeleteAsync();
-                return;
-            }
-
             var executorRole = Context.Guild.GetRole(DelubrumProgressionRoles.Executor);
             var runPinner = Context.Guild.GetRole(RunHostData.PinnerRoleId);
 
@@ -99,8 +92,6 @@ namespace Prima.Stable.Modules
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task AddDelubrumProgRoleAsync([Remainder]string args)
         {
-            if (Context.Guild == null) return;
-
             var isFFLogs = FFLogs.IsLogLink(args);
             if (isFFLogs)
             {
@@ -168,21 +159,9 @@ namespace Prima.Stable.Modules
         [Command("removeprogrole", RunMode = RunMode.Async)]
         [Description("(Rolers only) Removes a progression role from a user.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        [CEMRequireRoleOrMentorPlus(DelubrumProgressionRoles.Executor)]
         public async Task RemoveDelubrumProgRoleAsync([Remainder] string args)
         {
-            if (Context.Guild == null) return;
-
-            var executor = Context.Guild.GetUser(Context.User.Id);
-            if (!executor.HasRole(DelubrumProgressionRoles.Executor, Context)
-                && !executor.HasRole(579916868035411968, Context) // or Mentor
-                && !executor.GuildPermissions.KickMembers) // or can kick users
-            {
-                var res = await ReplyAsync($"{Context.User.Mention}, you don't have the roler role!");
-                await Task.Delay(5000);
-                await res.DeleteAsync();
-                return;
-            }
-
             var words = args.Split(' ');
 
             await Context.Guild.DownloadUsersAsync();
