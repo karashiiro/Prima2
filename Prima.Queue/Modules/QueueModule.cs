@@ -1358,8 +1358,9 @@ namespace Prima.Queue.Modules
             var drsOutputChannel = guild.GetTextChannel(guildConfig.DelubrumScheduleOutputChannel);
             var drnOutputChannel = guild.GetTextChannel(guildConfig.DelubrumNormalScheduleOutputChannel);
             var cllOutputChannel = guild.GetTextChannel(guildConfig.CastrumScheduleOutputChannel);
+            var zadOutputChannel = guild.GetTextChannel(guildConfig.ZadnorThingScheduleOutputChannel);
 
-            return new[] { drsOutputChannel, drnOutputChannel, cllOutputChannel };
+            return new[] { drsOutputChannel, drnOutputChannel, cllOutputChannel, zadOutputChannel };
         }
 
         private async Task<IEnumerable<(IMessage, IEmbed)>> GetEvents(int inHours)
