@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Threading.Tasks;
+using System.Threading;
 using Discord.WebSocket;
 using Prima.Stable.Resources;
 
@@ -11,8 +11,8 @@ namespace Prima.Stable.Services
 
         private readonly DiscordSocketClient _client;
 
-        private Task _runningTask;
-        private bool _active;
+        private Thread _loopThread;
+        private volatile bool _active;
         
         public PresenceService(DiscordSocketClient client)
         {
@@ -25,11 +25,20 @@ namespace Prima.Stable.Services
         {
             if (_active) return;
             _active = true;
-            _runningTask = StartPresenceTask();
+            _loopThread = StartPresenceLoop();
         }
 
-        private void Stop() => _active = false;
+        private void Stop()
+        {
+            if (!_active) return;
+            _active = false;
+            _loopThread.Join();
+            _loopThread = null;
+        }
 
+        /// <summary>
+        /// Sets the presence update delay for the presence loop.
+        /// </summary>
         public void SetDelay(int ms)
         {
             DelayTime = ms;
@@ -37,21 +46,25 @@ namespace Prima.Stable.Services
             Start();
         }
 
-        public bool IsFaulted() => _runningTask.IsFaulted;
-
-        public Task NextPresence()
+        /// <summary>
+        /// Advances to the next presence.
+        /// </summary>
+        public void NextPresence()
         {
             var (name, activityType) = Presences.List[new Random().Next(0, Presences.List.Length)];
-            return _client.SetGameAsync(name, null, activityType);
+            _ = _client.SetGameAsync(name, null, activityType);
         }
 
-        private async Task StartPresenceTask()
+        private Thread StartPresenceLoop()
         {
-            while (_active)
+            return new(() =>
             {
-                await NextPresence();
-                await Task.Delay(DelayTime);
-            }
+                while (_active)
+                {
+                    NextPresence();
+                    Thread.Sleep(DelayTime);
+                }
+            });
         }
 
         public void Dispose()

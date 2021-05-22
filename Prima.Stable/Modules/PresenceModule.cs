@@ -13,7 +13,9 @@ namespace Prima.Modules
     {
         public PresenceService Presence { get; set; }
 
-        // Change the delay time on the SetPresence Task.
+        /// <summary>
+        /// Change the delay time on the SetPresence loop.
+        /// </summary>
         [Command("presencedelay")]
         public async Task SetPresenceDelay(string inputTime)
         {
@@ -26,11 +28,14 @@ namespace Prima.Modules
             await ReplyAsync(Properties.Resources.GenericSuccess);
         }
 
-        // Switch to a new presence.
+        /// <summary>
+        /// Switch to a new presence.
+        /// </summary>
         [Command("nextpresence")]
-        public async Task NextPresenceAsync()
+        public Task NextPresence()
         {
-            await Presence.NextPresence();
+            Presence.NextPresence();
+            return Task.CompletedTask;
         }
     }
 }
