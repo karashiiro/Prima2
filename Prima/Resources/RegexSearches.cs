@@ -19,5 +19,7 @@ namespace Prima.Resources
 
         public static readonly Regex Date = new Regex(@"(?:\d+\/\d+\/\d+)|(?:\d+\/\d+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         public static readonly Regex DayOrDate = new Regex(@"(?:\d+\/\d+\/\d+)|(?:\d+\/\d+)|(?:\s[^\s]+day)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        public static readonly Regex ScheduleOutputFieldNameRegex = new(@"(?<!Social|^)ScheduleOutputChannel", RegexOptions.Compiled);
     }
 }

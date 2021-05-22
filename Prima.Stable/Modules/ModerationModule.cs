@@ -243,7 +243,7 @@ namespace Prima.Moderation.Modules
             {
                 try
                 {
-                    var entry = guildConfig.TextBlacklist.Single(rs => rs == regexString);
+                    var entry = guildConfig.TextDenylist.Single(rs => rs == regexString);
                      await Db.RemoveGuildTextDenylistEntry(Context.Guild.Id, entry);
                 }
                 catch (InvalidOperationException)

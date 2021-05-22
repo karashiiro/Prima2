@@ -8,6 +8,7 @@ using Prima.Services;
 using Serilog;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Prima.Queue.Handlers
@@ -103,17 +104,26 @@ namespace Prima.Queue.Handlers
             }
             catch { /* ignored */ }
         }
-
+        
         private static ulong GetScheduleInputChannel(DiscordGuildConfiguration guildConfig, ulong channelId)
         {
-            if (channelId == guildConfig.CastrumScheduleOutputChannel)
-                return guildConfig.CastrumScheduleInputChannel;
-            else if (channelId == guildConfig.DelubrumNormalScheduleOutputChannel)
-                return guildConfig.DelubrumNormalScheduleInputChannel;
-            else if (channelId == guildConfig.DelubrumScheduleOutputChannel)
-                return guildConfig.DelubrumScheduleInputChannel;
-            else if (channelId == guildConfig.ScheduleOutputChannel)
-                return guildConfig.ScheduleInputChannel;
+            var guildConfigFields = typeof(DiscordGuildConfiguration).GetFields();
+
+            var scheduleOutputChannels = guildConfigFields
+                .Where(f => RegexSearches.ScheduleOutputFieldNameRegex.IsMatch(f.Name))
+                .ToList();
+
+            foreach (var outputChannelField in scheduleOutputChannels)
+            {
+                if (channelId != (ulong?)outputChannelField.GetValue(guildConfig)) continue;
+
+                var inputChannelFieldName = outputChannelField.Name.Replace("Output", "Input");
+
+                return (ulong?)guildConfigFields
+                    .FirstOrDefault(f => f.Name == inputChannelFieldName)
+                    ?.GetValue(guildConfig) ?? 0;
+            }
+            
             return 0;
         }
 
@@ -124,6 +134,8 @@ namespace Prima.Queue.Handlers
 #else
             if (channelId == guildConfig.CastrumScheduleOutputChannel)
                 return 765994301850779709;
+            else if (channelId == guildConfig.ZadnorThingScheduleOutputChannel)
+                return 845106113082818560;
             else if (channelId == guildConfig.DelubrumNormalScheduleOutputChannel)
                 return 806957742056013895;
             else if (channelId == guildConfig.DelubrumScheduleOutputChannel)

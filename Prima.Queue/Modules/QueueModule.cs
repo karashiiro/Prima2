@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Prima.Models;
 
 namespace Prima.Queue.Modules
 {
@@ -1349,18 +1350,18 @@ namespace Prima.Queue.Modules
             var (m, _) = await GetEvent(eventId);
             return m != null;
         }
-
+        
         private IEnumerable<ITextChannel> GetOutputChannels(SocketGuild guild)
         {
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == (guild?.Id ?? 0));
             if (guildConfig == null) return new List<ITextChannel>();
 
-            var drsOutputChannel = guild.GetTextChannel(guildConfig.DelubrumScheduleOutputChannel);
-            var drnOutputChannel = guild.GetTextChannel(guildConfig.DelubrumNormalScheduleOutputChannel);
-            var cllOutputChannel = guild.GetTextChannel(guildConfig.CastrumScheduleOutputChannel);
-            var zadOutputChannel = guild.GetTextChannel(guildConfig.ZadnorThingScheduleOutputChannel);
+            var scheduleOutputChannels = typeof(DiscordGuildConfiguration).GetFields()
+                .Where(f => RegexSearches.ScheduleOutputFieldNameRegex.IsMatch(f.Name))
+                .Select(f => (ulong?)f.GetValue(guildConfig))
+                .Select(cId => guild.GetTextChannel(cId ?? 0));
 
-            return new[] { drsOutputChannel, drnOutputChannel, cllOutputChannel, zadOutputChannel };
+            return scheduleOutputChannels;  
         }
 
         private async Task<IEnumerable<(IMessage, IEmbed)>> GetEvents(int inHours)
