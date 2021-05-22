@@ -45,6 +45,14 @@ namespace Prima.Moderation.Modules
                     }
                 }
             }
+
+            if (guild == null)
+            {
+                await ReplyAsync(
+                    "No shared guilds were found. This is almost certainly an error - please send your report to a staff member directly.");
+                return;
+            }
+
             var guildConfig = Db.Guilds.Single(g => g.Id == guild.Id);
 
             var postChannel = guild.GetTextChannel(guildConfig.ReportChannel);

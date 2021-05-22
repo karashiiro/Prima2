@@ -206,12 +206,12 @@ namespace Prima.Stable.Modules
 
             if (userMention == null || parameters.Length < 3)
             {
-                var reply = await ReplyAsync($"{Context.User.Mention}, please enter that command in the format `{prefix}iam Mention World Name Surname`.");
+                var reply = await ReplyAsync($"{Context.User.Mention}, please enter that command in the format `{prefix}theyare Mention World Name Surname`.");
                 await Task.Delay(MessageDeleteDelay);
                 await reply.DeleteAsync();
                 return;
             }
-            (new Task(async () =>
+            new Task(async () =>
             {
                 await Task.Delay(MessageDeleteDelay);
                 try
@@ -219,7 +219,7 @@ namespace Prima.Stable.Modules
                     await Context.Message.DeleteAsync();
                 }
                 catch (HttpException) { } // Message was already deleted.
-            })).Start();
+            }).Start();
             var world = parameters[0].ToLower();
             var name = parameters[1] + " " + parameters[2];
             world = RegexSearches.NonAlpha.Replace(world, string.Empty);
