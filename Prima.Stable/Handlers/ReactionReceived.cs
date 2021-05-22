@@ -17,7 +17,13 @@ namespace Prima.Stable.Handlers
         private const ulong EurekaRole = 588913087818498070;
         private const ulong DiademRole = 588913444712087564;
 
-        public static async Task HandlerAdd(IDbService db, CharacterLookup lodestone, Cacheable<IUserMessage, ulong> _, ISocketMessageChannel ichannel, SocketReaction reaction)
+        public static Task HandlerAdd(IDbService db, CharacterLookup lodestone, Cacheable<IUserMessage, ulong> message, ISocketMessageChannel ichannel, SocketReaction reaction)
+        {
+            _ = HandlerAddAsync(db, lodestone, message, ichannel, reaction);
+            return Task.CompletedTask;
+        }
+
+        private static async Task HandlerAddAsync(IDbService db, CharacterLookup lodestone, Cacheable<IUserMessage, ulong> message, ISocketMessageChannel ichannel, SocketReaction reaction)
         {
             if (ichannel is SocketGuildChannel channel)
             {
@@ -90,7 +96,13 @@ namespace Prima.Stable.Handlers
             }
         }
 
-        public static async Task HandlerRemove(IDbService db, Cacheable<IUserMessage, ulong> _, ISocketMessageChannel ichannel, SocketReaction reaction)
+        public static Task HandlerRemove(IDbService db, Cacheable<IUserMessage, ulong> message, ISocketMessageChannel ichannel, SocketReaction reaction)
+        {
+            _ = HandlerRemoveAsync(db, message, ichannel, reaction);
+            return Task.CompletedTask;
+        }
+
+        private static async Task HandlerRemoveAsync(IDbService db, Cacheable<IUserMessage, ulong> message, ISocketMessageChannel ichannel, SocketReaction reaction)
         {
             if (ichannel is SocketGuildChannel channel)
             {
