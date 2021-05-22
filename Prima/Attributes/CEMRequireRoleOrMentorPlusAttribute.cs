@@ -16,17 +16,17 @@ namespace Prima.Attributes
             _roleId = roleId;
         }
 
-        public override async Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
+        public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
             if (context.User is not IGuildUser member)
             {
-                return PreconditionResult.FromError("Command cannot be executed outside of a guild.");
+                return Task.FromResult(PreconditionResult.FromError("Command cannot be executed outside of a guild."));
             }
 
             var role = member.Guild.GetRole(_roleId);
 
             if (member.MemberHasRole(role, context) || member.MemberHasRole(CEMMentorRoleId, context) || member.GuildPermissions.KickMembers)
-                return PreconditionResult.FromSuccess();
+                return Task.FromResult(PreconditionResult.FromSuccess());
 
             _ = Task.Run(async () =>
             {
@@ -36,7 +36,7 @@ namespace Prima.Attributes
                 await res.DeleteAsync();
             });
 
-            return PreconditionResult.FromError($"User does not have required role \"{role.Name}\" or Mentor+.");
+            return Task.FromResult(PreconditionResult.FromError($"User does not have required role \"{role.Name}\" or Mentor+."));
         }
     }
 }
