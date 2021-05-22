@@ -28,9 +28,13 @@ namespace Prima.Attributes
             if (member.MemberHasRole(role, context) || member.MemberHasRole(CEMMentorRoleId, context) || member.GuildPermissions.KickMembers)
                 return PreconditionResult.FromSuccess();
 
-            var res = await context.Channel.SendMessageAsync($"{member.Mention}, you don't have the {role.Name} role!");
-            await Task.Delay(5000);
-            await res.DeleteAsync();
+            _ = Task.Run(async () =>
+            {
+                var res = await context.Channel.SendMessageAsync(
+                    $"{member.Mention}, you don't have the {role.Name} role!");
+                await Task.Delay(5000);
+                await res.DeleteAsync();
+            });
 
             return PreconditionResult.FromError($"User does not have required role \"{role.Name}\" or Mentor+.");
         }
