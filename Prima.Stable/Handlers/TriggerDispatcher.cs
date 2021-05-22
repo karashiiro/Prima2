@@ -17,7 +17,13 @@ namespace Prima.Stable.Handlers
             .Where(t => t != null)
             .ToList();
 
-        public static async Task Handler(DiscordSocketClient client, SocketMessage message)
+        public static Task Handler(DiscordSocketClient client, SocketMessage message)
+        {
+            _ = HandlerAsync(client, message);
+            return Task.CompletedTask;
+        }
+
+        private static async Task HandlerAsync(DiscordSocketClient client, SocketMessage message)
         {
             if (message.Author.Id == client.CurrentUser.Id) return;
 
@@ -26,7 +32,7 @@ namespace Prima.Stable.Handlers
             {
                 guild = guildChannel.Guild;
             }
-            
+
             var applicableTriggers = Triggers
                 .Where(t => t.IsGuildApplicable(guild))
                 .Where(t => t.Condition(message))
