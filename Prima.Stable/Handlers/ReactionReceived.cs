@@ -19,7 +19,7 @@ namespace Prima.Stable.Handlers
 
         public static Task HandlerAdd(IDbService db, CharacterLookup lodestone, Cacheable<IUserMessage, ulong> message, ISocketMessageChannel ichannel, SocketReaction reaction)
         {
-            _ = HandlerAddAsync(db, lodestone, message, ichannel, reaction);
+            Task.Run(() => HandlerAddAsync(db, lodestone, message, ichannel, reaction));
             return Task.CompletedTask;
         }
 
@@ -98,7 +98,7 @@ namespace Prima.Stable.Handlers
 
         public static Task HandlerRemove(IDbService db, Cacheable<IUserMessage, ulong> message, ISocketMessageChannel ichannel, SocketReaction reaction)
         {
-            _ = HandlerRemoveAsync(db, message, ichannel, reaction);
+            Task.Run(() => HandlerRemoveAsync(db, message, ichannel, reaction));
             return Task.CompletedTask;
         }
 

@@ -19,7 +19,7 @@ namespace Prima.Stable.Handlers
 
         public static Task Handler(DiscordSocketClient client, SocketMessage message)
         {
-            _ = HandlerAsync(client, message);
+            Task.Run(() => HandlerAsync(client, message));
             return Task.CompletedTask;
         }
 

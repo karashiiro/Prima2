@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Discord.WebSocket;
 using Prima.Stable.Resources;
 
@@ -52,7 +53,7 @@ namespace Prima.Stable.Services
         public void NextPresence()
         {
             var (name, activityType) = Presences.List[new Random().Next(0, Presences.List.Length)];
-            _ = _client.SetGameAsync(name, null, activityType);
+            Task.Run(() => _client.SetGameAsync(name, null, activityType));
         }
 
         private Thread StartPresenceLoop()
