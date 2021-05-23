@@ -27,6 +27,7 @@ namespace Prima.Stable.Services
             if (_active) return;
             _active = true;
             _loopThread = StartPresenceLoop();
+            _loopThread.Start();
         }
 
         private void Stop()
