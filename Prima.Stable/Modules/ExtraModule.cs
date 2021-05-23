@@ -26,24 +26,14 @@ namespace Prima.Extra.Modules
         public HttpClient Http { get; set; }
         public XIVAPIService Xivapi { get; set; }
 
+        private const ulong CEMSpeculation = 738899820168740984;
+        private const ulong CEMBozTheorycrafting = 593815337980526603;
+
         [Command("weather")]
         [Description("[FFXIV] Shows the current weather for the specified zone.")]
+        [DisableInChannelsForGuild(CEMSpeculation, CEMBozTheorycrafting, GuildId = SpecialGuilds.CrystalExploratoryMissions)]
         public async Task WeatherAsync([Remainder] string zone)
         {
-            if (Context.Guild != null && Context.Guild.Id == SpecialGuilds.CrystalExploratoryMissions)
-            {
-                const ulong speculation = 738899820168740984;
-                const ulong theorycrafting = 593815337980526603;
-                if (Context.Channel.Id == speculation || Context.Channel.Id == theorycrafting)
-                {
-                    await Context.Message.DeleteAsync();
-                    var reply = await ReplyAsync("That command is disabled in this channel.");
-                    await Task.Delay(10000).ConfigureAwait(false);
-                    await reply.DeleteAsync();
-                    return;
-                }
-            }
-
             IList<(Weather, DateTime)> forecast;
             try
             {
