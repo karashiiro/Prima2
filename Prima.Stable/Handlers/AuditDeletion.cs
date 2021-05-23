@@ -20,8 +20,8 @@ namespace Prima.Stable.Handlers
 
             var config = db.Guilds.Single(g => g.Id == guild.Id);
 
-            var deletedMessageChannel = guild.GetChannel(config.DeletedMessageChannel) as SocketTextChannel ?? throw new NullReferenceException();
-            var deletedCommandChannel = guild.GetChannel(config.DeletedCommandChannel) as SocketTextChannel ?? throw new NullReferenceException();
+            var deletedMessageChannel = guild.GetChannel(config.DeletedMessageChannel) as SocketTextChannel;
+            var deletedCommandChannel = guild.GetChannel(config.DeletedCommandChannel) as SocketTextChannel;
 
             CachedMessage cachedMessage;
             var imessage = await cmessage.GetOrDownloadAsync();
@@ -74,11 +74,25 @@ namespace Prima.Stable.Handlers
             // Send the embed.
             if (author.Id == client.CurrentUser.Id || cachedMessage.Content.StartsWith(prefix))
             {
-                await deletedCommandChannel.SendMessageAsync(embed: messageEmbed);
+                if (deletedCommandChannel != null)
+                {
+                    await deletedCommandChannel.SendMessageAsync(embed: messageEmbed);
+                }
+                else
+                {
+                    Log.Warning("Deleted command channel not set!");
+                }
             }
             else
             {
-                await deletedMessageChannel.SendMessageAsync(embed: messageEmbed);
+                if (deletedMessageChannel != null)
+                {
+                    await deletedMessageChannel.SendMessageAsync(embed: messageEmbed);
+                }
+                else
+                {
+                    Log.Warning("Deleted message channel not set!");
+                }
             }
 
             // TODO Attach attachments as well.
