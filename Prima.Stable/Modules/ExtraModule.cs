@@ -38,7 +38,7 @@ namespace Prima.Extra.Modules
                 {
                     await Context.Message.DeleteAsync();
                     var reply = await ReplyAsync("That command is disabled in this channel.");
-                    await Task.Delay(10000);
+                    await Task.Delay(10000).ConfigureAwait(false);
                     await reply.DeleteAsync();
                     return;
                 }
@@ -147,7 +147,9 @@ namespace Prima.Extra.Modules
                 await ReplyAsync($"No results found for \"{itemName}\", are you sure you spelled the item name correctly?");
                 return;
             }
-            var searchData = searchResults.Where(result => result.Name.ToLower() == itemName.ToLower());
+            var searchData = searchResults
+                .Where(result => string.Equals(result.Name, itemName, StringComparison.CurrentCultureIgnoreCase))
+                .ToList();
             var item = !searchData.Any() ? searchResults.First() : searchData.First();
 
             var itemId = item.ID;
