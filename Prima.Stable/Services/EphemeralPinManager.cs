@@ -9,9 +9,9 @@ using Serilog;
 
 namespace Prima.Stable.Services
 {
-    public class EphemeralPinManager
+    public class EphemeralPinManager : IDisposable
     {
-        public const double HoursUntilRemoval = 4.5;
+        public static double HoursUntilRemoval => 4.5;
 
         private readonly IDbService _db;
         private readonly DiscordSocketClient _client;
@@ -65,9 +65,9 @@ namespace Prima.Stable.Services
                 }
 
 #if DEBUG
-                await Task.Delay(1000, token);
+                await Task.Delay(1000, token).ConfigureAwait(false);
 #else
-                await Task.Delay(new TimeSpan(0, 5, 0), token);
+                await Task.Delay(new TimeSpan(0, 5, 0), token).ConfigureAwait(false);
 #endif
             }
         }

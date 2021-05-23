@@ -53,9 +53,9 @@ namespace Prima.Stable.Services
                 }
 
 #if DEBUG
-                await Task.Delay(1000, token);
+                await Task.Delay(1000, token).ConfigureAwait(false);
 #else
-                await Task.Delay(new TimeSpan(0, 5, 0), token);
+                await Task.Delay(new TimeSpan(0, 5, 0), token).ConfigureAwait(false);
 #endif
             }
         }
