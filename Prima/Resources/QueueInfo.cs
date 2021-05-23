@@ -8,6 +8,7 @@ namespace Prima.Resources
         public const double BAQueueTimeout = 4 * Time.Hour;
         public const double CastrumQueueTimeout = 4 * Time.Hour;
         public const double DelubrumQueueTimeout = 4 * Time.Hour;
+        public const double ZadnorQueueTimeout = 4 * Time.Hour;
 
         // This is all really bad and should be done in config.
         public static readonly IDictionary<ulong, string> LfgChannels = new Dictionary<ulong, string>
