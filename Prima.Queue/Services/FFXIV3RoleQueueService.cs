@@ -88,7 +88,7 @@ namespace Prima.Queue.Services
             await AlertTimeouts(Queues["lfg-delubrum-savage"]?.Timeout(QueueInfo.DelubrumQueueTimeout, 0 * Time.Second, excludeEvents: true), "lfg-delubrum-savage", 4);
             await AlertTimeouts(Queues["lfg-drs-fresh-prog"]?.Timeout(QueueInfo.DelubrumQueueTimeout, 0 * Time.Second, excludeEvents: true), "lfg-drs-fresh-prog", 4);
             await AlertTimeouts(Queues["lfg-delubrum-normal"]?.Timeout(QueueInfo.DelubrumQueueTimeout, 0 * Time.Second, excludeEvents: true), "lfg-delubrum-normal", 4);
-            await AlertTimeouts(Queues["lfg-delubrum-normal"]?.Timeout(QueueInfo.ZadnorQueueTimeout, 0 * Time.Second, excludeEvents: true), "lfg-zadnor-dungeon", 4);
+            await AlertTimeouts(Queues["lfg-zadnor-dungeon"]?.Timeout(QueueInfo.ZadnorQueueTimeout, 0 * Time.Second, excludeEvents: true), "lfg-zadnor-dungeon", 4);
         }
 
         private async Task AlertTimeouts((IEnumerable<ulong> uids, IEnumerable<ulong> almostUids)? sets, string queueName, int hours)
