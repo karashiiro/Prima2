@@ -537,7 +537,7 @@ namespace Prima.Stable.Modules
 
         // Check who this user is.
         [Command("whoami", RunMode = RunMode.Async)]
-        [Description("[FFXIV] Check what character you have registered.")]
+        [Description("[FFXIV] Check the character registered to you.")]
         public async Task WhoAmIAsync()
         {
             if (Context.Guild != null && Context.Guild.Id == SpecialGuilds.CrystalExploratoryMissions)
