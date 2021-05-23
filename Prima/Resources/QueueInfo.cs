@@ -25,6 +25,7 @@ namespace Prima.Resources
             { 803636739343908894, "lfg-delubrum-savage" },
             { 809241125373739058, "lfg-drs-fresh-prog" },
             { 806957742056013895, "lfg-delubrum-normal" },
+            { 845106113082818560, "lfg-zadnor-dungeon" },
         };
 
         public static IDictionary<string, List<ulong>> FlipDictionary()
