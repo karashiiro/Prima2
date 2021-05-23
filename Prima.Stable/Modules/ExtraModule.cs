@@ -48,10 +48,8 @@ namespace Prima.Extra.Modules
             var (currentWeather, currentWeatherStartTime) = forecast[0];
 
             var dbUser = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id);
-            // ReSharper disable once JoinDeclarationAndInitializer
-            TimeZoneInfo tzi;
             var (customTzi, _) = Util.GetLocalizedTimeForUser(dbUser, DateTime.Now);
-            tzi = customTzi ?? TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
+            var tzi = customTzi ?? TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
 
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
             var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
