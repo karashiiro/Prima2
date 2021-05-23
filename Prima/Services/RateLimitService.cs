@@ -18,6 +18,17 @@ namespace Prima.Services
         }
 
         /// <summary>
+        /// Returns the number of seconds until the specified command may be used again.
+        /// </summary>
+        /// <param name="command">The command to check.</param>
+        public long TimeUntilReady(CommandInfo command)
+        {
+            if (!_commandTimeouts.ContainsKey(command.Name))
+                return 0;
+            return _commandTimeouts[command.Name] - DateTimeOffset.Now.ToUnixTimeSeconds();
+        }
+
+        /// <summary>
         /// Returns true if the command is ready to be used again.
         /// </summary>
         /// <param name="command">The command to check.</param>
@@ -33,15 +44,14 @@ namespace Prima.Services
         /// TODO: Make this per-guild or per-channel.
         /// </summary>
         /// <param name="command">The command to render unusable.</param>
-        public void ResetTime(CommandInfo command)
+        /// <param name="seconds">How long to disable the command.</param>
+        public void ResetTime(CommandInfo command, int seconds)
         {
-            if (!command.HasTimeout())
-                throw new InvalidOperationException("Command does not have RateLimitAttribute set.");
-
-            var rateLimitInfo = (RateLimitAttribute)command.Attributes.First(attr => attr is RateLimitAttribute);
-
+            if (seconds == 0)
+                throw new InvalidOperationException("Command does not have a rate limit.");
+            
             _commandTimeouts.Remove(command.Name);
-            _commandTimeouts.Add(command.Name, DateTimeOffset.Now.ToUnixTimeSeconds() + rateLimitInfo.TimeSeconds);
+            _commandTimeouts.Add(command.Name, DateTimeOffset.Now.ToUnixTimeSeconds() + seconds);
         }
     }
 }
