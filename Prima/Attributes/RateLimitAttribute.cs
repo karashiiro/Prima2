@@ -17,8 +17,13 @@ namespace Prima.Attributes
             var rateLimits = services.GetRequiredService<RateLimitService>();
             if (!rateLimits.IsReady(command))
             {
-                await context.Channel.SendMessageAsync(
-                    $"That command cannot be used for another {rateLimits.TimeUntilReady(command)} seconds.");
+                _ = Task.Run(async () =>
+                {
+                    var res = await context.Channel.SendMessageAsync(
+                        $"That command cannot be used for another {rateLimits.TimeUntilReady(command)} seconds.");
+                    await Task.Delay(5000);
+                    await res.DeleteAsync();
+                });
                 return PreconditionResult.FromError("Command rate limit has not yet expired.");
             }
 
