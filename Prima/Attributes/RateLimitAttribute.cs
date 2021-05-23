@@ -12,7 +12,7 @@ namespace Prima.Attributes
 
         public bool Global { get; set; }
 
-        public override async Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
+        public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
             var rateLimits = services.GetRequiredService<RateLimitService>();
             if (!rateLimits.IsReady(command))
@@ -24,11 +24,11 @@ namespace Prima.Attributes
                     await Task.Delay(5000);
                     await res.DeleteAsync();
                 });
-                return PreconditionResult.FromError("Command rate limit has not yet expired.");
+                return Task.FromResult(PreconditionResult.FromError("Command rate limit has not yet expired."));
             }
 
             rateLimits.ResetTime(command, TimeSeconds);
-            return PreconditionResult.FromSuccess();
+            return Task.FromResult(PreconditionResult.FromSuccess());
         }
     }
 }
