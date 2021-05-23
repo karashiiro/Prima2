@@ -516,6 +516,11 @@ namespace Prima.Stable.Modules
             {
                 await ReplyAsync(Properties.Resources.LodestoneMountAchievementNotFoundError);
             }
+            else
+            {
+                await ReplyAsync(
+                    "If any achievement role was not added, please check <https://na.finalfantasyxiv.com/lodestone/my/setting/account/> and ensure that your achievements are public.");
+            }
 
             if (user == null)
             {
