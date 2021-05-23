@@ -423,52 +423,52 @@ namespace Prima.Stable.Modules
 
         [Command("star", RunMode = RunMode.Async)]
         [Description("Shows the Bozjan Southern Front star mob guide.")]
-        [RateLimit(TimeSeconds = 3, Global = true)]
+        [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task StarMobsAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/muvBR1Z.png");
 
         [Command("cluster", RunMode = RunMode.Async)]
         [Alias("clusters")]
         [Description("Shows the Bozjan Southern Front cluster path guide.")]
-        [RateLimit(TimeSeconds = 3, Global = true)]
+        [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task BozjaClustersAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/FuG4wDK.png");
         
         [Command("qgreflect", RunMode = RunMode.Async)]
         [Description("Shows Queen's Guard reflect positions.")]
-        [RateLimit(TimeSeconds = 3, Global = true)]
+        [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task QueensGuardReflectAsync() => DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/808869784195563521/809107279697150012/robotstemplate2.png");
 
         [Command("chess", RunMode = RunMode.Async)]
         [Description("Shows Queen Chess strat.")]
-        [RateLimit(TimeSeconds = 3, Global = true)]
+        [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task QueenChessStratAsync() => DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/808869784195563521/809107442793185310/nJ4vHiK.png");
 
         [Command("fatefulwords", RunMode = RunMode.Async)]
         [Description("Shows the Fateful Words guide.")]
-        [RateLimit(TimeSeconds = 3, Global = true)]
+        [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task FatefulWordsAsync() => DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/808869784195563521/813152064342589443/Fateful_Words_debuffs.png");
 
         [Command("brands", RunMode = RunMode.Async)]
         [Alias("hotcold")]
         [Description("Shows the Trinity Avowed debuff guide. Also `~hotcold`.")]
-        [RateLimit(TimeSeconds = 3, Global = true)]
+        [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task BrandsHotColdAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/un5nvg4.png");
 
         [Command("slimes", RunMode = RunMode.Async)]
         [Description("Shows the Delubrum Reginae slimes guide.")]
-        [RateLimit(TimeSeconds = 3, Global = true)]
+        [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task SlimesAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/wUrvKtr.gif");
 
         [Command("pipegame", RunMode = RunMode.Async)]
         [Alias("ladders")]
         [Description("Shows the Trinity Avowed ladder guide. Also `~ladders`.")]
-        [RateLimit(TimeSeconds = 3, Global = true)]
+        [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task PipeGameAsync()
         {
@@ -478,7 +478,7 @@ namespace Prima.Stable.Modules
 
         [Command("minotrap", RunMode = RunMode.Async)]
         [Description("Shows the Stygimoloch Lord trap handling for tanks.")]
-        [RateLimit(TimeSeconds = 3, Global = true)]
+        [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task MinoTrapAsync() => ReplyAsync("https://clips.twitch.tv/PoisedCovertDumplingsItsBoshyTime-Vu4V6JZqHzM9LPUf");
     }
