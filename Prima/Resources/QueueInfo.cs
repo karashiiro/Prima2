@@ -8,7 +8,7 @@ namespace Prima.Resources
         public const double BAQueueTimeout = 4 * Time.Hour;
         public const double CastrumQueueTimeout = 4 * Time.Hour;
         public const double DelubrumQueueTimeout = 4 * Time.Hour;
-        public const double ZadnorQueueTimeout = 4 * Time.Hour;
+        public const double DalriadaQueueTimeout = 4 * Time.Hour;
 
         // This is all really bad and should be done in config.
         public static readonly IDictionary<ulong, string> LfgChannels = new Dictionary<ulong, string>
@@ -26,7 +26,7 @@ namespace Prima.Resources
             { 803636739343908894, "lfg-delubrum-savage" },
             { 809241125373739058, "lfg-drs-fresh-prog" },
             { 806957742056013895, "lfg-delubrum-normal" },
-            { 845106113082818560, "lfg-zadnor-dungeon" },
+            { 845106113082818560, "lfg-dalriada" },
         };
 
         public static IDictionary<string, List<ulong>> FlipDictionary()
