@@ -90,7 +90,7 @@ namespace Prima.Queue.Modules
                 803636739343908894 => "Delubrum Reginae (Savage)",
                 809241125373739058 => "fresh Delubrum Reginae (Savage) progression",
                 806957742056013895 => "Delubrum Reginae (Normal)",
-                845106113082818560 => "Zadnor Thing",
+                845106113082818560 => "Dalriada",
                 _ => throw new NotSupportedException(),
             };
 
