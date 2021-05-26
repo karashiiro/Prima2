@@ -9,7 +9,7 @@ namespace Prima.Stable.Handlers
 {
     public static class MessageCache
     {
-        // Caches the last week's worth of messages manually, since the built-in cache is apparently awful.
+        // Caches the last week's worth of messages manually, since the built-in cache doesn't work for older messages.
         public static Task Handler(IDbService db, IMessage message)
         {
             Task.Run(() => HandlerAsync(db, message));
