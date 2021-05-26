@@ -373,7 +373,9 @@ namespace Prima.Stable.Modules
                         guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Castrum"])),
                         guild.GetRole(ulong.Parse(guildConfig.Roles["Siege Liege"])),
                         guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Delubrum Savage"])),
-                        guild.GetRole(ulong.Parse(guildConfig.Roles["Savage Queen"]))
+                        guild.GetRole(ulong.Parse(guildConfig.Roles["Savage Queen"])),
+                        guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Dalriada"])),
+                        guild.GetRole(ulong.Parse(guildConfig.Roles["Dalriada Raider"])),
                     }).ToArray();
                 }
 
@@ -415,8 +417,10 @@ namespace Prima.Stable.Modules
             var siegeLiege = guild.GetRole(ulong.Parse(guildConfig.Roles["Siege Liege"]));
             var clearedDRS = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Delubrum Savage"]));
             var savageQueen = guild.GetRole(ulong.Parse(guildConfig.Roles["Savage Queen"]));
+            var clearedDalriada = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Dalriada"]));
+            var dalriadaRaider = guild.GetRole(ulong.Parse(guildConfig.Roles["Dalriada Raider"]));
 
-            if (member.HasRole(arsenalMaster) && member.HasRole(siegeLiege) && member.HasRole(savageQueen))
+            if (member.HasRole(arsenalMaster) && member.HasRole(siegeLiege) && member.HasRole(savageQueen) && member.HasRole(dalriadaRaider))
             {
                 await ReplyAsync(Properties.Resources.MemberAlreadyHasRoleError);
                 return;
@@ -442,6 +446,8 @@ namespace Prima.Stable.Modules
             var hasCastrumLLAchievement2 = false;
             var hasDRSAchievement1 = false;
             var hasDRSAchievement2 = false;
+            var hasDalriadaAchievement1 = false;
+            var hasDalriadaAchievement2 = false;
             if (!character["Bio"].ToObject<string>().Contains(Context.User.Id.ToString()))
             {
                 await ReplyAsync(Properties.Resources.LodestoneDiscordIdNotFoundError);
@@ -451,28 +457,28 @@ namespace Prima.Stable.Modules
             {
                 Log.Information("Added role " + arsenalMaster.Name);
                 await member.AddRoleAsync(arsenalMaster);
-                await ReplyAsync(Properties.Resources.LodestoneBAAchievementSuccess);
+                await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, arsenalMaster.Name));
                 hasAchievement = true;
             }
             if (achievements.Any(achievement => achievement.ID == 2680)) // Operation: Eagle's Nest I
             {
                 Log.Information("Added role " + clearedCastrumLacusLitore.Name);
                 await member.AddRoleAsync(clearedCastrumLacusLitore);
-                await ReplyAsync(Properties.Resources.LodestoneCastrumLLAchievement1Success); // Make these format strings
+                await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, clearedCastrumLacusLitore.Name));
                 hasCastrumLLAchievement1 = true;
             }
             if (achievements.Any(achievement => achievement.ID == 2682)) // Operation: Eagle's Nest III
             {
                 Log.Information("Added role " + siegeLiege.Name);
                 await member.AddRoleAsync(siegeLiege);
-                await ReplyAsync(Properties.Resources.LodestoneCastrumLLAchievement2Success);
+                await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, siegeLiege.Name));
                 hasCastrumLLAchievement2 = true;
             }
             if (achievements.Any(achievement => achievement.ID == 2765)) // Operation: Savage Queen of Swords I
             {
                 Log.Information("Added role " + clearedDRS.Name);
                 await member.AddRoleAsync(clearedDRS);
-                await ReplyAsync(Properties.Resources.LodestoneDRSSuccess1);
+                await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, clearedDRS.Name));
 
                 var queenProg = member.Guild.Roles.FirstOrDefault(r => r.Name == "The Queen Progression");
                 var contingentRoles = DelubrumProgressionRoles.GetContingentRoles(queenProg?.Id ?? 0);
@@ -490,7 +496,7 @@ namespace Prima.Stable.Modules
             {
                 Log.Information("Added role " + savageQueen.Name);
                 await member.AddRoleAsync(savageQueen);
-                await ReplyAsync(Properties.Resources.LodestoneDRSSuccess2);
+                await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, savageQueen.Name));
 
                 var queenProg = member.Guild.Roles.FirstOrDefault(r => r.Name == "The Queen Progression");
                 var contingentRoles = DelubrumProgressionRoles.GetContingentRoles(queenProg?.Id ?? 0);
@@ -504,6 +510,20 @@ namespace Prima.Stable.Modules
 
                 hasDRSAchievement2 = true;
             }
+            if (achievements.Any(achievement => achievement.ID == 2874)) // Hell to Pay I
+            {
+                Log.Information("Added role " + clearedDalriada.Name);
+                await member.AddRoleAsync(clearedDalriada);
+                await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, clearedDalriada.Name));
+                hasDalriadaAchievement1 = true;
+            }
+            if (achievements.Any(achievement => achievement.ID == 2876)) // Hell to Pay III
+            {
+                Log.Information("Added role " + dalriadaRaider.Name);
+                await member.AddRoleAsync(dalriadaRaider);
+                await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, dalriadaRaider.Name));
+                hasDalriadaAchievement2 = true;
+            }
             if (mounts.Any(m => m.Name == "Demi-Ozma"))
             {
                 Log.Information("Added role {Role} to {DiscordName}.", cleared.Name, Context.User.ToString());
@@ -512,7 +532,7 @@ namespace Prima.Stable.Modules
                 hasMount = true;
             }
 
-            if (!hasAchievement && !hasMount && !hasCastrumLLAchievement1 && !hasCastrumLLAchievement2 && !hasDRSAchievement1 && !hasDRSAchievement2)
+            if (!hasAchievement && !hasMount && !hasCastrumLLAchievement1 && !hasCastrumLLAchievement2 && !hasDRSAchievement1 && !hasDRSAchievement2 && !hasDalriadaAchievement1 && !hasDalriadaAchievement2)
             {
                 await ReplyAsync(Properties.Resources.LodestoneMountAchievementNotFoundError);
             }

@@ -141,27 +141,14 @@
   <data name="InvalidRegexError" xml:space="preserve">
     <value>That's not a valid regex string!</value>
   </data>
-  <data name="LodestoneBAAchievementSuccess" xml:space="preserve">
-    <value>The achievement has been found, and you have been given the Arsenal Master role.</value>
+  <data name="LodestoneAchievementRoleSuccess" xml:space="preserve">
+    <value>The achievement has been found, and you have been given the {0} role.</value>
   </data>
   <data name="LodestoneBAMountSuccess" xml:space="preserve">
     <value>The mount has been found, and you have been given the Cleared Arsenal role.</value>
   </data>
-  <data name="LodestoneCastrumLLAchievement1Success" xml:space="preserve">
-    <value>The achievement has been found, and you have been given the Cleared Castrum role.</value>
-  </data>
-  <data name="LodestoneCastrumLLAchievement2Success" xml:space="preserve">
-    <value>The achievement has been found, and you have been given the Siege Liege role.</value>
-  </data>
   <data name="LodestoneDiscordIdNotFoundError" xml:space="preserve">
     <value>Discord ID not found. Please ensure your Discord ID is located somewhere in your character profile.</value>
-  </data>
-  <data name="LodestoneDRSSuccess1" xml:space="preserve">
-    <value>The achievement has been found, and you have been given the Cleared Delubrum (Savage) role.</value>
-  </data>
-  <data name="LodestoneDRSSuccess2" xml:space="preserve">
-    <value>The achievement has been found, and you have been given the Savage Queen role.</value>
-    <comment>Should call this Killer Queen qwq</comment>
   </data>
   <data name="LodestoneMountAchievementNotFoundError" xml:space="preserve">
     <value>The mount or achievement was not found. Please ensure your achievements and mounts are public for this operation.
