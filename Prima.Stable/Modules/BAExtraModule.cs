@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Microsoft.Extensions.DependencyInjection;
 using Prima.Attributes;
 using Prima.Resources;
 using Prima.Services;

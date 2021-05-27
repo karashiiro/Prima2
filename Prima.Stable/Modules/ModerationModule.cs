@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using Prima.Attributes;
 using Prima.Stable.Handlers;
 
-namespace Prima.Moderation.Modules
+namespace Prima.Stable.Modules
 {
     /// <summary>
     /// This module includes commands that assist with moderation.

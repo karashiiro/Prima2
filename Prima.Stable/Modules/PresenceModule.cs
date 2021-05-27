@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Prima.Stable.Services;
 
-namespace Prima.Modules
+namespace Prima.Stable.Modules
 {
     /// <summary>
     /// Includes control commands for the <see cref="PresenceService"/>.

@@ -1,7 +1,11 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 using System.Net;
 using Discord.WebSocket;
 using FFXIVWeather;
+using FFXIVWeather.Lumina;
+using Lumina;
 using Microsoft.Extensions.DependencyInjection;
 using Prima.Services;
 using Prima.Stable.Handlers;
@@ -69,7 +73,10 @@ namespace Prima.Stable
                 .AddSingleton<CensusEventService>()
                 .AddSingleton<PresenceService>()
                 .AddSingleton<XIVAPIService>()
-                .AddSingleton<FFXIVWeatherService>()
+                .AddSingleton(new GameData(Environment.OSVersion.Platform == PlatformID.Win32NT
+                    ? @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack"
+                    : Path.Combine(Environment.GetEnvironmentVariable("HOME"), "sqpack")))
+                .AddSingleton<FFXIVWeatherLuminaService>()
                 .AddSingleton<MuteService>()
                 .AddSingleton<TimedRoleManager>()
                 .AddSingleton<FFLogsAPI>()

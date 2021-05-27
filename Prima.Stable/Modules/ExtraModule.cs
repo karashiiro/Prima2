@@ -1,7 +1,6 @@
 ﻿using Discord.Commands;
 using Newtonsoft.Json.Linq;
 using Prima.Services;
-using Prima.XIVAPI;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -9,20 +8,21 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Prima.Attributes;
-using FFXIVWeather;
-using FFXIVWeather.Models;
 using Discord;
+using FFXIVWeather.Lumina;
+using Lumina.Excel.GeneratedSheets;
 using Prima.Resources;
 using TimeZoneNames;
 using Color = Discord.Color;
+using Item = Prima.XIVAPI.Item;
 
-namespace Prima.Extra.Modules
+namespace Prima.Stable.Modules
 {
     [Name("Extra")]
     public class ExtraModule : ModuleBase<SocketCommandContext>
     {
         public IDbService Db { get; set; }
-        public FFXIVWeatherService Weather { get; set; }
+        public FFXIVWeatherLuminaService Weather { get; set; }
         public HttpClient Http { get; set; }
         public XIVAPIService Xivapi { get; set; }
 
@@ -64,7 +64,7 @@ namespace Prima.Extra.Modules
 
             var embed = new EmbedBuilder()
                 .WithAuthor(new EmbedAuthorBuilder()
-                    .WithIconUrl($"https://www.garlandtools.org/files/icons/weather/{currentWeather.GetName().Replace(" ", "%20")}.png")
+                    .WithIconUrl($"https://www.garlandtools.org/files/icons/weather/{currentWeather.Name.ToString().Replace(" ", "%20")}.png")
                     .WithName($"Current weather for {Util.JadenCase(zone)}:"))
                 .WithTitle($"Next weather starts in {Math.Truncate((forecast[1].Item2 - DateTime.UtcNow).TotalMinutes)} minutes.")
                 .WithColor(Color.LightOrange)
