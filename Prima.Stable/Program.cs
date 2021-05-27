@@ -75,7 +75,11 @@ namespace Prima.Stable
                 .AddSingleton<XIVAPIService>()
                 .AddSingleton(new GameData(Environment.OSVersion.Platform == PlatformID.Win32NT
                     ? @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack"
-                    : Path.Combine(Environment.GetEnvironmentVariable("HOME"), "sqpack")))
+                    : Path.Combine(Environment.GetEnvironmentVariable("HOME"), "sqpack"),
+                    new LuminaOptions
+                    {
+                        PanicOnSheetChecksumMismatch = false,
+                    }))
                 .AddSingleton<FFXIVWeatherLuminaService>()
                 .AddSingleton<MuteService>()
                 .AddSingleton<TimedRoleManager>()

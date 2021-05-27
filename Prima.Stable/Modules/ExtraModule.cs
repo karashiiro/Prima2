@@ -54,12 +54,12 @@ namespace Prima.Stable.Modules
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
             var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
 
-            var formattedForecast = $"**Current:** {currentWeather} (Began at {TimeZoneInfo.ConvertTimeFromUtc(currentWeatherStartTime, tzi).ToShortTimeString()} {tzAbbr})";
+            var formattedForecast = $"**Current:** {currentWeather.Name} (Began at {TimeZoneInfo.ConvertTimeFromUtc(currentWeatherStartTime, tzi).ToShortTimeString()} {tzAbbr})";
             foreach (var (weather, startTime) in forecast.Skip(1))
             {
                 var zonedTime = TimeZoneInfo.ConvertTimeFromUtc(startTime, tzi);
 
-                formattedForecast += $"\n{zonedTime.ToShortTimeString()}: {weather}";
+                formattedForecast += $"\n{zonedTime.ToShortTimeString()}: {weather.Name}";
             }
 
             var embed = new EmbedBuilder()
