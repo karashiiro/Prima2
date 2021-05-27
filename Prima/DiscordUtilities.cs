@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.Rest;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Prima.Attributes;
@@ -14,24 +16,20 @@ namespace Prima
     public static class DiscordUtilities
     {
         public static async Task<string> GetFormattedCommandList(
-            IServiceProvider services,
-            ICommandContext ctx,
+            Type module,
             string prefix,
-            string moduleName,
             ICollection<string> except = null)
         {
-            var commandManager = services.GetRequiredService<CommandService>();
-
-            var commands = (await commandManager.GetExecutableCommandsAsync(ctx, services))
-                .Where(command => command.Attributes.Any(attr => attr is DescriptionAttribute))
-                .Where(command => command.Module.Name == moduleName)
+            var commands = module.GetMethods()
+                .Where(command => command.GetCustomAttribute<DescriptionAttribute>() != null)
                 .Where(command => !except?.Contains(command.Name) ?? true);
 
             return commands
                 .Select(c =>
                 {
-                    var descAttr = (DescriptionAttribute)c.Attributes.First(attr => attr is DescriptionAttribute);
-                    return $"`{prefix}{c.Name}` - {descAttr.Description}\n";
+                    var commandAttr = c.GetCustomAttribute<CommandAttribute>();
+                    var descAttr = c.GetCustomAttribute<DescriptionAttribute>();
+                    return $"`{prefix}{commandAttr?.Text}` - {descAttr?.Description}\n";
                 })
                 .Aggregate((text, next) => text + next);
         }

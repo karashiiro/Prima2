@@ -38,8 +38,10 @@ namespace Prima.Stable.Modules
             if (guildConfig != null && guildConfig.Prefix != ' ')
                 prefix = guildConfig.Prefix.ToString();
 
-            var commands = await DiscordUtilities.GetFormattedCommandList(Services, Context, prefix,
-                "Bozja Extra Module", except: new List<string> {"bozhelp"});
+            var commands = await DiscordUtilities.GetFormattedCommandList(
+                typeof(BozjaExtraModule),
+                prefix,
+                except: new List<string> {"bozhelp"});
 
             var embed = new EmbedBuilder()
                 .WithTitle("Useful Commands (Bozja)")
