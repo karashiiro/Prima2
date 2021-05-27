@@ -234,7 +234,7 @@ namespace Prima.Scheduler.Modules
                     try
                     {
                         await m.AddReactionAsync(new Emoji("📳"));
-                        if (channel.Id != guildConfig.BozjaClusterScheduleOutputChannel)
+                        if (channel.Id != guildConfig.BozjaClusterScheduleOutputChannel && channel.Id != guildConfig.SocialScheduleOutputChannel)
                             await m.AddReactionsAsync(new IEmote[] {dps, healer, tank});
                     }
                     catch (Exception e)
