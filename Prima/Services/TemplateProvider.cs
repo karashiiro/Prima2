@@ -42,7 +42,16 @@ namespace Prima.Services
 
         public ResolvedTemplate Execute<T>(string templateName, T templateData) where T : class
         {
-            var template = _templates[templateName];
+            string template;
+            try
+            {
+                template = _templates[templateName];
+            }
+            catch (KeyNotFoundException e)
+            {
+                throw new KeyNotFoundException("Template file not found. Did you register it as an embedded resource?", e);
+            }
+
             var replaceableTokens = GetReplaceableTokens(template);
 
             // ReSharper disable once LoopCanBeConvertedToQuery

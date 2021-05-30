@@ -11,11 +11,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Templates\automod\delete.md" />
     <None Remove="Templates\test.md" />
     <None Remove="Templates\test\test.md" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Templates\automod\delete.md" />
     <EmbeddedResource Include="Templates\test.md">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>

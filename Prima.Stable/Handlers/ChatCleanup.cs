@@ -13,6 +13,7 @@ using Prima.Extensions;
 using Prima.Models;
 using Prima.Services;
 using Serilog;
+using Color = Discord.Color;
 using ImageFormat = System.Drawing.Imaging.ImageFormat;
 
 namespace Prima.Stable.Handlers
@@ -27,6 +28,8 @@ namespace Prima.Stable.Handlers
             {
                 throw new ArgumentNullException(nameof(rawMessage));
             }
+
+            if (rawMessage.Author.IsBot) return;
 
             SaveAttachments(db, wc, rawMessage);
 
@@ -89,6 +92,7 @@ namespace Prima.Stable.Handlers
                             Pattern = regexString,
                         })
                         .ToEmbedBuilder()
+                        .WithColor(Color.Orange)
                         .Build());
                 }
             }
