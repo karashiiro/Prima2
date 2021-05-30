@@ -1,5 +1,4 @@
 ﻿using Discord;
-using Prima.Templates;
 
 namespace Prima.Extensions
 {

@@ -1,4 +1,4 @@
-﻿namespace Prima.Templates
+﻿namespace Prima
 {
     public class ResolvedTemplate
     {
