@@ -173,6 +173,16 @@ namespace Prima.Tests.Mocks
             return Task.CompletedTask;
         }
 
+        public Task AddGuildTextGreylistEntry(ulong guildId, string regexString)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task RemoveGuildTextGreylistEntry(ulong guildId, string regexString)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task AddUser(DiscordXIVUser user)
         {
             return Task.CompletedTask;

@@ -99,6 +99,23 @@ namespace Prima.Stable.Handlers
         }
 
         /// <summary>
+        /// Check a message against the text greylist.
+        /// </summary>
+        private static async Task CheckTextGreylist(IMessage rawMessage, DiscordGuildConfiguration guildConfig, ITemplateProvider templates)
+        {
+            foreach (var regexString in guildConfig.TextGreylist)
+            {
+                var match = Regex.Match(rawMessage.Content, regexString);
+                if (match.Success)
+                {
+                    LastCaughtRegex = regexString;
+                    // Get report channel
+                    // Send notice embed
+                }
+            }
+        }
+
+        /// <summary>
         /// Save attachments to a local directory. Remember to clear out this folder periodically.
         /// </summary>
         private static void SaveAttachments(IDbService db, WebClient wc, SocketMessage rawMessage)

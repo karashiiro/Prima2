@@ -95,6 +95,9 @@ namespace Prima.Models
         [Obsolete("Use TextDenylist instead.")]
         public IList<string> TextBlacklist = new List<string>();
 
+        [BsonRequired]
+        public IList<string> TextGreylist = new List<string>();
+
         [BsonIgnore]
         public IList<string> TextDenylist
         {

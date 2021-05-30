@@ -199,7 +199,7 @@ namespace Prima.Stable.Modules
             await ReplyAsync("User timeout ended.");
         }
 
-        // Add a regex to the blacklist.
+        // Add a regex to the denylist.
         [Command("blocktext")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.BanMembers)]
@@ -207,7 +207,7 @@ namespace Prima.Stable.Modules
         {
             try
             {
-                Regex.IsMatch("", regexString);
+                _ = Regex.IsMatch("", regexString);
             }
             catch (ArgumentException)
             {
@@ -219,7 +219,7 @@ namespace Prima.Stable.Modules
             await ReplyAsync(Properties.Resources.GenericSuccess);
         }
 
-        // Remove a regex from the blacklist.
+        // Remove a regex from the denylist.
         [Command("unblocktext")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.BanMembers)]
@@ -255,6 +255,62 @@ namespace Prima.Stable.Modules
             await ReplyAsync(Properties.Resources.GenericSuccess);
         }
 
+        // Add a regex to the greylist.
+        [Command("softblocktext")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.BanMembers)]
+        public async Task SoftBlockTextAsync([Remainder] string regexString)
+        {
+            try
+            {
+                _ = Regex.IsMatch("", regexString);
+            }
+            catch (ArgumentException)
+            {
+                await ReplyAsync(Properties.Resources.InvalidRegexError);
+                return;
+            }
+
+            await Db.AddGuildTextGreylistEntry(Context.Guild.Id, regexString);
+            await ReplyAsync(Properties.Resources.GenericSuccess);
+        }
+
+        // Remove a regex from the greylist.
+        [Command("softunblocktext")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.BanMembers)]
+        public async Task SoftUnblockTextAsync([Remainder] string regexString = "")
+        {
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return;
+
+            if (string.IsNullOrEmpty(regexString)) // Remove the last regex that was matched if none was specified.
+            {
+                var lastCaughtRegex = ChatCleanup.LastCaughtRegex;
+                var entry = guildConfig.TextGreylist.FirstOrDefault(rs => rs == lastCaughtRegex);
+                if (entry == null)
+                {
+                    await ReplyAsync(Properties.Resources.RegexNotFoundError);
+                    return;
+                }
+                await Db.RemoveGuildTextGreylistEntry(Context.Guild.Id, entry);
+            }
+            else
+            {
+                try
+                {
+                    var entry = guildConfig.TextDenylist.Single(rs => rs == regexString);
+                    await Db.RemoveGuildTextDenylistEntry(Context.Guild.Id, entry);
+                }
+                catch (InvalidOperationException)
+                {
+                    await ReplyAsync(Properties.Resources.RegexNotFoundError);
+                    return;
+                }
+            }
+            await ReplyAsync(Properties.Resources.GenericSuccess);
+        }
+
         [Command("blockedtext")]
         [Alias("blockedtexts")]
         [RequireContext(ContextType.Guild)]
@@ -266,6 +322,21 @@ namespace Prima.Stable.Modules
 
             var output = $"These are the blocked expressions in the guild {Context.Guild.Name}:" +
                          "```\n" + guildConfig.TextDenylist.Aggregate("", (agg, next) => $"{agg}{next}\n") + "```";
+
+            await Context.User.SendMessageAsync(output);
+        }
+
+        [Command("softblockedtext")]
+        [Alias("softblockedtexts")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.BanMembers)]
+        public async Task SeeSoftBlockedTexts([Remainder] string args = "")
+        {
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return;
+
+            var output = $"These are the soft-blocked expressions in the guild {Context.Guild.Name}:" +
+                         "```\n" + guildConfig.TextGreylist.Aggregate("", (agg, next) => $"{agg}{next}\n") + "```";
 
             await Context.User.SendMessageAsync(output);
         }

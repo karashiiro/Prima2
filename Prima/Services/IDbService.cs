@@ -62,6 +62,10 @@ namespace Prima.Services
 
         Task RemoveGuildTextDenylistEntry(ulong guildId, string regexString);
 
+        Task AddGuildTextGreylistEntry(ulong guildId, string regexString);
+
+        Task RemoveGuildTextGreylistEntry(ulong guildId, string regexString);
+
         Task AddUser(DiscordXIVUser user);
 
         Task UpdateUser(DiscordXIVUser user);
