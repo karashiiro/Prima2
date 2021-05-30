@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace Prima.Services
 {
@@ -25,15 +26,19 @@ namespace Prima.Services
                     }
 
                     var resourceKey = resourceName
+                        .Replace("Prima.Templates.", "")
                         .Replace(".md", "")
                         .Replace(".", "/")
                         .ToLowerInvariant();
+                    resourceKey += ".md";
 
                     using var sr = new StreamReader(s);
                     return new { Name = resourceKey, Data = sr.ReadToEnd() };
                 })
                 .ToImmutableDictionary(resource => resource.Name, resource => resource.Data);
         }
+
+        public IEnumerable<string> GetNames() => _templates.Keys;
 
         public string Execute<T>(string templateName, T templateData) where T : class
         {
@@ -49,13 +54,12 @@ namespace Prima.Services
             return template;
         }
 
+        private static readonly Regex TokenRegex = new(@"\{\{.(?<Token>.+)\}\}", RegexOptions.Compiled);
         private static IEnumerable<string> GetReplaceableTokens(string template)
         {
-            return template
-                .Split('\n', '\r', ' ')
-                .Where(token => token.StartsWith("{{.") && token.EndsWith("}}"))
-                .Select(token => token[3..^2])
-                .Distinct();
+            return TokenRegex.Matches(template)
+                .Where(match => match.Success)
+                .Select(match => match.Groups["Token"].Value);
         }
     }
 }
