@@ -18,9 +18,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Templates\automod\delete.md" />
-    <EmbeddedResource Include="Templates\test.md">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
+    <EmbeddedResource Include="Templates\test.md" />
     <EmbeddedResource Include="Templates\test\test.md" />
   </ItemGroup>
 
