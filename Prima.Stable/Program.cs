@@ -36,6 +36,7 @@ namespace Prima.Stable
             var lodestone = services.GetRequiredService<CharacterLookup>();
             var keepClean = services.GetRequiredService<KeepClean>();
             var ephemeralPinner = services.GetRequiredService<EphemeralPinManager>();
+            var templates = services.GetRequiredService<ITemplateProvider>();
 
             keepClean.Initialize();
             roleRemover.Initialize();
@@ -51,7 +52,7 @@ namespace Prima.Stable
                 => VoteReactions.HandlerAdd(client, db, message, reaction);
 
             client.MessageDeleted += (message, channel) => AuditDeletion.Handler(db, client, message, channel);
-            client.MessageReceived += message => ChatCleanup.Handler(db, web, message);
+            client.MessageReceived += message => ChatCleanup.Handler(db, web, templates, message);
 
             client.MessageReceived += message => MessageCache.Handler(db, message);
             client.MessageReceived += message => TriggerDispatcher.Handler(client, message);

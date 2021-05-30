@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Net;
 using Discord.WebSocket;
+using Prima.Extensions;
 using Prima.Models;
 using Prima.Services;
 using Serilog;
@@ -20,7 +21,7 @@ namespace Prima.Stable.Handlers
     {
         public static string LastCaughtRegex { get; private set; }
 
-        public static async Task Handler(IDbService db, WebClient wc, SocketMessage rawMessage)
+        public static async Task Handler(IDbService db, WebClient wc, ITemplateProvider templates, SocketMessage rawMessage)
         {
             if (rawMessage == null)
             {
@@ -66,21 +67,29 @@ namespace Prima.Stable.Handlers
             {
                 await ProcessAttachments(db, rawMessage, channel);
             }
-            await CheckTextBlacklist(rawMessage, guildConfig);
+            await CheckTextDenylist(rawMessage, guildConfig, templates);
         }
 
         /// <summary>
-        /// Check a message against the text blacklist.
+        /// Check a message against the text denylist.
         /// </summary>
-        private static async Task CheckTextBlacklist(SocketMessage rawMessage, DiscordGuildConfiguration guildConfig)
+        private static async Task CheckTextDenylist(IMessage rawMessage, DiscordGuildConfiguration guildConfig, ITemplateProvider templates)
         {
-            foreach (var regexString in guildConfig.TextBlacklist)
+            foreach (var regexString in guildConfig.TextDenylist)
             {
                 var match = Regex.Match(rawMessage.Content, regexString);
                 if (match.Success)
                 {
                     LastCaughtRegex = regexString;
                     await rawMessage.DeleteAsync();
+                    await rawMessage.Author.SendMessageAsync(embed: templates.Execute("automod/delete.md", new
+                        {
+                            ChannelName = rawMessage.Channel.Name,
+                            MessageText = rawMessage.Content,
+                            Pattern = regexString,
+                        })
+                        .ToEmbedBuilder()
+                        .Build());
                 }
             }
         }
@@ -91,6 +100,12 @@ namespace Prima.Stable.Handlers
         private static void SaveAttachments(IDbService db, WebClient wc, SocketMessage rawMessage)
         {
             if (!rawMessage.Attachments.Any()) return;
+
+            if (!Directory.Exists(db.Config.TempDir))
+            {
+                Directory.CreateDirectory(db.Config.TempDir);
+            }
+
             foreach (var a in rawMessage.Attachments)
             {
                 wc.DownloadFile(new Uri(a.Url), Path.Combine(db.Config.TempDir, a.Filename));
