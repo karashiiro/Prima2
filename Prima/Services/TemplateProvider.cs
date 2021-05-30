@@ -9,7 +9,7 @@ using Prima.Templates;
 
 namespace Prima.Services
 {
-    public class TemplateProvider
+    public class TemplateProvider : ITemplateProvider
     {
         private readonly IReadOnlyDictionary<string, string> _templates;
 

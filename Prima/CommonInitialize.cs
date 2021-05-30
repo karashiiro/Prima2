@@ -57,7 +57,8 @@ namespace Prima
                 .AddSingleton<IDbService, DbService>()
                 .AddSingleton<FFXIVSheetService>()
                 .AddSingleton<PasswordGenerator>()
-                .AddSingleton<RateLimitService>();
+                .AddSingleton<RateLimitService>()
+                .AddSingleton<ITemplateProvider, TemplateProvider>();
                 //.AddSingleton(new HttpServer(Log.Information))
         }
 
