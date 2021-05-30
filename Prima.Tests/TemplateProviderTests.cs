@@ -36,8 +36,28 @@ namespace Prima.Tests
 
             Assert.True(
                 text.Contains($"Oh, wow, I have a {token}!"),
-                "Expected to find \"Oh, wow, I have a {0}!, got\n{1}",
+                "Expected to find \"Oh, wow, I have a {0}!\", got\n{1}",
                 token,
+                text);
+        }
+
+        [Test]
+        public void DirectoryTree_Works()
+        {
+            Assert.True(
+                _templates.GetNames().Contains("test/test.md"),
+                "Expected test/test.md, got [{0}]",
+                string.Join(',', _templates.GetNames()));
+
+            const string token = "cool token";
+            var text = _templates.Execute("test/test.md", new
+            {
+                Token = token,
+            }).Text;
+
+            Assert.True(
+                text.Contains("This is another template."),
+                "Expected to find \"This is another template.\", got\n{0}",
                 text);
         }
 

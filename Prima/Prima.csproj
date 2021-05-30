@@ -12,12 +12,14 @@
 
   <ItemGroup>
     <None Remove="Templates\test.md" />
+    <None Remove="Templates\test\test.md" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Templates\test.md">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="Templates\test\test.md" />
   </ItemGroup>
 
   <ItemGroup>
