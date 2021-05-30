@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Prima.Templates;
 
 namespace Prima.Services
 {
@@ -40,7 +41,7 @@ namespace Prima.Services
 
         public IEnumerable<string> GetNames() => _templates.Keys;
 
-        public string Execute<T>(string templateName, T templateData) where T : class
+        public ResolvedTemplate Execute<T>(string templateName, T templateData) where T : class
         {
             var template = _templates[templateName];
             var replaceableTokens = GetReplaceableTokens(template);
@@ -51,7 +52,8 @@ namespace Prima.Services
                 template = template.Replace("{{." + token + "}}", templateData.GetPropertyValue(token)?.ToString());
             }
 
-            return template;
+            template = template.Trim();
+            return new ResolvedTemplate(template);
         }
 
         private static readonly Regex TokenRegex = new(@"\{\{.(?<Token>.+)\}\}", RegexOptions.Compiled);
