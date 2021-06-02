@@ -8,7 +8,6 @@ using Prima.Services;
 using Serilog;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Prima.Queue.Handlers
@@ -43,6 +42,16 @@ namespace Prima.Queue.Handlers
             var guild = client.GetGuild(SpecialGuilds.CrystalExploratoryMissions);
 
             var message = await cachedMessage.GetOrDownloadAsync();
+
+            var noQueueChannels = new[]
+            {
+                guildConfig.BozjaClusterScheduleOutputChannel,
+                guildConfig.SocialScheduleOutputChannel,
+                guildConfig.DelubrumNormalScheduleOutputChannel,
+                guildConfig.DelubrumScheduleOutputChannel,
+            };
+            if (noQueueChannels.Contains(message.Channel.Id)) return;
+
             var inputChannel = guild.GetTextChannel(GetScheduleInputChannel(guildConfig, message.Channel.Id));
             if (inputChannel == null) return;
             var eventMessage = await inputChannel.GetMessageAsync(eventId.Value);
