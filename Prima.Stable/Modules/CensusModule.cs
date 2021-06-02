@@ -485,8 +485,8 @@ namespace Prima.Stable.Modules
                 foreach (var crId in contingentRoles)
                 {
                     var cr = member.Guild.GetRole(crId);
-                    if (member.HasRole(cr)) continue;
-                    await member.AddRoleAsync(cr);
+                    if (!member.HasRole(cr)) continue;
+                    await member.RemoveRoleAsync(cr);
                     Log.Information("Role {RoleName} added to {User}.", cr.Name, member.ToString());
                 }
 
