@@ -205,7 +205,7 @@ namespace Prima.Stable.Modules
         [RequireUserPermission(GuildPermission.BanMembers)]
         public async Task BlockTextAsync([Remainder] string regexString)
         {
-            await Task.Delay(2000);
+            await Task.Delay(1000);
 
             try
             {
@@ -245,7 +245,7 @@ namespace Prima.Stable.Modules
             {
                 try
                 {
-                    var entry = guildConfig.TextDenylist.Single(rs => rs == regexString);
+                    var entry = guildConfig.TextDenylist.First(rs => rs == regexString);
                      await Db.RemoveGuildTextDenylistEntry(Context.Guild.Id, entry);
                 }
                 catch (InvalidOperationException)
@@ -263,7 +263,7 @@ namespace Prima.Stable.Modules
         [RequireUserPermission(GuildPermission.BanMembers)]
         public async Task SoftBlockTextAsync([Remainder] string regexString)
         {
-            await Task.Delay(2000);
+            await Task.Delay(1000);
 
             try
             {
@@ -303,7 +303,7 @@ namespace Prima.Stable.Modules
             {
                 try
                 {
-                    var entry = guildConfig.TextGreylist.Single(rs => rs == regexString);
+                    var entry = guildConfig.TextGreylist.First(rs => rs == regexString);
                     await Db.RemoveGuildTextGreylistEntry(Context.Guild.Id, entry);
                 }
                 catch (InvalidOperationException)
