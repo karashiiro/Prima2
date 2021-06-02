@@ -12,12 +12,14 @@
 
   <ItemGroup>
     <None Remove="Templates\automod\delete.md" />
+    <None Remove="Templates\automod\softblock.md" />
     <None Remove="Templates\test.md" />
     <None Remove="Templates\test\test.md" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Templates\automod\delete.md" />
+    <EmbeddedResource Include="Templates\automod\softblock.md" />
     <EmbeddedResource Include="Templates\test.md" />
     <EmbeddedResource Include="Templates\test\test.md" />
   </ItemGroup>

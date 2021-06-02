@@ -33,16 +33,17 @@ namespace Prima.Stable.Handlers
 
             SaveAttachments(db, wc, rawMessage);
 
-            if (!(rawMessage.Channel is SocketGuildChannel channel))
+            if (rawMessage.Channel is not SocketGuildChannel channel)
                 return;
 
             if (db.Guilds.All(g => g.Id != channel.Guild.Id)) return;
             var guildConfig = db.Guilds.Single(g => g.Id == channel.Guild.Id);
 
+            var guild = channel.Guild;
+
             // Keep the welcome channel clean.
             if (rawMessage.Channel.Id == guildConfig.WelcomeChannel)
             {
-                var guild = channel.Guild;
                 var prefix = guildConfig.Prefix == ' ' ? db.Config.Prefix : guildConfig.Prefix;
                 if (!guild.GetUser(rawMessage.Author.Id).GetPermissions(channel).ManageMessages)
                 {
@@ -70,13 +71,15 @@ namespace Prima.Stable.Handlers
             {
                 await ProcessAttachments(db, rawMessage, channel);
             }
-            await CheckTextDenylist(rawMessage, guildConfig, templates);
+
+            await CheckTextDenylist(guild, rawMessage, guildConfig, templates);
+            await CheckTextGreylist(guild, rawMessage, guildConfig, templates);
         }
 
         /// <summary>
         /// Check a message against the text denylist.
         /// </summary>
-        private static async Task CheckTextDenylist(IMessage rawMessage, DiscordGuildConfiguration guildConfig, ITemplateProvider templates)
+        private static async Task CheckTextDenylist(SocketGuild guild, IMessage rawMessage, DiscordGuildConfiguration guildConfig, ITemplateProvider templates)
         {
             foreach (var regexString in guildConfig.TextDenylist)
             {
@@ -101,7 +104,7 @@ namespace Prima.Stable.Handlers
         /// <summary>
         /// Check a message against the text greylist.
         /// </summary>
-        private static async Task CheckTextGreylist(IMessage rawMessage, DiscordGuildConfiguration guildConfig, ITemplateProvider templates)
+        private static async Task CheckTextGreylist(SocketGuild guild, IMessage rawMessage, DiscordGuildConfiguration guildConfig, ITemplateProvider templates)
         {
             foreach (var regexString in guildConfig.TextGreylist)
             {
@@ -109,8 +112,23 @@ namespace Prima.Stable.Handlers
                 if (match.Success)
                 {
                     LastCaughtRegex = regexString;
-                    // Get report channel
-                    // Send notice embed
+                    var reportChannel = guild.GetTextChannel(guildConfig.ReportChannel);
+                    if (reportChannel == null)
+                    {
+                        Log.Warning("No report channel configured for softblocked message!");
+                        return;
+                    }
+
+                    await reportChannel.SendMessageAsync(embed: templates.Execute("automod/softblock.md", new
+                        {
+                            ChannelName = rawMessage.Channel.Name,
+                            MessageText = rawMessage.Content,
+                            Pattern = regexString,
+                            JumpLink = rawMessage.GetJumpUrl(),
+                        })
+                        .ToEmbedBuilder()
+                        .WithColor(Color.Orange)
+                        .Build());
                 }
             }
         }
