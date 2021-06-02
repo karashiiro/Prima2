@@ -205,6 +205,8 @@ namespace Prima.Stable.Modules
         [RequireUserPermission(GuildPermission.BanMembers)]
         public async Task BlockTextAsync([Remainder] string regexString)
         {
+            await Task.Delay(2000);
+
             try
             {
                 _ = Regex.IsMatch("", regexString);
@@ -261,6 +263,8 @@ namespace Prima.Stable.Modules
         [RequireUserPermission(GuildPermission.BanMembers)]
         public async Task SoftBlockTextAsync([Remainder] string regexString)
         {
+            await Task.Delay(2000);
+
             try
             {
                 _ = Regex.IsMatch("", regexString);
