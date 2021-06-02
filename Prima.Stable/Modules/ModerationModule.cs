@@ -304,7 +304,7 @@ namespace Prima.Stable.Modules
                 try
                 {
                     var entry = guildConfig.TextGreylist.Single(rs => rs == regexString);
-                    await Db.RemoveGuildTextDenylistEntry(Context.Guild.Id, entry);
+                    await Db.RemoveGuildTextGreylistEntry(Context.Guild.Id, entry);
                 }
                 catch (InvalidOperationException)
                 {
