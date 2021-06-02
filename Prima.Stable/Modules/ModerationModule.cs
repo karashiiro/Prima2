@@ -299,7 +299,7 @@ namespace Prima.Stable.Modules
             {
                 try
                 {
-                    var entry = guildConfig.TextDenylist.Single(rs => rs == regexString);
+                    var entry = guildConfig.TextGreylist.Single(rs => rs == regexString);
                     await Db.RemoveGuildTextDenylistEntry(Context.Guild.Id, entry);
                 }
                 catch (InvalidOperationException)
