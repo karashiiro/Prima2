@@ -335,25 +335,52 @@ namespace Prima.Stable.Modules
                     var user = Context.Guild.GetUser(users[id].DiscordId);
                     if (user == null) continue;
 
-                    foreach (var progRole in contingentRoles)
+                    if (killRole.Id == 806362589134454805 && encounter.Kill == true)
                     {
-                        Log.Information("Checking role {RoleName} on user {User}", progRole.Name, user);
-                        if (!user.HasRole(progRole))
-                        {
-                            addedAny = true;
-                            await user.AddRoleAsync(progRole);
-                            Log.Information("Added role {RoleName} to user {User}", progRole.Name, user);
-                        }
-                    }
+                        addedAny = true;
 
-                    if (encounter.Kill == true)
-                    {
+                        // Remove all contingent roles (this is bodge and should be refactored)
+                        foreach (var progRole in contingentRoles)
+                        {
+                            Log.Information("Checking role {RoleName} on user {User}", progRole.Name, user);
+                            if (user.HasRole(progRole))
+                            {
+                                await user.RemoveRoleAsync(progRole);
+                                Log.Information("Removed role {RoleName} from user {User}", progRole.Name, user);
+                            }
+                        }
+
+                        // Give everyone the clear role if they cleared DRS
                         Log.Information("Checking role {RoleName} on user {User}", killRole.Name, user);
                         if (!user.HasRole(killRole))
                         {
-                            addedAny = true;
                             await user.AddRoleAsync(killRole);
                             Log.Information("Added role {RoleName} to {User}", killRole.Name, user);
+                        }
+                    }
+                    else
+                    {
+                        // Give all contingent roles as well as the clear role
+                        foreach (var progRole in contingentRoles)
+                        {
+                            Log.Information("Checking role {RoleName} on user {User}", progRole.Name, user);
+                            if (!user.HasRole(progRole))
+                            {
+                                addedAny = true;
+                                await user.AddRoleAsync(progRole);
+                                Log.Information("Added role {RoleName} to user {User}", progRole.Name, user);
+                            }
+                        }
+
+                        if (encounter.Kill == true)
+                        {
+                            Log.Information("Checking role {RoleName} on user {User}", killRole.Name, user);
+                            if (!user.HasRole(killRole))
+                            {
+                                addedAny = true;
+                                await user.AddRoleAsync(killRole);
+                                Log.Information("Added role {RoleName} to {User}", killRole.Name, user);
+                            }
                         }
                     }
                 }
