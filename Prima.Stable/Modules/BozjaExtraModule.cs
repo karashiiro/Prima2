@@ -88,6 +88,29 @@ namespace Prima.Stable.Modules
             }
         }
 
+        [Command("rprgdrs", RunMode = RunMode.Async)]
+        [RequireOwner]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public async Task RPrgDrs()
+        {
+            // Removes DRS prog roles from cleared people
+            var queenProg = Context.Guild.Roles.FirstOrDefault(r => r.Name == "The Queen Progression");
+            var contingentRoles = DelubrumProgressionRoles.GetContingentRoles(queenProg?.Id ?? 0)
+                .Select(r => Context.Guild.GetRole(r))
+                .ToList();
+
+            var clearedRole = Context.Guild.GetRole(806362589134454805);
+            var cleared = Context.Guild.Users
+                .Where(u => u.HasRole(clearedRole));
+
+            foreach (var member in cleared)
+            {
+                await member.RemoveRolesAsync(contingentRoles);
+            }
+
+            await ReplyAsync("Done!");
+        }
+
         [Command("addprogrole", RunMode = RunMode.Async)]
         [Alias("addprogroles")]
         [Description("Adds progression roles to server members from a log. Rolers can also manually add roles using this command.")]
