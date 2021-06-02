@@ -200,7 +200,7 @@ namespace Prima.Stable.Modules
         }
 
         // Add a regex to the denylist.
-        [Command("blocktext")]
+        [Command("blocktext", RunMode = RunMode.Async)]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.BanMembers)]
         public async Task BlockTextAsync([Remainder] string regexString)
@@ -222,7 +222,7 @@ namespace Prima.Stable.Modules
         }
 
         // Remove a regex from the denylist.
-        [Command("unblocktext")]
+        [Command("unblocktext", RunMode = RunMode.Async)]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.BanMembers)]
         public async Task UnblockTextAsync([Remainder] string regexString = "")
@@ -258,7 +258,7 @@ namespace Prima.Stable.Modules
         }
 
         // Add a regex to the greylist.
-        [Command("softblocktext")]
+        [Command("softblocktext", RunMode = RunMode.Async)]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.BanMembers)]
         public async Task SoftBlockTextAsync([Remainder] string regexString)
@@ -280,7 +280,7 @@ namespace Prima.Stable.Modules
         }
 
         // Remove a regex from the greylist.
-        [Command("softunblocktext")]
+        [Command("softunblocktext", RunMode = RunMode.Async)]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.BanMembers)]
         public async Task SoftUnblockTextAsync([Remainder] string regexString = "")
@@ -315,7 +315,7 @@ namespace Prima.Stable.Modules
             await ReplyAsync(Properties.Resources.GenericSuccess);
         }
 
-        [Command("blockedtext")]
+        [Command("blockedtext", RunMode = RunMode.Async)]
         [Alias("blockedtexts")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.BanMembers)]
@@ -330,7 +330,7 @@ namespace Prima.Stable.Modules
             await Context.User.SendMessageAsync(output);
         }
 
-        [Command("softblockedtext")]
+        [Command("softblockedtext", RunMode = RunMode.Async)]
         [Alias("softblockedtexts")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.BanMembers)]
