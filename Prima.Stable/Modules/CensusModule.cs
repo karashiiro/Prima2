@@ -437,7 +437,20 @@ namespace Prima.Stable.Modules
 
             var lodestoneId = ulong.Parse(user?.LodestoneId ?? args[0]);
             var character = await Lodestone.GetCharacter(lodestoneId);
-            var achievements = await Lodestone.GetCharacterAchievements(lodestoneId);
+
+            AchievementInfo[] achievements;
+            try
+            {
+                achievements = await Lodestone.GetCharacterAchievements(lodestoneId);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Failed to fetch user achievements.");
+                await ReplyAsync("You don't seem to have your achievements public. " +
+                                 "Please temporarily make them public at <https://na.finalfantasyxiv.com/lodestone/my/setting/account/>.")
+                return;
+            }
+
             var mounts = await Lodestone.GetCharacterMounts(lodestoneId);
 
             var hasAchievement = false;
@@ -487,7 +500,7 @@ namespace Prima.Stable.Modules
                     var cr = member.Guild.GetRole(crId);
                     if (!member.HasRole(cr)) continue;
                     await member.RemoveRoleAsync(cr);
-                    Log.Information("Role {RoleName} added to {User}.", cr.Name, member.ToString());
+                    Log.Information("Role {RoleName} removed from {User}.", cr.Name, member.ToString());
                 }
 
                 hasDRSAchievement1 = true;
