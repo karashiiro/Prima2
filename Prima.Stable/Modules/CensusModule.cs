@@ -510,17 +510,6 @@ namespace Prima.Stable.Modules
                 Log.Information("Added role " + savageQueen.Name);
                 await member.AddRoleAsync(savageQueen);
                 await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, savageQueen.Name));
-
-                var queenProg = member.Guild.Roles.FirstOrDefault(r => r.Name == "The Queen Progression");
-                var contingentRoles = DelubrumProgressionRoles.GetContingentRoles(queenProg?.Id ?? 0);
-                foreach (var crId in contingentRoles)
-                {
-                    var cr = member.Guild.GetRole(crId);
-                    if (member.HasRole(cr)) continue;
-                    await member.AddRoleAsync(cr);
-                    Log.Information("Role {RoleName} added to {User}.", cr.Name, member.ToString());
-                }
-
                 hasDRSAchievement2 = true;
             }
             if (achievements.Any(achievement => achievement.ID == 2874)) // Hell to Pay I
