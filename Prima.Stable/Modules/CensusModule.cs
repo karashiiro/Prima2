@@ -447,7 +447,7 @@ namespace Prima.Stable.Modules
             {
                 Log.Error(e, "Failed to fetch user achievements.");
                 await ReplyAsync("You don't seem to have your achievements public. " +
-                                 "Please temporarily make them public at <https://na.finalfantasyxiv.com/lodestone/my/setting/account/>.")
+                                 "Please temporarily make them public at <https://na.finalfantasyxiv.com/lodestone/my/setting/account/>.");
                 return;
             }
 
