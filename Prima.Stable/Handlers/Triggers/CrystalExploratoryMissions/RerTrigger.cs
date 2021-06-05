@@ -7,7 +7,7 @@ namespace Prima.Stable.Handlers.Triggers.CrystalExploratoryMissions
     {
         public override bool Condition(SocketMessage message)
         {
-            return message.Content.Contains("153329450350673920");
+            return message.Content.Contains("649745887517605898");
         }
 
         public override async Task Execute(DiscordSocketClient client, SocketMessage message)
