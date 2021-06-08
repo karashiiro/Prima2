@@ -106,6 +106,8 @@ namespace Prima.Models
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 
+        public IList<string> BannedNameRegexes = new List<string>();
+
         [BsonRequired]
         [BsonRepresentation(BsonType.String)]
         public char Prefix = ' ';

@@ -221,6 +221,51 @@ namespace Prima.Stable.Modules
             await ReplyAsync(Properties.Resources.GenericSuccess);
         }
 
+        // Add a regex to the banned name list (only applies to joining users).
+        [Command("banusername", RunMode = RunMode.Async)]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.BanMembers)]
+        public async Task BanUsernameAsync([Remainder] string regexString)
+        {
+            await Task.Delay(1000);
+
+            try
+            {
+                _ = Regex.IsMatch("", regexString);
+            }
+            catch (ArgumentException)
+            {
+                await ReplyAsync(Properties.Resources.InvalidRegexError);
+                return;
+            }
+
+            await Db.AddGuildBannedNameRegex(Context.Guild.Id, regexString);
+            await ReplyAsync(Properties.Resources.GenericSuccess);
+        }
+
+        // Removes a regex from the banned name list.
+        [Command("stopbanusername", RunMode = RunMode.Async)]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.BanMembers)]
+        public async Task StopBanUsernameAsync([Remainder] string regexString)
+        {
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return;
+
+            try
+            {
+                var entry = guildConfig.BannedNameRegexes.First(rs => rs == regexString);
+                await Db.RemoveGuildBannedNameRegex(Context.Guild.Id, entry);
+            }
+            catch (InvalidOperationException)
+            {
+                await ReplyAsync(Properties.Resources.RegexNotFoundError);
+                return;
+            }
+
+            await ReplyAsync(Properties.Resources.GenericSuccess);
+        }
+
         // Remove a regex from the denylist.
         [Command("unblocktext", RunMode = RunMode.Async)]
         [RequireContext(ContextType.Guild)]
@@ -246,7 +291,7 @@ namespace Prima.Stable.Modules
                 try
                 {
                     var entry = guildConfig.TextDenylist.First(rs => rs == regexString);
-                     await Db.RemoveGuildTextDenylistEntry(Context.Guild.Id, entry);
+                    await Db.RemoveGuildTextDenylistEntry(Context.Guild.Id, entry);
                 }
                 catch (InvalidOperationException)
                 {

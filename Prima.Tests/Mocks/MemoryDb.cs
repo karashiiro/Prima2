@@ -257,5 +257,15 @@ namespace Prima.Tests.Mocks
         {
             throw new NotImplementedException();
         }
+
+        public Task AddGuildBannedNameRegex(ulong guildId, string name)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task RemoveGuildBannedNameRegex(ulong guildId, string name)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

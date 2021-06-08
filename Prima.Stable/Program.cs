@@ -3,7 +3,6 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Net;
 using Discord.WebSocket;
-using FFXIVWeather;
 using FFXIVWeather.Lumina;
 using Lumina;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,21 +47,24 @@ namespace Prima.Stable
             client.ReactionRemoved += (message, channel, reaction)
                 => ReactionReceived.HandlerRemove(db, message, channel, reaction);
 
-            client.ReactionAdded += (message, channel, reaction)
+            client.ReactionAdded += (message, _, reaction)
                 => VoteReactions.HandlerAdd(client, db, message, reaction);
 
-            client.MessageDeleted += (message, channel) => AuditDeletion.Handler(db, client, message, channel);
-            client.MessageReceived += message => ChatCleanup.Handler(db, web, templates, message);
+            client.MessageDeleted += (message, channel)
+                => AuditDeletion.Handler(db, client, message, channel);
 
+            client.MessageReceived += message => ChatCleanup.Handler(db, web, templates, message);
             client.MessageReceived += message => MessageCache.Handler(db, message);
             client.MessageReceived += message => TriggerDispatcher.Handler(client, message);
 
             client.GuildMemberUpdated += censusEvents.GuildMemberUpdated;
 
+            client.UserJoined += member => MemberJoin.Handler(db, member);
+
             client.UserVoiceStateUpdated += mute.OnVoiceJoin;
 
             Log.Information("Prima.Stable logged in!");
-                
+
             await Task.Delay(-1);
         }
 

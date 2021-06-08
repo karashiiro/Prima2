@@ -164,6 +164,22 @@ namespace Prima.Services
             return true;
         }
 
+        public Task AddGuildBannedNameRegex(ulong guildId, string regexString)
+        {
+            var update = Builders<DiscordGuildConfiguration>.Update.Push("BannedNameRegexes", regexString);
+            return _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
+        }
+
+        public async Task RemoveGuildBannedNameRegex(ulong guildId, string regexString)
+        {
+            var denylist = (await (await _guildConfig.FindAsync(guild => guild.Id == guildId)).FirstAsync().ConfigureAwait(false)).TextDenylist;
+            if (denylist.Any())
+            {
+                var update = Builders<DiscordGuildConfiguration>.Update.Pull("BannedNameRegexes", regexString);
+                await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
+            }
+        }
+
         private async Task AddGuildIfAbsent(ulong guildId)
         {
             if (!await (await _guildConfig.FindAsync(guild => guild.Id == guildId)).AnyAsync().ConfigureAwait(false))
@@ -288,7 +304,7 @@ namespace Prima.Services
 
         public async Task RemoveGuildTextGreylistEntry(ulong guildId, string regexString)
         {
-            var greylist = (await(await _guildConfig.FindAsync(guild => guild.Id == guildId)).FirstAsync().ConfigureAwait(false)).TextGreylist;
+            var greylist = (await (await _guildConfig.FindAsync(guild => guild.Id == guildId)).FirstAsync().ConfigureAwait(false)).TextGreylist;
             if (greylist.Any())
             {
                 var update = Builders<DiscordGuildConfiguration>.Update.Pull("TextGreylist", regexString);

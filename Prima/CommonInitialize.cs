@@ -27,7 +27,7 @@ namespace Prima
             {
                 AlwaysDownloadUsers = true,
                 LargeThreshold = 250,
-                MessageCacheSize = 10000,
+                MessageCacheSize = 1000,
             };
 
             return ConfigurePartialServiceCollection(disConfig);

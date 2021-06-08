@@ -34,6 +34,10 @@ namespace Prima.Services
 
         Task<bool> RemoveVoteHost(ulong messageId);
 
+        Task AddGuildBannedNameRegex(ulong guildId, string regexString);
+
+        Task RemoveGuildBannedNameRegex(ulong guildId, string regexString);
+
         Task<bool> AddVote(ulong messageId, ulong userId, string reactionName);
 
         Task<bool> RemoveVote(ulong messageId, ulong userId);
