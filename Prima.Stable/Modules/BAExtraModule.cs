@@ -17,7 +17,6 @@ namespace Prima.Stable.Modules
     {
         public IDbService Db { get; set; }
         public HttpClient Http { get; set; }
-        public IServiceProvider Services { get; set; }
 
         [Command("bahelp", RunMode = RunMode.Async)]
         [Description("Shows help information for the extra BA commands.")]

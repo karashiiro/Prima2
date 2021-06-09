@@ -23,7 +23,6 @@ namespace Prima.Stable.Modules
     {
         public IDbService Db { get; set; }
         public HttpClient Http { get; set; }
-        public IServiceProvider Services { get; set; }
         public FFLogsAPI FFLogsAPI { get; set; }
         public CharacterLookup Lodestone { get; set; }
 
@@ -333,7 +332,7 @@ namespace Prima.Stable.Modules
                     }
                     
                     var user = Context.Guild.GetUser(users[id].DiscordId);
-                    if (user == null) continue;
+                    if (user == null || user.HasRole(killRole)) continue;
 
                     if (killRole.Id == 806362589134454805 && encounter.Kill == true)
                     {
