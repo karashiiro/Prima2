@@ -332,7 +332,7 @@ namespace Prima.Stable.Modules
                     }
                     
                     var user = Context.Guild.GetUser(users[id].DiscordId);
-                    if (user == null || user.HasRole(killRole)) continue;
+                    if (user == null || user.HasRole(806362589134454805)) continue;
 
                     if (killRole.Id == 806362589134454805 && encounter.Kill == true)
                     {
