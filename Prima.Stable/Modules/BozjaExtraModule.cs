@@ -359,7 +359,7 @@ namespace Prima.Stable.Modules
                     }
                     else
                     {
-                        // Give all contingent roles as well as the clear role
+                        // Give all contingent roles as well as the clear role for the fight
                         foreach (var progRole in contingentRoles)
                         {
                             Log.Information("Checking role {RoleName} on user {User}", progRole.Name, user);
