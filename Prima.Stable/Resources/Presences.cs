@@ -13,6 +13,7 @@ namespace Prima.Stable.Resources
             new("FINAL FANTASY XIII-2", Discord.ActivityType.Playing),
             new("FINAL FANTASY XI", Discord.ActivityType.Playing),
             new("FINAL FANTASY XXVI", Discord.ActivityType.Playing),
+            new("Final Fantasy: Kill Chaos", Discord.ActivityType.Playing),
             new("PHANTASY STAR ONLINE 2", Discord.ActivityType.Playing),
             new("Fate/Extella", Discord.ActivityType.Playing),
             new("Arknights", Discord.ActivityType.Playing),
