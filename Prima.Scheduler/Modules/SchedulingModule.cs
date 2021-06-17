@@ -8,6 +8,7 @@ using Prima.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Serilog;
 using TimeZoneNames;
@@ -614,6 +615,7 @@ namespace Prima.Scheduler.Modules
             return true;
         }
 
+        private static readonly Regex MessageIdRegex = new(@"full message: https?:\/\/discord(app)?.com\/channels\/\d+\/\d+\/(?<MessageId>\d+)", RegexOptions.Compiled);
         private async Task SortEmbeds(IMessageChannel channel)
         {
             var progress = await ReplyAsync("Sorting announcements...");
@@ -648,6 +650,18 @@ namespace Prima.Scheduler.Modules
                     var embedBuilder = embed.ToEmbedBuilder();
 
                     var m = await channel.SendMessageAsync(embed.Footer?.Text, embed: embedBuilder.Build());
+
+                    try
+                    {
+                        var schedulerMessageId = ulong.Parse(MessageIdRegex.Match(embed.Description).Groups["MessageId"].Value);
+                        var @event = Db.Events.First(e => e.MessageId3 == schedulerMessageId);
+                        @event.EmbedMessageId = m.Id;
+                        await Db.UpdateScheduledEvent(@event);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e, "Failed to update embed message ID!");
+                    }
 
                     try
                     {
