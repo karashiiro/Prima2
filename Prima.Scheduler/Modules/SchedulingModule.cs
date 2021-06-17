@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Serilog;
 using TimeZoneNames;
 using Color = Discord.Color;
 
@@ -169,6 +170,8 @@ namespace Prima.Scheduler.Modules
 
                     var scheduleOutputChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
                     var embedMessage = await scheduleOutputChannel.SendMessageAsync(embed: embed);
+
+                    await SortEmbeds(scheduleOutputChannel);
 
                     @event.EmbedMessageId = embedMessage.Id;
 
@@ -399,6 +402,8 @@ namespace Prima.Scheduler.Modules
 
             await Sheets.AddEvent(@event, @event.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.BASpreadsheetId : guildConfig.CastrumSpreadsheetId);
 
+            await SortEmbeds(embedChannel);
+
             await ReplyAsync("Run rescheduled successfully.");
             foreach (var uid in @event.SubscribedUsers)
             {
@@ -607,6 +612,59 @@ namespace Prima.Scheduler.Modules
             }
 
             return true;
+        }
+
+        private async Task SortEmbeds(IMessageChannel channel)
+        {
+            var progress = await ReplyAsync("Sorting announcements...");
+            using var typing = Context.Channel.EnterTypingState();
+
+            var embeds = new List<IEmbed>();
+
+            await foreach (var page in channel.GetMessagesAsync())
+            {
+                foreach (var message in page)
+                {
+                    if (message.Embeds.All(e => e.Type != EmbedType.Rich)) continue;
+                    var embed = message.Embeds.First(e => e.Type == EmbedType.Rich);
+
+                    if (!embed.Timestamp.HasValue) continue;
+
+                    await message.DeleteAsync();
+                    if (embed.Timestamp.Value < DateTimeOffset.Now) continue;
+
+                    embeds.Add(embed);
+                }
+            }
+
+            // ReSharper disable PossibleInvalidOperationException
+            embeds.Sort((a, b) => (int)(b.Timestamp.Value.ToUnixTimeSeconds() - a.Timestamp.Value.ToUnixTimeSeconds()));
+            // ReSharper enable PossibleInvalidOperationException
+            
+            foreach (var embed in embeds)
+            {
+                try
+                {
+                    var embedBuilder = embed.ToEmbedBuilder();
+
+                    var m = await channel.SendMessageAsync(embed.Footer?.Text, embed: embedBuilder.Build());
+
+                    try
+                    {
+                        await m.AddReactionAsync(new Emoji("📳"));
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e, "Failed to add reactions!");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, "Error in sorting procedure!");
+                }
+            }
+
+            await progress.DeleteAsync();
         }
     }
 }
