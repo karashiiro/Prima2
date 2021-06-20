@@ -5,12 +5,12 @@ using Prima.Models;
 using Prima.Resources;
 using Prima.Scheduler.Services;
 using Prima.Services;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Serilog;
 using TimeZoneNames;
 using Color = Discord.Color;
 
@@ -158,7 +158,7 @@ namespace Prima.Scheduler.Modules
                     var embed = new EmbedBuilder()
                         .WithTitle(
                             $"Run scheduled by {leaderName} on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({tzAbbr}) " +
-                            $"[{runTime.DayOfWeek}, {(Month) runTime.Month} {runTime.Day}]!")
+                            $"[{runTime.DayOfWeek}, {(Month)runTime.Month} {runTime.Day}]!")
                         .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
                         .WithDescription(
                             "React to the :vibration_mode: on their message to be notified 30 minutes before it begins!\n\n" +
@@ -172,12 +172,12 @@ namespace Prima.Scheduler.Modules
                     var scheduleOutputChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
                     var embedMessage = await scheduleOutputChannel.SendMessageAsync(embed: embed);
 
-                    await SortEmbeds(scheduleOutputChannel);
-
                     @event.EmbedMessageId = embedMessage.Id;
 
                     await Db.AddScheduledEvent(@event);
                     await Sheets.AddEvent(@event, guildConfig.BASpreadsheetId);
+
+                    await SortEmbeds(scheduleOutputChannel);
                 }
             }
         }
@@ -238,7 +238,7 @@ namespace Prima.Scheduler.Modules
                 return;
             }
 
-            var scheduleOutputChannel = Context.Guild.GetTextChannel(result.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.ScheduleOutputChannel : guildConfig.CastrumScheduleOutputChannel);
+            var scheduleOutputChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
             if (await scheduleOutputChannel.GetMessageAsync(result.EmbedMessageId) is IUserMessage embedMessage)
             {
                 var embed = embedMessage.Embeds.First();
@@ -258,7 +258,7 @@ namespace Prima.Scheduler.Modules
 
             await ReplyAsync($"{Context.User.Mention}, the run has been unscheduled.");
 
-            await Sheets.RemoveEvent(result, result.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.BASpreadsheetId : guildConfig.CastrumSpreadsheetId);
+            await Sheets.RemoveEvent(result, guildConfig.BASpreadsheetId);
 
             var leaderName = (Context.User as IGuildUser)?.Nickname ?? Context.User.Username;
             foreach (var uid in result.SubscribedUsers)
@@ -289,8 +289,8 @@ namespace Prima.Scheduler.Modules
                 return;
             }
 
-            var currentRunTimeParameters = parameters.Substring(0, splitIndex).Trim();
-            var newRunTimeParameters = parameters.Substring(splitIndex + 1).Trim();
+            var currentRunTimeParameters = parameters[..splitIndex].Trim();
+            var newRunTimeParameters = parameters[(splitIndex + 1)..].Trim();
 
             DateTime currentRunTime;
             try
@@ -391,7 +391,7 @@ namespace Prima.Scheduler.Modules
                 timeMod -= 1;
 
             var leaderName = (Context.User as IGuildUser)?.Nickname ?? Context.User.Username;
-            var embedChannel = Context.Guild.GetTextChannel(@event.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.ScheduleOutputChannel : guildConfig.CastrumScheduleOutputChannel);
+            var embedChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
             var embedMessage = await embedChannel.GetMessageAsync(@event.EmbedMessageId) as IUserMessage;
             // ReSharper disable once PossibleNullReferenceException
             var embed = embedMessage.Embeds.FirstOrDefault()?.ToEmbedBuilder()
@@ -413,6 +413,19 @@ namespace Prima.Scheduler.Modules
                     continue;
                 await user.SendMessageAsync($"The run for reacted to, scheduled by {leaderName} on {currentRunTime.DayOfWeek} at {currentRunTime.ToShortTimeString()}, has been rescheduled to {newRunTime.DayOfWeek} at {newRunTime.ToShortTimeString()}");
             }
+        }
+
+        [Command("sortschedule")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        [RequireContext(ContextType.Guild)]
+        public async Task SortEmbedsAsync()
+        {
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return;
+
+            var embedChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
+
+            await SortEmbeds(embedChannel);
         }
 
         [Command("setruntimeba")]
@@ -449,7 +462,7 @@ namespace Prima.Scheduler.Modules
             var timeMod = -tzi.BaseUtcOffset.Hours;
             if (isDST)
                 timeMod -= 1;
-            
+
             await embedMessage.ModifyAsync(props =>
             {
                 props.Embed = embed.ToEmbedBuilder()
@@ -510,7 +523,6 @@ namespace Prima.Scheduler.Modules
         {
             var messageId = ulong.Parse(args[0]);
             var embedId = ulong.Parse(args[1]);
-            var notified = args.Length == 3;
 
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
             if (guildConfig == null) return;
@@ -642,19 +654,25 @@ namespace Prima.Scheduler.Modules
             // ReSharper disable PossibleInvalidOperationException
             embeds.Sort((a, b) => (int)(b.Timestamp.Value.ToUnixTimeSeconds() - a.Timestamp.Value.ToUnixTimeSeconds()));
             // ReSharper enable PossibleInvalidOperationException
-            
+
             foreach (var embed in embeds)
             {
                 try
                 {
                     var embedBuilder = embed.ToEmbedBuilder();
 
-                    var m = await channel.SendMessageAsync(embed.Footer?.Text, embed: embedBuilder.Build());
+                    var m = await channel.SendMessageAsync(embed: embedBuilder.Build());
 
                     try
                     {
                         var schedulerMessageId = ulong.Parse(MessageIdRegex.Match(embed.Description).Groups["MessageId"].Value);
-                        var @event = Db.Events.First(e => e.MessageId3 == schedulerMessageId);
+
+                        var @event = Db.Events.FirstOrDefault(e => e.MessageId3 == schedulerMessageId);
+                        if (@event == null)
+                        {
+                            continue;
+                        }
+
                         @event.EmbedMessageId = m.Id;
                         await Db.UpdateScheduledEvent(@event);
                     }
