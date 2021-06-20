@@ -426,6 +426,8 @@ namespace Prima.Scheduler.Modules
             var embedChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
 
             await SortEmbeds(embedChannel);
+
+            await ReplyAsync("Done!");
         }
 
         [Command("setruntimeba")]
