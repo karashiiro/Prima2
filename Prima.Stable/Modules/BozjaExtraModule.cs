@@ -484,7 +484,13 @@ namespace Prima.Stable.Modules
         [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task BozjaClustersAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/FuG4wDK.png");
-        
+
+        [Command("memories", RunMode = RunMode.Async)]
+        [Description("Shows the Bozjan Southern Front memory path guide.")]
+        [RateLimit(TimeSeconds = 10, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public Task BozjaMemoriesAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/JSCoxi8.png");
+
         [Command("qgreflect", RunMode = RunMode.Async)]
         [Description("Shows Queen's Guard reflect positions.")]
         [RateLimit(TimeSeconds = 10, Global = true)]
