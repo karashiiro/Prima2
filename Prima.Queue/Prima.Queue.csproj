@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Prima.Discord.Net\Modules\CommonModule.cs" Link="Modules\CommonModule.cs" />
+    <Compile Include="..\Prima.DiscordNet\Modules\CommonModule.cs" Link="Modules\CommonModule.cs" />
   </ItemGroup>
 
   <ItemGroup>
