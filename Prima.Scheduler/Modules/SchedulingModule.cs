@@ -1,8 +1,4 @@
-﻿using Discord;
-using Discord.Commands;
-using Prima.DiscordNet.Attributes;
-using Prima.DiscordNet.Services;
-using Prima.Models;
+﻿using Prima.Models;
 using Prima.Resources;
 using Prima.Scheduler.Services;
 using Serilog;
@@ -11,17 +7,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using DSharpPlus;
+using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
+using MongoDB.Bson.IO;
+using Prima.Services;
 using TimeZoneNames;
-using Color = Discord.Color;
 
 namespace Prima.Scheduler.Modules
 {
     /// <summary>
     /// Includes commands pertaining to scheduling things on the calendar.
     /// </summary>
-    [Name("Scheduling")]
-    [RequireContext(ContextType.Guild)]
-    public class SchedulingModule : ModuleBase<SocketCommandContext>
+    public class SchedulingModule : BaseCommandModule
     {
         private const long Threshold = 10800000;
 
@@ -30,17 +29,17 @@ namespace Prima.Scheduler.Modules
 
         [Command("schedule")]
         [Description("Schedule an event. See the commands channel for more detailed information.")]
-        public async Task ScheduleAsync([Remainder] string content) // Schedules a sink.
+        public async Task ScheduleAsync(CommandContext ctx, [RemainingText] string content) // Schedules a sink.
         {
-            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == ctx.Guild.Id);
             if (guildConfig == null) return;
-            if (Context.Channel.Id != guildConfig.ScheduleInputChannel) return;
+            if (ctx.Channel.Id != guildConfig.ScheduleInputChannel) return;
             var prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
 
             var splitIndex = content.IndexOf("|", StringComparison.Ordinal);
             if (splitIndex == -1)
             {
-                await ReplyAsync($"{Context.User.Mention}, please provide parameters with that command.\n" +
+                await ctx.RespondAsync($"{ctx.User.Mention}, please provide parameters with that command.\n" +
                                  "A well-formed command would look something like:\n" +
                                  $"`{prefix}schedule OZ Tuesday 5:00PM | This is a fancy description!`");
                 return;
@@ -51,7 +50,7 @@ namespace Prima.Scheduler.Modules
 
             if (parameters.IndexOf(":", StringComparison.Ordinal) == -1)
             {
-                await ReplyAsync($"{Context.User.Mention}, please specify a time for your run in your command!");
+                await ctx.RespondAsync($"{ctx.User.Mention}, please specify a time for your run in your command!");
                 return;
             }
 
@@ -59,26 +58,26 @@ namespace Prima.Scheduler.Modules
 
             if (coolParameters.Length == 0)
             {
-                await ReplyAsync($"{Context.User.Mention}, please provide parameters with that command.\n" +
+                await ctx.RespondAsync($"{ctx.User.Mention}, please provide parameters with that command.\n" +
                                  "A well-formed command would look something like:\n" +
                                  $"`{prefix}schedule OZ Tuesday 5:00PM | This is a fancy description!`");
                 return;
             }
 
-            IUserMessage message = Context.Message;
+            var message = ctx.Message;
             var multiplier = 1;
             for (var i = 0; i < multiplier; i++)
             {
                 if (i != 0)
                 {
-                    message = await ReplyAsync($"This message carries the RSVPs for run {i + 1} of this sequence.");
+                    message = await ctx.RespondAsync($"This message carries the RSVPs for run {i + 1} of this sequence.");
                 }
 
                 var @event = new ScheduledEvent
                 {
                     Description = description,
-                    LeaderId = Context.User.Id,
-                    GuildId = Context.Guild.Id,
+                    LeaderId = ctx.User.Id,
+                    GuildId = ctx.Guild.Id,
                     MessageId3 = message.Id,
                     SubscribedUsers = new List<string>(),
                 };
@@ -90,8 +89,8 @@ namespace Prima.Scheduler.Modules
                         multiplier = int.Parse(RegexSearches.NonNumbers.Replace(coolParameter, string.Empty));
                         if (multiplier > 12)
                         {
-                            await ReplyAsync(
-                                $"{Context.User.Mention}, for your own sake, you cannot schedule more than 36 hours-worth of runs at a time.");
+                            await ctx.RespondAsync(
+                                $"{ctx.User.Mention}, for your own sake, you cannot schedule more than 36 hours-worth of runs at a time.");
                             return;
                         }
                     }
@@ -106,12 +105,12 @@ namespace Prima.Scheduler.Modules
                     }
                 }
 
-                if (Context.Channel.Id == guildConfig.ScheduleInputChannel)
+                if (ctx.Channel.Id == guildConfig.ScheduleInputChannel)
                 {
                     if (!Enum.IsDefined(typeof(RunDisplayTypeBA), @event.RunKind))
                     {
-                        await ReplyAsync(
-                            $"{Context.User.Mention}, please specify a kind of run in your parameter list.\n" +
+                        await ctx.RespondAsync(
+                            $"{ctx.User.Mention}, please specify a kind of run in your parameter list.\n" +
                             $"Run kinds include: `[{string.Join(' ', Enum.GetNames(typeof(RunDisplayTypeBA)))}]`");
                         return;
                     }
@@ -128,11 +127,11 @@ namespace Prima.Scheduler.Modules
                 }
                 catch (ArgumentOutOfRangeException)
                 {
-                    await ReplyAsync($"{Context.User.Mention}, that date or time is invalid.");
+                    await ctx.RespondAsync($"{ctx.User.Mention}, that date or time is invalid.");
                     return;
                 }
 
-                if (!await RuntimeIsValid(runTime))
+                if (!await RuntimeIsValid(ctx, runTime))
                     return;
 
                 @event.RunTime = runTime.ToBinary();
@@ -145,51 +144,51 @@ namespace Prima.Scheduler.Modules
                 if (isDST)
                     timeMod -= 1;
 
-                await Context.Channel.SendMessageAsync(
-                    $"{Context.User.Mention} has just scheduled a run on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({tzAbbr})!\n" +
+                await ctx.Channel.SendMessageAsync(
+                    $"{ctx.User.Mention} has just scheduled a run on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({tzAbbr})!\n" +
                     $"React to the 📳 on their message to be notified 30 minutes before it begins!");
-                await message.AddReactionAsync(new Emoji("📳"));
+                await message.CreateReactionAsync(DiscordEmoji.FromUnicode("📳"));
 
                 var color = @event.RunKindCastrum == RunDisplayTypeCastrum.None ? RunDisplayTypes.GetColor(@event.RunKind) : RunDisplayTypes.GetColorCastrum();
-                var leaderName = (Context.User as IGuildUser)?.Nickname ?? Context.User.Username;
+                var leaderName = ctx.Member.Nickname ?? ctx.User.Username;
 
-                if (Context.Channel.Id == guildConfig.ScheduleInputChannel)
+                if (ctx.Channel.Id == guildConfig.ScheduleInputChannel)
                 {
-                    var embed = new EmbedBuilder()
+                    var embed = new DiscordEmbedBuilder()
                         .WithTitle(
                             $"Run scheduled by {leaderName} on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({tzAbbr}) " +
                             $"[{runTime.DayOfWeek}, {(Month)runTime.Month} {runTime.Day}]!")
-                        .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
+                        .WithColor(new DiscordColor(color.RGB[0], color.RGB[1], color.RGB[2]))
                         .WithDescription(
                             "React to the :vibration_mode: on their message to be notified 30 minutes before it begins!\n\n" +
-                            $"**{Context.User.Mention}'s full message: {message.GetJumpUrl()}**\n\n" +
+                            $"**{ctx.User.Mention}'s full message: {message.JumpLink}**\n\n" +
                             $"{new string(@event.Description.Take(1650).ToArray())}{(@event.Description.Length > 1650 ? "..." : "")}\n\n" +
                             $"**Schedule Overview: <{guildConfig.BASpreadsheetLink}>**")
-                        .WithFooter(footer => { footer.Text = "Localized time:"; })
+                        .WithFooter("Localized time:")
                         .WithTimestamp(runTime.AddHours(timeMod))
                         .Build();
 
-                    var scheduleOutputChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
-                    var embedMessage = await scheduleOutputChannel.SendMessageAsync(embed: embed);
+                    var scheduleOutputChannel = ctx.Guild.GetChannel(guildConfig.ScheduleOutputChannel);
+                    var embedMessage = await scheduleOutputChannel.SendMessageAsync(embed);
 
                     @event.EmbedMessageId = embedMessage.Id;
 
                     await Db.AddScheduledEvent(@event);
                     await Sheets.AddEvent(@event, guildConfig.BASpreadsheetId);
 
-                    await SortEmbeds(scheduleOutputChannel);
+                    await SortEmbeds(ctx, scheduleOutputChannel);
                 }
             }
         }
 
         [Command("unschedule")]
         [Description("Unschedule an event.")]
-        public async Task UnscheduleAsync([Remainder] string content)
+        public async Task UnscheduleAsync(CommandContext ctx, [RemainingText] string content)
         {
-            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == ctx.Guild.Id);
             if (guildConfig == null) return;
-            if (Context.Channel.Id == guildConfig.ScheduleInputChannel &&
-                Context.Channel.Id == guildConfig.CastrumScheduleInputChannel) return;
+            if (ctx.Channel.Id == guildConfig.ScheduleInputChannel &&
+                ctx.Channel.Id == guildConfig.CastrumScheduleInputChannel) return;
 
             DateTime when;
             try
@@ -198,7 +197,7 @@ namespace Prima.Scheduler.Modules
             }
             catch (ArgumentOutOfRangeException)
             {
-                await ReplyAsync($"{Context.User.Mention}, that time is invalid.");
+                await ctx.RespondAsync($"{ctx.User.Mention}, that time is invalid.");
                 return;
             }
             if (when.Minute >= 45)
@@ -217,53 +216,51 @@ namespace Prima.Scheduler.Modules
 
             if (when < DateTime.Now)
             {
-                await ReplyAsync($"{Context.User.Mention}, that time has already passed!");
+                await ctx.RespondAsync($"{ctx.User.Mention}, that time has already passed!");
                 return;
             }
 
             ScheduledEvent result;
             try
             {
-                result = await Db.TryRemoveScheduledEvent(when, Context.User.Id);
+                result = await Db.TryRemoveScheduledEvent(when, ctx.User.Id);
             }
             catch
             {
-                var botMaster = Context.Client.GetUser(Db.Config.BotMaster);
-                await ReplyAsync($"An error occurred. The run may or may not have been deleted, pinging {(botMaster != null ? botMaster.Mention : "undefined")}.");
+                var botMaster = await ctx.Client.GetUserAsync(Db.Config.BotMaster);
+                await ctx.RespondAsync($"An error occurred. The run may or may not have been deleted, pinging {(botMaster != null ? botMaster.Mention : "undefined")}.");
                 return;
             }
             if (result == null)
             {
-                await ReplyAsync($"{Context.User.Mention}, you don't seem to have a run scheduled at that day and time!");
+                await ctx.RespondAsync($"{ctx.User.Mention}, you don't seem to have a run scheduled at that day and time!");
                 return;
             }
 
-            var scheduleOutputChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
-            if (await scheduleOutputChannel.GetMessageAsync(result.EmbedMessageId) is IUserMessage embedMessage)
+            var scheduleOutputChannel = ctx.Guild.GetChannel(guildConfig.ScheduleOutputChannel);
+            var embedMessage = await scheduleOutputChannel.GetMessageAsync(result.EmbedMessageId);
+            var embed = embedMessage.Embeds.First();
+            var cancelledEmbed = new DiscordEmbedBuilder()
+                .WithTitle(embed.Title)
+                // ReSharper disable once PossibleInvalidOperationException
+                .WithColor(embed.Color.Value)
+                .WithDescription("❌ Cancelled")
+                .Build();
+            await embedMessage.ModifyAsync(properties => properties.Embed = cancelledEmbed);
+            _ = Task.Run(async () =>
             {
-                var embed = embedMessage.Embeds.First();
-                var cancelledEmbed = new EmbedBuilder()
-                    .WithTitle(embed.Title)
-                    // ReSharper disable once PossibleInvalidOperationException
-                    .WithColor(embed.Color.Value)
-                    .WithDescription("❌ Cancelled")
-                    .Build();
-                await embedMessage.ModifyAsync(properties => properties.Embed = cancelledEmbed);
-                _ = Task.Run(async () =>
-                {
-                    await Task.Delay(1800000);
-                    await embedMessage.DeleteAsync();
-                });
-            }
+                await Task.Delay(1800000);
+                await embedMessage.DeleteAsync();
+            });
 
-            await ReplyAsync($"{Context.User.Mention}, the run has been unscheduled.");
+            await ctx.RespondAsync($"{ctx.User.Mention}, the run has been unscheduled.");
 
             await Sheets.RemoveEvent(result, guildConfig.BASpreadsheetId);
 
-            var leaderName = (Context.User as IGuildUser)?.Nickname ?? Context.User.Username;
+            var leaderName = ctx.Member.Nickname ?? ctx.User.Username;
             foreach (var uid in result.SubscribedUsers)
             {
-                var user = Context.Guild.GetUser(ulong.Parse(uid));
+                var user = await ctx.Guild.GetMemberAsync(ulong.Parse(uid));
                 if (user == null)
                     continue;
                 await user.SendMessageAsync($"The run for reacted to, scheduled by {leaderName} on {when.DayOfWeek} at {when.ToShortTimeString()}, has been cancelled.");
@@ -272,18 +269,18 @@ namespace Prima.Scheduler.Modules
 
         [Command("reschedule")]
         [Description("Reschedule an event.")]
-        public async Task RescheduleAsync([Remainder] string parameters)
+        public async Task RescheduleAsync(CommandContext ctx, [RemainingText] string parameters)
         {
-            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == ctx.Guild.Id);
             if (guildConfig == null) return;
-            if (Context.Channel.Id == guildConfig.ScheduleInputChannel &&
-                Context.Channel.Id == guildConfig.CastrumScheduleInputChannel) return;
+            if (ctx.Channel.Id == guildConfig.ScheduleInputChannel &&
+                ctx.Channel.Id == guildConfig.CastrumScheduleInputChannel) return;
             var prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
 
             var splitIndex = parameters.IndexOf("|", StringComparison.Ordinal);
             if (splitIndex == -1)
             {
-                await ReplyAsync($"{Context.User.Mention}, please provide parameters with that command.\n" +
+                await ctx.RespondAsync($"{ctx.User.Mention}, please provide parameters with that command.\n" +
                                  "A well-formed command would look something like:\n" +
                                  $"`{prefix}reschedule Tuesday 5:00PM | Wednesday 6:30PM`");
                 return;
@@ -299,7 +296,7 @@ namespace Prima.Scheduler.Modules
             }
             catch (ArgumentOutOfRangeException)
             {
-                await ReplyAsync($"{Context.User.Mention}, the first time is invalid.");
+                await ctx.RespondAsync($"{ctx.User.Mention}, the first time is invalid.");
                 return;
             }
             if (currentRunTime.Minute >= 45)
@@ -316,10 +313,10 @@ namespace Prima.Scheduler.Modules
                 currentRunTime = currentRunTime.AddMinutes(-currentRunTime.Minute);
             }
 
-            var @event = currentRunTime < DateTime.Now ? null : Db.Events.FirstOrDefault(run => run.RunTime == currentRunTime.ToBinary() && run.LeaderId == Context.User.Id);
+            var @event = currentRunTime < DateTime.Now ? null : Db.Events.FirstOrDefault(run => run.RunTime == currentRunTime.ToBinary() && run.LeaderId == ctx.User.Id);
             if (@event == null)
             {
-                await ReplyAsync($"{Context.User.Mention}, you don't seem to have a run scheduled at that day and time (or that time has passed)!");
+                await ctx.RespondAsync($"{ctx.User.Mention}, you don't seem to have a run scheduled at that day and time (or that time has passed)!");
                 return;
             }
 
@@ -330,7 +327,7 @@ namespace Prima.Scheduler.Modules
             }
             catch (ArgumentOutOfRangeException)
             {
-                await ReplyAsync($"{Context.User.Mention}, the second time is invalid.");
+                await ctx.RespondAsync($"{ctx.User.Mention}, the second time is invalid.");
                 return;
             }
             if (newRunTime.Minute >= 45)
@@ -349,19 +346,19 @@ namespace Prima.Scheduler.Modules
 
             if (newRunTime == currentRunTime)
             {
-                await ReplyAsync($"{Context.User.Mention}, you can't reschedule a run to the same time!");
+                await ctx.RespondAsync($"{ctx.User.Mention}, you can't reschedule a run to the same time!");
                 return;
             }
 
             if (newRunTime < DateTime.Now)
             {
-                await ReplyAsync($"{Context.User.Mention}, you can't schedule a run in the past!");
+                await ctx.RespondAsync($"{ctx.User.Mention}, you can't schedule a run in the past!");
                 return;
             }
 
             if (newRunTime > DateTime.Now.AddDays(28))
             {
-                await ReplyAsync($"{Context.User.Mention}, runs are limited to being scheduled within the next 28 days.\n" +
+                await ctx.RespondAsync($"{ctx.User.Mention}, runs are limited to being scheduled within the next 28 days.\n" +
                                  "Please choose an earlier day to schedule your run.");
                 return;
             }
@@ -372,7 +369,7 @@ namespace Prima.Scheduler.Modules
                                     Math.Abs((DateTime.FromBinary(sr.RunTime) - newRunTime).TotalMilliseconds) <
                                     Threshold))
             {
-                await ReplyAsync($"{Context.User.Mention}, a run is already scheduled within 3 hours of that time! " +
+                await ctx.RespondAsync($"{ctx.User.Mention}, a run is already scheduled within 3 hours of that time! " +
                                  "Please check the schedule and try again.");
                 return;
             }
@@ -390,9 +387,9 @@ namespace Prima.Scheduler.Modules
             if (isDST)
                 timeMod -= 1;
 
-            var leaderName = (Context.User as IGuildUser)?.Nickname ?? Context.User.Username;
-            var embedChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
-            var embedMessage = await embedChannel.GetMessageAsync(@event.EmbedMessageId) as IUserMessage;
+            var leaderName = ctx.Member.Nickname ?? ctx.User.Username;
+            var embedChannel = ctx.Guild.GetChannel(guildConfig.ScheduleOutputChannel);
+            var embedMessage = await embedChannel.GetMessageAsync(@event.EmbedMessageId);
             // ReSharper disable once PossibleNullReferenceException
             var embed = embedMessage.Embeds.FirstOrDefault()?.ToEmbedBuilder()
                 .WithTitle($"Run scheduled by {leaderName} on {newRunTime.DayOfWeek} at {newRunTime.ToShortTimeString()} ({tzAbbr}) " +
@@ -403,12 +400,12 @@ namespace Prima.Scheduler.Modules
 
             await Sheets.AddEvent(@event, @event.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.BASpreadsheetId : guildConfig.CastrumSpreadsheetId);
 
-            await SortEmbeds(embedChannel);
+            await SortEmbeds(ctx, embedChannel);
 
-            await ReplyAsync("Run rescheduled successfully.");
+            await ctx.RespondAsync("Run rescheduled successfully.");
             foreach (var uid in @event.SubscribedUsers)
             {
-                var user = Context.Guild.GetUser(ulong.Parse(uid));
+                var user = await ctx.Guild.GetMemberAsync(ulong.Parse(uid));
                 if (user == null)
                     continue;
                 await user.SendMessageAsync($"The run for reacted to, scheduled by {leaderName} on {currentRunTime.DayOfWeek} at {currentRunTime.ToShortTimeString()}, has been rescheduled to {newRunTime.DayOfWeek} at {newRunTime.ToShortTimeString()}");
@@ -416,44 +413,41 @@ namespace Prima.Scheduler.Modules
         }
 
         [Command("sortschedule")]
-        [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
-        public async Task SortEmbedsAsync()
+        [RequireUserPermissions(Permissions.KickMembers)]
+        [RequireGuild]
+        public async Task SortEmbedsAsync(CommandContext ctx)
         {
-            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == ctx.Guild.Id);
             if (guildConfig == null) return;
 
-            var embedChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
+            var embedChannel = ctx.Guild.GetChannel(guildConfig.ScheduleOutputChannel);
 
-            await SortEmbeds(embedChannel);
+            await SortEmbeds(ctx, embedChannel);
 
-            await ReplyAsync("Done!");
+            await ctx.RespondAsync("Done!");
         }
 
         [Command("setruntimeba")]
-        [RequireUserPermission(GuildPermission.BanMembers)]
-        [RequireContext(ContextType.Guild)]
-        public async Task SetRunTimestamp(ulong outputChannelId, ulong messageId, [Remainder] string args)
+        [RequireUserPermissions(Permissions.BanMembers)]
+        [RequireGuild]
+        public async Task SetRunTimestamp(CommandContext ctx, ulong outputChannelId, ulong messageId, [RemainingText] string args)
         {
-            var outputChannel = Context.Guild.GetTextChannel(outputChannelId);
+            var outputChannel = ctx.Guild.GetChannel(outputChannelId);
 
-            IUserMessage embedMessage = null;
-            await foreach (var page in outputChannel.GetMessagesAsync())
+            DiscordMessage embedMessage = null;
+            foreach (var message in await outputChannel.GetMessagesAsync())
             {
-                foreach (var message in page)
+                if (message.Id == messageId)
                 {
-                    if (message.Id == messageId)
-                    {
-                        embedMessage = (IUserMessage)message;
-                        break;
-                    }
+                    embedMessage = message;
+                    break;
                 }
             }
 
-            var embed = embedMessage?.Embeds.FirstOrDefault(e => e.Type == EmbedType.Rich);
+            var embed = embedMessage?.Embeds.FirstOrDefault();
             if (embedMessage == null || embed == null)
             {
-                await ReplyAsync("No run was found matching that message ID in that channel.");
+                await ctx.RespondAsync("No run was found matching that message ID in that channel.");
                 return;
             }
 
@@ -472,30 +466,30 @@ namespace Prima.Scheduler.Modules
                     .Build();
             });
 
-            await ReplyAsync("Updated.");
+            await ctx.RespondAsync("Updated.");
         }
 
         [Command("rundst")]
-        [Alias("rundistribution", "rundstr")]
+        [Aliases("rundistribution", "rundstr")]
         [Description("See the historical distribution of runs across the day.")]
-        public Task GetRunDstAsync(params string[] args)
+        public Task GetRunDstAsync(CommandContext ctx, params string[] args)
         {
             var runKind = (RunDisplayTypeBA)(-1);
-            var color = new Color();
+            var color = new DiscordColor();
             if (args.Length != 0)
             {
                 try
                 {
                     runKind = (RunDisplayTypeBA)Enum.Parse(typeof(RunDisplayTypeBA), args[0], true);
                     var runKindColor = RunDisplayTypes.GetColor(runKind);
-                    color = new Color(runKindColor.RGB[0], runKindColor.RGB[1], runKindColor.RGB[2]);
+                    color = new DiscordColor(runKindColor.RGB[0], runKindColor.RGB[1], runKindColor.RGB[2]);
                 }
                 catch (ArgumentException) { /* Nothing to do */ }
             }
 
-            var embed = new EmbedBuilder()
+            var embed = new DiscordEmbedBuilder()
                 .WithTitle($"Historical Scheduled Runs by Hour {(Enum.IsDefined(typeof(RunDisplayTypeBA), runKind) ? $"({runKind})" : string.Empty)}")
-                .WithColor(Enum.IsDefined(typeof(RunDisplayTypeBA), runKind) ? color : Color.DarkTeal)
+                .WithColor(Enum.IsDefined(typeof(RunDisplayTypeBA), runKind) ? color : DiscordColor.DarkBlue)
                 .WithFooter("RSVP'd users may not be reflective of users who actually took part in a run.");
 
             var runsByHour = Db.Events
@@ -516,24 +510,24 @@ namespace Prima.Scheduler.Modules
                 embed = embed.AddField(label, $"{runBucket.Count()} runs (Average {Math.Round(runBucket.Aggregate(0, (i, @event) => i += @event.SubscribedUsers.Count) / (double)runBucket.Count(), 2)} users per run)");
             }
 
-            return ReplyAsync(embed: embed.Build());
+            return ctx.RespondAsync(embed: embed.Build());
         }
 
         [Command("restoreevent")]
-        [RequireUserPermission(GuildPermission.Administrator)]
-        public async Task RestoreEvent(params string[] args)
+        [RequireUserPermissions(Permissions.Administrator)]
+        public async Task RestoreEvent(CommandContext ctx, params string[] args)
         {
             var messageId = ulong.Parse(args[0]);
             var embedId = ulong.Parse(args[1]);
 
-            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == ctx.Guild.Id);
             if (guildConfig == null) return;
-            var channel = Context.Guild.GetTextChannel(guildConfig.ScheduleInputChannel);
+            var channel = ctx.Guild.GetChannel(guildConfig.ScheduleInputChannel);
 
             var message = await channel.GetMessageAsync(messageId);
             if (message == null)
             {
-                await ReplyAsync("x");
+                await ctx.RespondAsync("x");
                 return;
             }
 
@@ -544,12 +538,12 @@ namespace Prima.Scheduler.Modules
 
             var coolParameters = RegexSearches.Whitespace.Split(parameters);
 
-            var reactors = await message.GetReactionUsersAsync(new Emoji("📳"), 100).FlattenAsync();
+            var reactors = await message.GetReactionsAsync(DiscordEmoji.FromUnicode("📳"), 100);
             var @event = new ScheduledEvent
             {
                 Description = description,
                 LeaderId = message.Author.Id,
-                GuildId = Context.Guild.Id,
+                GuildId = ctx.Guild.Id,
                 MessageId3 = message.Id,
                 EmbedMessageId = embedId,
                 SubscribedUsers = reactors
@@ -578,17 +572,17 @@ namespace Prima.Scheduler.Modules
 
             await Db.AddScheduledEvent(@event);
 
-            await ReplyAsync($"success, new count: {Db.Events.Count()}");
+            await ctx.RespondAsync($"success, new count: {Db.Events.Count()}");
         }
 
         [RequireOwner]
         [Command("rebuildposts")]
-        public Task RebuildPosts()
+        public Task RebuildPosts(CommandContext ctx)
         {
-            return ScheduleUtils.RebuildPosts(Db, Context.Client, Context.Guild.Id);
+            return ScheduleUtils.RebuildPosts(Db, ctx.Client, ctx.Guild.Id);
         }
 
-        private async Task<bool> RuntimeIsValid(DateTime runTime)
+        private async Task<bool> RuntimeIsValid(CommandContext ctx, DateTime runTime)
         {
             if (runTime.Minute >= 45)
             {
@@ -606,13 +600,13 @@ namespace Prima.Scheduler.Modules
 
             if (runTime < DateTime.Now)
             {
-                await ReplyAsync($"{Context.User.Mention}, you can't schedule a run in the past!");
+                await ctx.RespondAsync($"{ctx.User.Mention}, you can't schedule a run in the past!");
                 return false;
             }
 
             if (runTime > DateTime.Now.AddDays(28))
             {
-                await ReplyAsync($"{Context.User.Mention}, runs are limited to being scheduled within the next 28 days.\n" +
+                await ctx.RespondAsync($"{ctx.User.Mention}, runs are limited to being scheduled within the next 28 days.\n" +
                                  "Please choose an earlier day to schedule your run.");
                 return false;
             }
@@ -621,7 +615,7 @@ namespace Prima.Scheduler.Modules
                                     Math.Abs((DateTime.FromBinary(sr.RunTime) - runTime).TotalMilliseconds) <
                                     Threshold))
             {
-                await ReplyAsync($"{Context.User.Mention}, a run is already scheduled within 3 hours of that time! " +
+                await ctx.RespondAsync($"{ctx.User.Mention}, a run is already scheduled within 3 hours of that time! " +
                                  "Please check the schedule and try again.");
                 return false;
             }
@@ -630,27 +624,22 @@ namespace Prima.Scheduler.Modules
         }
 
         private static readonly Regex MessageIdRegex = new(@"full message: https?:\/\/discord(app)?.com\/channels\/\d+\/\d+\/(?<MessageId>\d+)", RegexOptions.Compiled);
-        private async Task SortEmbeds(IMessageChannel channel)
+        private async Task SortEmbeds(CommandContext ctx, DiscordChannel channel)
         {
-            var progress = await ReplyAsync("Sorting announcements...");
-            using var typing = Context.Channel.EnterTypingState();
+            var progress = await ctx.RespondAsync("Sorting announcements...");
+            using var typing = ctx.Channel.TriggerTypingAsync();
 
-            var embeds = new List<IEmbed>();
-
-            await foreach (var page in channel.GetMessagesAsync())
+            var embeds = new List<DiscordEmbed>();
+            foreach (var message in await channel.GetMessagesAsync())
             {
-                foreach (var message in page)
-                {
-                    if (message.Embeds.All(e => e.Type != EmbedType.Rich)) continue;
-                    var embed = message.Embeds.First(e => e.Type == EmbedType.Rich);
+                var embed = message.Embeds.FirstOrDefault();
 
-                    if (!embed.Timestamp.HasValue) continue;
+                if (embed?.Timestamp == null) continue;
 
-                    await message.DeleteAsync();
-                    if (embed.Timestamp.Value < DateTimeOffset.Now) continue;
+                await message.DeleteAsync();
+                if (embed.Timestamp.Value < DateTimeOffset.Now) continue;
 
-                    embeds.Add(embed);
-                }
+                embeds.Add(embed);
             }
 
             // ReSharper disable PossibleInvalidOperationException
@@ -685,7 +674,7 @@ namespace Prima.Scheduler.Modules
 
                     try
                     {
-                        await m.AddReactionAsync(new Emoji("📳"));
+                        await m.CreateReactionAsync(DiscordEmoji.FromUnicode("📳"));
                     }
                     catch (Exception e)
                     {

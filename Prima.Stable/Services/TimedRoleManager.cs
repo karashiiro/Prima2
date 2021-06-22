@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Discord.WebSocket;
+using Prima.Services;
+using Serilog;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Discord.WebSocket;
-using Prima.DiscordNet.Services;
-using Serilog;
 
 namespace Prima.Stable.Services
 {
@@ -14,7 +14,7 @@ namespace Prima.Stable.Services
         private readonly DiscordSocketClient _client;
 
         private readonly CancellationTokenSource _tokenSource;
-        
+
         public TimedRoleManager(DiscordSocketClient client, IDbService db)
         {
             _db = db;
@@ -65,7 +65,7 @@ namespace Prima.Stable.Services
         {
             if (disposedValue) return;
             if (!disposing) return;
-            
+
             _tokenSource?.Cancel();
             _tokenSource?.Dispose();
 

@@ -1,9 +1,9 @@
 ﻿using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Prima.DiscordNet;
-using Prima.DiscordNet.Services;
 using Prima.Queue.Handlers;
 using Prima.Queue.Services;
+using Prima.Services;
 using Serilog;
 using System.Threading.Tasks;
 

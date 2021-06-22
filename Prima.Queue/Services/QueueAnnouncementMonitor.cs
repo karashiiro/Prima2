@@ -2,9 +2,9 @@
 using Discord.Net;
 using Discord.WebSocket;
 using Prima.DiscordNet;
-using Prima.DiscordNet.Services;
 using Prima.Models;
 using Prima.Resources;
+using Prima.Services;
 using Serilog;
 using System;
 using System.Collections.Generic;

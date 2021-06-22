@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Discord;
+using Prima.Models;
+using Prima.Services;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Discord;
-using Prima.Models;
-using Prima.DiscordNet.Services;
 
 namespace Prima.Stable.Handlers
 {

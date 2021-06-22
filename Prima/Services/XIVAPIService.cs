@@ -7,7 +7,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace Prima.DiscordNet.Services
+namespace Prima.Services
 {
     [Serializable]
     public class XIVAPICharacterNotFoundException : Exception

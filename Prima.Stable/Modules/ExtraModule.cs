@@ -1,17 +1,17 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
+using FFXIVWeather.Lumina;
+using Lumina.Excel.GeneratedSheets;
 using Newtonsoft.Json.Linq;
-using Prima.DiscordNet.Services;
+using Prima.DiscordNet.Attributes;
+using Prima.Resources;
+using Prima.Services;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Prima.DiscordNet.Attributes;
-using Discord;
-using FFXIVWeather.Lumina;
-using Lumina.Excel.GeneratedSheets;
-using Prima.Resources;
 using TimeZoneNames;
 using Color = Discord.Color;
 using Item = Prima.XIVAPI.Item;
@@ -150,8 +150,8 @@ namespace Prima.Stable.Modules
 
             await ReplyAsync($"__{listings.Count} results for {worldName} (Showing up to 10):__\n" +
                 trimmedListings.Select(listing => listing.Quantity + " **" + itemName + "** for " +
-					listing.PricePerUnit + " Gil " + (!string.IsNullOrEmpty(listing.WorldName) ? "on " +
-					listing.WorldName + " " : "") + (listing.Quantity > 1 ? $" (For a total of {listing.Total} Gil)" : "")));
+                    listing.PricePerUnit + " Gil " + (!string.IsNullOrEmpty(listing.WorldName) ? "on " +
+                    listing.WorldName + " " : "") + (listing.Quantity > 1 ? $" (For a total of {listing.Total} Gil)" : "")));
         }
 
         public class UniversalisListing

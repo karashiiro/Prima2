@@ -4,7 +4,7 @@ using Prima.DiscordNet;
 using Prima.Models;
 using Prima.Queue.Services;
 using Prima.Resources;
-using Prima.DiscordNet.Services;
+using Prima.Services;
 using Serilog;
 using System;
 using System.Collections.Generic;

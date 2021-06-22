@@ -1,6 +1,6 @@
 ﻿using NUnit.Framework;
 using Prima.DiscordNet.Extensions;
-using Prima.DiscordNet.Services;
+using Prima.Services;
 using System.Linq;
 
 namespace Prima.Tests

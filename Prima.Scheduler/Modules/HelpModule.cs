@@ -1,54 +1,53 @@
-﻿using Discord;
-using Discord.Commands;
-using Prima.DiscordNet.Attributes;
-using System;
+﻿using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
+using Prima.Scheduler.Attributes;
+using Prima.Scheduler.Services;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Color = Discord.Color;
 
 namespace Prima.Scheduler.Modules
 {
-    public class HelpModule : ModuleBase<SocketCommandContext>
+    public class HelpModule : BaseCommandModule
     {
         public CommandService CommandManager { get; set; }
-        public IServiceProvider Services { get; set; }
 
         [Command("help")]
-        [Alias("?")]
-        [System.ComponentModel.Description("<:LappDumb:736310777463439422>")]
-        public async Task HelpAsync()
+        [Aliases("?")]
+        [Description("<:LappDumb:736310777463439422>")]
+        public async Task HelpAsync(CommandContext ctx)
         {
-            var commands = (await CommandManager.GetExecutableCommandsAsync(Context, Services))
-                .Where(command => command.Attributes.Any(attr => attr is DescriptionAttribute));
+            var commands = ctx.GetExecutableCommandsAsync()
+                .Where(command => !string.IsNullOrEmpty(command.Description));
 
-            var fields = new List<EmbedFieldBuilder>();
-            foreach (var command in commands)
+            var fields = new List<DiscordEmbedField>();
+            await foreach (var command in commands)
             {
-                var restrictedToAttr = (RestrictToGuildsAttribute)command.Attributes.FirstOrDefault(attr => attr is RestrictToGuildsAttribute);
-                if (restrictedToAttr != null && (Context.Guild == null || restrictedToAttr.GuildIds.Contains(Context.Guild.Id)))
-                    continue;
-
-                var restrictedFromAttr = (RestrictFromGuildsAttribute)command.Attributes.FirstOrDefault(attr => attr is RestrictFromGuildsAttribute);
-                if (restrictedFromAttr != null && (Context.Guild != null && restrictedFromAttr.GuildIds.Contains(Context.Guild.Id)))
-                    continue;
-
-                var descAttr = (DescriptionAttribute)command.Attributes.First(attr => attr is DescriptionAttribute);
-
-                var fieldBuilder = new EmbedFieldBuilder()
+                var restrictedToAttr = (RestrictToGuildsAttribute)command.CustomAttributes
+                    .FirstOrDefault(attr => attr is RestrictToGuildsAttribute);
+                
+                var field = new DiscordEmbedField()
                     .WithIsInline(true)
                     .WithName(command.Name)
-                    .WithValue((restrictedToAttr != null ? $"({Context.Guild.Name}) " : "") + descAttr.Description);
-                fields.Add(fieldBuilder);
+                    .WithValue((restrictedToAttr != null ? $"({ctx.Guild.Name}) " : "") + command.Description);
+                fields.Add(field);
             }
 
-            var embed = new EmbedBuilder()
+            var embed = new DiscordEmbedBuilder()
                 .WithTitle("These are the scheduling commands you can use with Prima in that server:")
-                .WithColor(Color.DarkGreen)
+                .WithColor(DiscordColor.DarkGreen)
                 .WithFields(fields)
                 .Build();
 
-            await Context.User.SendMessageAsync(embed: embed);
+            if (ctx.Guild != null)
+            {
+                await ctx.Member.SendMessageAsync(embed);
+            }
+            else
+            {
+                await ctx.RespondAsync(embed);
+            }
         }
     }
 }

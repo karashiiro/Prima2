@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Prima.Extensions;
+using Prima.Models;
+using Prima.Services;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Prima.Extensions;
-using Prima.Models;
-using Prima.DiscordNet.Services;
 
 namespace Prima.Tests.Mocks
 {

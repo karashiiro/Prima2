@@ -1,13 +1,13 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
 using Discord.WebSocket;
 using Prima.Models;
-using Prima.DiscordNet.Services;
+using Prima.Services;
 using Prima.Stable.Resources;
 using Prima.Stable.Services;
 using Serilog;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Prima.Stable.Handlers
 {

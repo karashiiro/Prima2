@@ -2,8 +2,8 @@
 using Discord.Net;
 using Discord.WebSocket;
 using Prima.DiscordNet.Extensions;
-using Prima.DiscordNet.Services;
 using Prima.Models;
+using Prima.Services;
 using Serilog;
 using System;
 using System.Diagnostics;

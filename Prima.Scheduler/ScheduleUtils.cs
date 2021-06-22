@@ -1,40 +1,35 @@
-﻿using System;
+﻿using DSharpPlus;
+using DSharpPlus.Entities;
+using Prima.Models;
+using Prima.Resources;
+using Prima.Services;
+using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
-using Prima.Models;
-using Prima.Resources;
-using Prima.DiscordNet.Services;
-using Serilog;
 using TimeZoneNames;
 
 namespace Prima.Scheduler
 {
     public static class ScheduleUtils
     {
-        public static async Task<IEnumerable<(IMessage, IEmbed)>> GetEvents(IMessageChannel channel)
+        public static async Task<IEnumerable<(DiscordMessage, DiscordEmbed)>> GetEvents(DiscordChannel channel)
         {
-            var events = new List<(IMessage, IEmbed)>();
+            var events = new List<(DiscordMessage, DiscordEmbed)>();
             if (channel != null)
             {
-                await foreach (var page in channel.GetMessagesAsync())
+                foreach (var message in await channel.GetMessagesAsync())
                 {
-                    // ReSharper disable once LoopCanBeConvertedToQuery
-                    foreach (var message in page)
-                    {
-                        var embed = message.Embeds.FirstOrDefault(e => e.Type == EmbedType.Rich);
-                        events.Add((message, embed));
-                    }
+                    var embed = message.Embeds.FirstOrDefault();
+                    events.Add((message, embed));
                 }
             }
 
             return events;
         }
-        
-        public static IMessageChannel GetOutputChannel(DiscordGuildConfiguration guildConfig, SocketGuild guild, IMessageChannel inputChannel)
+
+        public static DiscordChannel GetOutputChannel(DiscordGuildConfiguration guildConfig, DiscordGuild guild, DiscordChannel inputChannel)
         {
             ulong outputChannelId;
             if (inputChannel.Id == guildConfig.SocialScheduleInputChannel)
@@ -50,7 +45,7 @@ namespace Prima.Scheduler
             else // inputChannel.Id == guildConfig.DelubrumNormalScheduleInputChannel
                 outputChannelId = guildConfig.DelubrumNormalScheduleOutputChannel;
 
-            return guild.GetTextChannel(outputChannelId);
+            return guild.GetChannel(outputChannelId);
         }
 
         public static string GetCalendarCodeForOutputChannel(DiscordGuildConfiguration guildConfig, ulong channelId)
@@ -86,21 +81,16 @@ namespace Prima.Scheduler
                 });
         }
 
-        public static async Task RebuildPosts(IDbService db, DiscordSocketClient client, ulong guildId)
+        public static async Task RebuildPosts(IDbService db, DiscordClient client, ulong guildId)
         {
             var guildConfig = db.Guilds.FirstOrDefault(g => g.Id == guildId);
             if (guildConfig == null)
                 return;
 
-            var guild = client.GetGuild(guildId);
+            var guild = await client.GetGuildAsync(guildId);
 
-            var iInChannel = client.GetChannel(guildConfig.ScheduleInputChannel);
-            if (!(iInChannel is ITextChannel inChannel))
-                return;
-
-            var iOutChannel = client.GetChannel(guildConfig.ScheduleOutputChannel);
-            if (!(iOutChannel is ITextChannel outChannel))
-                return;
+            var inChannel = await client.GetChannelAsync(guildConfig.ScheduleInputChannel);
+            var outChannel = await client.GetChannelAsync(guildConfig.ScheduleOutputChannel);
 
             var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
@@ -118,14 +108,8 @@ namespace Prima.Scheduler
                     continue;
                 }
 
-                var iOutMessage = await outChannel.GetMessageAsync(run.EmbedMessageId);
-                if (!(iOutMessage is IUserMessage message))
-                {
-                    Log.Information("Embed message {MessageId} is invalid; skipping...", run.EmbedMessageId);
-                    continue;
-                }
-
-                var leader = guild.GetUser(originalMessage.Author.Id);
+                var outMessage = await outChannel.GetMessageAsync(run.EmbedMessageId);
+                var leader = await guild.GetMemberAsync(originalMessage.Author.Id);
                 if (leader == null)
                 {
                     Log.Information("Leader {UserId} is null; skipping...", originalMessage.Author.Id);
@@ -135,23 +119,25 @@ namespace Prima.Scheduler
 
                 var runTime = DateTime.FromBinary(run.RunTime);
 
-                var newEmbed = message.Embeds.FirstOrDefault()?.ToEmbedBuilder()
+                var embed = outMessage.Embeds.FirstOrDefault();
+                if (embed == null)
+                {
+                    Log.Information("newEmbed is null; skipping...");
+                    continue;
+                }
+
+                var newEmbed = new DiscordEmbedBuilder(embed)
                     .WithTitle(
                         $"Run scheduled by {leaderName} on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({tzAbbr}) " +
                         $"[{runTime.DayOfWeek}, {(Month)runTime.Month} {runTime.Day}]!")
                     .WithDescription("React to the :vibration_mode: on their message to be notified 30 minutes before it begins!\n\n" +
-                                     $"**{guild.GetUser(run.LeaderId).Mention}'s full message: {originalMessage.GetJumpUrl()}**\n\n" +
+                                     $"**<@{run.LeaderId}>'s full message: {originalMessage.JumpLink}**\n\n" +
                                      $"{new string(run.Description.Take(1650).ToArray())}{(run.Description.Length > 1650 ? "..." : "")}\n\n" +
                                      $"**Schedule Overview: <{guildConfig.BASpreadsheetLink}>**")
                     .WithTimestamp(runTime.AddHours(-tzi.BaseUtcOffset.Hours))
                     .Build();
 
-                if (newEmbed == null)
-                {
-                    Log.Information("newEmbed is null; skipping...");
-                    continue;
-                }
-                await message.ModifyAsync(properties => properties.Embed = newEmbed);
+                await outMessage.ModifyAsync(properties => properties.Embed = newEmbed);
                 Log.Information("Updated information for run {MessageId}", run.MessageId3);
                 postsUpdated++;
             }

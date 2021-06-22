@@ -3,9 +3,9 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Prima.DiscordNet.Services;
-using Serilog;
+using Prima.Services;
+using Serilog.Events;
 using System;
-using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -15,13 +15,7 @@ namespace Prima.DiscordNet
     {
         public static IServiceCollection Main(string[] args)
         {
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Verbose()
-                .WriteTo.Console()
-                .WriteTo.SQLite(Environment.OSVersion.Platform == PlatformID.Win32NT
-                    ? "Log.db" // Only use Windows for testing.
-                    : Path.Combine(Environment.GetEnvironmentVariable("HOME"), "log/Log.db"))
-                .CreateLogger();
+            StaticLog.Initialize();
 
             var disConfig = new DiscordSocketConfig
             {
@@ -35,6 +29,12 @@ namespace Prima.DiscordNet
 
         public static async Task ConfigureServicesAsync(ServiceProvider services)
         {
+            static Task LogAsync(LogMessage message)
+            {
+                StaticLog.Write(ConvertEventLevel(message.Severity), message.Exception, message.Message);
+                return Task.CompletedTask;
+            }
+
             var client = services.GetRequiredService<DiscordSocketClient>();
 
             client.Log += LogAsync;
@@ -62,30 +62,18 @@ namespace Prima.DiscordNet
             //.AddSingleton(new HttpServer(Log.Information))
         }
 
-        private static Task LogAsync(LogMessage message)
+        private static LogEventLevel ConvertEventLevel(LogSeverity level)
         {
-            switch (message.Severity)
+            return level switch
             {
-                case LogSeverity.Critical:
-                    Log.Error(message.ToString());
-                    break;
-                case LogSeverity.Error:
-                    Log.Error(message.ToString());
-                    break;
-                case LogSeverity.Warning:
-                    Log.Warning(message.ToString());
-                    break;
-                case LogSeverity.Info:
-                    Log.Information(message.ToString());
-                    break;
-                case LogSeverity.Verbose:
-                    Log.Verbose(message.ToString());
-                    break;
-                case LogSeverity.Debug:
-                    Log.Debug(message.ToString());
-                    break;
-            }
-            return Task.CompletedTask;
+                LogSeverity.Critical => LogEventLevel.Fatal,
+                LogSeverity.Error => LogEventLevel.Error,
+                LogSeverity.Warning => LogEventLevel.Warning,
+                LogSeverity.Info => LogEventLevel.Information,
+                LogSeverity.Verbose => LogEventLevel.Verbose,
+                LogSeverity.Debug => LogEventLevel.Debug,
+                _ => throw new ArgumentOutOfRangeException(nameof(level), level, null),
+            };
         }
     }
 }

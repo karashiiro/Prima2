@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-namespace Prima.DiscordNet.Services
+namespace Prima.Services
 {
     public class TemplateProvider : ITemplateProvider
     {

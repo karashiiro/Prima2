@@ -1,14 +1,14 @@
-﻿using System;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
 using Prima.DiscordNet.Attributes;
 using Prima.Resources;
-using Prima.DiscordNet.Services;
+using Prima.Services;
 using Prima.Stable.Services;
 using Serilog;
+using System;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Prima.Stable.Modules
 {

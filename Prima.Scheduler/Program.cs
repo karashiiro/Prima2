@@ -1,50 +1,71 @@
-﻿using Discord.WebSocket;
+﻿using DSharpPlus;
 using Microsoft.Extensions.DependencyInjection;
-using Prima.DiscordNet;
-using Prima.DiscordNet.Services;
 using Prima.Scheduler.GoogleApis.Services;
 using Prima.Scheduler.Handlers;
 using Prima.Scheduler.Services;
+using Prima.Services;
 using Serilog;
+using System;
+using System.Net.Http;
 using System.Threading.Tasks;
+using Prima.Scheduler.Modules;
 
 namespace Prima.Scheduler
 {
     class Program
     {
-        static void Main(string[] args) => MainAsync(args).GetAwaiter().GetResult();
+        static void Main() => MainAsync().GetAwaiter().GetResult();
 
-        private static async Task MainAsync(string[] args)
+        private static async Task MainAsync()
         {
-            var sc = CommonInitialize.Main(args);
-
             // Initialize the ASP.NET service provider and freeze this Task indefinitely.
-            await using var services = ConfigureServices(sc);
-            await CommonInitialize.ConfigureServicesAsync(services);
+            await using var services = ConfigureServices();
 
-            var client = services.GetRequiredService<DiscordSocketClient>();
+            var client = services.GetRequiredService<DiscordClient>();
             var events = services.GetRequiredService<EventService>();
             var db = services.GetRequiredService<IDbService>();
             var calendar = services.GetRequiredService<CalendarApi>();
 
-            client.MessageUpdated += events.OnMessageEdit;
-            client.ReactionAdded += events.OnReactionAdd;
-            client.ReactionRemoved += events.OnReactionRemove;
+            var commands = services.GetRequiredService<CommandService>();
+            client.MessageCreated += commands.Handler;
 
-            client.MessageUpdated += (_, message, channel) => AnnounceEdit.Handler(client, calendar, db, message);
-            client.ReactionAdded += (cachedMessage, channel, reaction)
-                => AnnounceReact.HandlerAdd(client, db, cachedMessage, reaction);
+            commands.UseCommandModule<DiagnosticModule>();
+            commands.UseCommandModule<HelpModule>();
+            commands.UseCommandModule<NotificationBoardModule>();
+            commands.UseCommandModule<SchedulingModule>();
+
+            client.MessageUpdated += events.OnMessageEdit;
+            client.MessageReactionAdded += events.OnReactionAdd;
+            client.MessageReactionRemoved += events.OnReactionRemove;
+
+            client.MessageUpdated += (_, updateEvent)
+                => AnnounceEdit.Handler(client, calendar, db, updateEvent);
+            client.MessageReactionAdded += (_, reactionEvent)
+                => AnnounceReact.HandlerAdd(client, db, reactionEvent);
 
             services.GetRequiredService<RunNotiferService>().Initialize();
             services.GetRequiredService<AnnounceMonitor>().Initialize();
+
+            await client.ConnectAsync();
 
             Log.Information("Prima Scheduler logged in!");
 
             await Task.Delay(-1);
         }
 
-        private static ServiceProvider ConfigureServices(IServiceCollection sc)
+        private static ServiceProvider ConfigureServices()
         {
+            var sc = new ServiceCollection()
+                .AddSingleton(new DiscordClient(new DiscordConfiguration
+                {
+                    Token = Environment.GetEnvironmentVariable("PRIMA_BOT_TOKEN"),
+                    TokenType = TokenType.Bot,
+                }))
+                .AddSingleton<CommandService>()
+                .AddSingleton<HttpClient>()
+                .AddSingleton<IDbService, DbService>()
+                .AddSingleton<FFXIVSheetService>()
+                .AddSingleton<ITemplateProvider, TemplateProvider>();
             sc.AddSingleton<EventService>();
             sc.AddSingleton<RunNotiferService>();
             sc.AddSingleton<SpreadsheetService>();

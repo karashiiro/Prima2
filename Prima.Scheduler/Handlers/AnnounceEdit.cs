@@ -1,18 +1,19 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Discord;
-using Discord.WebSocket;
+﻿using DSharpPlus;
+using DSharpPlus.Entities;
+using DSharpPlus.EventArgs;
 using Prima.Resources;
 using Prima.Scheduler.GoogleApis.Services;
-using Prima.DiscordNet.Services;
+using Prima.Services;
 using Serilog;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Prima.Scheduler.Handlers
 {
     public static class AnnounceEdit
     {
-        public static async Task Handler(DiscordSocketClient client, CalendarApi calendar, IDbService db, SocketMessage message)
+        public static async Task Handler(DiscordClient client, CalendarApi calendar, IDbService db, MessageUpdateEventArgs updateEvent)
         {
             var guildConfig = db.Guilds.FirstOrDefault(g => g.Id == SpecialGuilds.CrystalExploratoryMissions);
             if (guildConfig == null)
@@ -21,7 +22,8 @@ namespace Prima.Scheduler.Handlers
                 return;
             }
 
-            var guild = client.GetGuild(guildConfig.Id);
+            var guild = updateEvent.Guild;
+            var message = updateEvent.Message;
 
             var prefix = db.Config.Prefix;
             if (message.Content == null || !message.Content.StartsWith(prefix + "announce")) return;
@@ -46,7 +48,7 @@ namespace Prima.Scheduler.Handlers
                     $"`{prefix}announce 5:00PM | This is a fancy description!`");
                 return;
             }
-            
+
             var description = args.Substring(splitIndex + 1).Trim();
             var trimmedDescription = description.Substring(0, Math.Min(1700, description.Length));
             if (trimmedDescription.Length != description.Length)
@@ -60,8 +62,7 @@ namespace Prima.Scheduler.Handlers
             var calendarLinkLine = lines.LastOrDefault(l => l.StartsWith("[Copy to Google Calendar]"));
             await embedMessage.ModifyAsync(props =>
             {
-                props.Embed = embed
-                    .ToEmbedBuilder()
+                props.Embed = new DiscordEmbedBuilder(embed)
                     .WithDescription(trimmedDescription + (calendarLinkLine != null
                         ? $"\n\n{calendarLinkLine}"
                         : "") + (messageLinkLine != null
@@ -73,21 +74,16 @@ namespace Prima.Scheduler.Handlers
             Log.Information("Updated announcement embed.");
         }
 
-        private static async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, ulong eventId)
+        private static async Task<(DiscordMessage, DiscordEmbed)> FindAnnouncement(DiscordChannel channel, ulong eventId)
         {
-            await foreach (var page in channel.GetMessagesAsync())
+            foreach (var message in await channel.GetMessagesAsync())
             {
-                foreach (var message in page)
-                {
-                    var restMessage = (IUserMessage)message;
+                var embed = message.Embeds.FirstOrDefault();
+                if (embed?.Footer == null) continue;
 
-                    var embed = restMessage.Embeds.FirstOrDefault();
-                    if (embed?.Footer == null) continue;
+                if (embed.Footer?.Text != eventId.ToString()) continue;
 
-                    if (embed.Footer?.Text != eventId.ToString()) continue;
-
-                    return (restMessage, embed);
-                }
+                return (message, embed);
             }
 
             return (null, null);

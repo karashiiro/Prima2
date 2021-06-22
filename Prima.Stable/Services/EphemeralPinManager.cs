@@ -1,11 +1,11 @@
-﻿using System;
+﻿using Discord;
+using Discord.WebSocket;
+using Prima.Services;
+using Serilog;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Discord;
-using Discord.WebSocket;
-using Prima.DiscordNet.Services;
-using Serilog;
 
 namespace Prima.Stable.Services
 {

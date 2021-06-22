@@ -3,7 +3,7 @@ using FFXIVWeather.Lumina;
 using Lumina;
 using Microsoft.Extensions.DependencyInjection;
 using Prima.DiscordNet;
-using Prima.DiscordNet.Services;
+using Prima.Services;
 using Prima.Stable.Handlers;
 using Prima.Stable.Services;
 using Serilog;

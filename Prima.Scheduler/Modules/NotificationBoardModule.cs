@@ -1,9 +1,4 @@
-﻿using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
-using Prima.DiscordNet.Attributes;
-using Prima.DiscordNet.Services;
-using Prima.Models;
+﻿using Prima.Models;
 using Prima.Resources;
 using Prima.Scheduler.GoogleApis.Calendar;
 using Prima.Scheduler.GoogleApis.Services;
@@ -13,27 +8,31 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
+using DSharpPlus;
+using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
+using MongoDB.Bson.IO;
+using Prima.Services;
 using TimeZoneNames;
-using Color = Discord.Color;
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace Prima.Scheduler.Modules
 {
-    [Name("NotificationBoard")]
-    [RequireContext(ContextType.Guild)]
-    public class NotificationBoardModule : ModuleBase<SocketCommandContext>
+    public class NotificationBoardModule : BaseCommandModule
     {
         public CalendarApi Calendar { get; set; }
         public IDbService Db { get; set; }
 
-        [Command("announce", RunMode = RunMode.Async)]
+        [Command("announce")]
         [Description("Announce an event. Usage: `~announce Time | Description`")]
-        public async Task Announce([Remainder] string args)
+        [RequireGuild]
+        public async Task Announce(CommandContext ctx, string args)
         {
-            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == ctx.Guild.Id);
             if (guildConfig == null) return;
 
-            var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, Context.Guild, Context.Channel);
+            var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, ctx.Guild, ctx.Channel);
             if (outputChannel == null) return;
 
             var prefix = Db.Config.Prefix;
@@ -41,15 +40,15 @@ namespace Prima.Scheduler.Modules
             var splitIndex = args.IndexOf("|", StringComparison.Ordinal);
             if (splitIndex == -1)
             {
-                await ReplyAsync($"{Context.User.Mention}, please provide parameters with that command.\n" +
-                                 "A well-formed command would look something like:\n" +
-                                 $"`{prefix}announce 5:00PM | This is a fancy description!`");
+                await ctx.RespondAsync($"{ctx.User.Mention}, please provide parameters with that command.\n" +
+                          "A well-formed command would look something like:\n" +
+                          $"`{prefix}announce 5:00PM | This is a fancy description!`");
                 return;
             }
 
-            var parameters = args.Substring(0, splitIndex).Trim();
-            var description = args.Substring(splitIndex + 1).Trim();
-            var trimmedDescription = description.Substring(0, Math.Min(1700, description.Length));
+            var parameters = args[..splitIndex].Trim();
+            var description = args[(splitIndex + 1)..].Trim();
+            var trimmedDescription = description[..Math.Min(1700, description.Length)];
             if (trimmedDescription.Length != description.Length)
             {
                 trimmedDescription += "...";
@@ -57,14 +56,14 @@ namespace Prima.Scheduler.Modules
 
             if (parameters.IndexOf(":", StringComparison.Ordinal) == -1)
             {
-                await ReplyAsync($"{Context.User.Mention}, please specify a time for your run in your command!");
+                await ctx.RespondAsync($"<@{ctx.User.Id}>, please specify a time for your run in your command!");
                 return;
             }
 
             var time = Util.GetDateTime(parameters);
             if (time < DateTime.Now)
             {
-                await ReplyAsync("You cannot announce an event in the past!");
+                await ctx.RespondAsync("You cannot announce an event in the past!");
                 return;
             }
 
@@ -83,27 +82,25 @@ namespace Prima.Scheduler.Modules
             await Calendar.PostEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), new MiniEvent
 #endif
             {
-                Title = Context.User.ToString(),
+                Title = ctx.User.ToString(),
                 Description = description,
                 StartTime = XmlConvert.ToString(time.AddHours(timeMod), XmlDateTimeSerializationMode.Utc),
             });
 
-            var member = Context.Guild.GetUser(Context.User.Id);
+            var member = await ctx.Guild.GetMemberAsync(ctx.User.Id);
             var color = RunDisplayTypes.GetColorCastrum();
-            await outputChannel.SendMessageAsync(Context.Message.Id.ToString(), embed: new EmbedBuilder()
-                .WithAuthor(new EmbedAuthorBuilder()
-                    .WithIconUrl(Context.User.GetAvatarUrl())
-                    .WithName(Context.User.ToString()))
-                .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
+            await outputChannel.SendMessageAsync(ctx.Message.Id.ToString(), embed: new DiscordEmbedBuilder()
+                .WithAuthor(ctx.User.ToString(), iconUrl: ctx.User.GetAvatarUrl(ImageFormat.Png))
+                .WithColor(new DiscordColor(color.RGB[0], color.RGB[1], color.RGB[2]))
                 .WithTimestamp(time.AddHours(timeMod))
-                .WithTitle($"Event scheduled by {member?.Nickname ?? Context.User.ToString()} on {time.DayOfWeek} at {time.ToShortTimeString()} ({tzAbbr})!")
-                .WithDescription(trimmedDescription + $"\n\n[Copy to Google Calendar]({eventLink})\nMessage Link: {Context.Message.GetJumpUrl()}")
-                .WithFooter(Context.Message.Id.ToString())
+                .WithTitle($"Event scheduled by {member?.Nickname ?? ctx.User.ToString()} on {time.DayOfWeek} at {time.ToShortTimeString()} ({tzAbbr})!")
+                .WithDescription(trimmedDescription + $"\n\n[Copy to Google Calendar]({eventLink})\nMessage Link: {ctx.Message.JumpLink}")
+                .WithFooter(ctx.Message.Id.ToString())
                 .Build());
 
-            await ReplyAsync($"Event announced! Announcement posted in <#{outputChannel.Id}>. React to the announcement in " +
-                             $"<#{outputChannel.Id}> with :vibration_mode: to be notified before the event begins.");
-            await SortEmbeds(guildConfig, Context.Guild, outputChannel);
+            await ctx.RespondAsync($"Event announced! Announcement posted in <#{outputChannel.Id}>. React to the announcement in " +
+                      $"<#{outputChannel.Id}> with :vibration_mode: to be notified before the event begins.");
+            await SortEmbeds(ctx, guildConfig, ctx.Guild, outputChannel);
         }
 
         private async Task<MiniEvent> FindEvent(string calendarClass, string title, DateTime startTime)
@@ -117,15 +114,15 @@ namespace Prima.Scheduler.Modules
         }
 
         [Command("setruntime")]
-        [RequireUserPermission(GuildPermission.BanMembers)]
-        [RequireContext(ContextType.Guild)]
-        public async Task SetRunTimestamp(ulong outputChannelId, ulong eventId, [Remainder] string args)
+        [RequireUserPermissions(Permissions.BanMembers)]
+        [RequireGuild]
+        public async Task SetRunTimestamp(CommandContext ctx, ulong outputChannelId, ulong eventId, [RemainingText] string args)
         {
-            var outputChannel = Context.Guild.GetTextChannel(outputChannelId);
+            var outputChannel = ctx.Guild.GetChannel(outputChannelId);
             var (embedMessage, embed) = await FindAnnouncement(outputChannel, eventId);
             if (embed == null)
             {
-                await ReplyAsync("No run was found matching that event ID in that channel.");
+                await ctx.RespondAsync("No run was found matching that event ID in that channel.");
                 return;
             }
 
@@ -139,7 +136,7 @@ namespace Prima.Scheduler.Modules
             if (isDST)
                 timeMod -= 1;
 
-            var host = Context.Guild.Users.FirstOrDefault(u => u.ToString() == embed.Author?.Name);
+            var host = ctx.Guild.Members.Values.FirstOrDefault(u => u.ToString() == embed.Author?.Name);
             await embedMessage.ModifyAsync(props =>
             {
                 var builder = embed.ToEmbedBuilder();
@@ -153,52 +150,48 @@ namespace Prima.Scheduler.Modules
                     .Build();
             });
 
-            await ReplyAsync("Updated.");
+            await ctx.RespondAsync("Updated.");
         }
 
-        [Command("sortembeds", RunMode = RunMode.Async)]
-        [RequireContext(ContextType.Guild)]
+        [Command("sortembeds")]
+        [RequireGuild]
         [RequireOwner]
-        public async Task SortEmbedsCommand(ulong id)
+        public async Task SortEmbedsCommand(CommandContext ctx, ulong id)
         {
-            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == ctx.Guild.Id);
             if (guildConfig == null) return;
 
-            var channel = Context.Guild.GetTextChannel(id);
-            await SortEmbeds(guildConfig, Context.Guild, channel);
-            await ReplyAsync("Done!");
+            var channel = ctx.Guild.GetChannel(id);
+            await SortEmbeds(ctx, guildConfig, ctx.Guild, channel);
+            await ctx.RespondAsync("Done!");
         }
 
-        private async Task SortEmbeds(DiscordGuildConfiguration guildConfig, IGuild guild, IMessageChannel channel)
+        private async Task SortEmbeds(CommandContext ctx, DiscordGuildConfiguration guildConfig, DiscordGuild guild, DiscordChannel channel)
         {
-            var progress = await ReplyAsync("Sorting announcements...");
-            using var typing = Context.Channel.EnterTypingState();
+            var progress = await ctx.RespondAsync("Sorting announcements...");
+            using var typing = ctx.Channel.TriggerTypingAsync();
 
-            var embeds = new List<IEmbed>();
+            var embeds = new List<DiscordEmbed>();
 
-            await foreach (var page in channel.GetMessagesAsync())
+            foreach (var message in await channel.GetMessagesAsync())
             {
-                foreach (var message in page)
-                {
-                    if (message.Embeds.All(e => e.Type != EmbedType.Rich)) continue;
-                    var embed = message.Embeds.First(e => e.Type == EmbedType.Rich);
+                var embed = message.Embeds.FirstOrDefault();
 
-                    if (!embed.Timestamp.HasValue) continue;
+                if (embed?.Timestamp == null) continue;
 
-                    await message.DeleteAsync();
-                    if (embed.Timestamp.Value < DateTimeOffset.Now) continue;
+                await message.DeleteAsync();
+                if (embed.Timestamp.Value < DateTimeOffset.Now) continue;
 
-                    embeds.Add(embed);
-                }
+                embeds.Add(embed);
             }
 
             // ReSharper disable PossibleInvalidOperationException
             embeds.Sort((a, b) => (int)(b.Timestamp.Value.ToUnixTimeSeconds() - a.Timestamp.Value.ToUnixTimeSeconds()));
             // ReSharper enable PossibleInvalidOperationException
 
-            var dps = guild.Emotes.FirstOrDefault(e => e.Name.ToLowerInvariant() == "dps");
-            var healer = guild.Emotes.FirstOrDefault(e => e.Name.ToLowerInvariant() == "healer");
-            var tank = guild.Emotes.FirstOrDefault(e => e.Name.ToLowerInvariant() == "tank");
+            var dps = guild.Emojis.Values.FirstOrDefault(e => e.Name.ToLowerInvariant() == "dps");
+            var healer = guild.Emojis.Values.FirstOrDefault(e => e.Name.ToLowerInvariant() == "healer");
+            var tank = guild.Emojis.Values.FirstOrDefault(e => e.Name.ToLowerInvariant() == "tank");
             foreach (var embed in embeds)
             {
                 try
@@ -222,7 +215,7 @@ namespace Prima.Scheduler.Modules
 
                         var calendarLinkLine = lines.LastOrDefault(LineContainsCalendarLink);
                         messageLinkLine =
-                            $"Message Link: https://discordapp.com/channels/{guild.Id}/{Context.Channel.Id}/{embed.Footer?.Text}";
+                            $"Message Link: https://discordapp.com/channels/{guild.Id}/{ctx.Channel.Id}/{embed.Footer?.Text}";
 
                         embedBuilder.WithDescription(trimmedDescription + (calendarLinkLine != null
                             ? $"\n\n{calendarLinkLine}"
@@ -233,7 +226,7 @@ namespace Prima.Scheduler.Modules
 
                     try
                     {
-                        await m.AddReactionAsync(new Emoji("📳"));
+                        await m.CreateReactionAsync(DiscordEmoji.FromUnicode("📳"));
 
                         var noQueueChannels = new[]
                         {
@@ -244,7 +237,7 @@ namespace Prima.Scheduler.Modules
                         };
 
                         if (!noQueueChannels.Contains(channel.Id))
-                            await m.AddReactionsAsync(new IEmote[] { dps, healer, tank });
+                            await m.CreateReactionsAsync(new[] { dps, healer, tank });
                     }
                     catch (Exception e)
                     {
@@ -270,60 +263,60 @@ namespace Prima.Scheduler.Modules
             return l.StartsWith("Message Link: https://discordapp.com/channels/");
         }
 
-        [Command("reactions", RunMode = RunMode.Async)]
+        [Command("reactions")]
         [Description("Get the number of reactions for an announcement.")]
-        public async Task ReactionCount([Remainder] string args)
+        public async Task ReactionCount(CommandContext ctx, [RemainingText] string args)
         {
-            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == ctx.Guild.Id);
             if (guildConfig == null) return;
 
-            var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, Context.Guild, Context.Channel);
+            var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, ctx.Guild, ctx.Channel);
             if (outputChannel == null) return;
 
             var time = Util.GetDateTime(args);
 
-            var (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, time);
+            var (embedMessage, embed) = await FindAnnouncement(ctx, outputChannel, ctx.User, time);
             if (embedMessage != null && embed?.Footer != null && ulong.TryParse(embed.Footer?.Text, out var originalMessageId))
             {
                 var count = await Db.EventReactions
                     .Where(er => er.EventId == originalMessageId)
                     .CountAsync();
-                await ReplyAsync($"That event has `{count}` reaction(s).");
+                await ctx.RespondAsync($"That event has `{count}` reaction(s).");
             }
             else
             {
-                await ReplyAsync("Failed to fetch embed message!");
+                await ctx.RespondAsync("Failed to fetch embed message!");
             }
         }
 
-        [Command("reannounce", RunMode = RunMode.Async)]
+        [Command("reannounce")]
         [Description("Reschedule an announcement. Usage: `~reannounce Old Time | New Time`")]
-        public async Task Reannounce([Remainder] string args)
+        public async Task Reannounce(CommandContext ctx, [RemainingText] string args)
         {
-            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == ctx.Guild.Id);
             if (guildConfig == null) return;
 
-            var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, Context.Guild, Context.Channel);
+            var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, ctx.Guild, ctx.Channel);
             if (outputChannel == null) return;
 
-            var username = Context.User.ToString();
+            var username = ctx.User.ToString();
             var times = args.Split('|');
 
             var curTime = Util.GetDateTime(times[0]);
             if (curTime < DateTime.Now)
             {
-                await ReplyAsync("The first time is in the past!");
+                await ctx.RespondAsync("The first time is in the past!");
                 return;
             }
 
             var newTime = Util.GetDateTime(times[1]);
             if (newTime < DateTime.Now)
             {
-                await ReplyAsync("The second time is in the past!");
+                await ctx.RespondAsync("The second time is in the past!");
                 return;
             }
 
-            var (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, curTime);
+            var (embedMessage, embed) = await FindAnnouncement(ctx, outputChannel, ctx.User, curTime);
             if (embedMessage != null)
             {
                 var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
@@ -334,13 +327,13 @@ namespace Prima.Scheduler.Modules
                 if (isDST)
                     timeMod -= 1;
 
-                var member = Context.Guild.GetUser(Context.User.Id);
+                var member = await ctx.Guild.GetMemberAsync(ctx.User.Id);
                 await embedMessage.ModifyAsync(props =>
                 {
                     props.Embed = embed
                         .ToEmbedBuilder()
                         .WithTimestamp(newTime.AddHours(timeMod))
-                        .WithTitle($"Event scheduled by {member?.Nickname ?? Context.User.ToString()} on {newTime.DayOfWeek} at {newTime.ToShortTimeString()} ({tzAbbr})!")
+                        .WithTitle($"Event scheduled by {member?.Nickname ?? ctx.User.ToString()} on {newTime.DayOfWeek} at {newTime.ToShortTimeString()} ({tzAbbr})!")
                         .Build();
                 });
 
@@ -363,32 +356,32 @@ namespace Prima.Scheduler.Modules
                 }
 #endif
 
-                await SortEmbeds(guildConfig, Context.Guild, outputChannel);
+                await SortEmbeds(ctx, guildConfig, ctx.Guild, outputChannel);
 
                 Log.Information("Rescheduled announcement from {OldTime} to {NewTime}", curTime.ToShortTimeString(), newTime.ToShortTimeString());
-                await ReplyAsync("Announcement rescheduled!");
+                await ctx.RespondAsync("Announcement rescheduled!");
             }
             else
             {
-                await ReplyAsync("No announcement by you was found at that time!");
+                await ctx.RespondAsync("No announcement by you was found at that time!");
             }
         }
 
-        [Command("unannounce", RunMode = RunMode.Async)]
+        [Command("unannounce")]
         [Description("Cancel an event. Usage: `~unannounce Time`")]
-        public async Task Unannounce([Remainder] string args)
+        public async Task Unannounce(CommandContext ctx, [RemainingText] string args)
         {
-            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == ctx.Guild.Id);
             if (guildConfig == null) return;
 
-            var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, Context.Guild, Context.Channel);
+            var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, ctx.Guild, ctx.Channel);
             if (outputChannel == null) return;
 
-            var username = Context.User.ToString();
+            var username = ctx.User.ToString();
             var time = Util.GetDateTime(args);
             if (time < DateTime.Now)
             {
-                await ReplyAsync("That time is in the past!");
+                await ctx.RespondAsync("That time is in the past!");
                 return;
             }
 
@@ -398,12 +391,12 @@ namespace Prima.Scheduler.Modules
             if (isDST)
                 timeMod -= 1;
 
-            var (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, time);
+            var (embedMessage, embed) = await FindAnnouncement(ctx, outputChannel, ctx.User, time);
             if (embedMessage != null)
             {
                 await embedMessage.ModifyAsync(props =>
                 {
-                    props.Embed = new EmbedBuilder()
+                    props.Embed = new DiscordEmbedBuilder()
                         .WithTitle(embed.Title)
                         .WithColor(embed.Color.Value)
                         .WithDescription("❌ Cancelled")
@@ -435,22 +428,22 @@ namespace Prima.Scheduler.Modules
                     await Db.RemoveAllEventReactions(ulong.Parse(embed.Footer?.Text));
                 }
 
-                await ReplyAsync("Event cancelled.");
+                await ctx.RespondAsync("Event cancelled.");
             }
             else
             {
-                await ReplyAsync("No event by you was found at that time!");
+                await ctx.RespondAsync("No event by you was found at that time!");
             }
         }
 
         [Command("drsruns")]
         [Description("Lists the estimated number of runs of each type for Delubrum Reginae (Savage) right now.")]
-        public async Task ListDRSRunCountsByType([Remainder] string args = "")
+        public async Task ListDRSRunCountsByType(CommandContext ctx, [RemainingText] string args = "")
         {
-            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == ctx.Guild.Id);
             if (guildConfig == null) return;
 
-            var outputChannel = Context.Guild.GetTextChannel(guildConfig.DelubrumScheduleOutputChannel);
+            var outputChannel = ctx.Guild.GetChannel(guildConfig.DelubrumScheduleOutputChannel);
             var events = await ScheduleUtils.GetEvents(outputChannel);
 
             var eventCounts = events
@@ -481,30 +474,26 @@ namespace Prima.Scheduler.Modules
                 "Unknown",
             };
 
-            await ReplyAsync(typeOrder.Aggregate("Estimated run counts by type:\n```",
+            await ctx.RespondAsync(typeOrder.Aggregate("Estimated run counts by type:\n```",
                                  (agg, type) => agg + $"\n{type}: {(eventCounts.ContainsKey(type) ? eventCounts[type] : 0)}") +
                              "\n```");
         }
 
-        private async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, SocketUser user, DateTime time)
+        private async Task<(DiscordMessage, DiscordEmbed)> FindAnnouncement(CommandContext ctx, DiscordChannel channel, DiscordUser user, DateTime time)
         {
-            var announcements = new List<(IUserMessage, IEmbed)>();
-
-            await foreach (var page in channel.GetMessagesAsync())
+            var announcements = new List<(DiscordMessage, DiscordEmbed)>();
+            foreach (var message in await channel.GetMessagesAsync())
             {
-                foreach (var message in page)
-                {
-                    var restMessage = (IUserMessage)message;
+                var restMessage = message;
 
-                    var embed = restMessage.Embeds.FirstOrDefault();
-                    if (embed?.Footer == null) continue;
+                var embed = restMessage.Embeds.FirstOrDefault();
+                if (embed?.Footer == null) continue;
 
-                    if (embed.Author?.Name != user.ToString()
-                          || !embed.Title.Contains(time.ToShortTimeString())
-                          || !embed.Title.Contains(time.DayOfWeek.ToString())) continue;
+                if (embed.Author?.Name != user.ToString()
+                    || !embed.Title.Contains(time.ToShortTimeString())
+                    || !embed.Title.Contains(time.DayOfWeek.ToString())) continue;
 
-                    announcements.Add((restMessage, embed));
-                }
+                announcements.Add((restMessage, embed));
             }
 
             switch (announcements.Count)
@@ -518,16 +507,16 @@ namespace Prima.Scheduler.Modules
                         var query = "Multiple runs at that time were found; which one would you like to select?";
                         for (var i = 0; i < announcements.Count; i++)
                         {
-                            query += $"\n{i + 1}) {announcements[i].Item1.GetJumpUrl()}";
+                            query += $"\n{i + 1}) {announcements[i].Item1.JumpLink}";
                         }
-                        await ReplyAsync(query);
+                        await ctx.RespondAsync(query);
 
                         var j = -1;
                         const int stopPollingDelayMs = 250;
                         for (var i = 0; i < (5 * 60000) / stopPollingDelayMs; i++)
                         {
-                            var newMessages = await Context.Channel.GetMessagesAsync(limit: 1).FlattenAsync();
-                            var newMessage = newMessages.FirstOrDefault(m => m.Author.Id == Context.User.Id);
+                            var newMessages = await ctx.Channel.GetMessagesAsync(limit: 1);
+                            var newMessage = newMessages.FirstOrDefault(m => m.Author.Id == ctx.User.Id);
                             if (newMessage != null && int.TryParse(newMessage.Content, out j))
                             {
                                 break;
@@ -536,27 +525,24 @@ namespace Prima.Scheduler.Modules
                         }
 
                         if (j != -1) return announcements[j - 1];
-                        await ReplyAsync("No response received; cancelling...");
+                        await ctx.RespondAsync("No response received; cancelling...");
                         return (null, null);
                     }
             }
         }
 
-        private static async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, ulong eventId)
+        private static async Task<(DiscordMessage, DiscordEmbed)> FindAnnouncement(DiscordChannel channel, ulong eventId)
         {
-            await foreach (var page in channel.GetMessagesAsync())
+            foreach (var message in await channel.GetMessagesAsync())
             {
-                foreach (var message in page)
+                var restMessage = message;
+
+                var embed = message.Embeds.FirstOrDefault();
+                if (embed?.Footer == null) continue;
+
+                if (ulong.TryParse(embed.Footer?.Text, out var embedEId) && embedEId == eventId)
                 {
-                    var restMessage = (IUserMessage)message;
-
-                    var embed = restMessage.Embeds.FirstOrDefault();
-                    if (embed?.Footer == null) continue;
-
-                    if (ulong.TryParse(embed.Footer?.Text, out var embedEId) && embedEId == eventId)
-                    {
-                        return (restMessage, embed);
-                    }
+                    return (restMessage, embed);
                 }
             }
 

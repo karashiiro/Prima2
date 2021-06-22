@@ -1,12 +1,10 @@
-﻿using Discord;
-using Discord.Net;
-using Discord.WebSocket;
+﻿using DSharpPlus;
+using DSharpPlus.Entities;
 using Prima.Models;
 using Prima.Resources;
-using Prima.DiscordNet.Services;
+using Prima.Services;
 using Serilog;
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,9 +25,9 @@ namespace Prima.Scheduler.Services
 
         private readonly CancellationTokenSource _tokenSource;
         private readonly IDbService _db;
-        private readonly DiscordSocketClient _client;
+        private readonly DiscordClient _client;
 
-        public RunNotiferService(IDbService db, DiscordSocketClient client)
+        public RunNotiferService(IDbService db, DiscordClient client)
         {
             _tokenSource = new CancellationTokenSource();
             _db = db;
@@ -49,7 +47,7 @@ namespace Prima.Scheduler.Services
             {
                 if (token.IsCancellationRequested)
                     token.ThrowIfCancellationRequested();
-                
+
                 var runs = _db.Events.Where(e => DateTime.FromBinary(e.RunTime) > DateTime.Now && !e.Notified);
                 foreach (var run in runs)
                 {
@@ -69,21 +67,12 @@ namespace Prima.Scheduler.Services
 
                         Log.Information("Run {MessageId}, notifications started.", run.MessageId3);
 
-                        var guild = _client.Guilds.FirstOrDefault(g =>
-                        {
-#if DEBUG
-                            Log.Debug("{Guild1}, {Guild2}", g.Id, run.GuildId);
-#endif
-                            return g.Id == run.GuildId;
-                        });
+                        var guild = await _client.GetGuildAsync(run.GuildId);
                         if (guild == null)
                         {
                             Log.Error("No guild found, skipping!");
                             continue;
                         }
-
-                        Log.Information("Redownloading user list.");
-                        await Task.WhenAny(guild.DownloadUsersAsync(), Task.Delay(5000, token));
 
                         var guildConfig = _db.Guilds.FirstOrDefault(gc => gc.Id == guild.Id);
                         if (guildConfig == null)
@@ -91,22 +80,22 @@ namespace Prima.Scheduler.Services
                             Log.Error("No guild configuration found, skipping!");
                             continue;
                         }
-                        var commandChannel = guild.GetTextChannel(run.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.ScheduleInputChannel : guildConfig.CastrumScheduleInputChannel);
-                        var outputChannel = guild.GetTextChannel(run.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.ScheduleOutputChannel : guildConfig.CastrumScheduleOutputChannel);
+                        var commandChannel = guild.GetChannel(guildConfig.ScheduleInputChannel);
+                        var outputChannel = guild.GetChannel(guildConfig.ScheduleOutputChannel);
 
-                        var leader = (IGuildUser)guild.GetUser(run.LeaderId) ?? await _client.Rest.GetGuildUserAsync(guild.Id, run.LeaderId);
+                        var leader = await guild.GetMemberAsync(run.LeaderId);
                         try
                         {
                             Log.Information("Sending notification to leader.");
                             await leader.SendMessageAsync("The run you scheduled is set to begin in 30 minutes!\n\n" +
-                                $"Message link: <{(await commandChannel.GetMessageAsync(run.MessageId3)).GetJumpUrl()}>");
+                                $"Message link: <{(await commandChannel.GetMessageAsync(run.MessageId3)).JumpLink}>");
                         }
-                        catch (HttpException)
+                        catch (Exception)
                         {
                             try
                             {
                                 var message = await commandChannel.SendMessageAsync($"{leader.Mention}, the run you scheduled is set to begin in 30 minutes!\n\n" +
-                                    $"Message link: <{(await commandChannel.GetMessageAsync(run.MessageId3)).GetJumpUrl()}>");
+                                    $"Message link: <{(await commandChannel.GetMessageAsync(run.MessageId3)).JumpLink}>");
                                 (new Task(async () =>
                                 {
                                     await Task.Delay((int)Threshold, token);
@@ -114,10 +103,10 @@ namespace Prima.Scheduler.Services
                                     {
                                         await message.DeleteAsync();
                                     }
-                                    catch (HttpException) { } // Message was already deleted.
+                                    catch (Exception) { } // Message was already deleted.
                                 })).Start();
                             }
-                            catch (HttpException)
+                            catch (Exception)
                             {
                                 Log.Warning("Every attempt at notifying {LeaderName} failed.", leader.ToString());
                             }
@@ -125,7 +114,7 @@ namespace Prima.Scheduler.Services
 
                         foreach (var userId in run.SubscribedUsers)
                         {
-                            var member = guild.GetUser(ulong.Parse(userId));
+                            var member = await guild.GetMemberAsync(ulong.Parse(userId));
                             await TryNotifyMember(member, leader, commandChannel, run, guildConfig, token);
                         }
 
@@ -146,22 +135,22 @@ namespace Prima.Scheduler.Services
             }
         }
 
-        private static async Task TryNotifyMember(IUser member, IGuildUser leader, ISocketMessageChannel commandChannel, ScheduledEvent @event, DiscordGuildConfiguration guildConfig, CancellationToken token)
+        private static async Task TryNotifyMember(DiscordMember member, DiscordMember leader, DiscordChannel commandChannel, ScheduledEvent @event, DiscordGuildConfiguration guildConfig, CancellationToken token)
         {
             var success = false;
             try
             {
                 await member.SendMessageAsync(
                     $"The run you reacted to (hosted by {leader.Nickname ?? leader.Username}) is beginning in 30 minutes!\n\n" +
-                    $"Message link: <{(await commandChannel.GetMessageAsync(@event.MessageId3)).GetJumpUrl()}>");
+                    $"Message link: <{(await commandChannel.GetMessageAsync(@event.MessageId3)).JumpLink}>");
                 success = true;
             }
-            catch (HttpException)
+            catch (Exception)
             {
                 try
                 {
                     var message = await commandChannel.SendMessageAsync($"{member.Mention}, the run you reacted to (hosted by {leader.Nickname ?? leader.Username}) is beginning in 30 minutes!\n\n" +
-                        $"Message link: <{(await commandChannel.GetMessageAsync(@event.MessageId3)).GetJumpUrl()}>");
+                        $"Message link: <{(await commandChannel.GetMessageAsync(@event.MessageId3)).JumpLink}>");
                     (new Task(async () =>
                     {
                         await Task.Delay((int)Threshold, token);
@@ -169,11 +158,11 @@ namespace Prima.Scheduler.Services
                         {
                             await message.DeleteAsync();
                         }
-                        catch (HttpException) { } // Message was already deleted.
+                        catch (Exception) { } // Message was already deleted.
                     })).Start();
                     success = true;
                 }
-                catch (HttpException)
+                catch (Exception)
                 {
                     Log.Warning("Every attempt at message user {Username} failed.", member.ToString());
                 }
@@ -181,14 +170,14 @@ namespace Prima.Scheduler.Services
             if (success) Log.Information($"Info sent to {member} about {leader}'s run.");
         }
 
-        private async Task AssignHost(IGuildUser host)
+        private async Task AssignHost(DiscordMember host)
         {
             var guild = host.Guild;
 
             var hostRole = guild.GetRole(HostRole);
             var runPinner = guild.GetRole(RunHostData.PinnerRoleId);
 
-            await host.AddRolesAsync(new [] { hostRole, runPinner });
+            await host.GrantRolesAsync(new[] { hostRole, runPinner });
 
             await _db.AddTimedRole(HostRole, guild.Id, host.Id, DateTime.UtcNow.AddHours(4.5));
             await _db.AddTimedRole(runPinner.Id, guild.Id, host.Id, DateTime.UtcNow.AddHours(4.5));

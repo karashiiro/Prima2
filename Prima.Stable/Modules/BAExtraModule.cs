@@ -2,8 +2,8 @@
 using Discord.Commands;
 using Prima.DiscordNet;
 using Prima.DiscordNet.Attributes;
-using Prima.DiscordNet.Services;
 using Prima.Resources;
+using Prima.Services;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;

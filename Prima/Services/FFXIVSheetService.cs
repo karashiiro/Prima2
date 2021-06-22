@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 
-namespace Prima.DiscordNet.Services
+namespace Prima.Services
 {
     public class FFXIVSheetService
     {

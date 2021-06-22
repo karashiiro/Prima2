@@ -1,6 +1,8 @@
 ﻿using Discord;
 using Discord.Commands;
-using Prima.DiscordNet.Services;
+using Prima.DiscordNet.Attributes;
+using Prima.Services;
+using Prima.Stable.Handlers;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -8,8 +10,6 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Prima.DiscordNet.Attributes;
-using Prima.Stable.Handlers;
 
 namespace Prima.Stable.Modules
 {
@@ -246,7 +246,7 @@ namespace Prima.Stable.Modules
                 try
                 {
                     var entry = guildConfig.TextDenylist.First(rs => rs == regexString);
-                     await Db.RemoveGuildTextDenylistEntry(Context.Guild.Id, entry);
+                    await Db.RemoveGuildTextDenylistEntry(Context.Guild.Id, entry);
                 }
                 catch (InvalidOperationException)
                 {

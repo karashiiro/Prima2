@@ -1,22 +1,21 @@
-﻿using Google.Apis.Auth.OAuth2;
+﻿using DSharpPlus;
+using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 using Google.Apis.Util.Store;
 using Prima.Models;
 using Prima.Resources;
+using Prima.Services;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Discord.WebSocket;
-using Prima.DiscordNet.Services;
 using Color = Google.Apis.Sheets.v4.Data.Color;
-using System.Linq;
-using Discord;
 
 namespace Prima.Scheduler.Services
 {
@@ -34,10 +33,10 @@ namespace Prima.Scheduler.Services
             : Path.Combine(Environment.GetEnvironmentVariable("HOME"), "token.json");
 
         private readonly IDbService _db;
-        private readonly DiscordSocketClient _client;
+        private readonly DiscordClient _client;
         private readonly SheetsService _service;
 
-        public SpreadsheetService(IDbService db, DiscordSocketClient client)
+        public SpreadsheetService(IDbService db, DiscordClient client)
         {
             _db = db;
             _client = client;
@@ -154,7 +153,7 @@ namespace Prima.Scheduler.Services
                                         {
                                             UserEnteredValue = new ExtendedValue
                                             {
-                                                FormulaValue = $"=HYPERLINK(\"{(await _client.GetGuild(@event.GuildId).GetTextChannel(@event.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.ScheduleInputChannel : guildConfig.CastrumScheduleInputChannel).GetMessageAsync(@event.MessageId3)).GetJumpUrl()}\",\"[{_client.GetUser(@event.LeaderId)}]\")",
+                                                FormulaValue = $"=HYPERLINK(\"{await GetEventJumpLink(@event, guildConfig)}\",\"[{await _client.GetUserAsync(@event.LeaderId)}]\")",
                                             },
                                         },
                                     },
@@ -263,6 +262,14 @@ namespace Prima.Scheduler.Services
 
             @event.Listed = true;
             await _db.UpdateScheduledEvent(@event);
+        }
+
+        private async Task<string> GetEventJumpLink(ScheduledEvent @event, DiscordGuildConfiguration guildConfig)
+        {
+            var guild = await _client.GetGuildAsync(@event.GuildId);
+            var channel = guild.GetChannel(guildConfig.ScheduleInputChannel);
+            var message = await channel.GetMessageAsync(@event.MessageId3);
+            return message.JumpLink.ToString();
         }
 
         public async Task RemoveEvent(ScheduledEvent @event, string spreadsheetId)

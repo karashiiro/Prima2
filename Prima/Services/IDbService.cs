@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Prima.Models;
 
-namespace Prima.DiscordNet.Services
+namespace Prima.Services
 {
     public interface IDbService
     {

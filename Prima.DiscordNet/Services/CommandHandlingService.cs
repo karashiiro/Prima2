@@ -2,6 +2,7 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
+using Prima.Services;
 using Serilog;
 using System;
 using System.Linq;
