@@ -1,12 +1,9 @@
-﻿using System;
+﻿using Discord.Commands;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using Discord.Commands;
-using Prima.Attributes;
-using Prima.Extensions;
 
-namespace Prima.Services
+namespace Prima.DiscordNet.Services
 {
     public class RateLimitService
     {
@@ -49,7 +46,7 @@ namespace Prima.Services
         {
             if (seconds == 0)
                 throw new InvalidOperationException("Command does not have a rate limit.");
-            
+
             _commandTimeouts.Remove(command.Name);
             _commandTimeouts.Add(command.Name, DateTimeOffset.Now.ToUnixTimeSeconds() + seconds);
         }

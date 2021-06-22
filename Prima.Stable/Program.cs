@@ -1,16 +1,16 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-using System.Net;
-using Discord.WebSocket;
-using FFXIVWeather;
+﻿using Discord.WebSocket;
 using FFXIVWeather.Lumina;
 using Lumina;
 using Microsoft.Extensions.DependencyInjection;
-using Prima.Services;
+using Prima.DiscordNet;
+using Prima.DiscordNet.Services;
 using Prima.Stable.Handlers;
 using Prima.Stable.Services;
 using Serilog;
+using System;
+using System.IO;
+using System.Net;
+using System.Threading.Tasks;
 
 namespace Prima.Stable
 {
@@ -62,7 +62,7 @@ namespace Prima.Stable
             client.UserVoiceStateUpdated += mute.OnVoiceJoin;
 
             Log.Information("Prima.Stable logged in!");
-                
+
             await Task.Delay(-1);
         }
 

@@ -7,16 +7,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Prima\Modules\CommonModule.cs" Link="Modules\CommonModule.cs" />
+    <Compile Include="..\Prima.Discord.Net\Modules\CommonModule.cs" Link="Modules\CommonModule.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Discord.Net" Version="2.4.0" />
     <PackageReference Include="FFXIVWeather.Lumina" Version="1.2.2" />
     <PackageReference Include="System.Drawing.Common" Version="5.0.2" />
     <PackageReference Include="TimeZoneNames" Version="4.2.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Prima.Discord.Net\Prima.DiscordNet.csproj" />
     <ProjectReference Include="..\Prima\Prima.csproj" />
   </ItemGroup>
 

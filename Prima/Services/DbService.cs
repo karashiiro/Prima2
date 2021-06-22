@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Prima.Services
+namespace Prima.DiscordNet.Services
 {
     public class DbService : IDbService
     {
@@ -288,7 +288,7 @@ namespace Prima.Services
 
         public async Task RemoveGuildTextGreylistEntry(ulong guildId, string regexString)
         {
-            var greylist = (await(await _guildConfig.FindAsync(guild => guild.Id == guildId)).FirstAsync().ConfigureAwait(false)).TextGreylist;
+            var greylist = (await (await _guildConfig.FindAsync(guild => guild.Id == guildId)).FirstAsync().ConfigureAwait(false)).TextGreylist;
             if (greylist.Any())
             {
                 var update = Builders<DiscordGuildConfiguration>.Update.Pull("TextGreylist", regexString);

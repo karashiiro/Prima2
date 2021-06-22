@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Prima.Services
+namespace Prima.DiscordNet.Services
 {
     public interface ITemplateProvider
     {

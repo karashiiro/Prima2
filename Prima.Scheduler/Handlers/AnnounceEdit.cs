@@ -5,7 +5,7 @@ using Discord;
 using Discord.WebSocket;
 using Prima.Resources;
 using Prima.Scheduler.GoogleApis.Services;
-using Prima.Services;
+using Prima.DiscordNet.Services;
 using Serilog;
 
 namespace Prima.Scheduler.Handlers

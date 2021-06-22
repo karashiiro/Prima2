@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Prima.Attributes
+namespace Prima.DiscordNet.Attributes
 {
     /// <summary>
     /// Sets the description for the command.

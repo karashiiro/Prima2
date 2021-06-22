@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Prima.Models;
-using Prima.Services;
+using Prima.DiscordNet.Services;
 
 namespace Prima.Stable.Handlers
 {

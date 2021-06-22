@@ -1,7 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Prima.Models;
-using Prima.Services;
+using Prima.DiscordNet.Services;
 using System;
 using System.Threading.Tasks;
 

@@ -1,18 +1,19 @@
-﻿using System;
+﻿using Discord;
+using Discord.Commands;
+using Discord.Net;
+using Prima.DiscordNet;
+using Prima.DiscordNet.Attributes;
+using Prima.DiscordNet.Services;
+using Prima.Models;
+using Prima.Resources;
+using Prima.Stable.Models.FFLogs;
+using Prima.Stable.Services;
+using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Discord;
-using Discord.Commands;
-using Discord.Net;
-using Prima.Attributes;
-using Prima.Models;
-using Prima.Resources;
-using Prima.Services;
-using Prima.Stable.Models.FFLogs;
-using Prima.Stable.Services;
-using Serilog;
 using Color = Discord.Color;
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -40,7 +41,7 @@ namespace Prima.Stable.Modules
             var commands = await DiscordUtilities.GetFormattedCommandList(
                 typeof(BozjaExtraModule),
                 prefix,
-                except: new List<string> {"bozhelp"});
+                except: new List<string> { "bozhelp" });
 
             var embed = new EmbedBuilder()
                 .WithTitle("Useful Commands (Bozja)")
@@ -114,7 +115,7 @@ namespace Prima.Stable.Modules
         [Alias("addprogroles")]
         [Description("Adds progression roles to server members from a log. Rolers can also manually add roles using this command.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task AddDelubrumProgRoleAsync([Remainder]string args)
+        public async Task AddDelubrumProgRoleAsync([Remainder] string args)
         {
             var isFFLogs = FFLogs.IsLogLink(args);
             if (isFFLogs)
@@ -143,7 +144,7 @@ namespace Prima.Stable.Modules
                 .Select(idStr => RegexSearches.NonNumbers.Replace(idStr, ""))
                 .Select(ulong.Parse)
                 .Select(id => Context.Guild.GetUser(id));
-            
+
             var roleName = string.Join(' ', words.Where(w => !w.StartsWith('<')));
             roleName = RegexSearches.UnicodeApostrophe.Replace(roleName, "'");
 
@@ -296,7 +297,7 @@ namespace Prima.Stable.Modules
             // multiple queries.
             var users = (await Task.WhenAll(potentialUsers))
                 .Where(kvp => kvp.Value != null)
-                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);;
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value); ;
             var missedUsers = new List<LogInfo.ReportDataWrapper.ReportData.Report.Master.Actor>();
 
             var addedAny = false;
@@ -330,7 +331,7 @@ namespace Prima.Stable.Modules
                         }
                         continue;
                     }
-                    
+
                     var user = Context.Guild.GetUser(users[id].DiscordId);
                     if (user == null || user.HasRole(806362589134454805)) continue;
 

@@ -3,7 +3,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Serilog;
 
-namespace Prima.Services
+namespace Prima.DiscordNet.Services
 {
     public class PasswordGenerator
     {

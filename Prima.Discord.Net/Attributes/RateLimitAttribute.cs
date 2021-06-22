@@ -1,10 +1,10 @@
-﻿using System;
-using System.Threading.Tasks;
-using Discord.Commands;
+﻿using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
-using Prima.Services;
+using System;
+using System.Threading.Tasks;
+using Prima.DiscordNet.Services;
 
-namespace Prima.Attributes
+namespace Prima.DiscordNet.Attributes
 {
     public class RateLimitAttribute : PreconditionAttribute
     {

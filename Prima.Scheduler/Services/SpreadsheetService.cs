@@ -13,7 +13,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord.WebSocket;
-using Prima.Services;
+using Prima.DiscordNet.Services;
 using Color = Google.Apis.Sheets.v4.Data.Color;
 using System.Linq;
 using Discord;

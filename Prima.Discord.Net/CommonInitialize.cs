@@ -2,14 +2,14 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
-using Prima.Services;
+using Prima.DiscordNet.Services;
 using Serilog;
 using System;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace Prima
+namespace Prima.DiscordNet
 {
     public static class CommonInitialize
     {
@@ -36,7 +36,7 @@ namespace Prima
         public static async Task ConfigureServicesAsync(ServiceProvider services)
         {
             var client = services.GetRequiredService<DiscordSocketClient>();
-                
+
             client.Log += LogAsync;
             services.GetRequiredService<CommandService>().Log += LogAsync;
 
@@ -59,7 +59,7 @@ namespace Prima
                 .AddSingleton<PasswordGenerator>()
                 .AddSingleton<RateLimitService>()
                 .AddSingleton<ITemplateProvider, TemplateProvider>();
-                //.AddSingleton(new HttpServer(Log.Information))
+            //.AddSingleton(new HttpServer(Log.Information))
         }
 
         private static Task LogAsync(LogMessage message)

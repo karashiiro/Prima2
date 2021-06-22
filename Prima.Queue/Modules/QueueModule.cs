@@ -2,17 +2,18 @@
 using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
-using Prima.Attributes;
+using Prima.DiscordNet;
+using Prima.DiscordNet.Attributes;
+using Prima.DiscordNet.Services;
+using Prima.Models;
 using Prima.Queue.Services;
 using Prima.Resources;
-using Prima.Services;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Prima.Models;
 
 namespace Prima.Queue.Modules
 {
@@ -509,7 +510,7 @@ namespace Prima.Queue.Modules
                             guildConfig.CastrumScheduleInputChannel,
                         };
 #endif
-                        
+
                         var (_, embed) = await GetEvent(eventId);
                         if (embed.Timestamp == null)
                         {
@@ -940,7 +941,7 @@ namespace Prima.Queue.Modules
             if (delubrumAllRoles)
             {
                 var roleIds = DelubrumProgressionRoles.Roles.Keys;
-                var events = string.IsNullOrEmpty(eventId) ? queue.GetEvents().Append("") : new []{ eventId };
+                var events = string.IsNullOrEmpty(eventId) ? queue.GetEvents().Append("") : new[] { eventId };
                 foreach (var eId in events)
                 {
                     var response = roleIds
@@ -1210,7 +1211,7 @@ namespace Prima.Queue.Modules
             Log.Information("User {User} inserted at position {Position} in queue {QueueName}.", user.ToString(), position, queueName);
             return ReplyAsync($"User inserted in position {position}.");
         }
-        
+
         [Command("expirequeues", RunMode = RunMode.Async)]
         [Description("Expires all members from nonexistent events.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
@@ -1350,7 +1351,7 @@ namespace Prima.Queue.Modules
             var (m, _) = await GetEvent(eventId);
             return m != null;
         }
-        
+
         private IEnumerable<ITextChannel> GetOutputChannels(SocketGuild guild)
         {
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == (guild?.Id ?? 0));
@@ -1361,7 +1362,7 @@ namespace Prima.Queue.Modules
                 .Select(f => (ulong?)f.GetValue(guildConfig))
                 .Select(cId => guild.GetTextChannel(cId ?? 0));
 
-            return scheduleOutputChannels;  
+            return scheduleOutputChannels;
         }
 
         private async Task<IEnumerable<(IMessage, IEmbed)>> GetEvents(int inHours)

@@ -1,6 +1,6 @@
 ﻿using Discord.WebSocket;
 
-namespace Prima.Services
+namespace Prima.DiscordNet.Services
 {
     public class DiagnosticService
     {

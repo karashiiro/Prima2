@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Prima.Models;
-using Prima.Services;
+using Prima.DiscordNet.Services;
 using Serilog;
 using Color = Discord.Color;
 

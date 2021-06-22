@@ -1,10 +1,10 @@
 ﻿using Discord;
 using Discord.Commands;
-using Prima.Attributes;
+using Prima.DiscordNet.Attributes;
+using Prima.DiscordNet.Services;
 using Prima.Models;
 using Prima.Resources;
 using Prima.Scheduler.Services;
-using Prima.Services;
 using Serilog;
 using System;
 using System.Collections.Generic;

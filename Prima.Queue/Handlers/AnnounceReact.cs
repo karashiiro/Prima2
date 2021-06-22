@@ -1,11 +1,12 @@
-﻿using System;
-using Discord;
+﻿using Discord;
 using Discord.WebSocket;
+using Prima.DiscordNet;
 using Prima.Models;
 using Prima.Queue.Services;
 using Prima.Resources;
-using Prima.Services;
+using Prima.DiscordNet.Services;
 using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -27,7 +28,7 @@ namespace Prima.Queue.Handlers
             if (client.CurrentUser.Id == userId || !RoleReactions.ContainsKey(reaction.Emote.Name)) return;
 
             var role = RoleReactions[reaction.Emote.Name];
-            
+
             var eventId = await AnnounceUtil.GetEventId(cachedMessage);
             if (eventId == null) return;
 
@@ -37,7 +38,7 @@ namespace Prima.Queue.Handlers
                 Log.Error("No guild configuration found for the default guild!");
                 return;
             }
-            
+
             var user = client.GetUser(userId);
             var guild = client.GetGuild(SpecialGuilds.CrystalExploratoryMissions);
 
@@ -70,7 +71,7 @@ namespace Prima.Queue.Handlers
 
             var queueName = QueueInfo.LfgChannels[scheduleQueue];
             var queue = queueService.GetOrCreateQueue(queueName);
-            
+
             if (queue.Enqueue(userId, role, eventId.Value.ToString()))
             {
                 var embed = message.Embeds.FirstOrDefault(e => e.Type == EmbedType.Rich);
@@ -113,7 +114,7 @@ namespace Prima.Queue.Handlers
             }
             catch { /* ignored */ }
         }
-        
+
         private static ulong GetScheduleInputChannel(DiscordGuildConfiguration guildConfig, ulong channelId)
         {
             var guildConfigFields = typeof(DiscordGuildConfiguration).GetFields();
@@ -132,7 +133,7 @@ namespace Prima.Queue.Handlers
                     .FirstOrDefault(f => f.Name == inputChannelFieldName)
                     ?.GetValue(guildConfig) ?? 0;
             }
-            
+
             return 0;
         }
 

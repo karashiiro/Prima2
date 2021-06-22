@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord.WebSocket;
-using Prima.Services;
+using Prima.DiscordNet.Services;
 using Serilog;
 
 namespace Prima.Stable.Services

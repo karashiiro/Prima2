@@ -1,13 +1,13 @@
-﻿using System;
+﻿using Discord;
+using Discord.Commands;
+using Prima.DiscordNet;
+using Prima.DiscordNet.Attributes;
+using Prima.DiscordNet.Services;
+using Prima.Resources;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Discord;
-using Discord.Commands;
-using Prima.Attributes;
-using Prima.Resources;
-using Prima.Services;
 using Color = Discord.Color;
 
 namespace Prima.Stable.Modules
@@ -28,8 +28,8 @@ namespace Prima.Stable.Modules
             var prefix = Db.Config.Prefix.ToString();
             if (guildConfig != null && guildConfig.Prefix != ' ')
                 prefix = guildConfig.Prefix.ToString();
-            
-            var baseCommands = await DiscordUtilities.GetFormattedCommandList(typeof(BAExtraModule), prefix, except: new List<string>{"bahelp"});
+
+            var baseCommands = await DiscordUtilities.GetFormattedCommandList(typeof(BAExtraModule), prefix, except: new List<string> { "bahelp" });
             var hostCommands = await DiscordUtilities.GetFormattedCommandList(typeof(RunModule), prefix);
 
             var embed = new EmbedBuilder()

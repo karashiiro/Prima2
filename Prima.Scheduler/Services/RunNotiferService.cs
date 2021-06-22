@@ -3,7 +3,7 @@ using Discord.Net;
 using Discord.WebSocket;
 using Prima.Models;
 using Prima.Resources;
-using Prima.Services;
+using Prima.DiscordNet.Services;
 using Serilog;
 using System;
 using System.Globalization;

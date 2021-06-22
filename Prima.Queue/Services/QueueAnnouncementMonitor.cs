@@ -1,15 +1,16 @@
-﻿using System;
+﻿using Discord;
+using Discord.Net;
+using Discord.WebSocket;
+using Prima.DiscordNet;
+using Prima.DiscordNet.Services;
+using Prima.Models;
+using Prima.Resources;
+using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Discord;
-using Discord.Net;
-using Discord.WebSocket;
-using Prima.Models;
-using Prima.Resources;
-using Prima.Services;
-using Serilog;
 
 namespace Prima.Queue.Services
 {

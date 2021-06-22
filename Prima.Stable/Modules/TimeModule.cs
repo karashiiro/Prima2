@@ -2,8 +2,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Discord.Commands;
-using Prima.Attributes;
-using Prima.Services;
+using Prima.DiscordNet.Attributes;
+using Prima.DiscordNet.Services;
 
 namespace Prima.Stable.Modules
 {

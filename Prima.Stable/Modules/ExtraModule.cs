@@ -1,13 +1,13 @@
 ﻿using Discord.Commands;
 using Newtonsoft.Json.Linq;
-using Prima.Services;
+using Prima.DiscordNet.Services;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Prima.Attributes;
+using Prima.DiscordNet.Attributes;
 using Discord;
 using FFXIVWeather.Lumina;
 using Lumina.Excel.GeneratedSheets;

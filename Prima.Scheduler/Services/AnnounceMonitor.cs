@@ -1,14 +1,15 @@
 ﻿using Discord;
+using Discord.Net;
 using Discord.WebSocket;
+using Prima.DiscordNet;
+using Prima.DiscordNet.Services;
 using Prima.Resources;
-using Prima.Services;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Discord.Net;
 
 namespace Prima.Scheduler.Services
 {
@@ -140,7 +141,7 @@ namespace Prima.Scheduler.Services
                     if (!nullableTimestamp.HasValue) continue;
 
                     var timestamp = nullableTimestamp.Value;
-                    
+
                     // Remove expired posts
                     if (timestamp.AddMinutes(60) < DateTimeOffset.Now)
                     {
@@ -205,7 +206,7 @@ namespace Prima.Scheduler.Services
 
             try
             {
-                await host.AddRolesAsync(new []{currentHost, runPinner});
+                await host.AddRolesAsync(new[] { currentHost, runPinner });
                 await _db.AddTimedRole(currentHost.Id, guild.Id, host.Id, DateTime.UtcNow.AddHours(4.5));
                 await _db.AddTimedRole(runPinner.Id, guild.Id, host.Id, DateTime.UtcNow.AddHours(4.5));
                 return true;

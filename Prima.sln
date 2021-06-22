@@ -21,7 +21,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Prima.Stable", "Prima.Stabl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Prima.Queue", "Prima.Queue\Prima.Queue.csproj", "{5ED58840-26F1-472E-BC2B-9986F40B589E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestBed", "TestBed\TestBed.csproj", "{DCA15A4B-153C-4532-AFFD-5B3A3722B211}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Prima.DiscordNet", "Prima.Discord.Net\Prima.DiscordNet.csproj", "{23FEA2CA-AAB9-4C77-BE04-A72123D05B69}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -49,10 +49,10 @@ Global
 		{5ED58840-26F1-472E-BC2B-9986F40B589E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5ED58840-26F1-472E-BC2B-9986F40B589E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5ED58840-26F1-472E-BC2B-9986F40B589E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DCA15A4B-153C-4532-AFFD-5B3A3722B211}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DCA15A4B-153C-4532-AFFD-5B3A3722B211}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DCA15A4B-153C-4532-AFFD-5B3A3722B211}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DCA15A4B-153C-4532-AFFD-5B3A3722B211}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23FEA2CA-AAB9-4C77-BE04-A72123D05B69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23FEA2CA-AAB9-4C77-BE04-A72123D05B69}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23FEA2CA-AAB9-4C77-BE04-A72123D05B69}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23FEA2CA-AAB9-4C77-BE04-A72123D05B69}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

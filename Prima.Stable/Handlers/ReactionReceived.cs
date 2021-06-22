@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Prima.Models;
-using Prima.Services;
+using Prima.DiscordNet.Services;
 using Prima.Stable.Resources;
 using Prima.Stable.Services;
 using Serilog;

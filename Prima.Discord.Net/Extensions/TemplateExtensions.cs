@@ -1,6 +1,6 @@
 ﻿using Discord;
 
-namespace Prima.Extensions
+namespace Prima.DiscordNet.Extensions
 {
     public static class TemplateExtensions
     {

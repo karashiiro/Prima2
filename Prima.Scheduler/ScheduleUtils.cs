@@ -7,7 +7,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Prima.Models;
 using Prima.Resources;
-using Prima.Services;
+using Prima.DiscordNet.Services;
 using Serilog;
 using TimeZoneNames;
 

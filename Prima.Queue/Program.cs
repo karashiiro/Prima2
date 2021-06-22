@@ -1,12 +1,11 @@
-﻿using Serilog;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
+﻿using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
-using Prima.Queue.Services;
-using Prima.Services;
-using Discord.WebSocket;
-using Discord;
+using Prima.DiscordNet;
+using Prima.DiscordNet.Services;
 using Prima.Queue.Handlers;
+using Prima.Queue.Services;
+using Serilog;
+using System.Threading.Tasks;
 
 namespace Prima.Queue
 {

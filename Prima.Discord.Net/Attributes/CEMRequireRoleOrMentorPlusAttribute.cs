@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 
-namespace Prima.Attributes
+namespace Prima.DiscordNet.Attributes
 {
     public class CEMRequireRoleOrMentorPlusAttribute : PreconditionAttribute
     {

@@ -1,8 +1,8 @@
 ﻿using Discord.Commands;
 using Newtonsoft.Json.Linq;
-using Prima.Attributes;
+using Prima.DiscordNet.Attributes;
 using Prima.Models;
-using Prima.Services;
+using Prima.DiscordNet.Services;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;

@@ -7,15 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Prima\Modules\CommonModule.cs" Link="Modules\CommonModule.cs" />
+    <Compile Include="..\Prima.Discord.Net\Modules\CommonModule.cs" Link="Modules\CommonModule.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Discord.Net" Version="2.4.0" />
     <PackageReference Include="Google.Apis.Sheets.v4" Version="1.45.0.1954" />
-    <PackageReference Include="TimeZoneNames" Version="4.1.0" />
+    <PackageReference Include="TimeZoneNames" Version="4.2.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Prima.Discord.Net\Prima.DiscordNet.csproj" />
     <ProjectReference Include="..\Prima\Prima.csproj" />
   </ItemGroup>
 

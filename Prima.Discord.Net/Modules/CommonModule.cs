@@ -1,11 +1,11 @@
 ﻿using Discord;
 using Discord.Commands;
-using Prima.Services;
+using Prima.DiscordNet.Services;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Prima.Modules
+namespace Prima.DiscordNet.Modules
 {
     /// <summary>
     /// Includes commands that all bot instances should be able to execute.

@@ -1,4 +1,11 @@
-﻿using System;
+﻿using Discord;
+using Discord.Net;
+using Discord.WebSocket;
+using Prima.DiscordNet.Extensions;
+using Prima.DiscordNet.Services;
+using Prima.Models;
+using Serilog;
+using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -6,13 +13,6 @@ using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Discord;
-using Discord.Net;
-using Discord.WebSocket;
-using Prima.Extensions;
-using Prima.Models;
-using Prima.Services;
-using Serilog;
 using Color = Discord.Color;
 using ImageFormat = System.Drawing.Imaging.ImageFormat;
 
@@ -89,11 +89,11 @@ namespace Prima.Stable.Handlers
                     LastCaughtRegex = regexString;
                     await rawMessage.DeleteAsync();
                     await rawMessage.Author.SendMessageAsync(embed: templates.Execute("automod/delete.md", new
-                        {
-                            ChannelName = rawMessage.Channel.Name,
-                            MessageText = rawMessage.Content,
-                            Pattern = regexString,
-                        })
+                    {
+                        ChannelName = rawMessage.Channel.Name,
+                        MessageText = rawMessage.Content,
+                        Pattern = regexString,
+                    })
                         .ToEmbedBuilder()
                         .WithColor(Color.Orange)
                         .Build());
@@ -120,12 +120,12 @@ namespace Prima.Stable.Handlers
                     }
 
                     await reportChannel.SendMessageAsync(embed: templates.Execute("automod/softblock.md", new
-                        {
-                            ChannelName = rawMessage.Channel.Name,
-                            MessageText = rawMessage.Content,
-                            Pattern = regexString,
-                            JumpLink = rawMessage.GetJumpUrl(),
-                        })
+                    {
+                        ChannelName = rawMessage.Channel.Name,
+                        MessageText = rawMessage.Content,
+                        Pattern = regexString,
+                        JumpLink = rawMessage.GetJumpUrl(),
+                    })
                         .ToEmbedBuilder()
                         .WithColor(Color.Orange)
                         .Build());

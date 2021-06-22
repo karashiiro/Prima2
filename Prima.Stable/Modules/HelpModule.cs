@@ -1,6 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
-using Prima.Attributes;
+using Prima.DiscordNet.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;

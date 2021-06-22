@@ -1,17 +1,18 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
-using Prima.Attributes;
+using Prima.DiscordNet;
+using Prima.DiscordNet.Attributes;
+using Prima.DiscordNet.Services;
 using Prima.Models;
 using Prima.Resources;
-using Prima.Services;
 using Prima.Stable.Resources;
 using Prima.Stable.Services;
 using Serilog;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Color = Discord.Color;
 
 namespace Prima.Stable.Modules
@@ -108,7 +109,7 @@ namespace Prima.Stable.Modules
             }
 
             var member = guild.GetUser(Context.User.Id);
-            
+
             using var typing = Context.Channel.EnterTypingState();
 
             DiscordXIVUser foundCharacter;
@@ -190,7 +191,7 @@ namespace Prima.Stable.Modules
             {
                 await ActivateUser(member, existingLodestoneId, foundCharacter, guildConfig);
             }
-            
+
             // Cleanup
             await Task.Delay(MessageDeleteDelay);
             await finalReply.DeleteAsync();
@@ -331,7 +332,7 @@ namespace Prima.Stable.Modules
             var memberRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
             await member.AddRoleAsync(memberRole);
             Log.Information("Added {DiscordName} to {Role}.", member.ToString(), memberRole.Name);
-            
+
             var contentRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles[MostRecentZoneRole]));
             if (contentRole != null && Worlds.List.Contains(dbEntry.World))
             {

@@ -1,11 +1,11 @@
 ﻿using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
-using Prima.Services;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Prima.DiscordNet.Services;
 
-namespace Prima.Attributes
+namespace Prima.DiscordNet.Attributes
 {
     public class RequireUserInDatabaseAttribute : PreconditionAttribute
     {

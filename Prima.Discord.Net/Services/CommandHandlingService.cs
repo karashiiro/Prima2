@@ -8,7 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace Prima.Services
+namespace Prima.DiscordNet.Services
 {
     public class CommandHandlingService
     {
@@ -23,7 +23,7 @@ namespace Prima.Services
             _db = services.GetRequiredService<IDbService>();
             _discord = services.GetRequiredService<DiscordSocketClient>();
             _services = services;
-            
+
             _commands.CommandExecuted += CommandExecutedAsync;
             _discord.MessageReceived += MessageReceivedAsync;
         }
@@ -59,7 +59,7 @@ namespace Prima.Services
             if (!message.HasCharPrefix(prefix, ref argPos))
             {
                 // Hacky bit to get this working with fewer headaches upfront for new users
-                if (rawMessage.Channel is SocketGuildChannel {Name: "welcome"})
+                if (rawMessage.Channel is SocketGuildChannel { Name: "welcome" })
                 {
                     if (message.Content.StartsWith("i") || message.Content.StartsWith("agree"))
                     {

@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Prima
+namespace Prima.DiscordNet
 {
     public static class AnnounceUtil
     {

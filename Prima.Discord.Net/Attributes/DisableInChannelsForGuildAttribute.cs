@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 
-namespace Prima.Attributes
+namespace Prima.DiscordNet.Attributes
 {
     public class DisableInChannelsForGuildAttribute : PreconditionAttribute
     {

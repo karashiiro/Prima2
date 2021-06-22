@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Prima.Extensions;
-using Prima.Services;
+using Prima.DiscordNet.Services;
 
 namespace Prima.Stable.Services
 {
