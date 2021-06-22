@@ -18,7 +18,9 @@ jobs:
       with:
         dotnet-version: 5.0.102
     - name: Restore dependencies
-      run: dotnet restore
+      run: |
+        dotnet nuget add source https://nuget.emzi0767.com/api/v3/index.json --name DSharpPlus
+        dotnet restore
     - name: Build
       run: dotnet build --no-restore
     - name: Test
