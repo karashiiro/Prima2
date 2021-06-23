@@ -1,0 +1,30 @@
+name: Rust
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+    - "PrimaRoleReactions/**"
+  pull_request:
+    branches: [ master ]
+    paths:
+    - "PrimaRoleReactions/**"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: |
+        cd PrimaRoleReactions
+        cargo build --verbose
+    - name: Run tests
+      run: |
+        cd PrimaRoleReactions
+        cargo test --verbose
