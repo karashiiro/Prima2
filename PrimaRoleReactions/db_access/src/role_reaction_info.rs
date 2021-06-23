@@ -1,3 +1,6 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct RoleReactionInfo {
     pub guild_id: u64,
     pub channel_id: u64,
