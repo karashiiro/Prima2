@@ -1,4 +1,4 @@
-#![allow(non_snake_case)] // This disables this lint for the entire crate - most code should stay in the library, not here
+#![allow(non_snake_case)] // This disables this lint for the entire crate - most code should live in the library, not here
 use std::env;
 
 use serenity::prelude::*;
