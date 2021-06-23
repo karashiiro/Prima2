@@ -2,7 +2,7 @@
 use std::env;
 use serenity::prelude::*;
 use db_access::database::RoleReactionsDatabase;
-use role_reactions::Handler;
+use role_reactions::event_handler::Handler;
 
 #[tokio::main]
 async fn main() {
