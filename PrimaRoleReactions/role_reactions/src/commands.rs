@@ -12,7 +12,7 @@ use crate::typemaps::RoleReactionsDatabaseContainer;
 #[commands(role_reactions)]
 pub struct RoleReactions;
 
-#[command]
+#[command("rolereactions")]
 #[only_in(guilds)]
 async fn role_reactions(ctx: &Context, message: &Message) -> CommandResult {
     let guild_id = *message.guild_id.unwrap().as_u64();
