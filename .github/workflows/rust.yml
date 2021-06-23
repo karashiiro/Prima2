@@ -3,8 +3,12 @@ name: Rust
 on:
   push:
     branches: [ master ]
+    paths:
+    - "PrimaRoleReactions/**"
   pull_request:
     branches: [ master ]
+    paths:
+    - "PrimaRoleReactions/**"
 
 env:
   CARGO_TERM_COLOR: always
@@ -17,6 +21,10 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build
-      run: cargo build ./PrimaRoleReactions --verbose
+      run: |
+        cd PrimaRoleReactions
+        cargo build --verbose
     - name: Run tests
-      run: cargo test ./PrimaRoleReactions --verbose
+      run: |
+        cd PrimaRoleReactions
+        cargo test --verbose
