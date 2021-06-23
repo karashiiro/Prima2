@@ -3,8 +3,17 @@ use serenity::{
     model::{channel::Message, gateway::Ready},
     prelude::*,
 };
+use db_access::database::RoleReactionsDatabase;
 
-pub struct Handler;
+pub struct Handler {
+    db: RoleReactionsDatabase,
+}
+
+impl Handler {
+    pub fn new(db: RoleReactionsDatabase) -> Self {
+        Self { db }
+    }
+}
 
 #[async_trait]
 impl EventHandler for Handler {

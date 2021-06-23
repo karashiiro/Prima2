@@ -6,14 +6,13 @@ use futures::{TryStreamExt};
 const ROLE_REACTION_COLLECTION: &str = "RoleReactions";
 
 pub struct RoleReactionsDatabase {
-    client: Client,
     db: Database,
 }
 
 impl RoleReactionsDatabase {
-    pub async fn new(application_name: String, db_name: String) -> Self {
+    pub async fn new(application_name: &str, db_name: &str) -> Self {
         let mut client_options = ClientOptions::parse("mongodb://localhost").await.unwrap();
-        client_options.app_name = Some(application_name);
+        client_options.app_name = Some(application_name.parse().unwrap());
 
         let client =
             Client::with_options(client_options).unwrap_or_else(|error| {
@@ -30,7 +29,7 @@ impl RoleReactionsDatabase {
 
         let db = client.database(&db_name);
 
-        Self { client, db }
+        Self { db }
     }
 
     pub async fn get_role_reactions(&self, guild_id: u64) -> Result<Vec<RoleReactionInfo>, mongodb::error::Error> {

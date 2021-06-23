@@ -7,3 +7,4 @@ edition = "2018"
 
 [dependencies]
 serenity = "0.10"
+db_access = { path = "../db_access" }
