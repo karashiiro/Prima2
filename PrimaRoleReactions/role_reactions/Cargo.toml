@@ -6,5 +6,5 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serenity = "0.10"
+serenity = { version = "0.10", features = ["client", "framework", "unstable_discord_api"] }
 db_access = { path = "../db_access" }

@@ -1,6 +1,5 @@
 #![allow(non_snake_case)] // This disables this lint for the entire crate - most code should live in the library, not here
 use db_access::database::RoleReactionsDatabase;
-use role_reactions::commands::ROLEREACTIONS_GROUP;
 use role_reactions::event_handler::Handler;
 use role_reactions::hooks::{after, before};
 use role_reactions::typemaps::RoleReactionsDatabaseContainer;
@@ -13,6 +12,11 @@ use std::env;
 #[tokio::main]
 async fn main() {
     let token = env::var("PRIMA_BOT_TOKEN").expect("Expected a token in the environment");
+
+    let application_id: u64 = env::var("PRIMA_APPLICATION_ID")
+        .expect("Expected an application id in the environment")
+        .parse()
+        .expect("application id is not a valid id");
 
     let http = Http::new_with_token(&token);
     let (owners, bot_id) = match http.get_current_application_info().await {
@@ -39,14 +43,14 @@ async fn main() {
                 .owners(owners)
         })
         .before(before)
-        .after(after)
-        .group(&ROLEREACTIONS_GROUP);
+        .after(after);
 
     let mut client = Client::builder(&token)
         .event_handler(Handler)
+        .application_id(application_id)
         .framework(framework)
         .await
-        .expect("Err creating client");
+        .expect("Error creating client");
 
     {
         let mut data = client.data.write().await;
