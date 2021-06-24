@@ -13,15 +13,17 @@ pub struct Handler;
 #[async_trait]
 impl EventHandler for Handler {
     async fn reaction_add(&self, ctx: Context, added_reaction: Reaction) {
-        reactions::reaction_activate(&ctx, &added_reaction)
-            .await
-            .unwrap_or_else(|error| println!("Error in reaction activation: {:?}", error));
+        match reactions::reaction_activate(&ctx, &added_reaction).await {
+            Err(error) => println!("Error in reaction activation: {:?}", error),
+            _ => {}
+        }
     }
 
     async fn reaction_remove(&self, ctx: Context, removed_reaction: Reaction) {
-        reactions::reaction_activate(&ctx, &removed_reaction)
-            .await
-            .unwrap_or_else(|error| println!("Error in reaction activation: {:?}", error));
+        match reactions::reaction_activate(&ctx, &removed_reaction).await {
+            Err(error) => println!("Error in reaction activation: {:?}", error),
+            _ => {}
+        }
     }
 
     async fn ready(&self, ctx: Context, ready: Ready) {

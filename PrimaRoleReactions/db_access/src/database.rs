@@ -50,12 +50,12 @@ impl RoleReactionsDatabase {
 
     pub async fn get_role_reaction(
         &self,
-        channel_id: u64,
-        emote_id: u64,
+        channel_id: &u64,
+        emote_id: &u64,
     ) -> Result<Option<RoleReactionInfo>, mongodb::error::Error> {
         let collection = self.get_collection(ROLE_REACTION_COLLECTION);
         let filter =
-            doc! { "channel_id": channel_id.to_string(), "emote_id": emote_id.to_string() };
+            doc! { "channel_id": channel_id.to_string(), "emoji_id": emote_id.to_string() };
 
         collection.find_one(filter, None).await
     }

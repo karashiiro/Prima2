@@ -11,7 +11,7 @@ pub async fn reaction_activate(ctx: &Context, reaction: &Reaction) -> Result<(),
 
     if let Some(guild) = reaction.guild_id {
         let mut member: Member;
-        if let Some(user) = reaction.member.as_ref().and_then(|pm| pm.user.as_ref()) {
+        if let Some(user) = reaction.user_id {
             member = guild.member(&ctx.http, user).await?;
         } else {
             println!("Failed to fetch guild member.");
@@ -20,7 +20,7 @@ pub async fn reaction_activate(ctx: &Context, reaction: &Reaction) -> Result<(),
 
         if let ReactionType::Custom { id, .. } = reaction.emoji {
             if let Some(role_reaction) = db
-                .get_role_reaction(*reaction.channel_id.as_u64(), *id.as_u64())
+                .get_role_reaction(reaction.channel_id.as_u64(), id.as_u64())
                 .await
                 .unwrap_or_else(|error| {
                     println!("Failed to get role reaction from database: {:?}", error);
@@ -38,8 +38,20 @@ pub async fn reaction_activate(ctx: &Context, reaction: &Reaction) -> Result<(),
 
                 if member.roles.contains(&role_id) {
                     member.remove_role(&ctx.http, role_id).await?;
+                    println!(
+                        "Removed role {} from {}#{}",
+                        role.unwrap().name,
+                        member.user.name,
+                        member.user.discriminator
+                    );
                 } else {
                     member.add_role(&ctx.http, role_id).await?;
+                    println!(
+                        "Added role {} to {}#{}",
+                        role.unwrap().name,
+                        member.user.name,
+                        member.user.discriminator
+                    );
                 }
             }
         }
