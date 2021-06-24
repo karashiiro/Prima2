@@ -65,10 +65,10 @@ impl RoleReactionsDatabase {
     ) -> Result<(), mongodb::error::Error> {
         let collection = self.get_collection(ROLE_REACTION_COLLECTION);
         let filter = doc! {
-            "guild_id": rr_info.guild_id,
-            "channel_id": rr_info.channel_id,
-            "emoji_id": rr_info.emoji_id,
-            "role_id": rr_info.role_id,
+            "guild_id": rr_info.guild_id.to_string(),
+            "channel_id": rr_info.channel_id.to_string(),
+            "emoji_id": rr_info.emoji_id.to_string(),
+            "role_id": rr_info.role_id.to_string(),
         };
 
         let existing = collection.find_one(filter, None).await?;
@@ -88,10 +88,10 @@ impl RoleReactionsDatabase {
     ) -> Result<(), mongodb::error::Error> {
         let collection = self.get_collection(ROLE_REACTION_COLLECTION);
         let filter = doc! {
-            "guild_id": rr_info.guild_id,
-            "channel_id": rr_info.channel_id,
-            "emoji_id": rr_info.emoji_id,
-            "role_id": rr_info.role_id,
+            "guild_id": rr_info.guild_id.to_string(),
+            "channel_id": rr_info.channel_id.to_string(),
+            "emoji_id": rr_info.emoji_id.to_string(),
+            "role_id": rr_info.role_id.to_string(),
         };
 
         let delete_filter = filter.clone();

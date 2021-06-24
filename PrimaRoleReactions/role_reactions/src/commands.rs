@@ -20,6 +20,8 @@ async fn read_role_reaction_info(
     mut args: Args,
 ) -> Option<RoleReactionInfo> {
     let guild_id = *message.guild_id.unwrap().as_u64();
+
+    // These are parsed as u64s for validation, before being converted back to strings
     let channel_id = args.single::<u64>();
     let emoji_id = args.single::<u64>();
     let role_id = args.single::<u64>();
@@ -45,10 +47,10 @@ async fn read_role_reaction_info(
     }
 
     Some(RoleReactionInfo {
-        guild_id,
-        channel_id: channel_id.unwrap(),
-        emoji_id: emoji_id.unwrap(),
-        role_id: role_id.unwrap(),
+        guild_id: guild_id.to_string(),
+        channel_id: channel_id.unwrap().to_string(),
+        emoji_id: emoji_id.unwrap().to_string(),
+        role_id: role_id.unwrap().to_string(),
     })
 }
 

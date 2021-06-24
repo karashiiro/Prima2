@@ -30,7 +30,7 @@ async fn reaction_activate(ctx: &Context, reaction: &Reaction) -> Result<(), Err
                     None
                 })
             {
-                let role_id = RoleId(role_reaction.role_id);
+                let role_id = RoleId(role_reaction.role_id.parse()?);
                 let roles = guild.roles(&ctx.http).await?;
 
                 let role = roles.get(&role_id);
