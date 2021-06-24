@@ -1,21 +1,10 @@
 use crate::typemaps::RoleReactionsDatabaseContainer;
-use serenity::model::prelude::{GuildId, Member, PartialMember, Reaction, ReactionType, RoleId};
+use serenity::model::prelude::{Member, Reaction, ReactionType, RoleId};
 use serenity::prelude::{Context, EventHandler};
 use serenity::Error;
 use serenity::{async_trait, model::gateway::Ready};
 
 pub struct Handler;
-
-async fn get_member_from_partial(
-    ctx: &Context,
-    guild: &GuildId,
-    partial_member: &Option<PartialMember>,
-) -> Option<Member> {
-    match partial_member.as_ref().and_then(|pm| pm.user.as_ref()) {
-        None => None,
-        Some(user) => Some(guild.member(&ctx.http, user).await.unwrap()),
-    }
-}
 
 async fn reaction_activate(ctx: &Context, reaction: &Reaction) -> Result<(), Error> {
     let data = ctx.data.read().await;
@@ -24,30 +13,36 @@ async fn reaction_activate(ctx: &Context, reaction: &Reaction) -> Result<(), Err
         .expect("Expected RoleReactionsDatabaseContainer in TypeMap");
 
     if let Some(guild) = reaction.guild_id {
-        if let Some(mut member) = get_member_from_partial(ctx, &guild, &reaction.member).await {
-            if let ReactionType::Custom { id, .. } = reaction.emoji {
-                if let Some(role_reaction) = db
-                    .get_role_reaction(*reaction.channel_id.as_u64(), *id.as_u64())
-                    .await
-                    .unwrap_or_else(|error| {
-                        println!("Failed to get role reaction from database: {:?}", error);
-                        None
-                    })
-                {
-                    let role_id = RoleId(role_reaction.role_id);
-                    let roles = guild.roles(&ctx.http).await?;
+        let mut member: Member;
+        if let Some(user) = reaction.member.as_ref().and_then(|pm| pm.user.as_ref()) {
+            member = guild.member(&ctx.http, user).await?;
+        } else {
+            println!("Failed to fetch guild member.");
+            return Ok(());
+        }
 
-                    let role = roles.get(&role_id);
-                    if role.is_none() {
-                        println!("Failed to retrieve role. Does it exist?");
-                        return Ok(());
-                    }
+        if let ReactionType::Custom { id, .. } = reaction.emoji {
+            if let Some(role_reaction) = db
+                .get_role_reaction(*reaction.channel_id.as_u64(), *id.as_u64())
+                .await
+                .unwrap_or_else(|error| {
+                    println!("Failed to get role reaction from database: {:?}", error);
+                    None
+                })
+            {
+                let role_id = RoleId(role_reaction.role_id);
+                let roles = guild.roles(&ctx.http).await?;
 
-                    if member.roles.contains(&role_id) {
-                        member.remove_role(&ctx.http, role_id).await?;
-                    } else {
-                        member.add_role(&ctx.http, role_id).await?;
-                    }
+                let role = roles.get(&role_id);
+                if role.is_none() {
+                    println!("Failed to retrieve role. Does it exist?");
+                    return Ok(());
+                }
+
+                if member.roles.contains(&role_id) {
+                    member.remove_role(&ctx.http, role_id).await?;
+                } else {
+                    member.add_role(&ctx.http, role_id).await?;
                 }
             }
         }
