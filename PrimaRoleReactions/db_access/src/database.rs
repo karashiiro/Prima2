@@ -36,7 +36,7 @@ impl RoleReactionsDatabase {
         guild_id: u64,
     ) -> Result<Vec<RoleReactionInfo>, mongodb::error::Error> {
         let collection = self.get_collection(ROLE_REACTION_COLLECTION);
-        let filter = doc! { "guild_id": guild_id };
+        let filter = doc! { "guild_id": guild_id.to_string() };
 
         let mut cursor = collection.find(filter, None).await?;
 
@@ -54,7 +54,8 @@ impl RoleReactionsDatabase {
         emote_id: u64,
     ) -> Result<Option<RoleReactionInfo>, mongodb::error::Error> {
         let collection = self.get_collection(ROLE_REACTION_COLLECTION);
-        let filter = doc! { "channel_id": channel_id, "emote_id": emote_id };
+        let filter =
+            doc! { "channel_id": channel_id.to_string(), "emote_id": emote_id.to_string() };
 
         collection.find_one(filter, None).await
     }

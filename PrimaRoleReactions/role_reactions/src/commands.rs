@@ -1,5 +1,6 @@
 use crate::typemaps::RoleReactionsDatabaseContainer;
 use db_access::role_reaction_info::RoleReactionInfo;
+use serenity::utils::Colour;
 use serenity::{
     framework::standard::{
         macros::{command, group},
@@ -16,7 +17,7 @@ use std::fmt::Display;
 pub struct RoleReactions;
 
 async fn reply_to(ctx: &Context, message: &Message, response: impl Display) {
-    if let Err(why) = message.reply(&ctx.http, response).await {
+    if let Err(why) = message.channel_id.say(&ctx.http, response).await {
         println!("Error sending message: {:?}", why);
     }
 }
@@ -49,6 +50,7 @@ async fn read_role_reaction_info(
     if let Some(error) = error_message {
         println!("{}", error);
         reply_to(ctx, message, error).await;
+        return None;
     }
 
     Some(RoleReactionInfo {
@@ -70,10 +72,38 @@ async fn role_reactions(ctx: &Context, message: &Message) -> CommandResult {
 
     match db.get_role_reactions(guild_id).await {
         Ok(role_reactions) => {
-            for _ in role_reactions {
-                if let Err(why) = message.channel_id.say(&ctx.http, "A role reaction.").await {
-                    println!("Error sending message: {:?}", why);
-                }
+            if role_reactions.len() == 0 {
+                reply_to(
+                    ctx,
+                    message,
+                    "No role reactions are registered for this guild.",
+                )
+                .await;
+                return Ok(());
+            }
+
+            let guild_name = message.guild_id.unwrap().name(&ctx.cache).await.unwrap();
+
+            if let Err(why) = message
+                .channel_id
+                .send_message(&ctx.http, |m| {
+                    m.embed(|e| {
+                        let mut reactions_string = String::from("**Role reactions:**\n");
+                        for reaction in role_reactions {
+                            reactions_string.push_str(&*format!(
+                                "<#{}> <:e:{}>: <@&{}>\n",
+                                reaction.channel_id, reaction.emoji_id, reaction.role_id
+                            ));
+                        }
+
+                        e.title(&*format!("{} Role Reactions", guild_name))
+                            .color(Colour::from_rgb(52, 152, 219))
+                            .description(reactions_string)
+                    })
+                })
+                .await
+            {
+                println!("Error sending message: {:?}", why);
             }
         }
         Err(error) => {
