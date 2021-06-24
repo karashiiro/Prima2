@@ -1,14 +1,14 @@
 #![allow(non_snake_case)] // This disables this lint for the entire crate - most code should live in the library, not here
-use std::env;
-use serenity::prelude::*;
 use db_access::database::RoleReactionsDatabase;
-use role_reactions::event_handler::Handler;
-use role_reactions::hooks::{before, after};
 use role_reactions::commands::ROLEREACTIONS_GROUP;
-use serenity::http::Http;
-use std::collections::HashSet;
-use serenity::framework::StandardFramework;
+use role_reactions::event_handler::Handler;
+use role_reactions::hooks::{after, before};
 use role_reactions::typemaps::RoleReactionsDatabaseContainer;
+use serenity::framework::StandardFramework;
+use serenity::http::Http;
+use serenity::prelude::*;
+use std::collections::HashSet;
+use std::env;
 
 #[tokio::main]
 async fn main() {
@@ -24,19 +24,20 @@ async fn main() {
                 Ok(bot_id) => (owners, bot_id.id),
                 Err(why) => panic!("Could not access the bot id: {:?}", why),
             }
-        },
+        }
         Err(why) => panic!("Could not access application info: {:?}", why),
     };
 
     let db = RoleReactionsDatabase::new("Prima Role Reactions", "PrimaDb").await;
 
     let framework = StandardFramework::new()
-        .configure(|c| c
-            .with_whitespace(true)
-            .on_mention(Some(bot_id))
-            .prefix("~")
-            .delimiters(vec![" "])
-            .owners(owners))
+        .configure(|c| {
+            c.with_whitespace(true)
+                .on_mention(Some(bot_id))
+                .prefix("~")
+                .delimiters(vec![" "])
+                .owners(owners)
+        })
         .before(before)
         .after(after)
         .group(&ROLEREACTIONS_GROUP);

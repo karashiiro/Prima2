@@ -1,13 +1,13 @@
-use serenity::{
-    prelude::Context,
-    model::prelude::Message,
-    framework::standard::{
-        Args, CommandResult,
-        macros::{command, group},
-    },
-};
 use crate::typemaps::RoleReactionsDatabaseContainer;
 use db_access::role_reaction_info::RoleReactionInfo;
+use serenity::{
+    framework::standard::{
+        macros::{command, group},
+        Args, CommandResult,
+    },
+    model::prelude::Message,
+    prelude::Context,
+};
 
 #[group]
 #[only_in(guilds)]
@@ -26,8 +26,9 @@ fn read_role_reaction_info(message: &Message, mut args: Args) -> RoleReactionInf
 #[command("rolereactions")]
 async fn role_reactions(ctx: &Context, message: &Message) -> CommandResult {
     let data = ctx.data.read().await;
-    let db = data.get::<RoleReactionsDatabaseContainer>()
-        .expect("Expected RoleReactionsDatabase in TypeMap");
+    let db = data
+        .get::<RoleReactionsDatabaseContainer>()
+        .expect("Expected RoleReactionsDatabaseContainer in TypeMap");
 
     let guild_id = *message.guild_id.unwrap().as_u64();
 
@@ -41,7 +42,11 @@ async fn role_reactions(ctx: &Context, message: &Message) -> CommandResult {
         }
         Err(error) => {
             println!("Failed to fetch role reactions for guild: {:?}", error);
-            if let Err(why) = message.channel_id.say(&ctx.http, "Failed to fetch role reactions for this guild.").await {
+            if let Err(why) = message
+                .channel_id
+                .say(&ctx.http, "Failed to fetch role reactions for this guild.")
+                .await
+            {
                 println!("Error sending message: {:?}", why);
             }
         }
@@ -53,8 +58,9 @@ async fn role_reactions(ctx: &Context, message: &Message) -> CommandResult {
 #[command("addrolereaction")]
 async fn add_role_reaction(ctx: &Context, message: &Message, args: Args) -> CommandResult {
     let data = ctx.data.read().await;
-    let db = data.get::<RoleReactionsDatabaseContainer>()
-        .expect("Expected RoleReactionsDatabase in TypeMap");
+    let db = data
+        .get::<RoleReactionsDatabaseContainer>()
+        .expect("Expected RoleReactionsDatabaseContainer in TypeMap");
 
     let role_reaction = read_role_reaction_info(message, args);
 
@@ -62,7 +68,11 @@ async fn add_role_reaction(ctx: &Context, message: &Message, args: Args) -> Comm
         Ok(_) => {}
         Err(error) => {
             println!("Failed to add role reaction: {:?}", error);
-            if let Err(why) = message.channel_id.say(&ctx.http, "Failed to add role reaction.").await {
+            if let Err(why) = message
+                .channel_id
+                .say(&ctx.http, "Failed to add role reaction.")
+                .await
+            {
                 println!("Error sending message: {:?}", why);
             }
         }
@@ -74,8 +84,9 @@ async fn add_role_reaction(ctx: &Context, message: &Message, args: Args) -> Comm
 #[command("removerolereaction")]
 async fn remove_role_reaction(ctx: &Context, message: &Message, args: Args) -> CommandResult {
     let data = ctx.data.read().await;
-    let db = data.get::<RoleReactionsDatabaseContainer>()
-        .expect("Expected RoleReactionsDatabase in TypeMap");
+    let db = data
+        .get::<RoleReactionsDatabaseContainer>()
+        .expect("Expected RoleReactionsDatabaseContainer in TypeMap");
 
     let role_reaction = read_role_reaction_info(message, args);
 
@@ -83,7 +94,11 @@ async fn remove_role_reaction(ctx: &Context, message: &Message, args: Args) -> C
         Ok(_) => {}
         Err(error) => {
             println!("Failed to remove role reaction: {:?}", error);
-            if let Err(why) = message.channel_id.say(&ctx.http, "Failed to remove role reaction.").await {
+            if let Err(why) = message
+                .channel_id
+                .say(&ctx.http, "Failed to remove role reaction.")
+                .await
+            {
                 println!("Error sending message: {:?}", why);
             }
         }

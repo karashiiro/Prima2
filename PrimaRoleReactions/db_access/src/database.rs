@@ -1,7 +1,7 @@
 use mongodb::{bson::doc, options::ClientOptions, Client, Collection, Database};
 
 use crate::role_reaction_info::RoleReactionInfo;
-use futures::{TryStreamExt};
+use futures::TryStreamExt;
 
 const ROLE_REACTION_COLLECTION: &str = "RoleReactions";
 
@@ -14,10 +14,9 @@ impl RoleReactionsDatabase {
         let mut client_options = ClientOptions::parse("mongodb://localhost").await.unwrap();
         client_options.app_name = Some(application_name.parse().unwrap());
 
-        let client =
-            Client::with_options(client_options).unwrap_or_else(|error| {
-                panic!("Failed to connect to MongoDB server: {:?}", error);
-            });
+        let client = Client::with_options(client_options).unwrap_or_else(|error| {
+            panic!("Failed to connect to MongoDB server: {:?}", error);
+        });
 
         client
             .database("admin")
@@ -32,7 +31,10 @@ impl RoleReactionsDatabase {
         Self { db }
     }
 
-    pub async fn get_role_reactions(&self, guild_id: u64) -> Result<Vec<RoleReactionInfo>, mongodb::error::Error> {
+    pub async fn get_role_reactions(
+        &self,
+        guild_id: u64,
+    ) -> Result<Vec<RoleReactionInfo>, mongodb::error::Error> {
         let collection = self.get_collection(ROLE_REACTION_COLLECTION);
         let filter = doc! { "guild_id": guild_id };
 
@@ -46,7 +48,21 @@ impl RoleReactionsDatabase {
         Ok(results)
     }
 
-    pub async fn add_role_reaction(&self, rr_info: RoleReactionInfo) -> Result<(), mongodb::error::Error> {
+    pub async fn get_role_reaction(
+        &self,
+        channel_id: u64,
+        emote_id: u64,
+    ) -> Result<Option<RoleReactionInfo>, mongodb::error::Error> {
+        let collection = self.get_collection(ROLE_REACTION_COLLECTION);
+        let filter = doc! { "channel_id": channel_id, "emote_id": emote_id };
+
+        collection.find_one(filter, None).await
+    }
+
+    pub async fn add_role_reaction(
+        &self,
+        rr_info: RoleReactionInfo,
+    ) -> Result<(), mongodb::error::Error> {
         let collection = self.get_collection(ROLE_REACTION_COLLECTION);
         let filter = doc! {
             "guild_id": rr_info.guild_id,
@@ -66,7 +82,10 @@ impl RoleReactionsDatabase {
         Ok(())
     }
 
-    pub async fn remove_role_reaction(&self, rr_info: RoleReactionInfo) -> Result<(), mongodb::error::Error> {
+    pub async fn remove_role_reaction(
+        &self,
+        rr_info: RoleReactionInfo,
+    ) -> Result<(), mongodb::error::Error> {
         let collection = self.get_collection(ROLE_REACTION_COLLECTION);
         let filter = doc! {
             "guild_id": rr_info.guild_id,
