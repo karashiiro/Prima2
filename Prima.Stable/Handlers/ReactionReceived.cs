@@ -34,7 +34,7 @@ namespace Prima.Stable.Handlers
                 {
                     return;
                 }
-                if ((ichannel.Id == 551584585432039434 || ichannel.Id == 590757405927669769 || ichannel.Id == 765748243367591936) && reaction.Emote is Emote emote && disConfig.RoleEmotes.TryGetValue(emote.Id.ToString(), out var roleIdString))
+                if (ichannel.Id is 551584585432039434 or 590757405927669769 or 765748243367591936 && reaction.Emote is Emote emote && disConfig.RoleEmotes.TryGetValue(emote.Id.ToString(), out var roleIdString))
                 {
                     var roleId = ulong.Parse(roleIdString);
                     var role = member.Guild.GetRole(roleId);
@@ -60,7 +60,7 @@ namespace Prima.Stable.Handlers
                         var highestCombatLevel = 0;
                         foreach (var classJob in data["ClassJobs"].ToObject<CharacterLookup.ClassJob[]>())
                         {
-                            if (classJob.JobID >= 8 && classJob.JobID <= 18) continue;
+                            if (classJob.JobID is >= 8 and <= 18) continue;
                             if (classJob.Level > highestCombatLevel)
                             {
                                 highestCombatLevel = classJob.Level;
@@ -117,7 +117,7 @@ namespace Prima.Stable.Handlers
                 {
                     return;
                 }
-                if ((ichannel.Id == 551584585432039434 || ichannel.Id == 590757405927669769 || ichannel.Id == 765748243367591936) && reaction.Emote is Emote emote && disConfig.RoleEmotes.TryGetValue(emote.Id.ToString(), out var roleIdString))
+                if (ichannel.Id is 551584585432039434 or 590757405927669769 or 765748243367591936 && reaction.Emote is Emote emote && disConfig.RoleEmotes.TryGetValue(emote.Id.ToString(), out var roleIdString))
                 {
                     var roleId = ulong.Parse(roleIdString);
                     var role = member.Guild.GetRole(roleId);
