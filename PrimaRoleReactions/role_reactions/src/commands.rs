@@ -8,11 +8,18 @@ use serenity::{
     model::prelude::Message,
     prelude::Context,
 };
+use std::fmt::Display;
 
 #[group]
 #[only_in(guilds)]
 #[commands(role_reactions, add_role_reaction, remove_role_reaction)]
 pub struct RoleReactions;
+
+async fn reply_to(ctx: &Context, message: &Message, response: impl Display) {
+    if let Err(why) = message.reply(&ctx.http, response).await {
+        println!("Error sending message: {:?}", why);
+    }
+}
 
 async fn read_role_reaction_info(
     ctx: &Context,
@@ -41,9 +48,7 @@ async fn read_role_reaction_info(
 
     if let Some(error) = error_message {
         println!("{}", error);
-        if let Err(why) = message.channel_id.say(&ctx.http, error).await {
-            println!("Error sending message: {:?}", why);
-        }
+        reply_to(ctx, message, error).await;
     }
 
     Some(RoleReactionInfo {
@@ -73,13 +78,12 @@ async fn role_reactions(ctx: &Context, message: &Message) -> CommandResult {
         }
         Err(error) => {
             println!("Failed to fetch role reactions for guild: {:?}", error);
-            if let Err(why) = message
-                .channel_id
-                .say(&ctx.http, "Failed to fetch role reactions for this guild.")
-                .await
-            {
-                println!("Error sending message: {:?}", why);
-            }
+            reply_to(
+                ctx,
+                message,
+                "Failed to fetch role reactions for this guild.",
+            )
+            .await;
         }
     }
 
@@ -95,16 +99,10 @@ async fn add_role_reaction(ctx: &Context, message: &Message, args: Args) -> Comm
 
     if let Some(role_reaction) = read_role_reaction_info(ctx, message, args).await {
         match db.add_role_reaction(role_reaction).await {
-            Ok(_) => {}
+            Ok(_) => reply_to(ctx, message, "Role reaction added.").await,
             Err(error) => {
                 println!("Failed to add role reaction: {:?}", error);
-                if let Err(why) = message
-                    .channel_id
-                    .say(&ctx.http, "Failed to add role reaction.")
-                    .await
-                {
-                    println!("Error sending message: {:?}", why);
-                }
+                reply_to(ctx, message, "Failed to add role reaction.").await;
             }
         }
     }
@@ -121,16 +119,10 @@ async fn remove_role_reaction(ctx: &Context, message: &Message, args: Args) -> C
 
     if let Some(role_reaction) = read_role_reaction_info(ctx, message, args).await {
         match db.remove_role_reaction(role_reaction).await {
-            Ok(_) => {}
+            Ok(_) => reply_to(ctx, message, "Role reaction removed.").await,
             Err(error) => {
                 println!("Failed to remove role reaction: {:?}", error);
-                if let Err(why) = message
-                    .channel_id
-                    .say(&ctx.http, "Failed to remove role reaction.")
-                    .await
-                {
-                    println!("Error sending message: {:?}", why);
-                }
+                reply_to(ctx, message, "Failed to remove role reaction.").await;
             }
         }
     }
