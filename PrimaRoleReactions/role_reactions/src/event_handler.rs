@@ -99,6 +99,20 @@ impl EventHandler for Handler {
             return;
         }
 
+        if let Some(data) = interaction.clone().data {
+            if let InteractionData::ApplicationCommand(c) = data {
+                println!(
+                    "Received slash command: /{} {}",
+                    c.name,
+                    c.options
+                        .iter()
+                        .map(|opt| opt.value.as_ref().unwrap().as_str().unwrap())
+                        .collect::<Vec<&str>>()
+                        .join(" ")
+                );
+            }
+        }
+
         match interaction.clone().data {
             None => {}
             Some(data) => match data {
@@ -110,7 +124,9 @@ impl EventHandler for Handler {
                     "removerolereaction" => {
                         slash_commands::remove_role_reaction(&ctx, &interaction).await
                     }
-                    _ => {}
+                    _ => {
+                        println!("Slash command was unknown.")
+                    }
                 },
                 InteractionData::MessageComponent(_) => {}
             },
