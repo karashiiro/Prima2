@@ -34,13 +34,13 @@ namespace Prima.Stable.Handlers
                 {
                     return;
                 }
-                if (ichannel.Id is 551584585432039434 or 590757405927669769 or 765748243367591936 && reaction.Emote is Emote emote && disConfig.RoleEmotes.TryGetValue(emote.Id.ToString(), out var roleIdString))
+                if (ichannel.Id == 590757405927669769 && reaction.Emote is Emote emote && disConfig.RoleEmotes.TryGetValue(emote.Id.ToString(), out var roleIdString))
                 {
                     var roleId = ulong.Parse(roleIdString);
                     var role = member.Guild.GetRole(roleId);
                     var dbEntry = db.Users.FirstOrDefault(u => u.DiscordId == reaction.UserId);
 
-                    if (roleId == BozjaRole || roleId == EurekaRole || roleId == DiademRole)
+                    if (roleId is BozjaRole or EurekaRole or DiademRole)
                     {
                         if (dbEntry == null)
                         {
@@ -80,12 +80,12 @@ namespace Prima.Stable.Handlers
                         }
 
                         // 60 is already the minimum requirement to register.
-                    }
 
-                    await member.AddRoleAsync(role);
-                    Log.Information("Role {Role} was added to {DiscordUser}", role.Name, member.ToString());
+                        await member.AddRoleAsync(role);
+                        Log.Information("Role {Role} was added to {DiscordUser}", role.Name, member.ToString());
+                    }
                 }
-                else if (guild.Id == 550702475112480769 && (ichannel.Id == 552643167808258060 || ichannel.Id == 768886934084648960) && reaction.Emote.Name == "✅")
+                else if (guild.Id == 550702475112480769 && ichannel.Id is 552643167808258060 or 768886934084648960 && reaction.Emote.Name == "✅")
                 {
                     await member.SendMessageAsync($"You have begun the verification process. Your **Discord account ID** is `{member.Id}`.\n"
                                                   + "Please add this somewhere in your FFXIV Lodestone Character Profile.\n"
@@ -117,7 +117,7 @@ namespace Prima.Stable.Handlers
                 {
                     return;
                 }
-                if (ichannel.Id is 551584585432039434 or 590757405927669769 or 765748243367591936 && reaction.Emote is Emote emote && disConfig.RoleEmotes.TryGetValue(emote.Id.ToString(), out var roleIdString))
+                if (ichannel.Id == 590757405927669769 && reaction.Emote is Emote emote && disConfig.RoleEmotes.TryGetValue(emote.Id.ToString(), out var roleIdString))
                 {
                     var roleId = ulong.Parse(roleIdString);
                     var role = member.Guild.GetRole(roleId);
