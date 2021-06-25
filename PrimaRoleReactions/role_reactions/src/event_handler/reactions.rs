@@ -3,7 +3,16 @@ use serenity::model::prelude::{Member, Reaction, ReactionType, RoleId};
 use serenity::prelude::Context;
 use serenity::Error;
 
-pub async fn reaction_activate(ctx: &Context, reaction: &Reaction) -> Result<(), Error> {
+pub enum ReactionChange {
+    Add,
+    Remove,
+}
+
+pub async fn reaction_activate(
+    ctx: &Context,
+    reaction: &Reaction,
+    change: ReactionChange,
+) -> Result<(), Error> {
     let data = ctx.data.read().await;
     let db = data
         .get::<RoleReactionsDatabaseContainer>()
@@ -36,22 +45,25 @@ pub async fn reaction_activate(ctx: &Context, reaction: &Reaction) -> Result<(),
                     return Ok(());
                 }
 
-                if member.roles.contains(&role_id) {
-                    member.remove_role(&ctx.http, role_id).await?;
-                    println!(
-                        "Removed role {} from {}#{}",
-                        role.unwrap().name,
-                        member.user.name,
-                        member.user.discriminator
-                    );
-                } else {
-                    member.add_role(&ctx.http, role_id).await?;
-                    println!(
-                        "Added role {} to {}#{}",
-                        role.unwrap().name,
-                        member.user.name,
-                        member.user.discriminator
-                    );
+                match change {
+                    ReactionChange::Add => {
+                        member.add_role(&ctx.http, role_id).await?;
+                        println!(
+                            "Added role {} to {}#{}",
+                            role.unwrap().name,
+                            member.user.name,
+                            member.user.discriminator
+                        );
+                    }
+                    ReactionChange::Remove => {
+                        member.remove_role(&ctx.http, role_id).await?;
+                        println!(
+                            "Removed role {} from {}#{}",
+                            role.unwrap().name,
+                            member.user.name,
+                            member.user.discriminator
+                        );
+                    }
                 }
             }
         }

@@ -1,3 +1,4 @@
+use crate::event_handler::reactions::ReactionChange;
 use serenity::model::interactions::{
     ApplicationCommand, ApplicationCommandOptionType, Interaction, InteractionData,
 };
@@ -13,14 +14,14 @@ pub struct Handler;
 #[async_trait]
 impl EventHandler for Handler {
     async fn reaction_add(&self, ctx: Context, added_reaction: Reaction) {
-        match reactions::reaction_activate(&ctx, &added_reaction).await {
+        match reactions::reaction_activate(&ctx, &added_reaction, ReactionChange::Add).await {
             Err(error) => println!("Error in reaction activation: {:?}", error),
             _ => {}
         }
     }
 
     async fn reaction_remove(&self, ctx: Context, removed_reaction: Reaction) {
-        match reactions::reaction_activate(&ctx, &removed_reaction).await {
+        match reactions::reaction_activate(&ctx, &removed_reaction, ReactionChange::Remove).await {
             Err(error) => println!("Error in reaction activation: {:?}", error),
             _ => {}
         }

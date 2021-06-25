@@ -71,7 +71,14 @@ async fn read_role_reaction_info(
 }
 
 pub async fn role_reactions(ctx: &Context, interaction: &Interaction) {
-    if !interaction.member.as_ref().unwrap().permissions.unwrap().manage_roles() {
+    if !interaction
+        .member
+        .as_ref()
+        .unwrap()
+        .permissions
+        .unwrap()
+        .manage_roles()
+    {
         return;
     }
 
@@ -130,7 +137,14 @@ pub async fn role_reactions(ctx: &Context, interaction: &Interaction) {
 }
 
 pub async fn add_role_reaction(ctx: &Context, interaction: &Interaction) {
-    if !interaction.member.as_ref().unwrap().permissions.unwrap().manage_roles() {
+    if !interaction
+        .member
+        .as_ref()
+        .unwrap()
+        .permissions
+        .unwrap()
+        .manage_roles()
+    {
         return;
     }
 
@@ -170,7 +184,14 @@ pub async fn add_role_reaction(ctx: &Context, interaction: &Interaction) {
 }
 
 pub async fn remove_role_reaction(ctx: &Context, interaction: &Interaction) {
-    if !interaction.member.as_ref().unwrap().permissions.unwrap().manage_roles() {
+    if !interaction
+        .member
+        .as_ref()
+        .unwrap()
+        .permissions
+        .unwrap()
+        .manage_roles()
+    {
         return;
     }
 
