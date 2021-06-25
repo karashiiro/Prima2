@@ -72,7 +72,7 @@ impl EventHandler for Handler {
         ApplicationCommand::create_global_application_command(&ctx.http, |command| {
             command
                 .name("removerolereaction")
-                .description("Remove a role reaction to this guild.")
+                .description("Remove a role reaction from this guild.")
                 .create_option(|o| {
                     o.name("channel")
                         .description("The channel to remove the role reaction from.")
