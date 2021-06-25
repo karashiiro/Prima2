@@ -71,6 +71,10 @@ async fn read_role_reaction_info(
 }
 
 pub async fn role_reactions(ctx: &Context, interaction: &Interaction) {
+    if !interaction.member.unwrap().permissions.unwrap().manage_roles() {
+        return;
+    }
+
     let data = ctx.data.read().await;
     let db = data
         .get::<RoleReactionsDatabaseContainer>()
@@ -126,6 +130,10 @@ pub async fn role_reactions(ctx: &Context, interaction: &Interaction) {
 }
 
 pub async fn add_role_reaction(ctx: &Context, interaction: &Interaction) {
+    if !interaction.member.unwrap().permissions.unwrap().manage_roles() {
+        return;
+    }
+
     let data = ctx.data.read().await;
     let db = data
         .get::<RoleReactionsDatabaseContainer>()
@@ -162,6 +170,10 @@ pub async fn add_role_reaction(ctx: &Context, interaction: &Interaction) {
 }
 
 pub async fn remove_role_reaction(ctx: &Context, interaction: &Interaction) {
+    if !interaction.member.unwrap().permissions.unwrap().manage_roles() {
+        return;
+    }
+
     let data = ctx.data.read().await;
     let db = data
         .get::<RoleReactionsDatabaseContainer>()
