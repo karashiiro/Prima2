@@ -99,11 +99,16 @@ impl EventHandler for Handler {
         if let Some(data) = interaction.clone().data {
             if let InteractionData::ApplicationCommand(c) = data {
                 println!(
-                    "Received slash command: /{} {}",
+                    "Received slash command: /{} {}\n\tOptions: {}",
                     c.name,
                     c.options
                         .iter()
                         .map(|opt| opt.value.as_ref().unwrap().as_str().unwrap())
+                        .collect::<Vec<&str>>()
+                        .join(" "),
+                    c.options
+                        .iter()
+                        .map(|opt| opt.name.as_str())
                         .collect::<Vec<&str>>()
                         .join(" ")
                 );

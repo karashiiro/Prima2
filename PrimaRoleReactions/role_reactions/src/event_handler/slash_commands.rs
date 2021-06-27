@@ -26,9 +26,11 @@ async fn read_role_reaction_info(
     interaction: &Interaction,
     data: &ApplicationCommandInteractionData,
 ) -> Option<RoleReactionInfo> {
-    let mut options_iterator = data.options.iter();
+    //let mut options_iterator = data.options.iter();
 
-    let channel_id = options_iterator
+    let channel_id = data
+        .options
+        .iter()
         .find(|&o| o.name == "channel")
         .unwrap()
         .value
@@ -37,7 +39,7 @@ async fn read_role_reaction_info(
         .as_str()
         .unwrap();
 
-    let emoji_id_opt = options_iterator.find(|&o| o.name == "emoji_id");
+    let emoji_id_opt = data.options.iter().find(|&o| o.name == "emoji_id");
     let mut emoji_id = "";
     if emoji_id_opt.is_some() {
         emoji_id = emoji_id_opt
@@ -56,7 +58,9 @@ async fn read_role_reaction_info(
         }
     }
 
-    let role_id = options_iterator
+    let role_id = data
+        .options
+        .iter()
         .find(|&o| o.name == "role")
         .unwrap()
         .value
