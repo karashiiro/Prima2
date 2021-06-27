@@ -31,6 +31,9 @@ impl RoleReactionsDatabase {
         Self { db }
     }
 
+    /**
+     * Retrieves all role reactions for the provided guild from the database.
+     */
     pub async fn get_role_reactions(
         &self,
         guild_id: u64,
@@ -48,6 +51,9 @@ impl RoleReactionsDatabase {
         Ok(results)
     }
 
+    /**
+     * Retrieves a role reaction from the database.
+     */
     pub async fn get_role_reaction(
         &self,
         channel_id: &u64,
@@ -60,6 +66,9 @@ impl RoleReactionsDatabase {
         collection.find_one(filter, None).await
     }
 
+    /**
+     * Adds a role reaction to the database.
+     */
     pub async fn add_role_reaction(
         &self,
         rr_info: RoleReactionInfo,
@@ -83,6 +92,10 @@ impl RoleReactionsDatabase {
         Ok(())
     }
 
+    /**
+     * Removes a role reaction entry from the database. This ignores the emoji ID and deletes all
+     * entries that match the guild, channel, and role.
+     */
     pub async fn remove_role_reaction(
         &self,
         rr_info: RoleReactionInfo,
@@ -91,7 +104,6 @@ impl RoleReactionsDatabase {
         let filter = doc! {
             "guild_id": rr_info.guild_id.to_string(),
             "channel_id": rr_info.channel_id.to_string(),
-            "emoji_id": rr_info.emoji_id.to_string(),
             "role_id": rr_info.role_id.to_string(),
         };
 
@@ -101,7 +113,7 @@ impl RoleReactionsDatabase {
         match existing {
             None => {}
             Some(_) => {
-                collection.delete_one(delete_filter, None).await?;
+                collection.delete_many(delete_filter, None).await?;
             }
         }
 
