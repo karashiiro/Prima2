@@ -13,6 +13,9 @@ namespace Prima.Stable.Handlers
 {
     public static class ReactionReceived
     {
+        // Even though most role reactions are currently handled by a separate deployment unit, roles
+        // with validation are still handled here. This should eventually be migrated as well.
+
         private const ulong BozjaRole = 588913532410527754;
         private const ulong EurekaRole = 588913087818498070;
         private const ulong DiademRole = 588913444712087564;
