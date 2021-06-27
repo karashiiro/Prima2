@@ -37,20 +37,23 @@ async fn read_role_reaction_info(
         .as_str()
         .unwrap();
 
-    let emoji_id = options_iterator
-        .find(|&o| o.name == "emoji_id")
-        .unwrap()
-        .value
-        .as_ref()
-        .unwrap()
-        .as_str()
-        .unwrap();
-    if let Err(_) = emoji_id.parse::<u64>() {
-        create_interaction_response(&ctx, &interaction, |m| {
-            m.content("Failed to parse emoji. Make sure the ID is correct, and that the emoji you are using is not a Unicode emote.")
-        })
-            .await;
-        return None;
+    let emoji_id_opt = options_iterator.find(|&o| o.name == "emoji_id");
+    let mut emoji_id = "";
+    if emoji_id_opt.is_some() {
+        emoji_id = emoji_id_opt
+            .unwrap()
+            .value
+            .as_ref()
+            .unwrap()
+            .as_str()
+            .unwrap();
+        if let Err(_) = emoji_id.parse::<u64>() {
+            create_interaction_response(&ctx, &interaction, |m| {
+                m.content("Failed to parse emoji. Make sure the ID is correct, and that the emoji you are using is not a Unicode emote.")
+            })
+                .await;
+            return None;
+        }
     }
 
     let role_id = options_iterator

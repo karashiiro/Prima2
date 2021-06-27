@@ -80,12 +80,6 @@ impl EventHandler for Handler {
                         .required(true)
                 })
                 .create_option(|o| {
-                    o.name("emoji_id")
-                        .description("The ID of the emoji used to add the reaction.")
-                        .kind(ApplicationCommandOptionType::String)
-                        .required(true)
-                })
-                .create_option(|o| {
                     o.name("role")
                         .description("The role to remove the reaction for.")
                         .kind(ApplicationCommandOptionType::Role)
