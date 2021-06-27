@@ -56,7 +56,7 @@ namespace Prima.Stable.Modules
             var guildConfig = Db.Guilds.Single(g => g.Id == guild.Id);
 
             var postChannel = guild.GetTextChannel(guildConfig.ReportChannel);
-            var output = $"<@&{guildConfig.Roles["Moderator"]}> {Context.User.Mention} just sent a report: {p}";
+            var output = $"<@&{guildConfig.Roles["Moderator"]}> {Context.User.Mention} just sent a modmail: {p}";
             if (output.Length > 2000) // This can only be the case once, no need for a loop.
             {
                 await postChannel.SendMessageAsync(output.Substring(0, 2000));
