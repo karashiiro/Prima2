@@ -127,7 +127,7 @@ impl RoleReactionsDatabase {
      */
     pub async fn get_slash_command(
         &self,
-        name: String,
+        name: &str,
     ) -> Result<Option<SlashCommandInfo>, mongodb::error::Error> {
         let collection = self.get_collection::<SlashCommandInfo>(SLASH_COMMAND_COLLECTION);
         let filter = doc! { "name": name.to_string() };
