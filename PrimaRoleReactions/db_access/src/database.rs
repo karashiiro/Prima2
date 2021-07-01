@@ -1,11 +1,9 @@
 use mongodb::{bson::doc, options::ClientOptions, Client, Collection, Database};
 
 use crate::role_reaction_info::RoleReactionInfo;
-use crate::slash_command_info::SlashCommandInfo;
 use futures::TryStreamExt;
 
 const ROLE_REACTION_COLLECTION: &str = "RoleReactions";
-const SLASH_COMMAND_COLLECTION: &str = "SlashCommands";
 
 pub struct RoleReactionsDatabase {
     db: Database,
@@ -107,65 +105,6 @@ impl RoleReactionsDatabase {
             "guild_id": rr_info.guild_id.to_string(),
             "channel_id": rr_info.channel_id.to_string(),
             "role_id": rr_info.role_id.to_string(),
-        };
-
-        let delete_filter = filter.clone();
-
-        let existing = collection.find_one(filter, None).await?;
-        match existing {
-            None => {}
-            Some(_) => {
-                collection.delete_many(delete_filter, None).await?;
-            }
-        }
-
-        Ok(())
-    }
-
-    /**
-     * Retrieves a slash command from the database.
-     */
-    pub async fn get_slash_command(
-        &self,
-        name: &str,
-    ) -> Result<Option<SlashCommandInfo>, mongodb::error::Error> {
-        let collection = self.get_collection::<SlashCommandInfo>(SLASH_COMMAND_COLLECTION);
-        let filter = doc! { "name": name.to_string() };
-
-        collection.find_one(filter, None).await
-    }
-
-    /**
-     * Adds a slash command to the database.
-     */
-    pub async fn add_slash_command(
-        &self,
-        sc_info: SlashCommandInfo,
-    ) -> Result<(), mongodb::error::Error> {
-        let collection = self.get_collection::<SlashCommandInfo>(SLASH_COMMAND_COLLECTION);
-        let filter = doc! {
-            "name": sc_info.name.to_string(),
-            "command_id": sc_info.command_id.to_string(),
-        };
-
-        let existing = collection.find_one(filter, None).await?;
-        match existing {
-            None => {
-                collection.insert_one(sc_info, None).await?;
-            }
-            Some(_) => {}
-        }
-
-        Ok(())
-    }
-
-    /**
-     * Removes a slash command entry from the database.
-     */
-    pub async fn remove_slash_command(&self, command_id: u64) -> Result<(), mongodb::error::Error> {
-        let collection = self.get_collection::<SlashCommandInfo>(SLASH_COMMAND_COLLECTION);
-        let filter = doc! {
-            "command_id": command_id.to_string(),
         };
 
         let delete_filter = filter.clone();
