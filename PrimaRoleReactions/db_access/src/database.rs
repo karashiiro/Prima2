@@ -151,7 +151,7 @@ impl RoleReactionsDatabase {
         let existing = collection.find_one(filter, None).await?;
         match existing {
             None => {
-                collection.insert_one(rr_info, None).await?;
+                collection.insert_one(sc_info, None).await?;
             }
             Some(_) => {}
         }
@@ -181,7 +181,12 @@ impl RoleReactionsDatabase {
         Ok(())
     }
 
-    fn get_collection<T>(&self, name: &str) -> Collection<T> {
-        self.db.collection::<RoleReactionInfo>(name)
+    fn get_collection<
+        T: serde::Serialize + for<'de> serde::Deserialize<'de> + std::marker::Unpin + std::fmt::Debug,
+    >(
+        &self,
+        name: &str,
+    ) -> Collection<T> {
+        self.db.collection::<T>(name)
     }
 }
