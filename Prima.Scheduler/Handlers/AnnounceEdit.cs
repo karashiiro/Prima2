@@ -1,6 +1,5 @@
-﻿using DSharpPlus;
-using DSharpPlus.Entities;
-using DSharpPlus.EventArgs;
+﻿using Discord;
+using Discord.WebSocket;
 using Prima.Resources;
 using Prima.Scheduler.GoogleApis.Services;
 using Prima.Services;
@@ -13,7 +12,7 @@ namespace Prima.Scheduler.Handlers
 {
     public static class AnnounceEdit
     {
-        public static async Task Handler(DiscordClient client, CalendarApi calendar, IDbService db, MessageUpdateEventArgs updateEvent)
+        public static async Task Handler(DiscordSocketClient client, CalendarApi calendar, IDbService db, SocketMessage message)
         {
             var guildConfig = db.Guilds.FirstOrDefault(g => g.Id == SpecialGuilds.CrystalExploratoryMissions);
             if (guildConfig == null)
@@ -22,8 +21,7 @@ namespace Prima.Scheduler.Handlers
                 return;
             }
 
-            var guild = updateEvent.Guild;
-            var message = updateEvent.Message;
+            var guild = client.GetGuild(guildConfig.Id);
 
             var prefix = db.Config.Prefix;
             if (message.Content == null || !message.Content.StartsWith(prefix + "announce")) return;
@@ -62,7 +60,8 @@ namespace Prima.Scheduler.Handlers
             var calendarLinkLine = lines.LastOrDefault(l => l.StartsWith("[Copy to Google Calendar]"));
             await embedMessage.ModifyAsync(props =>
             {
-                props.Embed = new DiscordEmbedBuilder(embed)
+                props.Embed = embed
+                    .ToEmbedBuilder()
                     .WithDescription(trimmedDescription + (calendarLinkLine != null
                         ? $"\n\n{calendarLinkLine}"
                         : "") + (messageLinkLine != null
@@ -74,16 +73,21 @@ namespace Prima.Scheduler.Handlers
             Log.Information("Updated announcement embed.");
         }
 
-        private static async Task<(DiscordMessage, DiscordEmbed)> FindAnnouncement(DiscordChannel channel, ulong eventId)
+        private static async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, ulong eventId)
         {
-            foreach (var message in await channel.GetMessagesAsync())
+            await foreach (var page in channel.GetMessagesAsync())
             {
-                var embed = message.Embeds.FirstOrDefault();
-                if (embed?.Footer == null) continue;
+                foreach (var message in page)
+                {
+                    var restMessage = (IUserMessage)message;
 
-                if (embed.Footer?.Text != eventId.ToString()) continue;
+                    var embed = restMessage.Embeds.FirstOrDefault();
+                    if (embed?.Footer == null) continue;
 
-                return (message, embed);
+                    if (embed.Footer?.Text != eventId.ToString()) continue;
+
+                    return (restMessage, embed);
+                }
             }
 
             return (null, null);

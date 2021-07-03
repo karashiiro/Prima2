@@ -1,4 +1,5 @@
-﻿using DSharpPlus;
+﻿using Discord;
+using Discord.WebSocket;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
@@ -33,10 +34,10 @@ namespace Prima.Scheduler.Services
             : Path.Combine(Environment.GetEnvironmentVariable("HOME"), "token.json");
 
         private readonly IDbService _db;
-        private readonly DiscordClient _client;
+        private readonly DiscordSocketClient _client;
         private readonly SheetsService _service;
 
-        public SpreadsheetService(IDbService db, DiscordClient client)
+        public SpreadsheetService(IDbService db, DiscordSocketClient client)
         {
             _db = db;
             _client = client;
@@ -153,7 +154,7 @@ namespace Prima.Scheduler.Services
                                         {
                                             UserEnteredValue = new ExtendedValue
                                             {
-                                                FormulaValue = $"=HYPERLINK(\"{await GetEventJumpLink(@event, guildConfig)}\",\"[{await _client.GetUserAsync(@event.LeaderId)}]\")",
+                                                FormulaValue = $"=HYPERLINK(\"{(await _client.GetGuild(@event.GuildId).GetTextChannel(@event.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.ScheduleInputChannel : guildConfig.CastrumScheduleInputChannel).GetMessageAsync(@event.MessageId3)).GetJumpUrl()}\",\"[{_client.GetUser(@event.LeaderId)}]\")",
                                             },
                                         },
                                     },
@@ -262,14 +263,6 @@ namespace Prima.Scheduler.Services
 
             @event.Listed = true;
             await _db.UpdateScheduledEvent(@event);
-        }
-
-        private async Task<string> GetEventJumpLink(ScheduledEvent @event, DiscordGuildConfiguration guildConfig)
-        {
-            var guild = await _client.GetGuildAsync(@event.GuildId);
-            var channel = guild.GetChannel(guildConfig.ScheduleInputChannel);
-            var message = await channel.GetMessageAsync(@event.MessageId3);
-            return message.JumpLink.ToString();
         }
 
         public async Task RemoveEvent(ScheduledEvent @event, string spreadsheetId)

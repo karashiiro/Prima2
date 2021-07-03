@@ -7,13 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DSharpPlus" Version="4.1.0-nightly-00892" />
-    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.1.0-nightly-00892" />
+    <Compile Include="..\Prima.DiscordNet\Modules\CommonModule.cs" Link="Modules\CommonModule.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Discord.Net" Version="2.4.0" />
     <PackageReference Include="Google.Apis.Sheets.v4" Version="1.45.0.1954" />
     <PackageReference Include="TimeZoneNames" Version="4.2.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Prima.DiscordNet\Prima.DiscordNet.csproj" />
     <ProjectReference Include="..\Prima\Prima.csproj" />
   </ItemGroup>
 
