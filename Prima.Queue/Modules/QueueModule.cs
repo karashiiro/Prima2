@@ -1381,27 +1381,13 @@ namespace Prima.Queue.Modules
         private static string RemoveEventIdFromArgs(string args)
         {
             var match = EventIdRegex.Match(args);
-            if (match.Success)
-            {
-                return args.Replace(match.Value, "");
-            }
-            else
-            {
-                return args;
-            }
+            return match.Success ? args.Replace(match.Value, "") : args;
         }
 
         private static string GetEventIdFromArgs(string args)
         {
             var match = EventIdRegex.Match(args);
-            if (match.Success)
-            {
-                return match.Value;
-            }
-            else
-            {
-                return null;
-            }
+            return match.Success ? match.Value : null;
         }
 
         private static string RemoveRoleFromArgs(string args)
@@ -1409,12 +1395,7 @@ namespace Prima.Queue.Modules
             var roleName =
                 DelubrumProgressionRoles.Roles.Values.FirstOrDefault(rn =>
                     args.ToLowerInvariant().Contains(rn.ToLowerInvariant()));
-            if (roleName != null)
-            {
-                return args.Replace(roleName, "", StringComparison.InvariantCultureIgnoreCase);
-            }
-
-            return args;
+            return roleName != null ? args.Replace(roleName, "", StringComparison.InvariantCultureIgnoreCase) : args;
         }
 
         private IRole GetRoleFromArgs(string args)
@@ -1422,13 +1403,13 @@ namespace Prima.Queue.Modules
             var roleName =
                 DelubrumProgressionRoles.Roles.Values.FirstOrDefault(rn =>
                     args.ToLowerInvariant().Contains(rn.ToLowerInvariant()));
-            if (roleName != null)
-            {
-                roleName = RegexSearches.UnicodeApostrophe.Replace(roleName, "'");
-                return Context.Guild.Roles.FirstOrDefault(r => r.Name == roleName);
-            }
 
-            return null;
+            if (roleName == null) return null;
+
+            roleName = RegexSearches.UnicodeApostrophe.Replace(roleName, "'");
+
+            return Context.Guild.Roles.FirstOrDefault(r => r.Name == roleName);
+
         }
     }
 }
