@@ -57,6 +57,8 @@ namespace Prima.Stable
             client.MessageReceived += message => MessageCache.Handler(db, message);
             client.MessageReceived += message => TriggerDispatcher.Handler(client, message);
 
+            //client.UserJoined += user => WelcomeCard.Handler(templates, user);
+
             client.GuildMemberUpdated += censusEvents.GuildMemberUpdated;
 
             client.UserVoiceStateUpdated += mute.OnVoiceJoin;
