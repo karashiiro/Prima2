@@ -27,7 +27,7 @@ namespace Prima.Queue
 
             services.GetRequiredService<QueueAnnouncementMonitor>().Initialize();
 
-            client.ReactionAdded += (message, channel, reaction)
+            client.ReactionAdded += (message, _, reaction)
                 => AnnounceReact.HandlerAdd(client, queueService, db, message, reaction);
 
             Log.Information("Prima Queue logged in!");
@@ -40,6 +40,7 @@ namespace Prima.Queue
             return sc
                 .AddSingleton<FFXIV3RoleQueueService>()
                 .AddSingleton<QueueAnnouncementMonitor>()
+                .AddSingleton<ExpireQueuesService>()
                 .BuildServiceProvider();
         }
     }

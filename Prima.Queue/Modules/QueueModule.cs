@@ -1212,51 +1212,6 @@ namespace Prima.Queue.Modules
             return ReplyAsync($"User inserted in position {position}.");
         }
 
-        [Command("expirequeues", RunMode = RunMode.Async)]
-        [Description("Expires all members from nonexistent events.")]
-        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task ExpireEventQueue([Remainder] string args = "")
-        {
-            const ulong mentor = 579916868035411968;
-            var sender = Context.Guild.GetUser(Context.User.Id);
-            if (sender.Roles.All(r => r.Id != mentor) && !sender.GuildPermissions.KickMembers)
-                return;
-
-            using var typing = Context.Channel.EnterTypingState();
-
-            var eventIds = (await GetEvents(int.MaxValue))
-                .Select(@event => @event.Item2.Footer?.Text)
-                .Where(id => id != null)
-                .ToList();
-            var queueEventIds = new List<string>();
-
-            var queues = QueueInfo.LfgChannels
-                .Select(kvp => kvp.Value)
-                .Select(QueueService.GetOrCreateQueue)
-                .ToList();
-            foreach (var queue in queues)
-            {
-                queueEventIds.AddRange(queue.GetEvents());
-            }
-
-            var inactiveEventIds = queueEventIds
-                .Except(eventIds)
-                .Distinct()
-                .ToList();
-            foreach (var queue in queues)
-            {
-                foreach (var eventId in inactiveEventIds)
-                {
-                    queue.ExpireEvent(eventId);
-                    Log.Information("Cleared queue for event {EventId}", eventId);
-                }
-            }
-
-            QueueService.Save();
-
-            await ReplyAsync($"Done! Events cleared:```\n{inactiveEventIds.Aggregate("", (agg, next) => agg + $"{next}\n")}```");
-        }
-
         [Command("confirm", RunMode = RunMode.Async)]
         public async Task ConfirmEvent()
         {
@@ -1341,11 +1296,6 @@ namespace Prima.Queue.Modules
             await ReplyAsync("You are not confirmed for that event.");
         }
 
-        private IEnumerable<FFXIV3RoleQueue> GetQueues()
-        {
-            return null;
-        }
-
         private async Task<bool> IsEventReal(string eventId)
         {
             var (m, _) = await GetEvent(eventId);
@@ -1427,7 +1377,7 @@ namespace Prima.Queue.Modules
             return (null, null);
         }
 
-        private static readonly Regex EventIdRegex = new Regex(@"\d{5}\d+", RegexOptions.Compiled);
+        private static readonly Regex EventIdRegex = new(@"\d{5}\d+", RegexOptions.Compiled);
         private static string RemoveEventIdFromArgs(string args)
         {
             var match = EventIdRegex.Match(args);
