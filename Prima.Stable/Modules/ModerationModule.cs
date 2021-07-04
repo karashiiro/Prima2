@@ -151,7 +151,7 @@ namespace Prima.Stable.Modules
                 return;
             }
 
-            var member = Context.Guild.GetUser(uid);
+            /*var member = Context.Guild.GetUser(uid);
 
             await member.SendMessageAsync(embed: Templates.Execute("automod/postban.md", new
                 {
@@ -161,7 +161,7 @@ namespace Prima.Stable.Modules
             })
                 .ToEmbedBuilder()
                 .WithColor(Color.Red)
-                .Build());
+                .Build());*/
 
             await Context.Guild.AddBanAsync(uid, reason: reason);
             await ReplyAsync("User banned.");
