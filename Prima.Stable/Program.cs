@@ -48,7 +48,7 @@ namespace Prima.Stable
             client.ReactionRemoved += (message, channel, reaction)
                 => ReactionReceived.HandlerRemove(db, message, channel, reaction);
 
-            client.ReactionAdded += (message, channel, reaction)
+            client.ReactionAdded += (message, _, reaction)
                 => VoteReactions.HandlerAdd(client, db, message, reaction);
 
             client.MessageDeleted += (message, channel) => AuditDeletion.Handler(db, client, message, channel);

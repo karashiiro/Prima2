@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Prima.DiscordNet.Extensions;
 
 namespace Prima.Stable.Modules
 {
@@ -20,6 +21,7 @@ namespace Prima.Stable.Modules
     public class ModerationModule : ModuleBase<SocketCommandContext>
     {
         public IDbService Db { get; set; }
+        public ITemplateProvider Templates { get; set; }
 
         // Submit a report.
         [Command("modmail", RunMode = RunMode.Async)]
@@ -148,6 +150,18 @@ namespace Prima.Stable.Modules
                 await ReplyAsync("Could not read user ID.");
                 return;
             }
+
+            var member = Context.Guild.GetUser(uid);
+
+            await member.SendMessageAsync(embed: Templates.Execute("automod/postban.md", new
+                {
+                    GuildName = Context.Guild.Name,
+                    BanReason = reason,
+                    BanAppealsUrl = "https://cem-ban-appeals.netlify.app/",
+            })
+                .ToEmbedBuilder()
+                .WithColor(Color.Red)
+                .Build());
 
             await Context.Guild.AddBanAsync(uid, reason: reason);
             await ReplyAsync("User banned.");
