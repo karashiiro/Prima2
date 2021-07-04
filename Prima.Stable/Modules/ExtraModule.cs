@@ -9,8 +9,10 @@ using Prima.Services;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using TimeZoneNames;
 using Color = Discord.Color;
@@ -72,6 +74,44 @@ namespace Prima.Stable.Modules
                 .Build();
 
             await ReplyAsync(embed: embed);
+        }
+
+        [Command("weatherreport")]
+        [Description("[FFXIV] Provides a text file with the next 200 weather entries for the specified zone.")]
+        [DisableInChannelsForGuild(CEMSpeculation, CEMBozTheorycrafting, GuildId = SpecialGuilds.CrystalExploratoryMissions)]
+        public async Task WeatherReportAsync([Remainder] string zone)
+        {
+            IList<(Weather, DateTime)> forecast;
+            try
+            {
+                forecast = Weather.GetForecast(zone, count: 200);
+            }
+            catch (ArgumentException)
+            {
+                await ReplyAsync("The specified zone could not be found.");
+                return;
+            }
+
+            var dbUser = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id);
+            var (customTzi, _) = Util.GetLocalizedTimeForUser(dbUser, DateTime.Now);
+            var tzi = customTzi ?? TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
+
+            var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
+            var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
+            
+            var outputData = forecast
+                .Aggregate($"Time\t\t\t\tWeather\n{new string('=', "7/4/2021 6:13:20 PM PDT         Dust Storms".Length)}", (agg, next) =>
+                {
+                    var (weather, startTime) = next;
+                    var zonedTime = TimeZoneInfo.ConvertTimeFromUtc(startTime, tzi);
+                    var timeText = zonedTime + " " + tzAbbr;
+                    return agg + $"\n{timeText}{(timeText.Length < 24 ? "\t" : "")}\t{weather.Name}";
+                });
+
+            await using var file = new MemoryStream(Encoding.UTF8.GetBytes(outputData));
+
+            await Context.Channel.SendFileAsync(file, "weather.txt",
+                messageReference: new MessageReference(Context.Message.Id));
         }
 
         [Command("roll", RunMode = RunMode.Async)]

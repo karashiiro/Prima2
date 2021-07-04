@@ -106,6 +106,12 @@ namespace Prima.Stable.Handlers
         /// </summary>
         private static async Task CheckTextGreylist(SocketGuild guild, IMessage rawMessage, DiscordGuildConfiguration guildConfig, ITemplateProvider templates)
         {
+            if (guildConfig.TextGreylist == null)
+            {
+                Log.Warning("{List} is null.", nameof(guildConfig.TextGreylist));
+                return;
+            }
+
             foreach (var regexString in guildConfig.TextGreylist)
             {
                 var match = Regex.Match(rawMessage.Content, regexString);
