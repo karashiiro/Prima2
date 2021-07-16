@@ -46,7 +46,7 @@ namespace Prima.Stable.Handlers
 
                         if (!Worlds.List.Contains(dbEntry.World))
                         {
-                            await member.SendMessageAsync("Off-DC characters may not access our organization tools.");
+                            await member.SendMessageAsync("Characters outside of Crystal may not access our scheduling tools.");
                             return;
                         }
 
