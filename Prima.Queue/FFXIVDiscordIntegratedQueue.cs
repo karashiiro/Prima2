@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
+using Prima.DiscordNet;
 using Prima.Extensions;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Prima.Queue
 {
@@ -96,7 +97,7 @@ namespace Prima.Queue
             var slot = GetQueue(role)
                 .FirstOrDefault(s => s.Id == userId);
             if (slot == null) return;
-            slot.RoleIds = discordRole == null ? new List<ulong>() : new List<ulong> {discordRole.Id};
+            slot.RoleIds = discordRole == null ? new List<ulong>() : new List<ulong> { discordRole.Id };
         }
 
         private static bool SlotHasRole(QueueSlot s, IRole discordRole, SocketCommandContext context)

@@ -133,11 +133,11 @@ namespace Prima.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The achievement has been found, and you have been given the Arsenal Master role..
+        ///   Looks up a localized string similar to The achievement has been found, and you have been given the {0} role..
         /// </summary>
-        public static string LodestoneBAAchievementSuccess {
+        public static string LodestoneAchievementRoleSuccess {
             get {
-                return ResourceManager.GetString("LodestoneBAAchievementSuccess", resourceCulture);
+                return ResourceManager.GetString("LodestoneAchievementRoleSuccess", resourceCulture);
             }
         }
         
@@ -151,47 +151,11 @@ namespace Prima.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The achievement has been found, and you have been given the Cleared Castrum role..
-        /// </summary>
-        public static string LodestoneCastrumLLAchievement1Success {
-            get {
-                return ResourceManager.GetString("LodestoneCastrumLLAchievement1Success", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The achievement has been found, and you have been given the Siege Liege role..
-        /// </summary>
-        public static string LodestoneCastrumLLAchievement2Success {
-            get {
-                return ResourceManager.GetString("LodestoneCastrumLLAchievement2Success", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Discord ID not found. Please ensure your Discord ID is located somewhere in your character profile..
         /// </summary>
         public static string LodestoneDiscordIdNotFoundError {
             get {
                 return ResourceManager.GetString("LodestoneDiscordIdNotFoundError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The achievement has been found, and you have been given the Cleared Delubrum (Savage) role..
-        /// </summary>
-        public static string LodestoneDRSSuccess1 {
-            get {
-                return ResourceManager.GetString("LodestoneDRSSuccess1", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The achievement has been found, and you have been given the Savage Queen role..
-        /// </summary>
-        public static string LodestoneDRSSuccess2 {
-            get {
-                return ResourceManager.GetString("LodestoneDRSSuccess2", resourceCulture);
             }
         }
         

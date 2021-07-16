@@ -2,7 +2,9 @@
 using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
-using Prima.Attributes;
+using Prima.DiscordNet;
+using Prima.DiscordNet.Attributes;
+using Prima.Models;
 using Prima.Queue.Services;
 using Prima.Resources;
 using Prima.Services;
@@ -32,6 +34,8 @@ namespace Prima.Queue.Modules
             803636739343908894
 #endif
             ;
+
+        private const ulong ZadnorThingChannelId = 845106113082818560;
 
         private static readonly IList<(ulong, DateTime)> LfmPullTimeLog = new List<(ulong, DateTime)>();
         private static readonly string[] Elements = { "Earth", "Wind", "Water", "Fire", "Lightning", "Ice" };
@@ -87,6 +91,7 @@ namespace Prima.Queue.Modules
                 803636739343908894 => "Delubrum Reginae (Savage)",
                 809241125373739058 => "fresh Delubrum Reginae (Savage) progression",
                 806957742056013895 => "Delubrum Reginae (Normal)",
+                845106113082818560 => "Dalriada",
                 _ => throw new NotSupportedException(),
             };
 
@@ -160,7 +165,7 @@ namespace Prima.Queue.Modules
                 const ulong castrumLfg = 765994301850779709;
 #endif
                 await leader.SendMessageAsync($"Your Party Finder password is {pw}.\n" +
-                    $"Please join {(new ulong[] { castrumLfg, DelubrumSavageChannelId, 806957742056013895, 809241125373739058 }.Contains(Context.Channel.Id) ? "a" : "an elemental")} voice channel within the next 30 seconds to continue matching.\n" +
+                    $"Please join {(new ulong[] { castrumLfg, DelubrumSavageChannelId, ZadnorThingChannelId, 806957742056013895, 809241125373739058 }.Contains(Context.Channel.Id) ? "a" : "an elemental")} voice channel within the next 30 seconds to continue matching.\n" +
                     "Create the listing in Party Finder now; matching will begin in 30 seconds.");
             }
             catch (HttpException)
@@ -505,7 +510,7 @@ namespace Prima.Queue.Modules
                             guildConfig.CastrumScheduleInputChannel,
                         };
 #endif
-                        
+
                         var (_, embed) = await GetEvent(eventId);
                         if (embed.Timestamp == null)
                         {
@@ -614,7 +619,7 @@ namespace Prima.Queue.Modules
                     break;
             }
 
-            if (!new ulong[] { 765994301850779709, DelubrumSavageChannelId, 806957742056013895, 809241125373739058 }.Contains(Context.Channel.Id))
+            if (!new ulong[] { 765994301850779709, DelubrumSavageChannelId, ZadnorThingChannelId, 806957742056013895, 809241125373739058 }.Contains(Context.Channel.Id))
             {
                 response += extra;
             }
@@ -936,7 +941,7 @@ namespace Prima.Queue.Modules
             if (delubrumAllRoles)
             {
                 var roleIds = DelubrumProgressionRoles.Roles.Keys;
-                var events = string.IsNullOrEmpty(eventId) ? queue.GetEvents().Append("") : new []{ eventId };
+                var events = string.IsNullOrEmpty(eventId) ? queue.GetEvents().Append("") : new[] { eventId };
                 foreach (var eId in events)
                 {
                     var response = roleIds
@@ -1206,51 +1211,6 @@ namespace Prima.Queue.Modules
             Log.Information("User {User} inserted at position {Position} in queue {QueueName}.", user.ToString(), position, queueName);
             return ReplyAsync($"User inserted in position {position}.");
         }
-        
-        [Command("expirequeues", RunMode = RunMode.Async)]
-        [Description("Expires all members from nonexistent events.")]
-        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task ExpireEventQueue([Remainder] string args = "")
-        {
-            const ulong mentor = 579916868035411968;
-            var sender = Context.Guild.GetUser(Context.User.Id);
-            if (sender.Roles.All(r => r.Id != mentor) && !sender.GuildPermissions.KickMembers)
-                return;
-
-            using var typing = Context.Channel.EnterTypingState();
-
-            var eventIds = (await GetEvents(int.MaxValue))
-                .Select(@event => @event.Item2.Footer?.Text)
-                .Where(id => id != null)
-                .ToList();
-            var queueEventIds = new List<string>();
-
-            var queues = QueueInfo.LfgChannels
-                .Select(kvp => kvp.Value)
-                .Select(QueueService.GetOrCreateQueue)
-                .ToList();
-            foreach (var queue in queues)
-            {
-                queueEventIds.AddRange(queue.GetEvents());
-            }
-
-            var inactiveEventIds = queueEventIds
-                .Except(eventIds)
-                .Distinct()
-                .ToList();
-            foreach (var queue in queues)
-            {
-                foreach (var eventId in inactiveEventIds)
-                {
-                    queue.ExpireEvent(eventId);
-                    Log.Information("Cleared queue for event {EventId}", eventId);
-                }
-            }
-
-            QueueService.Save();
-
-            await ReplyAsync($"Done! Events cleared:```\n{inactiveEventIds.Aggregate("", (agg, next) => agg + $"{next}\n")}```");
-        }
 
         [Command("confirm", RunMode = RunMode.Async)]
         public async Task ConfirmEvent()
@@ -1336,11 +1296,6 @@ namespace Prima.Queue.Modules
             await ReplyAsync("You are not confirmed for that event.");
         }
 
-        private IEnumerable<FFXIV3RoleQueue> GetQueues()
-        {
-            return null;
-        }
-
         private async Task<bool> IsEventReal(string eventId)
         {
             var (m, _) = await GetEvent(eventId);
@@ -1352,11 +1307,12 @@ namespace Prima.Queue.Modules
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == (guild?.Id ?? 0));
             if (guildConfig == null) return new List<ITextChannel>();
 
-            var drsOutputChannel = guild.GetTextChannel(guildConfig.DelubrumScheduleOutputChannel);
-            var drnOutputChannel = guild.GetTextChannel(guildConfig.DelubrumNormalScheduleOutputChannel);
-            var cllOutputChannel = guild.GetTextChannel(guildConfig.CastrumScheduleOutputChannel);
+            var scheduleOutputChannels = typeof(DiscordGuildConfiguration).GetFields()
+                .Where(f => RegexSearches.ScheduleOutputFieldNameRegex.IsMatch(f.Name))
+                .Select(f => (ulong?)f.GetValue(guildConfig))
+                .Select(cId => guild.GetTextChannel(cId ?? 0));
 
-            return new[] { drsOutputChannel, drnOutputChannel, cllOutputChannel };
+            return scheduleOutputChannels;
         }
 
         private async Task<IEnumerable<(IMessage, IEmbed)>> GetEvents(int inHours)
@@ -1421,31 +1377,17 @@ namespace Prima.Queue.Modules
             return (null, null);
         }
 
-        private static readonly Regex EventIdRegex = new Regex(@"\d{5}\d+", RegexOptions.Compiled);
+        private static readonly Regex EventIdRegex = new(@"\d{5}\d+", RegexOptions.Compiled);
         private static string RemoveEventIdFromArgs(string args)
         {
             var match = EventIdRegex.Match(args);
-            if (match.Success)
-            {
-                return args.Replace(match.Value, "");
-            }
-            else
-            {
-                return args;
-            }
+            return match.Success ? args.Replace(match.Value, "") : args;
         }
 
         private static string GetEventIdFromArgs(string args)
         {
             var match = EventIdRegex.Match(args);
-            if (match.Success)
-            {
-                return match.Value;
-            }
-            else
-            {
-                return null;
-            }
+            return match.Success ? match.Value : null;
         }
 
         private static string RemoveRoleFromArgs(string args)
@@ -1453,12 +1395,7 @@ namespace Prima.Queue.Modules
             var roleName =
                 DelubrumProgressionRoles.Roles.Values.FirstOrDefault(rn =>
                     args.ToLowerInvariant().Contains(rn.ToLowerInvariant()));
-            if (roleName != null)
-            {
-                return args.Replace(roleName, "", StringComparison.InvariantCultureIgnoreCase);
-            }
-
-            return args;
+            return roleName != null ? args.Replace(roleName, "", StringComparison.InvariantCultureIgnoreCase) : args;
         }
 
         private IRole GetRoleFromArgs(string args)
@@ -1466,13 +1403,13 @@ namespace Prima.Queue.Modules
             var roleName =
                 DelubrumProgressionRoles.Roles.Values.FirstOrDefault(rn =>
                     args.ToLowerInvariant().Contains(rn.ToLowerInvariant()));
-            if (roleName != null)
-            {
-                roleName = RegexSearches.UnicodeApostrophe.Replace(roleName, "'");
-                return Context.Guild.Roles.FirstOrDefault(r => r.Name == roleName);
-            }
 
-            return null;
+            if (roleName == null) return null;
+
+            roleName = RegexSearches.UnicodeApostrophe.Replace(roleName, "'");
+
+            return Context.Guild.Roles.FirstOrDefault(r => r.Name == roleName);
+
         }
     }
 }

@@ -18,7 +18,7 @@ namespace Prima.Stable.Modules
 
         [Command("configure", RunMode = RunMode.Async)]
         [Alias("config")]
-        public async Task ConfigureAsync(string key, [Remainder]string value)
+        public async Task ConfigureAsync(string key, [Remainder] string value)
         {
             try
             {

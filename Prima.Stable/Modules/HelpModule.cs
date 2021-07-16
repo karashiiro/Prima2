@@ -1,11 +1,12 @@
 ﻿using Discord;
 using Discord.Commands;
-using Prima.Attributes;
-using Prima.Resources;
+using Prima.DiscordNet.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Prima.DiscordNet.Extensions;
+using Prima.Services;
 using Color = Discord.Color;
 
 namespace Prima.Stable.Modules
@@ -14,6 +15,7 @@ namespace Prima.Stable.Modules
     {
         public CommandService CommandManager { get; set; }
         public IServiceProvider Services { get; set; }
+        public ITemplateProvider Templates { get; set; }
 
         [Command("help")]
         [Alias("?")]
@@ -55,6 +57,17 @@ namespace Prima.Stable.Modules
             }
 
             await ReplyAsync($"{Context.User.Mention}, a list of commands you can use in this server was sent to you via DM.");
+        }
+
+        [Command("privacy")]
+        [Description("See information about data this bot collects.")]
+        public async Task PrivacyPolicy()
+        {
+            var embed = Templates.Execute("privacy.md", new{})
+                .ToEmbedBuilder()
+                .WithColor(Color.DarkGreen)
+                .Build();
+            await Context.User.SendMessageAsync(embed: embed);
         }
     }
 }

@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Discord.Commands;
+using Prima.DiscordNet.Attributes;
+using Prima.Services;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Discord.Commands;
-using Prima.Attributes;
-using Prima.Services;
 
 namespace Prima.Stable.Modules
 {

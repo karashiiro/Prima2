@@ -1,12 +1,16 @@
-﻿using System.Threading.Tasks;
-using System.Net;
-using Discord.WebSocket;
-using FFXIVWeather;
+﻿using Discord.WebSocket;
+using FFXIVWeather.Lumina;
+using Lumina;
 using Microsoft.Extensions.DependencyInjection;
+using Prima.DiscordNet;
 using Prima.Services;
 using Prima.Stable.Handlers;
 using Prima.Stable.Services;
 using Serilog;
+using System;
+using System.IO;
+using System.Net;
+using System.Threading.Tasks;
 
 namespace Prima.Stable
 {
@@ -32,6 +36,7 @@ namespace Prima.Stable
             var lodestone = services.GetRequiredService<CharacterLookup>();
             var keepClean = services.GetRequiredService<KeepClean>();
             var ephemeralPinner = services.GetRequiredService<EphemeralPinManager>();
+            var templates = services.GetRequiredService<ITemplateProvider>();
 
             keepClean.Initialize();
             roleRemover.Initialize();
@@ -43,21 +48,23 @@ namespace Prima.Stable
             client.ReactionRemoved += (message, channel, reaction)
                 => ReactionReceived.HandlerRemove(db, message, channel, reaction);
 
-            client.ReactionAdded += (message, channel, reaction)
+            client.ReactionAdded += (message, _, reaction)
                 => VoteReactions.HandlerAdd(client, db, message, reaction);
 
             client.MessageDeleted += (message, channel) => AuditDeletion.Handler(db, client, message, channel);
-            client.MessageReceived += message => ChatCleanup.Handler(db, web, message);
+            client.MessageReceived += message => ChatCleanup.Handler(db, web, templates, message);
 
             client.MessageReceived += message => MessageCache.Handler(db, message);
-            client.MessageReceived += message => ExtraMessageReceived.Handler(client, message);
+            client.MessageReceived += message => TriggerDispatcher.Handler(client, message);
+
+            //client.UserJoined += user => WelcomeCard.Handler(templates, user);
 
             client.GuildMemberUpdated += censusEvents.GuildMemberUpdated;
 
             client.UserVoiceStateUpdated += mute.OnVoiceJoin;
 
             Log.Information("Prima.Stable logged in!");
-                
+
             await Task.Delay(-1);
         }
 
@@ -69,7 +76,14 @@ namespace Prima.Stable
                 .AddSingleton<CensusEventService>()
                 .AddSingleton<PresenceService>()
                 .AddSingleton<XIVAPIService>()
-                .AddSingleton<FFXIVWeatherService>()
+                .AddSingleton(new GameData(Environment.OSVersion.Platform == PlatformID.Win32NT
+                    ? @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack"
+                    : Path.Combine(Environment.GetEnvironmentVariable("HOME"), "sqpack"),
+                    new LuminaOptions
+                    {
+                        PanicOnSheetChecksumMismatch = false,
+                    }))
+                .AddSingleton<FFXIVWeatherLuminaService>()
                 .AddSingleton<MuteService>()
                 .AddSingleton<TimedRoleManager>()
                 .AddSingleton<FFLogsAPI>()

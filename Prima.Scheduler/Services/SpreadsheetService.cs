@@ -1,22 +1,22 @@
-﻿using Google.Apis.Auth.OAuth2;
+﻿using Discord;
+using Discord.WebSocket;
+using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 using Google.Apis.Util.Store;
 using Prima.Models;
 using Prima.Resources;
+using Prima.Services;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Discord.WebSocket;
-using Prima.Services;
 using Color = Google.Apis.Sheets.v4.Data.Color;
-using System.Linq;
-using Discord;
 
 namespace Prima.Scheduler.Services
 {

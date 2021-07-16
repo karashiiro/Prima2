@@ -1,11 +1,12 @@
-﻿using System;
-using Discord;
+﻿using Discord;
 using Discord.WebSocket;
+using Prima.DiscordNet;
 using Prima.Models;
 using Prima.Queue.Services;
 using Prima.Resources;
 using Prima.Services;
 using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -27,7 +28,7 @@ namespace Prima.Queue.Handlers
             if (client.CurrentUser.Id == userId || !RoleReactions.ContainsKey(reaction.Emote.Name)) return;
 
             var role = RoleReactions[reaction.Emote.Name];
-            
+
             var eventId = await AnnounceUtil.GetEventId(cachedMessage);
             if (eventId == null) return;
 
@@ -37,11 +38,21 @@ namespace Prima.Queue.Handlers
                 Log.Error("No guild configuration found for the default guild!");
                 return;
             }
-            
+
             var user = client.GetUser(userId);
             var guild = client.GetGuild(SpecialGuilds.CrystalExploratoryMissions);
 
             var message = await cachedMessage.GetOrDownloadAsync();
+
+            var noQueueChannels = new[]
+            {
+                guildConfig.BozjaClusterScheduleOutputChannel,
+                guildConfig.SocialScheduleOutputChannel,
+                guildConfig.DelubrumNormalScheduleOutputChannel,
+                guildConfig.DelubrumScheduleOutputChannel,
+            };
+            if (noQueueChannels.Contains(message.Channel.Id)) return;
+
             var inputChannel = guild.GetTextChannel(GetScheduleInputChannel(guildConfig, message.Channel.Id));
             if (inputChannel == null) return;
             var eventMessage = await inputChannel.GetMessageAsync(eventId.Value);
@@ -60,7 +71,7 @@ namespace Prima.Queue.Handlers
 
             var queueName = QueueInfo.LfgChannels[scheduleQueue];
             var queue = queueService.GetOrCreateQueue(queueName);
-            
+
             if (queue.Enqueue(userId, role, eventId.Value.ToString()))
             {
                 var embed = message.Embeds.FirstOrDefault(e => e.Type == EmbedType.Rich);
@@ -106,14 +117,23 @@ namespace Prima.Queue.Handlers
 
         private static ulong GetScheduleInputChannel(DiscordGuildConfiguration guildConfig, ulong channelId)
         {
-            if (channelId == guildConfig.CastrumScheduleOutputChannel)
-                return guildConfig.CastrumScheduleInputChannel;
-            else if (channelId == guildConfig.DelubrumNormalScheduleOutputChannel)
-                return guildConfig.DelubrumNormalScheduleInputChannel;
-            else if (channelId == guildConfig.DelubrumScheduleOutputChannel)
-                return guildConfig.DelubrumScheduleInputChannel;
-            else if (channelId == guildConfig.ScheduleOutputChannel)
-                return guildConfig.ScheduleInputChannel;
+            var guildConfigFields = typeof(DiscordGuildConfiguration).GetFields();
+
+            var scheduleOutputChannels = guildConfigFields
+                .Where(f => RegexSearches.ScheduleOutputFieldNameRegex.IsMatch(f.Name))
+                .ToList();
+
+            foreach (var outputChannelField in scheduleOutputChannels)
+            {
+                if (channelId != (ulong?)outputChannelField.GetValue(guildConfig)) continue;
+
+                var inputChannelFieldName = outputChannelField.Name.Replace("Output", "Input");
+
+                return (ulong?)guildConfigFields
+                    .FirstOrDefault(f => f.Name == inputChannelFieldName)
+                    ?.GetValue(guildConfig) ?? 0;
+            }
+
             return 0;
         }
 
@@ -124,6 +144,8 @@ namespace Prima.Queue.Handlers
 #else
             if (channelId == guildConfig.CastrumScheduleOutputChannel)
                 return 765994301850779709;
+            else if (channelId == guildConfig.ZadnorThingScheduleOutputChannel)
+                return 845106113082818560;
             else if (channelId == guildConfig.DelubrumNormalScheduleOutputChannel)
                 return 806957742056013895;
             else if (channelId == guildConfig.DelubrumScheduleOutputChannel)

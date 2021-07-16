@@ -1,5 +1,4 @@
-﻿using Discord;
-using Discord.Net;
+﻿using Discord.Net;
 using Discord.WebSocket;
 using Prima.Models;
 using Prima.Services;
@@ -114,7 +113,7 @@ namespace Prima.Stable.Services
             DiscordGuildConfiguration guildConfig;
             try
             {
-                guildConfig= _db.Guilds.Single(g => g.Id == newMember.Guild.Id);
+                guildConfig = _db.Guilds.Single(g => g.Id == newMember.Guild.Id);
             }
             catch (InvalidOperationException)
             {
@@ -172,8 +171,8 @@ namespace Prima.Stable.Services
 
                 await statusChannel.SendMessageAsync($"User {oldMember.Nickname} changed their nickname to {newMember.Nickname}.");
             }
-            catch (InvalidOperationException) {} // User is not in the database
-            catch (HttpException) {} // User has a higher permission level than this bot
+            catch (InvalidOperationException) { } // User is not in the database
+            catch (HttpException) { } // User has a higher permission level than this bot
         }
 
         private static string GetDefaultNickname(DiscordXIVUser user)

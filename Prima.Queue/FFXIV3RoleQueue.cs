@@ -65,16 +65,30 @@ namespace Prima.Queue
 
         public bool Remove(ulong userId, FFXIVRole role)
         {
-            return GetQueue(role)
-                .RemoveAll(s => s.Id == userId, overload: true)
-                .Any();
+            try
+            {
+                return GetQueue(role)
+                    .RemoveAll(s => s.Id == userId, overload: true)
+                    .Any();
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return false;
+            }
         }
 
         public bool Remove(ulong userId, FFXIVRole role, string eventId)
         {
-            return GetQueue(role)
-                .RemoveAll(s => EventValid(eventId)(s) && s.Id == userId, overload: true)
-                .Any();
+            try
+            {
+                return GetQueue(role)
+                    .RemoveAll(s => EventValid(eventId)(s) && s.Id == userId, overload: true)
+                    .Any();
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return false;
+            }
         }
 
         public void RemoveAll(ulong user)

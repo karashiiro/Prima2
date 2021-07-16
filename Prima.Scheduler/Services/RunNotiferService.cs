@@ -49,7 +49,7 @@ namespace Prima.Scheduler.Services
             {
                 if (token.IsCancellationRequested)
                     token.ThrowIfCancellationRequested();
-                
+
                 var runs = _db.Events.Where(e => DateTime.FromBinary(e.RunTime) > DateTime.Now && !e.Notified);
                 foreach (var run in runs)
                 {
@@ -188,7 +188,7 @@ namespace Prima.Scheduler.Services
             var hostRole = guild.GetRole(HostRole);
             var runPinner = guild.GetRole(RunHostData.PinnerRoleId);
 
-            await host.AddRolesAsync(new [] { hostRole, runPinner });
+            await host.AddRolesAsync(new[] { hostRole, runPinner });
 
             await _db.AddTimedRole(HostRole, guild.Id, host.Id, DateTime.UtcNow.AddHours(4.5));
             await _db.AddTimedRole(runPinner.Id, guild.Id, host.Id, DateTime.UtcNow.AddHours(4.5));

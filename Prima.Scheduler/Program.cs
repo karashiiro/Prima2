@@ -1,17 +1,18 @@
-﻿using Prima.Scheduler.Services;
-using Serilog;
-using System.Threading.Tasks;
-using Discord.WebSocket;
+﻿using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
+using Prima.DiscordNet;
 using Prima.Scheduler.GoogleApis.Services;
 using Prima.Scheduler.Handlers;
+using Prima.Scheduler.Services;
 using Prima.Services;
+using Serilog;
+using System.Threading.Tasks;
 
 namespace Prima.Scheduler
 {
     class Program
     {
-        static void Main(string[] args) => MainAsync(args).GetAwaiter().GetResult();  
+        static void Main(string[] args) => MainAsync(args).GetAwaiter().GetResult();
 
         private static async Task MainAsync(string[] args)
         {
@@ -38,7 +39,7 @@ namespace Prima.Scheduler
             services.GetRequiredService<AnnounceMonitor>().Initialize();
 
             Log.Information("Prima Scheduler logged in!");
-            
+
             await Task.Delay(-1);
         }
 

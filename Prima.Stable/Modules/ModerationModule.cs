@@ -1,20 +1,18 @@
 ﻿using Discord;
 using Discord.Commands;
-using Prima.Models;
-using Prima.Stable.Services;
+using Prima.DiscordNet.Attributes;
 using Prima.Services;
+using Prima.Stable.Handlers;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Prima.Attributes;
-using Prima.Stable.Handlers;
+using Prima.DiscordNet.Extensions;
 
-namespace Prima.Moderation.Modules
+namespace Prima.Stable.Modules
 {
     /// <summary>
     /// This module includes commands that assist with moderation.
@@ -23,12 +21,13 @@ namespace Prima.Moderation.Modules
     public class ModerationModule : ModuleBase<SocketCommandContext>
     {
         public IDbService Db { get; set; }
+        public ITemplateProvider Templates { get; set; }
 
         // Submit a report.
         [Command("modmail", RunMode = RunMode.Async)]
         [Alias("report")]
         [Description("Privately report information to the administration.")]
-        public async Task ReportAsync(params string[] p)
+        public async Task ReportAsync([Remainder] string p = "")
         {
             if (Context.Guild != null)
             {
@@ -48,11 +47,18 @@ namespace Prima.Moderation.Modules
                     }
                 }
             }
+
+            if (guild == null)
+            {
+                await ReplyAsync(
+                    "No shared guilds were found. This is almost certainly an error - please send your report to a staff member directly.");
+                return;
+            }
+
             var guildConfig = Db.Guilds.Single(g => g.Id == guild.Id);
 
             var postChannel = guild.GetTextChannel(guildConfig.ReportChannel);
-            var output = $"<@&{guildConfig.Roles["Moderator"]}> {Context.User.Mention} just sent a report:"
-                + Context.Message.Content.Substring(Context.Message.Content.IndexOf(' '));
+            var output = $"<@&{guildConfig.Roles["Moderator"]}> {Context.User.Mention} just sent a modmail: {p}";
             if (output.Length > 2000) // This can only be the case once, no need for a loop.
             {
                 await postChannel.SendMessageAsync(output.Substring(0, 2000));
@@ -145,6 +151,18 @@ namespace Prima.Moderation.Modules
                 return;
             }
 
+            var member = Context.Guild.GetUser(uid);
+
+            await member.SendMessageAsync(embed: Templates.Execute("automod/postban.md", new
+                {
+                    GuildName = Context.Guild.Name,
+                    BanReason = reason,
+                    BanAppealsUrl = "https://cem-ban-appeals.netlify.app/",
+            })
+                .ToEmbedBuilder()
+                .WithColor(Color.Red)
+                .Build());
+
             await Context.Guild.AddBanAsync(uid, reason: reason);
             await ReplyAsync("User banned.");
         }
@@ -195,14 +213,17 @@ namespace Prima.Moderation.Modules
             await ReplyAsync("User timeout ended.");
         }
 
-        // Add a regex to the blacklist.
-        [Command("blocktext")]
+        // Add a regex to the denylist.
+        [Command("blocktext", RunMode = RunMode.Async)]
+        [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.BanMembers)]
         public async Task BlockTextAsync([Remainder] string regexString)
         {
+            await Task.Delay(1000);
+
             try
             {
-                Regex.IsMatch("", regexString);
+                _ = Regex.IsMatch("", regexString);
             }
             catch (ArgumentException)
             {
@@ -210,37 +231,36 @@ namespace Prima.Moderation.Modules
                 return;
             }
 
-            await Db.AddGuildTextBlacklistEntry(Context.Guild.Id, regexString);
+            await Db.AddGuildTextDenylistEntry(Context.Guild.Id, regexString);
             await ReplyAsync(Properties.Resources.GenericSuccess);
         }
 
-        // Remove a regex from the blacklist.
-        [Command("unblocktext")]
+        // Remove a regex from the denylist.
+        [Command("unblocktext", RunMode = RunMode.Async)]
+        [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.BanMembers)]
-        public async Task UnblockTextAsync([Remainder] string regexString)
+        public async Task UnblockTextAsync([Remainder] string regexString = "")
         {
-            DiscordGuildConfiguration guildConfig;
-            try
-            {
-                guildConfig = Db.Guilds.Single(g => g.Id == Context.Guild.Id);
-            }
-            catch (InvalidOperationException)
-            {
-                return;
-            }
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return;
 
             if (string.IsNullOrEmpty(regexString)) // Remove the last regex that was matched if none was specified.
             {
-                var lastCaughtRegex = ChatCleanup.LastCaughtRegex;
-                var entry = guildConfig.TextBlacklist.Single(rs => rs == lastCaughtRegex);
-                await Db.RemoveGuildTextBlacklistEntry(Context.Guild.Id, entry);
+                var lastCaughtRegex = ChatCleanup.LastCaughtRegex; // TODO: Make this a guild-keyed Dictionary
+                var entry = guildConfig.TextDenylist.FirstOrDefault(rs => rs == lastCaughtRegex);
+                if (entry == null)
+                {
+                    await ReplyAsync(Properties.Resources.RegexNotFoundError);
+                    return;
+                }
+                await Db.RemoveGuildTextDenylistEntry(Context.Guild.Id, entry);
             }
             else
             {
                 try
                 {
-                    var entry = guildConfig.TextBlacklist.Single(rs => rs == regexString);
-                     await Db.RemoveGuildTextBlacklistEntry(Context.Guild.Id, entry);
+                    var entry = guildConfig.TextDenylist.First(rs => rs == regexString);
+                    await Db.RemoveGuildTextDenylistEntry(Context.Guild.Id, entry);
                 }
                 catch (InvalidOperationException)
                 {
@@ -249,6 +269,94 @@ namespace Prima.Moderation.Modules
                 }
             }
             await ReplyAsync(Properties.Resources.GenericSuccess);
+        }
+
+        // Add a regex to the greylist.
+        [Command("softblocktext", RunMode = RunMode.Async)]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.BanMembers)]
+        public async Task SoftBlockTextAsync([Remainder] string regexString)
+        {
+            await Task.Delay(1000);
+
+            try
+            {
+                _ = Regex.IsMatch("", regexString);
+            }
+            catch (ArgumentException)
+            {
+                await ReplyAsync(Properties.Resources.InvalidRegexError);
+                return;
+            }
+
+            await Db.AddGuildTextGreylistEntry(Context.Guild.Id, regexString);
+            await ReplyAsync(Properties.Resources.GenericSuccess);
+        }
+
+        // Remove a regex from the greylist.
+        [Command("softunblocktext", RunMode = RunMode.Async)]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.BanMembers)]
+        public async Task SoftUnblockTextAsync([Remainder] string regexString = "")
+        {
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return;
+
+            if (string.IsNullOrEmpty(regexString)) // Remove the last regex that was matched if none was specified.
+            {
+                var lastCaughtRegex = ChatCleanup.LastCaughtRegex;
+                var entry = guildConfig.TextGreylist.FirstOrDefault(rs => rs == lastCaughtRegex);
+                if (entry == null)
+                {
+                    await ReplyAsync(Properties.Resources.RegexNotFoundError);
+                    return;
+                }
+                await Db.RemoveGuildTextGreylistEntry(Context.Guild.Id, entry);
+            }
+            else
+            {
+                try
+                {
+                    var entry = guildConfig.TextGreylist.First(rs => rs == regexString);
+                    await Db.RemoveGuildTextGreylistEntry(Context.Guild.Id, entry);
+                }
+                catch (InvalidOperationException)
+                {
+                    await ReplyAsync(Properties.Resources.RegexNotFoundError);
+                    return;
+                }
+            }
+            await ReplyAsync(Properties.Resources.GenericSuccess);
+        }
+
+        [Command("blockedtext", RunMode = RunMode.Async)]
+        [Alias("blockedtexts")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.BanMembers)]
+        public async Task SeeBlockedTexts([Remainder] string args = "")
+        {
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return;
+
+            var output = $"These are the blocked expressions in the guild {Context.Guild.Name}:" +
+                         "```\n" + guildConfig.TextDenylist.Aggregate("", (agg, next) => $"{agg}{next}\n") + "```";
+
+            await Context.User.SendMessageAsync(output);
+        }
+
+        [Command("softblockedtext", RunMode = RunMode.Async)]
+        [Alias("softblockedtexts")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.BanMembers)]
+        public async Task SeeSoftBlockedTexts([Remainder] string args = "")
+        {
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return;
+
+            var output = $"These are the soft-blocked expressions in the guild {Context.Guild.Name}:" +
+                         "```\n" + guildConfig.TextGreylist.Aggregate("", (agg, next) => $"{agg}{next}\n") + "```";
+
+            await Context.User.SendMessageAsync(output);
         }
     }
 }

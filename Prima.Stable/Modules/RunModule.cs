@@ -1,14 +1,14 @@
-﻿using System;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
-using Prima.Attributes;
+using Prima.DiscordNet.Attributes;
 using Prima.Resources;
 using Prima.Services;
 using Prima.Stable.Services;
 using Serilog;
+using System;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Prima.Stable.Modules
 {
@@ -20,39 +20,19 @@ namespace Prima.Stable.Modules
 
         private const ulong HostSpeakerRoleId = 762072215356702741;
         private const ulong PrioritySpeakerRoleId = 762071904273432628;
-        private const ulong CEMMentorRoleId = 579916868035411968;
 
         private static readonly Regex MessageRef =
             new(@"discord(?:app)?\.com\/channels\/\d+\/\d+\/(?<MessageID>\d+)", RegexOptions.Compiled);
 
         [Command("pin", RunMode = RunMode.Async)]
         [Description("Temporarily pins a message in a run channel.")]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        [CEMRequireRoleOrMentorPlus(RunHostData.PinnerRoleId)]
         public async Task PinMessage(string messageRef)
         {
-            if (Context.Guild == null)
-            {
-                Log.Warning("Command not used in a guild!");
-                return;
-            }
-
             if (!Context.Channel.Name.Contains("group-chat"))
             {
-                Log.Warning("Command not used in a guild channel!");
-                return;
-            }
-
-            var member = Context.Guild.GetUser(Context.User.Id);
-            if (!member.HasRole(RunHostData.PinnerRoleId)
-                && !member.HasRole(CEMMentorRoleId)
-                && !member.GuildPermissions.KickMembers)
-            {
-                Log.Warning("User does not have permission to use that command!\n" +
-                            "Pinner? {IsPinned}\n" +
-                            "Mentor? {IsMentor}\n" +
-                            "Mod+? {IsMod}",
-                    member.HasRole(RunHostData.PinnerRoleId),
-                    member.HasRole(CEMMentorRoleId),
-                    member.GuildPermissions.KickMembers);
+                Log.Warning("Command not used in a run channel!");
                 return;
             }
 
@@ -82,32 +62,13 @@ namespace Prima.Stable.Modules
 
         [Command("unpin", RunMode = RunMode.Async)]
         [Description("Unpins a message pinned by a run member in a run channel.")]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        [CEMRequireRoleOrMentorPlus(RunHostData.PinnerRoleId)]
         public async Task UnpinMessage(string messageRef)
         {
-            if (Context.Guild == null)
-            {
-                Log.Warning("Command not used in a guild!");
-                return;
-            }
-
             if (!Context.Channel.Name.Contains("group-chat"))
             {
-                Log.Warning("Command not used in a guild channel!");
-                return;
-            }
-
-            var member = Context.Guild.GetUser(Context.User.Id);
-            if (!member.HasRole(RunHostData.PinnerRoleId)
-                && !member.HasRole(CEMMentorRoleId)
-                && !member.GuildPermissions.KickMembers)
-            {
-                Log.Warning("User does not have permission to use that command!\n" +
-                            "Pinner? {IsPinned}\n" +
-                            "Mentor? {IsMentor}\n" +
-                            "Mod+? {IsMod}",
-                    member.HasRole(RunHostData.PinnerRoleId),
-                    member.HasRole(CEMMentorRoleId),
-                    member.GuildPermissions.KickMembers);
+                Log.Warning("Command not used in a run channel!");
                 return;
             }
 

@@ -264,18 +264,34 @@ namespace Prima.Services
             return _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
         }
 
-        public Task AddGuildTextBlacklistEntry(ulong guildId, string regexString)
+        public Task AddGuildTextDenylistEntry(ulong guildId, string regexString)
         {
             var update = Builders<DiscordGuildConfiguration>.Update.Push("TextBlacklist", regexString);
             return _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
         }
 
-        public async Task RemoveGuildTextBlacklistEntry(ulong guildId, string regexString)
+        public async Task RemoveGuildTextDenylistEntry(ulong guildId, string regexString)
         {
-            var blacklist = (await (await _guildConfig.FindAsync(guild => guild.Id == guildId)).FirstAsync().ConfigureAwait(false)).TextBlacklist;
-            if (blacklist.Any())
+            var denylist = (await (await _guildConfig.FindAsync(guild => guild.Id == guildId)).FirstAsync().ConfigureAwait(false)).TextDenylist;
+            if (denylist.Any())
             {
                 var update = Builders<DiscordGuildConfiguration>.Update.Pull("TextBlacklist", regexString);
+                await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
+            }
+        }
+
+        public Task AddGuildTextGreylistEntry(ulong guildId, string regexString)
+        {
+            var update = Builders<DiscordGuildConfiguration>.Update.Push("TextGreylist", regexString);
+            return _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
+        }
+
+        public async Task RemoveGuildTextGreylistEntry(ulong guildId, string regexString)
+        {
+            var greylist = (await (await _guildConfig.FindAsync(guild => guild.Id == guildId)).FirstAsync().ConfigureAwait(false)).TextGreylist;
+            if (greylist.Any())
+            {
+                var update = Builders<DiscordGuildConfiguration>.Update.Pull("TextGreylist", regexString);
                 await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
             }
         }

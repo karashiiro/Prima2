@@ -1,8 +1,8 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
 using Discord.WebSocket;
 using Prima.Services;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Prima.Stable.Handlers
 {

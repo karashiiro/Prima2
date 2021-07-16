@@ -1,5 +1,7 @@
 ﻿using Discord;
+using Discord.Net;
 using Discord.WebSocket;
+using Prima.DiscordNet;
 using Prima.Resources;
 using Prima.Services;
 using Serilog;
@@ -8,7 +10,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Discord.Net;
 
 namespace Prima.Scheduler.Services
 {
@@ -91,8 +92,26 @@ namespace Prima.Scheduler.Services
                     await NotifyLead(host);
                     await NotifyMembers(host, embedMessage, embed, token);
                 }, token);
-                
-                await Task.WhenAll(drsCheck, drnCheck, clusterCheck, castrumCheck);
+
+                var zadnorCheck = CheckRuns(guild, guildConfig.ZadnorThingScheduleOutputChannel, 30, async (host, embedMessage, embed) =>
+                {
+                    var success = await AssignHostRole(guild, host);
+                    if (!success) return;
+
+                    await NotifyLead(host);
+                    await NotifyMembers(host, embedMessage, embed, token);
+                }, token);
+
+                var socialCheck = CheckRuns(guild, guildConfig.SocialScheduleOutputChannel, 30, async (host, embedMessage, embed) =>
+                {
+                    var success = await AssignSocialHostRole(guild, host);
+                    if (!success) return;
+
+                    await NotifyLead(host);
+                    await NotifyMembers(host, embedMessage, embed, token);
+                }, token);
+
+                await Task.WhenAll(drsCheck, drnCheck, clusterCheck, castrumCheck, zadnorCheck, socialCheck);
 #if DEBUG
                 await Task.Delay(3000, token);
 #else
@@ -122,7 +141,7 @@ namespace Prima.Scheduler.Services
                     if (!nullableTimestamp.HasValue) continue;
 
                     var timestamp = nullableTimestamp.Value;
-                    
+
                     // Remove expired posts
                     if (timestamp.AddMinutes(60) < DateTimeOffset.Now)
                     {
@@ -158,6 +177,25 @@ namespace Prima.Scheduler.Services
             }
         }
 
+        private async Task<bool> AssignSocialHostRole(SocketGuild guild, SocketGuildUser host)
+        {
+            var socialHost = guild.GetRole(RunHostData.SocialHostRoleId);
+
+            Log.Information("Assigning roles...");
+            if (host == null || host.HasRole(socialHost)) return false;
+
+            try
+            {
+                await _db.AddTimedRole(socialHost.Id, guild.Id, host.Id, DateTime.UtcNow.AddHours(4.5));
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Failed to add host role to {User}!", socialHost?.ToString() ?? "null");
+                return false;
+            }
+        }
+
         private async Task<bool> AssignHostRole(SocketGuild guild, SocketGuildUser host)
         {
             var currentHost = guild.GetRole(RunHostData.RoleId);
@@ -168,7 +206,7 @@ namespace Prima.Scheduler.Services
 
             try
             {
-                await host.AddRolesAsync(new []{currentHost, runPinner});
+                await host.AddRolesAsync(new[] { currentHost, runPinner });
                 await _db.AddTimedRole(currentHost.Id, guild.Id, host.Id, DateTime.UtcNow.AddHours(4.5));
                 await _db.AddTimedRole(runPinner.Id, guild.Id, host.Id, DateTime.UtcNow.AddHours(4.5));
                 return true;

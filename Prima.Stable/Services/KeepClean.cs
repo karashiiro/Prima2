@@ -52,7 +52,7 @@ namespace Prima.Stable.Services
                     await CleanChannel(rosterChannel, new TimeSpan(72, 0, 0));
                 }
 
-                await Task.Delay(new TimeSpan(1, 0, 0), token);
+                await Task.Delay(new TimeSpan(1, 0, 0), token).ConfigureAwait(false);
             }
         }
 

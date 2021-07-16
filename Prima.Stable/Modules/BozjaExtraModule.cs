@@ -1,18 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
 using Discord.Net;
-using Prima.Attributes;
+using Prima.DiscordNet;
+using Prima.DiscordNet.Attributes;
 using Prima.Models;
 using Prima.Resources;
 using Prima.Services;
 using Prima.Stable.Models.FFLogs;
 using Prima.Stable.Services;
 using Serilog;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 using Color = Discord.Color;
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -23,7 +24,6 @@ namespace Prima.Stable.Modules
     {
         public IDbService Db { get; set; }
         public HttpClient Http { get; set; }
-        public IServiceProvider Services { get; set; }
         public FFLogsAPI FFLogsAPI { get; set; }
         public CharacterLookup Lodestone { get; set; }
 
@@ -38,8 +38,10 @@ namespace Prima.Stable.Modules
             if (guildConfig != null && guildConfig.Prefix != ' ')
                 prefix = guildConfig.Prefix.ToString();
 
-            var commands = await DiscordUtilities.GetFormattedCommandList(Services, Context, prefix,
-                "Bozja Extra Module", except: new List<string> {"bozhelp"});
+            var commands = await DiscordUtilities.GetFormattedCommandList(
+                typeof(BozjaExtraModule),
+                prefix,
+                except: new List<string> { "bozhelp" });
 
             var embed = new EmbedBuilder()
                 .WithTitle("Useful Commands (Bozja)")
@@ -53,16 +55,9 @@ namespace Prima.Stable.Modules
         [Command("setroler", RunMode = RunMode.Async)]
         [Description("(Hosts only) Gives the Delubrum Roler and Run Pinner roles to the specified user.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        [CEMRequireRoleOrMentorPlus(RunHostData.RoleId)]
         public async Task SetLeadAsync(IUser user)
         {
-            if (!Context.User.HasRole(RunHostData.RoleId, Context))
-            {
-                var res = await ReplyAsync($"{Context.User.Mention}, you don't have a run host role!");
-                await Task.Delay(5000);
-                await res.DeleteAsync();
-                return;
-            }
-
             var executorRole = Context.Guild.GetRole(DelubrumProgressionRoles.Executor);
             var runPinner = Context.Guild.GetRole(RunHostData.PinnerRoleId);
 
@@ -93,14 +88,35 @@ namespace Prima.Stable.Modules
             }
         }
 
+        [Command("rprgdrs", RunMode = RunMode.Async)]
+        [RequireOwner]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public async Task RPrgDrs()
+        {
+            // Removes DRS prog roles from cleared people
+            var queenProg = Context.Guild.Roles.FirstOrDefault(r => r.Name == "The Queen Progression");
+            var contingentRoles = DelubrumProgressionRoles.GetContingentRoles(queenProg?.Id ?? 0)
+                .Select(r => Context.Guild.GetRole(r))
+                .ToList();
+
+            var clearedRole = Context.Guild.GetRole(806362589134454805);
+            var cleared = Context.Guild.Users
+                .Where(u => u.HasRole(clearedRole));
+
+            foreach (var member in cleared)
+            {
+                await member.RemoveRolesAsync(contingentRoles);
+            }
+
+            await ReplyAsync("Done!");
+        }
+
         [Command("addprogrole", RunMode = RunMode.Async)]
         [Alias("addprogroles")]
         [Description("Adds progression roles to server members from a log. Rolers can also manually add roles using this command.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task AddDelubrumProgRoleAsync([Remainder]string args)
+        public async Task AddDelubrumProgRoleAsync([Remainder] string args)
         {
-            if (Context.Guild == null) return;
-
             var isFFLogs = FFLogs.IsLogLink(args);
             if (isFFLogs)
             {
@@ -128,7 +144,7 @@ namespace Prima.Stable.Modules
                 .Select(idStr => RegexSearches.NonNumbers.Replace(idStr, ""))
                 .Select(ulong.Parse)
                 .Select(id => Context.Guild.GetUser(id));
-            
+
             var roleName = string.Join(' ', words.Where(w => !w.StartsWith('<')));
             roleName = RegexSearches.UnicodeApostrophe.Replace(roleName, "'");
 
@@ -168,21 +184,9 @@ namespace Prima.Stable.Modules
         [Command("removeprogrole", RunMode = RunMode.Async)]
         [Description("(Rolers only) Removes a progression role from a user.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        [CEMRequireRoleOrMentorPlus(DelubrumProgressionRoles.Executor)]
         public async Task RemoveDelubrumProgRoleAsync([Remainder] string args)
         {
-            if (Context.Guild == null) return;
-
-            var executor = Context.Guild.GetUser(Context.User.Id);
-            if (!executor.HasRole(DelubrumProgressionRoles.Executor, Context)
-                && !executor.HasRole(579916868035411968, Context) // or Mentor
-                && !executor.GuildPermissions.KickMembers) // or can kick users
-            {
-                var res = await ReplyAsync($"{Context.User.Mention}, you don't have the roler role!");
-                await Task.Delay(5000);
-                await res.DeleteAsync();
-                return;
-            }
-
             var words = args.Split(' ');
 
             await Context.Guild.DownloadUsersAsync();
@@ -293,7 +297,7 @@ namespace Prima.Stable.Modules
             // multiple queries.
             var users = (await Task.WhenAll(potentialUsers))
                 .Where(kvp => kvp.Value != null)
-                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);;
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value); ;
             var missedUsers = new List<LogInfo.ReportDataWrapper.ReportData.Report.Master.Actor>();
 
             var addedAny = false;
@@ -327,29 +331,56 @@ namespace Prima.Stable.Modules
                         }
                         continue;
                     }
-                    
+
                     var user = Context.Guild.GetUser(users[id].DiscordId);
-                    if (user == null) continue;
+                    if (user == null || user.HasRole(806362589134454805)) continue;
 
-                    foreach (var progRole in contingentRoles)
+                    if (killRole.Id == 806362589134454805 && encounter.Kill == true)
                     {
-                        Log.Information("Checking role {RoleName} on user {User}", progRole.Name, user);
-                        if (!user.HasRole(progRole))
+                        addedAny = true;
+
+                        // Remove all contingent roles (this is bodge and should be refactored)
+                        foreach (var progRole in contingentRoles)
                         {
-                            addedAny = true;
-                            await user.AddRoleAsync(progRole);
-                            Log.Information("Added role {RoleName} to user {User}", progRole.Name, user);
+                            Log.Information("Checking role {RoleName} on user {User}", progRole.Name, user);
+                            if (user.HasRole(progRole))
+                            {
+                                await user.RemoveRoleAsync(progRole);
+                                Log.Information("Removed role {RoleName} from user {User}", progRole.Name, user);
+                            }
                         }
-                    }
 
-                    if (encounter.Kill == true)
-                    {
+                        // Give everyone the clear role if they cleared DRS
                         Log.Information("Checking role {RoleName} on user {User}", killRole.Name, user);
                         if (!user.HasRole(killRole))
                         {
-                            addedAny = true;
                             await user.AddRoleAsync(killRole);
                             Log.Information("Added role {RoleName} to {User}", killRole.Name, user);
+                        }
+                    }
+                    else
+                    {
+                        // Give all contingent roles as well as the clear role for the fight
+                        foreach (var progRole in contingentRoles)
+                        {
+                            Log.Information("Checking role {RoleName} on user {User}", progRole.Name, user);
+                            if (!user.HasRole(progRole))
+                            {
+                                addedAny = true;
+                                await user.AddRoleAsync(progRole);
+                                Log.Information("Added role {RoleName} to user {User}", progRole.Name, user);
+                            }
+                        }
+
+                        if (encounter.Kill == true)
+                        {
+                            Log.Information("Checking role {RoleName} on user {User}", killRole.Name, user);
+                            if (!user.HasRole(killRole))
+                            {
+                                addedAny = true;
+                                await user.AddRoleAsync(killRole);
+                                Log.Information("Added role {RoleName} to {User}", killRole.Name, user);
+                            }
                         }
                     }
                 }
@@ -444,57 +475,69 @@ namespace Prima.Stable.Modules
 
         [Command("star", RunMode = RunMode.Async)]
         [Description("Shows the Bozjan Southern Front star mob guide.")]
-        [RateLimit(TimeSeconds = 1, Global = true)]
+        [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task StarMobsAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/muvBR1Z.png");
 
         [Command("cluster", RunMode = RunMode.Async)]
         [Alias("clusters")]
         [Description("Shows the Bozjan Southern Front cluster path guide.")]
-        [RateLimit(TimeSeconds = 1, Global = true)]
+        [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task BozjaClustersAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/FuG4wDK.png");
-        
+
+        [Command("memories", RunMode = RunMode.Async)]
+        [Description("Shows the Bozjan Southern Front memory path guide.")]
+        [RateLimit(TimeSeconds = 10, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public Task BozjaMemoriesAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/JSCoxi8.png");
+
         [Command("qgreflect", RunMode = RunMode.Async)]
         [Description("Shows Queen's Guard reflect positions.")]
-        [RateLimit(TimeSeconds = 1, Global = true)]
+        [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task QueensGuardReflectAsync() => DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/808869784195563521/809107279697150012/robotstemplate2.png");
 
         [Command("chess", RunMode = RunMode.Async)]
         [Description("Shows Queen Chess strat.")]
-        [RateLimit(TimeSeconds = 1, Global = true)]
+        [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task QueenChessStratAsync() => DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/808869784195563521/809107442793185310/nJ4vHiK.png");
 
         [Command("fatefulwords", RunMode = RunMode.Async)]
         [Description("Shows the Fateful Words guide.")]
-        [RateLimit(TimeSeconds = 1, Global = true)]
+        [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task FatefulWordsAsync() => DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/808869784195563521/813152064342589443/Fateful_Words_debuffs.png");
 
         [Command("brands", RunMode = RunMode.Async)]
         [Alias("hotcold")]
         [Description("Shows the Trinity Avowed debuff guide. Also `~hotcold`.")]
-        [RateLimit(TimeSeconds = 1, Global = true)]
+        [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task BrandsHotColdAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/un5nvg4.png");
 
         [Command("slimes", RunMode = RunMode.Async)]
         [Description("Shows the Delubrum Reginae slimes guide.")]
-        [RateLimit(TimeSeconds = 1, Global = true)]
+        [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task SlimesAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/wUrvKtr.gif");
 
         [Command("pipegame", RunMode = RunMode.Async)]
         [Alias("ladders")]
         [Description("Shows the Trinity Avowed ladder guide. Also `~ladders`.")]
-        [RateLimit(TimeSeconds = 1, Global = true)]
+        [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task PipeGameAsync()
         {
             await DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/i2ms13x.png");
             await DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/JgiTTK9.png");
         }
+
+        [Command("minotrap", RunMode = RunMode.Async)]
+        [Description("Shows the Stygimoloch Lord trap handling for tanks.")]
+        [RateLimit(TimeSeconds = 10, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public Task MinoTrapAsync() => ReplyAsync("https://clips.twitch.tv/PoisedCovertDumplingsItsBoshyTime-Vu4V6JZqHzM9LPUf");
     }
 }

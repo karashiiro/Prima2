@@ -1,11 +1,10 @@
 ﻿using Discord;
 using Discord.Commands;
-using Prima.Attributes;
+using Prima.DiscordNet.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Prima.Resources;
 using Color = Discord.Color;
 
 namespace Prima.Scheduler.Modules
@@ -17,7 +16,7 @@ namespace Prima.Scheduler.Modules
 
         [Command("help")]
         [Alias("?")]
-        [Description("<:LappDumb:736310777463439422>")]
+        [System.ComponentModel.Description("<:LappDumb:736310777463439422>")]
         public async Task HelpAsync()
         {
             var commands = (await CommandManager.GetExecutableCommandsAsync(Context, Services))

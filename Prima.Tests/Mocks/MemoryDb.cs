@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Prima.Extensions;
+using Prima.Models;
+using Prima.Services;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Prima.Extensions;
-using Prima.Models;
-using Prima.Services;
 
 namespace Prima.Tests.Mocks
 {
@@ -163,14 +163,24 @@ namespace Prima.Tests.Mocks
             return Task.CompletedTask;
         }
 
-        public Task AddGuildTextBlacklistEntry(ulong guildId, string regexString)
+        public Task AddGuildTextDenylistEntry(ulong guildId, string regexString)
         {
             return Task.CompletedTask;
         }
 
-        public Task RemoveGuildTextBlacklistEntry(ulong guildId, string regexString)
+        public Task RemoveGuildTextDenylistEntry(ulong guildId, string regexString)
         {
             return Task.CompletedTask;
+        }
+
+        public Task AddGuildTextGreylistEntry(ulong guildId, string regexString)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task RemoveGuildTextGreylistEntry(ulong guildId, string regexString)
+        {
+            throw new NotImplementedException();
         }
 
         public Task AddUser(DiscordXIVUser user)

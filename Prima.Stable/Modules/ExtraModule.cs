@@ -1,49 +1,41 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
+using FFXIVWeather.Lumina;
+using Lumina.Excel.GeneratedSheets;
 using Newtonsoft.Json.Linq;
+using Prima.DiscordNet.Attributes;
+using Prima.Resources;
 using Prima.Services;
-using Prima.XIVAPI;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
-using Prima.Attributes;
-using FFXIVWeather;
-using FFXIVWeather.Models;
-using Discord;
-using Prima.Resources;
 using TimeZoneNames;
 using Color = Discord.Color;
+using Item = Prima.XIVAPI.Item;
 
-namespace Prima.Extra.Modules
+namespace Prima.Stable.Modules
 {
     [Name("Extra")]
     public class ExtraModule : ModuleBase<SocketCommandContext>
     {
         public IDbService Db { get; set; }
-        public FFXIVWeatherService Weather { get; set; }
+        public FFXIVWeatherLuminaService Weather { get; set; }
         public HttpClient Http { get; set; }
         public XIVAPIService Xivapi { get; set; }
 
+        private const ulong CEMSpeculation = 738899820168740984;
+        private const ulong CEMBozTheorycrafting = 593815337980526603;
+
         [Command("weather")]
         [Description("[FFXIV] Shows the current weather for the specified zone.")]
+        [DisableInChannelsForGuild(CEMSpeculation, CEMBozTheorycrafting, GuildId = SpecialGuilds.CrystalExploratoryMissions)]
         public async Task WeatherAsync([Remainder] string zone)
         {
-            if (Context.Guild != null && Context.Guild.Id == SpecialGuilds.CrystalExploratoryMissions)
-            {
-                const ulong speculation = 738899820168740984;
-                const ulong theorycrafting = 593815337980526603;
-                if (Context.Channel.Id == speculation || Context.Channel.Id == theorycrafting)
-                {
-                    await Context.Message.DeleteAsync();
-                    var reply = await ReplyAsync("That command is disabled in this channel.");
-                    await Task.Delay(10000);
-                    await reply.DeleteAsync();
-                    return;
-                }
-            }
-
             IList<(Weather, DateTime)> forecast;
             try
             {
@@ -58,25 +50,23 @@ namespace Prima.Extra.Modules
             var (currentWeather, currentWeatherStartTime) = forecast[0];
 
             var dbUser = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id);
-            // ReSharper disable once JoinDeclarationAndInitializer
-            TimeZoneInfo tzi;
             var (customTzi, _) = Util.GetLocalizedTimeForUser(dbUser, DateTime.Now);
-            tzi = customTzi ?? TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
+            var tzi = customTzi ?? TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
 
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
             var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
 
-            var formattedForecast = $"**Current:** {currentWeather} (Began at {TimeZoneInfo.ConvertTimeFromUtc(currentWeatherStartTime, tzi).ToShortTimeString()} {tzAbbr})";
+            var formattedForecast = $"**Current:** {currentWeather.Name} (Began at {TimeZoneInfo.ConvertTimeFromUtc(currentWeatherStartTime, tzi).ToShortTimeString()} {tzAbbr})";
             foreach (var (weather, startTime) in forecast.Skip(1))
             {
                 var zonedTime = TimeZoneInfo.ConvertTimeFromUtc(startTime, tzi);
 
-                formattedForecast += $"\n{zonedTime.ToShortTimeString()}: {weather}";
+                formattedForecast += $"\n{zonedTime.ToShortTimeString()}: {weather.Name}";
             }
 
             var embed = new EmbedBuilder()
                 .WithAuthor(new EmbedAuthorBuilder()
-                    .WithIconUrl($"https://www.garlandtools.org/files/icons/weather/{currentWeather.GetName().Replace(" ", "%20")}.png")
+                    .WithIconUrl($"https://www.garlandtools.org/files/icons/weather/{currentWeather.Name.ToString().Replace(" ", "%20")}.png")
                     .WithName($"Current weather for {Util.JadenCase(zone)}:"))
                 .WithTitle($"Next weather starts in {Math.Truncate((forecast[1].Item2 - DateTime.UtcNow).TotalMinutes)} minutes.")
                 .WithColor(Color.LightOrange)
@@ -84,6 +74,44 @@ namespace Prima.Extra.Modules
                 .Build();
 
             await ReplyAsync(embed: embed);
+        }
+
+        [Command("weatherreport")]
+        [Description("[FFXIV] Provides a text file with the next 200 weather entries for the specified zone.")]
+        [DisableInChannelsForGuild(CEMSpeculation, CEMBozTheorycrafting, GuildId = SpecialGuilds.CrystalExploratoryMissions)]
+        public async Task WeatherReportAsync([Remainder] string zone)
+        {
+            IList<(Weather, DateTime)> forecast;
+            try
+            {
+                forecast = Weather.GetForecast(zone, count: 200);
+            }
+            catch (ArgumentException)
+            {
+                await ReplyAsync("The specified zone could not be found.");
+                return;
+            }
+
+            var dbUser = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id);
+            var (customTzi, _) = Util.GetLocalizedTimeForUser(dbUser, DateTime.Now);
+            var tzi = customTzi ?? TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
+
+            var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
+            var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
+            
+            var outputData = forecast
+                .Aggregate($"Time\t\t\t\tWeather\n{new string('=', "7/4/2021 6:13:20 PM PDT         Dust Storms".Length)}", (agg, next) =>
+                {
+                    var (weather, startTime) = next;
+                    var zonedTime = TimeZoneInfo.ConvertTimeFromUtc(startTime, tzi);
+                    var timeText = zonedTime + " " + tzAbbr;
+                    return agg + $"\n{timeText}{(timeText.Length < 24 ? "\t" : "")}\t{weather.Name}";
+                });
+
+            await using var file = new MemoryStream(Encoding.UTF8.GetBytes(outputData));
+
+            await Context.Channel.SendFileAsync(file, "weather.txt",
+                messageReference: new MessageReference(Context.Message.Id));
         }
 
         [Command("roll", RunMode = RunMode.Async)]
@@ -147,7 +175,9 @@ namespace Prima.Extra.Modules
                 await ReplyAsync($"No results found for \"{itemName}\", are you sure you spelled the item name correctly?");
                 return;
             }
-            var searchData = searchResults.Where(result => result.Name.ToLower() == itemName.ToLower());
+            var searchData = searchResults
+                .Where(result => string.Equals(result.Name, itemName, StringComparison.CurrentCultureIgnoreCase))
+                .ToList();
             var item = !searchData.Any() ? searchResults.First() : searchData.First();
 
             var itemId = item.ID;
@@ -160,8 +190,8 @@ namespace Prima.Extra.Modules
 
             await ReplyAsync($"__{listings.Count} results for {worldName} (Showing up to 10):__\n" +
                 trimmedListings.Select(listing => listing.Quantity + " **" + itemName + "** for " +
-					listing.PricePerUnit + " Gil " + (!string.IsNullOrEmpty(listing.WorldName) ? "on " +
-					listing.WorldName + " " : "") + (listing.Quantity > 1 ? $" (For a total of {listing.Total} Gil)" : "")));
+                    listing.PricePerUnit + " Gil " + (!string.IsNullOrEmpty(listing.WorldName) ? "on " +
+                    listing.WorldName + " " : "") + (listing.Quantity > 1 ? $" (For a total of {listing.Total} Gil)" : "")));
         }
 
         public class UniversalisListing

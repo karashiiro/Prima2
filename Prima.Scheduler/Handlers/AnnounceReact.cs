@@ -1,8 +1,9 @@
-﻿using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
 using Discord.WebSocket;
+using Prima.DiscordNet;
 using Prima.Services;
 using Serilog;
+using System.Threading.Tasks;
 
 namespace Prima.Scheduler.Handlers
 {

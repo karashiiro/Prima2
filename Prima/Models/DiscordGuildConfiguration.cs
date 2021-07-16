@@ -53,6 +53,18 @@ namespace Prima.Models
         [BsonRepresentation(BsonType.String)]
         public ulong DelubrumNormalScheduleOutputChannel = 0;
 
+        [BsonRepresentation(BsonType.String)]
+        public ulong ZadnorThingScheduleInputChannel = 0;
+
+        [BsonRepresentation(BsonType.String)]
+        public ulong ZadnorThingScheduleOutputChannel = 0;
+
+        [BsonRepresentation(BsonType.String)]
+        public ulong SocialScheduleInputChannel = 0;
+
+        [BsonRepresentation(BsonType.String)]
+        public ulong SocialScheduleOutputChannel = 0;
+
         [BsonRequired]
         [BsonRepresentation(BsonType.String)]
         public ulong StatusChannel = 0;
@@ -80,7 +92,19 @@ namespace Prima.Models
         public IDictionary<string, string> RoleEmotes = new Dictionary<string, string>();
 
         [BsonRequired]
+        [Obsolete("Use TextDenylist instead.")]
         public IList<string> TextBlacklist = new List<string>();
+        
+        public IList<string> TextGreylist = new List<string>();
+
+        [BsonIgnore]
+        public IList<string> TextDenylist
+        {
+#pragma warning disable CS0618 // Type or member is obsolete
+            get => TextBlacklist;
+            set => TextBlacklist = value;
+#pragma warning restore CS0618 // Type or member is obsolete
+        }
 
         [BsonRequired]
         [BsonRepresentation(BsonType.String)]

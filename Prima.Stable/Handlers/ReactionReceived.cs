@@ -1,23 +1,32 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
 using Discord.WebSocket;
 using Prima.Models;
 using Prima.Services;
 using Prima.Stable.Resources;
 using Prima.Stable.Services;
 using Serilog;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Prima.Stable.Handlers
 {
     public static class ReactionReceived
     {
+        // Even though most role reactions are currently handled by a separate deployment unit, roles
+        // with validation are still handled here. This should eventually be migrated as well.
+
         private const ulong BozjaRole = 588913532410527754;
         private const ulong EurekaRole = 588913087818498070;
         private const ulong DiademRole = 588913444712087564;
 
-        public static async Task HandlerAdd(IDbService db, CharacterLookup lodestone, Cacheable<IUserMessage, ulong> _, ISocketMessageChannel ichannel, SocketReaction reaction)
+        public static Task HandlerAdd(IDbService db, CharacterLookup lodestone, Cacheable<IUserMessage, ulong> message, ISocketMessageChannel ichannel, SocketReaction reaction)
+        {
+            Task.Run(() => HandlerAddAsync(db, lodestone, message, ichannel, reaction));
+            return Task.CompletedTask;
+        }
+
+        private static async Task HandlerAddAsync(IDbService db, CharacterLookup lodestone, Cacheable<IUserMessage, ulong> message, ISocketMessageChannel ichannel, SocketReaction reaction)
         {
             if (ichannel is SocketGuildChannel channel)
             {
@@ -28,13 +37,13 @@ namespace Prima.Stable.Handlers
                 {
                     return;
                 }
-                if ((ichannel.Id == 551584585432039434 || ichannel.Id == 590757405927669769 || ichannel.Id == 765748243367591936) && reaction.Emote is Emote emote && disConfig.RoleEmotes.TryGetValue(emote.Id.ToString(), out var roleIdString))
+                if (ichannel.Id == 590757405927669769 && reaction.Emote is Emote emote && disConfig.RoleEmotes.TryGetValue(emote.Id.ToString(), out var roleIdString))
                 {
                     var roleId = ulong.Parse(roleIdString);
                     var role = member.Guild.GetRole(roleId);
                     var dbEntry = db.Users.FirstOrDefault(u => u.DiscordId == reaction.UserId);
 
-                    if (roleId == BozjaRole || roleId == EurekaRole || roleId == DiademRole)
+                    if (roleId is BozjaRole or EurekaRole or DiademRole)
                     {
                         if (dbEntry == null)
                         {
@@ -54,7 +63,7 @@ namespace Prima.Stable.Handlers
                         var highestCombatLevel = 0;
                         foreach (var classJob in data["ClassJobs"].ToObject<CharacterLookup.ClassJob[]>())
                         {
-                            if (classJob.JobID >= 8 && classJob.JobID <= 18) continue;
+                            if (classJob.JobID is >= 8 and <= 18) continue;
                             if (classJob.Level > highestCombatLevel)
                             {
                                 highestCombatLevel = classJob.Level;
@@ -74,12 +83,12 @@ namespace Prima.Stable.Handlers
                         }
 
                         // 60 is already the minimum requirement to register.
-                    }
 
-                    await member.AddRoleAsync(role);
-                    Log.Information("Role {Role} was added to {DiscordUser}", role.Name, member.ToString());
+                        await member.AddRoleAsync(role);
+                        Log.Information("Role {Role} was added to {DiscordUser}", role.Name, member.ToString());
+                    }
                 }
-                else if (guild.Id == 550702475112480769 && (ichannel.Id == 552643167808258060 || ichannel.Id == 768886934084648960) && reaction.Emote.Name == "✅")
+                else if (guild.Id == 550702475112480769 && ichannel.Id is 552643167808258060 or 768886934084648960 && reaction.Emote.Name == "✅")
                 {
                     await member.SendMessageAsync($"You have begun the verification process. Your **Discord account ID** is `{member.Id}`.\n"
                                                   + "Please add this somewhere in your FFXIV Lodestone Character Profile.\n"
@@ -90,7 +99,13 @@ namespace Prima.Stable.Handlers
             }
         }
 
-        public static async Task HandlerRemove(IDbService db, Cacheable<IUserMessage, ulong> _, ISocketMessageChannel ichannel, SocketReaction reaction)
+        public static Task HandlerRemove(IDbService db, Cacheable<IUserMessage, ulong> message, ISocketMessageChannel ichannel, SocketReaction reaction)
+        {
+            Task.Run(() => HandlerRemoveAsync(db, message, ichannel, reaction));
+            return Task.CompletedTask;
+        }
+
+        private static async Task HandlerRemoveAsync(IDbService db, Cacheable<IUserMessage, ulong> message, ISocketMessageChannel ichannel, SocketReaction reaction)
         {
             if (ichannel is SocketGuildChannel channel)
             {
@@ -105,7 +120,7 @@ namespace Prima.Stable.Handlers
                 {
                     return;
                 }
-                if ((ichannel.Id == 551584585432039434 || ichannel.Id == 590757405927669769 || ichannel.Id == 765748243367591936) && reaction.Emote is Emote emote && disConfig.RoleEmotes.TryGetValue(emote.Id.ToString(), out var roleIdString))
+                if (ichannel.Id == 590757405927669769 && reaction.Emote is Emote emote && disConfig.RoleEmotes.TryGetValue(emote.Id.ToString(), out var roleIdString))
                 {
                     var roleId = ulong.Parse(roleIdString);
                     var role = member.Guild.GetRole(roleId);
