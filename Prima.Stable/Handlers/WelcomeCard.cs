@@ -1,9 +1,9 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using Prima.DiscordNet.Extensions;
+using Prima.Resources;
 using Prima.Services;
 using System.Threading.Tasks;
-using Prima.Resources;
 using Color = Discord.Color;
 
 namespace Prima.Stable.Handlers

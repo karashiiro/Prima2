@@ -97,7 +97,7 @@ namespace Prima.Stable.Modules
                 name = RegexSearches.AngleBrackets.Replace(name, string.Empty);
                 name = RegexSearches.UnicodeApostrophe.Replace(name, "'");
                 world = world.ToLower();
-                world = ("" + world[0]).ToUpper() + world.Substring(1);
+                world = ("" + world[0]).ToUpper() + world[1..];
                 if (world == "Courel" || world == "Couerl")
                 {
                     world = "Coeurl";
