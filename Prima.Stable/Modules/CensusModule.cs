@@ -628,6 +628,30 @@ namespace Prima.Stable.Modules
             await ReplyAsync(embed: responseEmbed);
         }
 
+        // Check who a character is owned by.
+        [Command("lwhois", RunMode = RunMode.Async)]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        public async Task LodestoneWhoIsAsync([Remainder] string lodestoneId = "")
+        {
+            var found = Db.Users.SingleOrDefault(u => u.LodestoneId == lodestoneId);
+            if (found == null)
+            {
+                await ReplyAsync(Properties.Resources.UserNotInDatabaseError);
+                return;
+            }
+
+            var user = await Context.Client.Rest.GetUserAsync(found.DiscordId);
+
+            var responseEmbed = new EmbedBuilder()
+                .WithTitle(user.ToString())
+                .WithColor(Color.Blue)
+                .WithThumbnailUrl(user.GetAvatarUrl())
+                .WithDescription(user.Mention)
+                .Build();
+
+            await ReplyAsync(embed: responseEmbed);
+        }
+
         // Check the number of database entries.
         [Command("indexcount")]
         [RequireUserPermission(GuildPermission.KickMembers)]
