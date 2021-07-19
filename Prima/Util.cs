@@ -1,10 +1,10 @@
-﻿using Prima.Resources;
+﻿using Prima.Game.FFXIV;
+using Prima.Resources;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Prima.Models;
 
 namespace Prima
 {
@@ -106,7 +106,7 @@ namespace Prima
                     }
                     continue;
                 }
- 
+
                 //Check for days of the week, possibly abbreviated.
                 if (dayOfWeek == -1)
                     switch (keyword.ToLowerInvariant())
@@ -166,14 +166,14 @@ namespace Prima
                             continue;
                     }
             } //foreach
-            
+
             //Check to make sure everything got set here, and then...
             var finalDate = new DateTime(year, month, day, hour, minute, 0, DateTimeKind.Utc);
             if (dayOfWeek >= 0)
             {
                 finalDate = finalDate.AddDays((dayOfWeek - (int)finalDate.DayOfWeek + 7) % 7);
             }
-            
+
             return finalDate;
         }
 
@@ -216,7 +216,7 @@ namespace Prima
                         matrix[i, j] = Math.Min(matrix[i - 1, j - 1], Math.Min(matrix[i, j - 1], matrix[i - 1, j])) + 1;
                 }
             }
-            return matrix[a - 1,b - 1];
+            return matrix[a - 1, b - 1];
         }
 
         public static (TimeZoneInfo, DateTime) GetLocalizedTimeForUser(DiscordXIVUser user, DateTime time)

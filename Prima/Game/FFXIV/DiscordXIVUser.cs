@@ -2,7 +2,7 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace Prima.Models
+namespace Prima.Game.FFXIV
 {
     public class DiscordXIVUser
     {

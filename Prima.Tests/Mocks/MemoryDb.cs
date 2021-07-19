@@ -1,4 +1,5 @@
 ﻿using Prima.Extensions;
+using Prima.Game.FFXIV;
 using Prima.Models;
 using Prima.Services;
 using System;

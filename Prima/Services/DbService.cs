@@ -1,4 +1,5 @@
 ﻿using MongoDB.Driver;
+using Prima.Game.FFXIV;
 using Prima.Models;
 using Serilog;
 using System;
