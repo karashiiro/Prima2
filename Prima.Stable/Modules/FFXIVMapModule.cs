@@ -1,8 +1,7 @@
 ﻿using Discord.Commands;
+using Lumina;
 using Newtonsoft.Json.Linq;
 using Prima.DiscordNet.Attributes;
-using Prima.Game.FFXIV;
-using Prima.Models;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -10,13 +9,15 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using PlaceName = Lumina.Excel.GeneratedSheets.PlaceName;
+using TerritoryType = Lumina.Excel.GeneratedSheets.TerritoryType;
 
 namespace Prima.Stable.Modules
 {
     public class FFXIVMapModule : ModuleBase<SocketCommandContext>
     {
         public HttpClient Http { get; set; }
-        public FFXIVSheetService Sheets { get; set; }
+        public GameData LuminaGameData { get; set; }
 
         [Command("ffxivmap")]
         [Description("[FFXIV] Displays a map of the specified zone.")]
@@ -59,7 +60,8 @@ namespace Prima.Stable.Modules
             using var g = Graphics.FromImage(drawing);
             g.DrawImage(map, 0, 0);
             g.DrawImage(redFlag, x * mapScale - flagWidth / 2, y * mapScale - flagHeight / 2, flagWidth, flagHeight);
-            using var mapToSend = new MemoryStream();
+
+            await using var mapToSend = new MemoryStream();
             drawing.Save(mapToSend, ImageFormat.Jpeg);
             mapToSend.Seek(0, SeekOrigin.Begin);
 
@@ -72,16 +74,17 @@ namespace Prima.Stable.Modules
 
             zoneName = zoneName.ToLowerInvariant();
 
-            var place = Sheets.GetSheet<PlaceName>().FirstOrDefault(pn => pn.Name.ToLowerInvariant() == zoneName);
+            var place = LuminaGameData.GetExcelSheet<PlaceName>().FirstOrDefault(pn => pn.Name.RawString.ToLowerInvariant() == zoneName);
             if (place == null) return (null, default);
-            var terriType = Sheets.GetSheet<TerritoryType>().FirstOrDefault(tt => tt.PlaceName == place.RowId);
+
+            var terriType = LuminaGameData.GetExcelSheet<TerritoryType>().FirstOrDefault(tt => tt.PlaceName.Row == place.RowId);
             if (terriType == null) return (null, default);
 
-            var xivapiTTRaw = JObject.Parse(await Http.GetStringAsync(new Uri($"https://xivapi.com/TerritoryType/{terriType.RowId}")));
-            var mapFilename = xivapiTTRaw["Map"]["MapFilename"].ToObject<string>();
+            var xivapiTtRaw = JObject.Parse(await Http.GetStringAsync(new Uri($"https://xivapi.com/TerritoryType/{terriType.RowId}")));
+            var mapFilename = xivapiTtRaw["Map"]["MapFilename"].ToObject<string>();
 
             var mapStream = await Http.GetStreamAsync(new Uri($"https://xivapi.com{mapFilename}"));
-            var mapScale = xivapiTTRaw["Map"]["SizeFactor"].ToObject<int>();
+            var mapScale = xivapiTtRaw["Map"]["SizeFactor"].ToObject<int>();
 
             return (mapStream, mapScale);
         }
