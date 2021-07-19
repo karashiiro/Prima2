@@ -32,5 +32,7 @@ namespace Prima.Game.FFXIV
         public string Avatar;
 
         public string Timezone;
+
+        public bool Verified;
     }
 }

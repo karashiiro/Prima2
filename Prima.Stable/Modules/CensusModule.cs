@@ -437,7 +437,6 @@ namespace Prima.Stable.Modules
             }
 
             var lodestoneId = ulong.Parse(user?.LodestoneId ?? args[0]);
-            var character = await Lodestone.GetCharacter(lodestoneId);
 
             AchievementInfo[] achievements;
             try
@@ -467,6 +466,13 @@ namespace Prima.Stable.Modules
                 await ReplyAsync(Properties.Resources.LodestoneDiscordIdNotFoundError);
                 return;
             }
+
+            if (user.Verified)
+            {
+                user.Verified = true;
+                await Db.UpdateUser(user);
+            }
+
             if (achievements.Any(achievement => achievement.ID == 2229)) // We're On Your Side III
             {
                 Log.Information("Added role " + arsenalMaster.Name);
