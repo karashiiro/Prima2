@@ -148,7 +148,7 @@ namespace Prima.Stable.Modules
                 Context.User.Id.ToString()))
             {
                 await Context.User.SendMessageAsync(
-                    "We now require that new users verify ownership of their FFXIV accounts. " +
+                    "We now require that users verify ownership of their FFXIV accounts when using `~iam`. " +
                     "Your Discord ID is:");
                 await Context.User.SendMessageAsync(Context.User.Id.ToString()); // Send this in a separate message to make things easier for mobile users
                 await Context.User.SendMessageAsync("Please paste this number somewhere into your Lodestone bio here: <https://na.finalfantasyxiv.com/lodestone/my/setting/profile/> and `~iam` again.");
