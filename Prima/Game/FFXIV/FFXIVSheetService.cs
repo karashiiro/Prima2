@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 
-namespace Prima.Services
+namespace Prima.Game.FFXIV
 {
     public class FFXIVSheetService
     {

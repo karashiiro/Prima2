@@ -1,5 +1,6 @@
 ﻿using Discord.Net;
 using Discord.WebSocket;
+using Prima.Game.FFXIV;
 using Prima.Models;
 using Prima.Services;
 using Serilog;

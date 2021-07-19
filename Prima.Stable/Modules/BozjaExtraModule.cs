@@ -3,6 +3,7 @@ using Discord.Commands;
 using Discord.Net;
 using Prima.DiscordNet;
 using Prima.DiscordNet.Attributes;
+using Prima.Game.FFXIV;
 using Prima.Models;
 using Prima.Resources;
 using Prima.Services;

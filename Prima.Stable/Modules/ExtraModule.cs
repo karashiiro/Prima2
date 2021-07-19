@@ -4,6 +4,7 @@ using FFXIVWeather.Lumina;
 using Lumina.Excel.GeneratedSheets;
 using Newtonsoft.Json.Linq;
 using Prima.DiscordNet.Attributes;
+using Prima.Game.FFXIV;
 using Prima.Resources;
 using Prima.Services;
 using System;
@@ -98,7 +99,7 @@ namespace Prima.Stable.Modules
 
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
             var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
-            
+
             var outputData = forecast
                 .Aggregate($"Time\t\t\t\tWeather\n{new string('=', "7/4/2021 6:13:20 PM PDT         Dust Storms".Length)}", (agg, next) =>
                 {

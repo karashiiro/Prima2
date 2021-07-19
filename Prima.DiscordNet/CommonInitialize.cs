@@ -3,6 +3,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Prima.DiscordNet.Services;
+using Prima.Game.FFXIV;
 using Prima.Services;
 using Serilog.Events;
 using System;
@@ -58,6 +59,7 @@ namespace Prima.DiscordNet
                 .AddSingleton<FFXIVSheetService>()
                 .AddSingleton<PasswordGenerator>()
                 .AddSingleton<RateLimitService>()
+                .AddSingleton<CharacterLookup>()
                 .AddSingleton<ITemplateProvider, TemplateProvider>();
             //.AddSingleton(new HttpServer(Log.Information))
         }

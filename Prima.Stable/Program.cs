@@ -3,6 +3,7 @@ using FFXIVWeather.Lumina;
 using Lumina;
 using Microsoft.Extensions.DependencyInjection;
 using Prima.DiscordNet;
+using Prima.Game.FFXIV;
 using Prima.Services;
 using Prima.Stable.Handlers;
 using Prima.Stable.Services;
@@ -72,7 +73,6 @@ namespace Prima.Stable
         {
             sc
                 .AddSingleton<WebClient>()
-                .AddSingleton<CharacterLookup>()
                 .AddSingleton<CensusEventService>()
                 .AddSingleton<PresenceService>()
                 .AddSingleton<XIVAPIService>()

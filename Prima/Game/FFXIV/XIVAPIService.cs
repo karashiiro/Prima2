@@ -7,7 +7,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace Prima.Services
+namespace Prima.Game.FFXIV
 {
     [Serializable]
     public class XIVAPICharacterNotFoundException : Exception
