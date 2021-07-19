@@ -301,6 +301,7 @@ namespace Prima.Stable.Modules
 
             // Add the user and character to the database.
             var user = foundCharacter;
+            user.Verified = true;
             foundCharacter.DiscordId = userMention.Id;
             await Db.AddUser(user);
 
