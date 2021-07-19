@@ -1,7 +1,6 @@
-﻿using System;
-using System.IO;
-using Serilog;
+﻿using Serilog;
 using Serilog.Events;
+using System;
 
 namespace Prima
 {
@@ -12,9 +11,6 @@ namespace Prima
             Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Verbose()
                 .WriteTo.Console()
-                .WriteTo.SQLite(Environment.OSVersion.Platform == PlatformID.Win32NT
-                    ? "Log.db" // Only use Windows for testing.
-                    : Path.Combine(Environment.GetEnvironmentVariable("HOME"), "log/Log.db"))
                 .CreateLogger();
         }
 
