@@ -15,15 +15,15 @@ namespace Prima.Stable.Services
     {
         private readonly DiscordSocketClient _client;
         private readonly IDbService _db;
-        private readonly XIVAPIService _XIVAPI;
+        private readonly CharacterLookup _lookup;
 
         private readonly List<ulong> _cemUnverifiedMembers;
 
-        public CensusEventService(DiscordSocketClient client, XIVAPIService XIVAPI, IDbService db)
+        public CensusEventService(DiscordSocketClient client, CharacterLookup lookup, IDbService db)
         {
             _client = client;
             _db = db;
-            _XIVAPI = XIVAPI;
+            _lookup = lookup;
 
             _cemUnverifiedMembers = new List<ulong>();
         }
@@ -82,15 +82,14 @@ namespace Prima.Stable.Services
                 DiscordXIVUser foundCharacter;
                 try
                 {
-                    foundCharacter = await _XIVAPI.GetDiscordXIVUser(world, name, 0);
+                    foundCharacter = await _lookup.GetDiscordXIVUser(world, name, 0);
                     foundCharacter.DiscordId = member.Id;
                     await _db.AddUser(foundCharacter);
                     Log.Information("Recovered data for {User}", $"{member.Username}#{member.Discriminator}");
                 }
-                catch (XIVAPICharacterNotFoundException)
+                catch (CharacterNotFound)
                 {
                     await CEMRecoverDataFailed(member);
-                    return;
                 }
             }
         }
