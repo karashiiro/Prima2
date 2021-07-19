@@ -481,7 +481,7 @@ namespace Prima.Stable.Modules
                 return;
             }
 
-            if (user.Verified)
+            if (!user.Verified)
             {
                 user.Verified = true;
                 await Db.UpdateUser(user);
