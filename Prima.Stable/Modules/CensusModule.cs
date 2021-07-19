@@ -229,19 +229,8 @@ namespace Prima.Stable.Modules
             if (userMention == null || parameters.Length < 3)
             {
                 var reply = await ReplyAsync($"{Context.User.Mention}, please enter that command in the format `{prefix}theyare Mention World Name Surname`.");
-                await Task.Delay(MessageDeleteDelay);
-                await reply.DeleteAsync();
                 return;
             }
-            new Task(async () =>
-            {
-                await Task.Delay(MessageDeleteDelay);
-                try
-                {
-                    await Context.Message.DeleteAsync();
-                }
-                catch (HttpException) { } // Message was already deleted.
-            }).Start();
             var world = parameters[0].ToLower();
             var name = parameters[1] + " " + parameters[2];
             world = RegexSearches.NonAlpha.Replace(world, string.Empty);
@@ -279,6 +268,14 @@ namespace Prima.Stable.Modules
             catch (CharacterNotFound)
             {
                 await ReplyAsync($"{Context.User.Mention}, no character matching that name and world was found. Are you sure you typed their world name correctly?");
+                return;
+            }
+
+            if (!force && !await LodestoneUtils.VerifyCharacter(Lodestone, ulong.Parse(foundCharacter.LodestoneId),
+                Context.User.Id.ToString()))
+            {
+                await ReplyAsync("That character does not have their Lodestone ID in their bio; please have them add it. " +
+                                 "Alternatively, append `force` to the end of the command to skip this check.");
                 return;
             }
 
@@ -338,10 +335,6 @@ namespace Prima.Stable.Modules
 
             var finalReply = await Context.Channel.SendMessageAsync(embed: responseEmbed);
             await ActivateUser(member, existingLodestoneId, foundCharacter, guildConfig);
-
-            // Cleanup
-            await Task.Delay(MessageDeleteDelay);
-            await finalReply.DeleteAsync();
         }
 
         private const ulong BozjaRole = 588913532410527754;
