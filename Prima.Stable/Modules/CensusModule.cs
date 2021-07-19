@@ -144,21 +144,42 @@ namespace Prima.Stable.Modules
                 return;
             }
 
+            if (!await LodestoneUtils.VerifyCharacter(Lodestone, ulong.Parse(foundCharacter.LodestoneId),
+                Context.User.Id.ToString()))
+            {
+                await Context.User.SendMessageAsync(
+                    "We now require that new users verify ownership of their FFXIV accounts. " +
+                    "Your Discord ID is:");
+                await Context.User.SendMessageAsync(Context.User.Id.ToString()); // Send this in a separate message to make things easier for mobile users
+                await Context.User.SendMessageAsync("Please paste this number somewhere into your Lodestone bio here: <https://na.finalfantasyxiv.com/lodestone/my/setting/profile/> and `~iam` again.");
+                var reply = await ReplyAsync($"{Context.User.Mention}, your Discord ID could not be found in your Lodestone bio. " +
+                                             "Please add the number DM'd to you here: <https://na.finalfantasyxiv.com/lodestone/my/setting/profile/>.");
+                await Task.Delay(MessageDeleteDelay);
+                await reply.DeleteAsync();
+                return;
+            }
+
             // Get the existing database entry, if it exists.
             var existingLodestoneId = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id)?.LodestoneId;
             var existingDiscordUser = Db.Users.FirstOrDefault(u => u.LodestoneId == foundCharacter.LodestoneId);
 
             // Disallow duplicate characters (CEM policy).
-            if (existingDiscordUser != null && existingDiscordUser.DiscordId != member.Id)
+            if (existingDiscordUser != null)
             {
-                var res = await ReplyAsync("That character is already registered to another user.");
-                await Task.Delay(new TimeSpan(0, 0, 30));
-                await res.DeleteAsync();
-                return;
+                if (existingDiscordUser.DiscordId != member.Id)
+                {
+                    var res = await ReplyAsync("That character is already registered to another user.");
+                    await Task.Delay(new TimeSpan(0, 0, 30));
+                    await res.DeleteAsync();
+                    return;
+                }
+
+                // TODO: allow if the Discord account is deleted?
             }
 
             // Insert them into the DB.
             var user = foundCharacter;
+            user.Verified = true;
             foundCharacter.DiscordId = Context.User.Id;
             await Db.AddUser(user);
 
