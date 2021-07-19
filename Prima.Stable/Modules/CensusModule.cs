@@ -430,7 +430,7 @@ namespace Prima.Stable.Modules
             using var typing = Context.Channel.EnterTypingState();
 
             var user = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id);
-            if (args.Length == 0 && user == null)
+            if (user == null)
             {
                 await ReplyAsync($"Your Lodestone information doesn't seem to be stored. Please register it again with `{prefix}iam`.");
                 return;
@@ -462,7 +462,7 @@ namespace Prima.Stable.Modules
             var hasDRSAchievement2 = false;
             var hasDalriadaAchievement1 = false;
             var hasDalriadaAchievement2 = false;
-            if (!character["Bio"].ToObject<string>().Contains(Context.User.Id.ToString()))
+            if (!await LodestoneUtils.VerifyCharacter(Lodestone, ulong.Parse(user.LodestoneId), Context.User.Id.ToString()))
             {
                 await ReplyAsync(Properties.Resources.LodestoneDiscordIdNotFoundError);
                 return;
@@ -543,18 +543,6 @@ namespace Prima.Stable.Modules
             {
                 await ReplyAsync(
                     "If any achievement role was not added, please check <https://na.finalfantasyxiv.com/lodestone/my/setting/account/> and ensure that your achievements are public.");
-            }
-
-            if (user == null)
-            {
-                await Db.AddUser(new DiscordXIVUser
-                {
-                    DiscordId = Context.User.Id,
-                    LodestoneId = args[0],
-                    Avatar = character["Avatar"].ToObject<string>(),
-                    Name = character["Name"].ToObject<string>(),
-                    World = character["World"].ToObject<string>(),
-                });
             }
         }
 
