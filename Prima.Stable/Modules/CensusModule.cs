@@ -602,6 +602,7 @@ namespace Prima.Stable.Modules
                 .WithUrl($"https://na.finalfantasyxiv.com/lodestone/character/{found.LodestoneId}/")
                 .WithColor(Color.Blue)
                 .WithThumbnailUrl(found.Avatar)
+                .WithDescription($"Verified: {(found.Verified ? "✅" : "❌")}")
                 .Build();
 
             Log.Information("Answered whoami from ({World}) {Name}.", found.World, found.Name);
@@ -632,6 +633,7 @@ namespace Prima.Stable.Modules
                 .WithUrl($"https://na.finalfantasyxiv.com/lodestone/character/{found.LodestoneId}/")
                 .WithColor(Color.Blue)
                 .WithThumbnailUrl(found.Avatar)
+                .WithDescription($"Verified: {(found.Verified ? "✅" : "❌")}")
                 .Build();
 
             await ReplyAsync(embed: responseEmbed);
@@ -655,7 +657,7 @@ namespace Prima.Stable.Modules
                 .WithTitle(user.ToString())
                 .WithColor(Color.Blue)
                 .WithThumbnailUrl(user.GetAvatarUrl())
-                .WithDescription(user.Mention)
+                .WithDescription(user.Mention + $"\nVerified: {(found.Verified ? "✅" : "❌")}")
                 .Build();
 
             await ReplyAsync(embed: responseEmbed);
