@@ -21,7 +21,7 @@ namespace Prima.Stable
 
         private static async Task MainAsync(string[] args)
         {
-            var sc = CommonInitialize.Main(args);
+            var sc = CommonInitialize.Main();
 
             // Initialize the ASP.NET service provider and freeze this Task indefinitely.
             await using var services = ConfigureServices(sc);

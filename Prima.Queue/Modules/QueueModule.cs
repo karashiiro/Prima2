@@ -799,7 +799,7 @@ namespace Prima.Queue.Modules
         {
             if (args.StartsWith("leave")) // See below
             {
-                await LeaveQueueAsync(args.Substring("leave".Length));
+                await LeaveQueueAsync(args["leave".Length..]);
                 return;
             }
 

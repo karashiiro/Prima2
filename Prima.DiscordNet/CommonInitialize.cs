@@ -3,7 +3,6 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Prima.DiscordNet.Services;
-using Prima.Game.FFXIV;
 using Prima.Services;
 using Serilog.Events;
 using System;
@@ -14,7 +13,7 @@ namespace Prima.DiscordNet
 {
     public static class CommonInitialize
     {
-        public static IServiceCollection Main(string[] args)
+        public static IServiceCollection Main()
         {
             StaticLog.Initialize();
 

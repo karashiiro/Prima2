@@ -62,7 +62,7 @@ namespace Prima.Stable.Modules
             if (output.Length > 2000) // This can only be the case once, no need for a loop.
             {
                 await postChannel.SendMessageAsync(output.Substring(0, 2000));
-                output = output.Substring(2000);
+                output = output[2000..];
             }
             await postChannel.SendMessageAsync(output);
             foreach (var attachment in Context.Message.Attachments)

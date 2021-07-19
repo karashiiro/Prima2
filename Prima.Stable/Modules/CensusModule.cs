@@ -237,7 +237,7 @@ namespace Prima.Stable.Modules
             name = RegexSearches.AngleBrackets.Replace(name, string.Empty);
             name = RegexSearches.UnicodeApostrophe.Replace(name, string.Empty);
             world = world.ToLower();
-            world = (world[0].ToString()).ToUpper() + world.Substring(1);
+            world = world[0].ToString().ToUpper() + world[1..];
             if (world == "Courel" || world == "Couerl")
             {
                 world = "Coeurl";
@@ -333,8 +333,7 @@ namespace Prima.Stable.Modules
             catch (HttpException) { }
 
             Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
-
-            var finalReply = await Context.Channel.SendMessageAsync(embed: responseEmbed);
+            
             await ActivateUser(member, existingLodestoneId, foundCharacter, guildConfig);
         }
 

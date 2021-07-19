@@ -77,7 +77,7 @@ namespace Prima.Stable.Services
                 }
 
                 var world = member.Nickname[1..member.Nickname.LastIndexOf(')')];
-                var name = member.Nickname.Substring(member.Nickname.LastIndexOf(')') + 2);
+                var name = member.Nickname[(member.Nickname.LastIndexOf(')') + 2)..];
 
                 DiscordXIVUser foundCharacter;
                 try

@@ -117,8 +117,7 @@ namespace Prima.Stable.Modules
 
         [Command("roll", RunMode = RunMode.Async)]
         [Description("T̵̪͖̎̈̍ḛ̷̤͑̚ș̴̔͑̾ͅͅt̸͔͜͝ ̶̡̨̪͌̉͠ỷ̵̺̕o̴̞̍ū̴͚̣̤r̵͚͎͔͘ ̴̨̬̿ḷ̷͖̀̚u̴͖̲͌́c̴̲̣͙͑̈͝k̸͍͖̿̆̓!̶̢̅̀")]
-        [SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Required for proper command processing.")]
-        public async Task RollAsync([Remainder] string junk)
+        public async Task RollAsync([Remainder] string args = "")
         {
             var res = (int)Math.Floor(new Random().NextDouble() * 4);
             switch (res)
@@ -168,7 +167,7 @@ namespace Prima.Stable.Modules
 
             var itemName = string.Join(' ', args[0..^2]);
             var worldName = args[^1];
-            worldName = char.ToUpper(worldName[0]) + worldName.Substring(1);
+            worldName = char.ToUpper(worldName[0]) + worldName[1..];
 
             var searchResults = await Xivapi.Search<Item>(itemName);
             if (searchResults.Count == 0)
