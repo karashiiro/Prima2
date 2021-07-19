@@ -1,9 +1,9 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Prima.Models;
 using System;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
 namespace Prima.Game.FFXIV
@@ -15,8 +15,8 @@ namespace Prima.Game.FFXIV
         public CharacterNotFound(string message) : base(message) { }
         public CharacterNotFound(string message, Exception inner) : base(message, inner) { }
         protected CharacterNotFound(
-            System.Runtime.Serialization.SerializationInfo info,
-            System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+            SerializationInfo info,
+            StreamingContext context) : base(info, context) { }
     }
 
     [Serializable]
@@ -26,8 +26,8 @@ namespace Prima.Game.FFXIV
         public NotMatchingFilter(string message) : base(message) { }
         public NotMatchingFilter(string message, Exception inner) : base(message, inner) { }
         protected NotMatchingFilter(
-            System.Runtime.Serialization.SerializationInfo info,
-            System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+            SerializationInfo info,
+            StreamingContext context) : base(info, context) { }
     }
 
     public class CharacterLookup

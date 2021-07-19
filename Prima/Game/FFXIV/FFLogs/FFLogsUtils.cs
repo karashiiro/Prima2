@@ -1,8 +1,8 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace Prima.Game.FFXIV
+namespace Prima.Game.FFXIV.FFLogs
 {
-    public static class FFLogs
+    public static class FFLogsUtils
     {
         private static readonly Regex IsLogLinkRegex = new(@"fflogs\.com\/reports\/", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 

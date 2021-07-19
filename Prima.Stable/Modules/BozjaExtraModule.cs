@@ -4,11 +4,10 @@ using Discord.Net;
 using Prima.DiscordNet;
 using Prima.DiscordNet.Attributes;
 using Prima.Game.FFXIV;
-using Prima.Models;
+using Prima.Game.FFXIV.FFLogs;
 using Prima.Resources;
 using Prima.Services;
 using Prima.Stable.Models.FFLogs;
-using Prima.Stable.Services;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -25,7 +24,7 @@ namespace Prima.Stable.Modules
     {
         public IDbService Db { get; set; }
         public HttpClient Http { get; set; }
-        public FFLogsAPI FFLogsAPI { get; set; }
+        public FFLogsClient FFLogsAPI { get; set; }
         public CharacterLookup Lodestone { get; set; }
 
         [Command("bozhelp", RunMode = RunMode.Async)]
@@ -118,7 +117,7 @@ namespace Prima.Stable.Modules
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task AddDelubrumProgRoleAsync([Remainder] string args)
         {
-            var isFFLogs = FFLogs.IsLogLink(args);
+            var isFFLogs = FFLogsUtils.IsLogLink(args);
             if (isFFLogs)
             {
                 await Context.Guild.DownloadUsersAsync();
@@ -256,7 +255,7 @@ namespace Prima.Stable.Modules
         {
             using var typing = Context.Channel.EnterTypingState();
 
-            var logMatch = FFLogs.LogLinkToIdRegex.Match(logLink);
+            var logMatch = FFLogsUtils.LogLinkToIdRegex.Match(logLink);
             if (!logMatch.Success)
             {
                 await ReplyAsync("That doesn't look like a log link!");
@@ -264,7 +263,7 @@ namespace Prima.Stable.Modules
             }
 
             var logId = logMatch.Value;
-            var req = FFLogs.BuildLogRequest(logId);
+            var req = FFLogsUtils.BuildLogRequest(logId);
             var res = (await FFLogsAPI.MakeGraphQLRequest<LogInfo>(req)).Content.Data.ReportInfo;
             if (res == null)
             {

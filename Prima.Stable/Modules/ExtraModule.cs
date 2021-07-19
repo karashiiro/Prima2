@@ -4,12 +4,11 @@ using FFXIVWeather.Lumina;
 using Lumina.Excel.GeneratedSheets;
 using Newtonsoft.Json.Linq;
 using Prima.DiscordNet.Attributes;
-using Prima.Game.FFXIV;
+using Prima.Game.FFXIV.XIVAPI;
 using Prima.Resources;
 using Prima.Services;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -17,7 +16,6 @@ using System.Text;
 using System.Threading.Tasks;
 using TimeZoneNames;
 using Color = Discord.Color;
-using Item = Prima.XIVAPI.Item;
 
 namespace Prima.Stable.Modules
 {
@@ -27,7 +25,7 @@ namespace Prima.Stable.Modules
         public IDbService Db { get; set; }
         public FFXIVWeatherLuminaService Weather { get; set; }
         public HttpClient Http { get; set; }
-        public XIVAPIService Xivapi { get; set; }
+        public XIVAPIClient Xivapi { get; set; }
 
         private const ulong CEMSpeculation = 738899820168740984;
         private const ulong CEMBozTheorycrafting = 593815337980526603;
@@ -169,7 +167,7 @@ namespace Prima.Stable.Modules
             var worldName = args[^1];
             worldName = char.ToUpper(worldName[0]) + worldName[1..];
 
-            var searchResults = await Xivapi.Search<Item>(itemName);
+            var searchResults = await Xivapi.SearchItem(itemName);
             if (searchResults.Count == 0)
             {
                 await ReplyAsync($"No results found for \"{itemName}\", are you sure you spelled the item name correctly?");
@@ -180,7 +178,7 @@ namespace Prima.Stable.Modules
                 .ToList();
             var item = !searchData.Any() ? searchResults.First() : searchData.First();
 
-            var itemId = item.ID;
+            var itemId = item.Id;
             itemName = item.Name;
 
             var uniResponse = await Http.GetAsync(new Uri($"https://universalis.app/api/{worldName}/{itemId}"));

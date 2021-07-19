@@ -4,6 +4,8 @@ using Lumina;
 using Microsoft.Extensions.DependencyInjection;
 using Prima.DiscordNet;
 using Prima.Game.FFXIV;
+using Prima.Game.FFXIV.FFLogs;
+using Prima.Game.FFXIV.XIVAPI;
 using Prima.Services;
 using Prima.Stable.Handlers;
 using Prima.Stable.Services;
@@ -32,7 +34,7 @@ namespace Prima.Stable
             var censusEvents = services.GetRequiredService<CensusEventService>();
             var mute = services.GetRequiredService<MuteService>();
             var roleRemover = services.GetRequiredService<TimedRoleManager>();
-            var ffLogs = services.GetRequiredService<FFLogsAPI>();
+            var ffLogs = services.GetRequiredService<FFLogsClient>();
             var web = services.GetRequiredService<WebClient>();
             var lodestone = services.GetRequiredService<CharacterLookup>();
             var keepClean = services.GetRequiredService<KeepClean>();
@@ -75,7 +77,7 @@ namespace Prima.Stable
                 .AddSingleton<WebClient>()
                 .AddSingleton<CensusEventService>()
                 .AddSingleton<PresenceService>()
-                .AddSingleton<XIVAPIService>()
+                .AddSingleton<XIVAPIClient>()
                 .AddSingleton(new GameData(Environment.OSVersion.Platform == PlatformID.Win32NT
                     ? @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack"
                     : Path.Combine(Environment.GetEnvironmentVariable("HOME"), "sqpack"),
@@ -86,7 +88,7 @@ namespace Prima.Stable
                 .AddSingleton<FFXIVWeatherLuminaService>()
                 .AddSingleton<MuteService>()
                 .AddSingleton<TimedRoleManager>()
-                .AddSingleton<FFLogsAPI>()
+                .AddSingleton<FFLogsClient>()
                 .AddSingleton<CharacterLookup>()
                 .AddSingleton<KeepClean>()
                 .AddSingleton<EphemeralPinManager>();

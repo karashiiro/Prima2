@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Serilog;
 
-namespace Prima.Game.FFXIV
+namespace Prima.Game.FFXIV.FFLogs
 {
-    public class FFLogsAPI
+    public class FFLogsClient
     {
         private readonly HttpClient _http;
 
@@ -18,7 +18,7 @@ namespace Prima.Game.FFXIV
         
         private DateTime _expirationTime;
 
-        public FFLogsAPI()
+        public FFLogsClient()
         {
             _http = new HttpClient();
 
