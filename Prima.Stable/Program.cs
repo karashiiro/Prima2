@@ -87,6 +87,7 @@ namespace Prima.Stable
                 .AddSingleton<MuteService>()
                 .AddSingleton<TimedRoleManager>()
                 .AddSingleton<FFLogsAPI>()
+                .AddSingleton<CharacterLookup>()
                 .AddSingleton<KeepClean>()
                 .AddSingleton<EphemeralPinManager>();
             return sc.BuildServiceProvider();

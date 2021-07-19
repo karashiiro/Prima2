@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace Prima.Stable
+namespace Prima.Game.FFXIV
 {
     public static class FFLogs
     {

@@ -56,9 +56,7 @@ namespace Prima.DiscordNet
                 .AddSingleton<DiagnosticService>()
                 .AddSingleton<HttpClient>()
                 .AddSingleton<IDbService, DbService>()
-                .AddSingleton<PasswordGenerator>()
                 .AddSingleton<RateLimitService>()
-                .AddSingleton<CharacterLookup>()
                 .AddSingleton<ITemplateProvider, TemplateProvider>();
             //.AddSingleton(new HttpServer(Log.Information))
         }

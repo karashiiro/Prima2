@@ -41,6 +41,7 @@ namespace Prima.Queue
                 .AddSingleton<FFXIV3RoleQueueService>()
                 .AddSingleton<QueueAnnouncementMonitor>()
                 .AddSingleton<ExpireQueuesService>()
+                .AddSingleton<PasswordGenerator>()
                 .BuildServiceProvider();
         }
     }

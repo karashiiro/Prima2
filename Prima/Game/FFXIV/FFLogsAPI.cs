@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Serilog;
 
-namespace Prima.Stable.Services
+namespace Prima.Game.FFXIV
 {
     public class FFLogsAPI
     {
