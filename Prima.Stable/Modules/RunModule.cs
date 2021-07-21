@@ -30,7 +30,7 @@ namespace Prima.Stable.Modules
         [CEMRequireRoleOrMentorPlus(RunHostData.PinnerRoleId)]
         public async Task PinMessage(string messageRef)
         {
-            if (!Context.Channel.Name.Contains("group-chat"))
+            if (!Context.Channel.Name.Contains("group-chat") && Context.Channel.Id is not 766444330880598076 or 858440602588020736)
             {
                 Log.Warning("Command not used in a run channel!");
                 return;
@@ -66,7 +66,7 @@ namespace Prima.Stable.Modules
         [CEMRequireRoleOrMentorPlus(RunHostData.PinnerRoleId)]
         public async Task UnpinMessage(string messageRef)
         {
-            if (!Context.Channel.Name.Contains("group-chat"))
+            if (!Context.Channel.Name.Contains("group-chat") && Context.Channel.Id is not 766444330880598076 or 858440602588020736)
             {
                 Log.Warning("Command not used in a run channel!");
                 return;
