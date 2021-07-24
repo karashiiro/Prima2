@@ -30,7 +30,7 @@ namespace Prima.Stable.Modules
         [CEMRequireRoleOrMentorPlus(RunHostData.PinnerRoleId)]
         public async Task PinMessage(string messageRef = "")
         {
-            if (!Context.Channel.Name.Contains("group-chat") && Context.Channel.Id is not 766444330880598076 or 858440602588020736)
+            if (!Context.Channel.Name.Contains("group-chat") && !new ulong[] { 766444330880598076, 858440602588020736 }.Contains(Context.Channel.Id))
             {
                 Log.Warning("Command not used in a run channel!");
                 return;
@@ -71,9 +71,9 @@ namespace Prima.Stable.Modules
         [Description("Unpins a message pinned by a run member in a run channel.")]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         [CEMRequireRoleOrMentorPlus(RunHostData.PinnerRoleId)]
-        public async Task UnpinMessage(string messageRef)
+        public async Task UnpinMessage(string messageRef = "")
         {
-            if (!Context.Channel.Name.Contains("group-chat") && Context.Channel.Id is not 766444330880598076 or 858440602588020736)
+            if (!Context.Channel.Name.Contains("group-chat") && !new ulong[] { 766444330880598076, 858440602588020736 }.Contains(Context.Channel.Id))
             {
                 Log.Warning("Command not used in a run channel!");
                 return;
