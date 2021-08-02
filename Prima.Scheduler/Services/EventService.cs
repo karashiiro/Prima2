@@ -67,8 +67,10 @@ namespace Prima.Scheduler.Services
             await message.ModifyAsync(properties => properties.Embed = embed);
         }
 
-        public async Task OnReactionAdd(Cacheable<IUserMessage, ulong> cmessage, ISocketMessageChannel ichannel, SocketReaction reaction)
+        public async Task OnReactionAdd(Cacheable<IUserMessage, ulong> cmessage, Cacheable<IMessageChannel, ulong> cchannel, SocketReaction reaction)
         {
+            var ichannel = await cchannel.GetOrDownloadAsync();
+
             if (!(reaction.Emote is Emoji emoji) || emoji.Name != "📳" || !(ichannel is SocketGuildChannel channel))
                 return;
 
@@ -102,8 +104,10 @@ namespace Prima.Scheduler.Services
             Log.Information("Added member {MemberId} to run {MessageId}.", reaction.UserId, run.MessageId3);
         }
 
-        public async Task OnReactionRemove(Cacheable<IUserMessage, ulong> cmessage, ISocketMessageChannel ichannel, SocketReaction reaction)
+        public async Task OnReactionRemove(Cacheable<IUserMessage, ulong> cmessage, Cacheable<IMessageChannel, ulong> cchannel, SocketReaction reaction)
         {
+            var ichannel = await cchannel.GetOrDownloadAsync();
+
             if (!(reaction.Emote is Emoji emoji) || emoji.Name != "📳" || !(ichannel is SocketGuildChannel channel))
                 return;
 

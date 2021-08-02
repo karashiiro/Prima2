@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Discord;
 
 namespace Prima.Stable.Services
 {
@@ -28,11 +29,11 @@ namespace Prima.Stable.Services
             _cemUnverifiedMembers = new List<ulong>();
         }
 
-        public async Task GuildMemberUpdated(SocketGuildUser oldMember, SocketGuildUser newMember)
+        public async Task GuildMemberUpdated(Cacheable<SocketGuildUser, ulong> oldMember, SocketGuildUser newMember)
         {
-            if (oldMember == null || newMember == null)
+            if (newMember == null)
             {
-                throw new ArgumentNullException(oldMember == null ? nameof(oldMember) : nameof(newMember));
+                throw new ArgumentNullException(nameof(newMember));
             }
 
             // Note: Use EnforcementEnabled or something in DB.
@@ -98,7 +99,7 @@ namespace Prima.Stable.Services
         {
             if (_cemUnverifiedMembers.Contains(member.Id)) return;
             await (await _client.GetUser(_db.Config.BotMaster)
-                .GetOrCreateDMChannelAsync())
+                .CreateDMChannelAsync())
                 .SendMessageAsync($"Please manually recover data for {member.Mention}.");
             _cemUnverifiedMembers.Add(member.Id);
         }
@@ -108,7 +109,7 @@ namespace Prima.Stable.Services
         // For example, if someone's default nickname is "(Balmung) Nota Realuser" and
         // they set their Discord nickname to "Absolutely", their nickname will change
         // to "(Absolutely) Nota Realuser".
-        private async Task CEMNamingScheme(SocketGuildUser oldMember, SocketGuildUser newMember)
+        private async Task CEMNamingScheme(Cacheable<SocketGuildUser, ulong> cOldMember, SocketGuildUser newMember)
         {
             DiscordGuildConfiguration guildConfig;
             try
@@ -119,11 +120,19 @@ namespace Prima.Stable.Services
             {
                 return;
             }
+
+            SocketGuildUser oldMember = null;
+            if (cOldMember.HasValue)
+            {
+                oldMember = cOldMember.Value;
+                // No download branch; downloaded data will have the new data
+            }
+
             var statusChannel = newMember.Guild.GetChannel(guildConfig.StatusChannel) as SocketTextChannel;
-            if (oldMember.Nickname == newMember.Nickname) return; // They might just be editing their avatar or something.
+            if (oldMember?.Nickname == newMember.Nickname) return; // They might just be editing their avatar or something.
             try
             {
-                var user = _db.Users.Single(user => user.DiscordId == newMember.Id);
+                var user = _db.Users.Single(u => u.DiscordId == newMember.Id);
 
                 if (string.IsNullOrEmpty(newMember.Nickname)) // They want no flair.
                 {
@@ -153,7 +162,7 @@ namespace Prima.Stable.Services
                 var nickname = $"({newMember.Nickname}) {user.Name}";
                 if (nickname.Length > 32) // Throws an exception otherwise
                 {
-                    var userDm = await newMember.GetOrCreateDMChannelAsync();
+                    var userDm = await newMember.CreateDMChannelAsync();
                     await userDm.SendMessageAsync("Because of Discord's limitations, nicknames must be 32 characters or fewer in length. " +
                                                   $"That nickname, `{nickname}`, exceeds 32 characters.\n" +
                                                   "If you meant to change your character name, please use `~iam` again in the welcome channel.");

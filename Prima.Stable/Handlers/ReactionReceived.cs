@@ -20,14 +20,16 @@ namespace Prima.Stable.Handlers
         private const ulong EurekaRole = 588913087818498070;
         private const ulong DiademRole = 588913444712087564;
 
-        public static Task HandlerAdd(IDbService db, CharacterLookup lodestone, Cacheable<IUserMessage, ulong> message, ISocketMessageChannel ichannel, SocketReaction reaction)
+        public static Task HandlerAdd(IDbService db, CharacterLookup lodestone, Cacheable<IUserMessage, ulong> message, Cacheable<IMessageChannel, ulong> cchannel, SocketReaction reaction)
         {
-            Task.Run(() => HandlerAddAsync(db, lodestone, message, ichannel, reaction));
+            Task.Run(() => HandlerAddAsync(db, lodestone, message, cchannel, reaction));
             return Task.CompletedTask;
         }
 
-        private static async Task HandlerAddAsync(IDbService db, CharacterLookup lodestone, Cacheable<IUserMessage, ulong> message, ISocketMessageChannel ichannel, SocketReaction reaction)
+        private static async Task HandlerAddAsync(IDbService db, CharacterLookup lodestone, Cacheable<IUserMessage, ulong> message, Cacheable<IMessageChannel, ulong> cchannel, SocketReaction reaction)
         {
+            var ichannel = await cchannel.GetOrDownloadAsync();
+
             if (ichannel is SocketGuildChannel channel)
             {
                 var guild = channel.Guild;
@@ -99,14 +101,16 @@ namespace Prima.Stable.Handlers
             }
         }
 
-        public static Task HandlerRemove(IDbService db, Cacheable<IUserMessage, ulong> message, ISocketMessageChannel ichannel, SocketReaction reaction)
+        public static Task HandlerRemove(IDbService db, Cacheable<IUserMessage, ulong> message, Cacheable<IMessageChannel, ulong> cchannel, SocketReaction reaction)
         {
-            Task.Run(() => HandlerRemoveAsync(db, message, ichannel, reaction));
+            Task.Run(() => HandlerRemoveAsync(db, message, cchannel, reaction));
             return Task.CompletedTask;
         }
 
-        private static async Task HandlerRemoveAsync(IDbService db, Cacheable<IUserMessage, ulong> message, ISocketMessageChannel ichannel, SocketReaction reaction)
+        private static async Task HandlerRemoveAsync(IDbService db, Cacheable<IUserMessage, ulong> message, Cacheable<IMessageChannel, ulong> cchannel, SocketReaction reaction)
         {
+            var ichannel = await cchannel.GetOrDownloadAsync();
+
             if (ichannel is SocketGuildChannel channel)
             {
                 var guild = channel.Guild;

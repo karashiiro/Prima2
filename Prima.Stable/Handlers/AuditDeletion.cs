@@ -12,9 +12,11 @@ namespace Prima.Stable.Handlers
 {
     public class AuditDeletion
     {
-        public static async Task Handler(IDbService db, DiscordSocketClient client, Cacheable<IMessage, ulong> cmessage, ISocketMessageChannel ichannel)
+        public static async Task Handler(IDbService db, DiscordSocketClient client, Cacheable<IMessage, ulong> cmessage, Cacheable<IMessageChannel, ulong> cchannel)
         {
-            if (!(ichannel is SocketGuildChannel channel) || db.Guilds.All(g => g.Id != channel.Guild.Id)) return;
+            var ichannel = await cchannel.GetOrDownloadAsync();
+
+            if (ichannel is not SocketGuildChannel channel || db.Guilds.All(g => g.Id != channel.Guild.Id)) return;
 
             var guild = channel.Guild;
 
