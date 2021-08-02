@@ -22,9 +22,6 @@ namespace Prima.Stable.Handlers
 
             var config = db.Guilds.Single(g => g.Id == guild.Id);
 
-            var deletedMessageChannel = guild.GetChannel(config.DeletedMessageChannel) as SocketTextChannel;
-            var deletedCommandChannel = guild.GetChannel(config.DeletedCommandChannel) as SocketTextChannel;
-
             CachedMessage cachedMessage;
             var imessage = await cmessage.GetOrDownloadAsync();
             if (imessage == null)
@@ -76,7 +73,7 @@ namespace Prima.Stable.Handlers
             // Send the embed.
             if (author.Id == client.CurrentUser.Id || cachedMessage.Content.StartsWith(prefix))
             {
-                if (deletedCommandChannel != null)
+                if (guild.GetChannel(config.DeletedCommandChannel) is SocketTextChannel deletedCommandChannel)
                 {
                     await deletedCommandChannel.SendMessageAsync(embed: messageEmbed);
                 }
@@ -87,7 +84,7 @@ namespace Prima.Stable.Handlers
             }
             else
             {
-                if (deletedMessageChannel != null)
+                if (guild.GetChannel(config.DeletedMessageChannel) is SocketTextChannel deletedMessageChannel)
                 {
                     await deletedMessageChannel.SendMessageAsync(embed: messageEmbed);
                 }
