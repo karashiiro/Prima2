@@ -27,7 +27,7 @@ namespace Prima.Scheduler.Services
         {
             var newMessage = await cmessage.DownloadAsync();
 
-            if (!(ichannel is SocketGuildChannel channel))
+            if (ichannel is not SocketGuildChannel channel)
                 return;
 
             var guild = channel.Guild;
@@ -46,11 +46,11 @@ namespace Prima.Scheduler.Services
             {
                 splitIndex = "~schedule ".Length;
             }
-            run.Description = newMessage.Content.Substring(splitIndex + 1).Trim();
+            run.Description = newMessage.Content[(splitIndex + 1)..].Trim();
             await _db.UpdateScheduledEvent(run);
 
             var embedChannel = guild.GetTextChannel(run.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.ScheduleOutputChannel : guildConfig.CastrumScheduleOutputChannel);
-            if (!(await embedChannel.GetMessageAsync(run.EmbedMessageId) is IUserMessage message))
+            if (await embedChannel.GetMessageAsync(run.EmbedMessageId) is not IUserMessage message)
                 return;
 
             var embed = message.Embeds.FirstOrDefault()?.ToEmbedBuilder()
@@ -64,14 +64,14 @@ namespace Prima.Scheduler.Services
 
             if (embed == null)
                 return;
-            await message.ModifyAsync(properties => properties.Embed = embed);
+            await message.ModifyAsync(properties => properties.Embeds = new[] { embed });
         }
 
         public async Task OnReactionAdd(Cacheable<IUserMessage, ulong> cmessage, Cacheable<IMessageChannel, ulong> cchannel, SocketReaction reaction)
         {
             var ichannel = await cchannel.GetOrDownloadAsync();
 
-            if (!(reaction.Emote is Emoji emoji) || emoji.Name != "📳" || !(ichannel is SocketGuildChannel channel))
+            if (reaction.Emote is not Emoji { Name: "📳" } || ichannel is not SocketGuildChannel channel)
                 return;
 
             var run = _db.Events.FirstOrDefault(e => e.MessageId3 == cmessage.Id);
@@ -108,7 +108,7 @@ namespace Prima.Scheduler.Services
         {
             var ichannel = await cchannel.GetOrDownloadAsync();
 
-            if (!(reaction.Emote is Emoji emoji) || emoji.Name != "📳" || !(ichannel is SocketGuildChannel channel))
+            if (reaction.Emote is not Emoji { Name: "📳" } || ichannel is not SocketGuildChannel channel)
                 return;
 
             var run = _db.Events.FirstOrDefault(e => e.MessageId3 == cmessage.Id);

@@ -46,8 +46,8 @@ namespace Prima.Scheduler.Modules
                 return;
             }
 
-            var parameters = content.Substring(0, splitIndex).Trim();
-            var description = content.Substring(splitIndex + 1).Trim();
+            var parameters = content[..splitIndex].Trim();
+            var description = content[(splitIndex + 1)..].Trim();
 
             if (parameters.IndexOf(":", StringComparison.Ordinal) == -1)
             {
@@ -248,7 +248,7 @@ namespace Prima.Scheduler.Modules
                     .WithColor(embed.Color.Value)
                     .WithDescription("❌ Cancelled")
                     .Build();
-                await embedMessage.ModifyAsync(properties => properties.Embed = cancelledEmbed);
+                await embedMessage.ModifyAsync(properties => properties.Embeds = new[] { cancelledEmbed });
                 _ = Task.Run(async () =>
                 {
                     await Task.Delay(1800000);
@@ -399,7 +399,7 @@ namespace Prima.Scheduler.Modules
                            $"[{newRunTime.DayOfWeek}, {(Month)newRunTime.Month} {newRunTime.Day}]!")
                 .WithTimestamp(newRunTime.AddHours(timeMod))
                 .Build();
-            await embedMessage.ModifyAsync(properties => properties.Embed = embed);
+            await embedMessage.ModifyAsync(properties => properties.Embeds = new[] { embed });
 
             await Sheets.AddEvent(@event, @event.RunKindCastrum == RunDisplayTypeCastrum.None ? guildConfig.BASpreadsheetId : guildConfig.CastrumSpreadsheetId);
 
@@ -467,9 +467,10 @@ namespace Prima.Scheduler.Modules
 
             await embedMessage.ModifyAsync(props =>
             {
-                props.Embed = embed.ToEmbedBuilder()
-                    .WithTimestamp(newRunTime.AddHours(timeMod))
-                    .Build();
+                props.Embeds = new[] {
+                    embed.ToEmbedBuilder()
+                        .WithTimestamp(newRunTime.AddHours(timeMod))
+                        .Build() };
             });
 
             await ReplyAsync("Updated.");
@@ -539,8 +540,8 @@ namespace Prima.Scheduler.Modules
 
             var splitIndex = message.Content.IndexOf("|", StringComparison.Ordinal);
 
-            var parameters = message.Content.Substring(0, splitIndex).Trim();
-            var description = message.Content.Substring(splitIndex + 1).Trim();
+            var parameters = message.Content[..splitIndex].Trim();
+            var description = message.Content[(splitIndex + 1)..].Trim();
 
             var coolParameters = RegexSearches.Whitespace.Split(parameters);
 

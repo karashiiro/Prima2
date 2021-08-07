@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Discord.Net.Labs" Version="2.4.9" />
+    <PackageReference Include="Discord.Net.Labs" Version="3.0.1-pre" />
     <PackageReference Include="Google.Apis.Sheets.v4" Version="1.45.0.1954" />
     <PackageReference Include="TimeZoneNames" Version="4.2.0" />
   </ItemGroup>

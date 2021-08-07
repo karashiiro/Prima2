@@ -94,11 +94,11 @@ namespace Prima.Scheduler
             var guild = client.GetGuild(guildId);
 
             var iInChannel = client.GetChannel(guildConfig.ScheduleInputChannel);
-            if (!(iInChannel is ITextChannel inChannel))
+            if (iInChannel is not ITextChannel inChannel)
                 return;
 
             var iOutChannel = client.GetChannel(guildConfig.ScheduleOutputChannel);
-            if (!(iOutChannel is ITextChannel outChannel))
+            if (iOutChannel is not ITextChannel outChannel)
                 return;
 
             var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
@@ -118,7 +118,7 @@ namespace Prima.Scheduler
                 }
 
                 var iOutMessage = await outChannel.GetMessageAsync(run.EmbedMessageId);
-                if (!(iOutMessage is IUserMessage message))
+                if (iOutMessage is not IUserMessage message)
                 {
                     Log.Information("Embed message {MessageId} is invalid; skipping...", run.EmbedMessageId);
                     continue;
@@ -150,7 +150,7 @@ namespace Prima.Scheduler
                     Log.Information("newEmbed is null; skipping...");
                     continue;
                 }
-                await message.ModifyAsync(properties => properties.Embed = newEmbed);
+                await message.ModifyAsync(properties => properties.Embeds = new[] { newEmbed });
                 Log.Information("Updated information for run {MessageId}", run.MessageId3);
                 postsUpdated++;
             }

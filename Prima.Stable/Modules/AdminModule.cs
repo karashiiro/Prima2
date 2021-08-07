@@ -1,10 +1,10 @@
-﻿using System.Globalization;
+﻿using Discord;
+using Discord.Commands;
+using Prima.Resources;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Discord;
-using Discord.Commands;
-using Prima.Resources;
 using Color = Discord.Color;
 
 namespace Prima.Stable.Modules
@@ -37,11 +37,11 @@ namespace Prima.Stable.Modules
 
             await embedMessage.ModifyAsync(props =>
             {
-                props.Embed = embed.ToEmbedBuilder()
+                props.Embeds = new[]{embed.ToEmbedBuilder()
                     .WithAuthor(new EmbedAuthorBuilder()
                         .WithIconUrl(newHost.GetAvatarUrl())
                         .WithName(newHost.ToString()))
-                    .Build();
+                    .Build()};
             });
 
             await ReplyAsync("Announcement host changed.");

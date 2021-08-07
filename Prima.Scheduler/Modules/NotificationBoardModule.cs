@@ -148,9 +148,9 @@ namespace Prima.Scheduler.Modules
                     builder = builder.WithTitle(
                         $"Event scheduled by {host.Nickname ?? host.ToString()} on {newRunTime.DayOfWeek} at {newRunTime.ToShortTimeString()} ({tzAbbr})!");
                 }
-                props.Embed = builder
+                props.Embeds = new[] { builder
                     .WithTimestamp(newRunTime.AddHours(timeMod))
-                    .Build();
+                    .Build() };
             });
 
             await ReplyAsync("Updated.");
@@ -337,11 +337,11 @@ namespace Prima.Scheduler.Modules
                 var member = Context.Guild.GetUser(Context.User.Id);
                 await embedMessage.ModifyAsync(props =>
                 {
-                    props.Embed = embed
+                    props.Embeds = new[] { embed
                         .ToEmbedBuilder()
                         .WithTimestamp(newTime.AddHours(timeMod))
                         .WithTitle($"Event scheduled by {member?.Nickname ?? Context.User.ToString()} on {newTime.DayOfWeek} at {newTime.ToShortTimeString()} ({tzAbbr})!")
-                        .Build();
+                        .Build() };
                 });
 
 #if DEBUG
@@ -403,11 +403,11 @@ namespace Prima.Scheduler.Modules
             {
                 await embedMessage.ModifyAsync(props =>
                 {
-                    props.Embed = new EmbedBuilder()
+                    props.Embeds = new[] { new EmbedBuilder()
                         .WithTitle(embed.Title)
                         .WithColor(embed.Color.Value)
                         .WithDescription("❌ Cancelled")
-                        .Build();
+                        .Build() };
                 });
 
                 new Task(async () =>

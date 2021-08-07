@@ -35,7 +35,7 @@ namespace Prima.Scheduler.Handlers
                 return;
             }
 
-            var args = message.Content.Substring(message.Content.IndexOf(' ') + 1);
+            var args = message.Content[(message.Content.IndexOf(' ') + 1)..];
 
             var splitIndex = args.IndexOf("|", StringComparison.Ordinal);
             if (splitIndex == -1)
@@ -47,8 +47,8 @@ namespace Prima.Scheduler.Handlers
                 return;
             }
 
-            var description = args.Substring(splitIndex + 1).Trim();
-            var trimmedDescription = description.Substring(0, Math.Min(1700, description.Length));
+            var description = args[(splitIndex + 1)..].Trim();
+            var trimmedDescription = description[..Math.Min(1700, description.Length)];
             if (trimmedDescription.Length != description.Length)
             {
                 trimmedDescription += "...";
@@ -60,14 +60,14 @@ namespace Prima.Scheduler.Handlers
             var calendarLinkLine = lines.LastOrDefault(l => l.StartsWith("[Copy to Google Calendar]"));
             await embedMessage.ModifyAsync(props =>
             {
-                props.Embed = embed
+                props.Embeds = new[] {embed
                     .ToEmbedBuilder()
                     .WithDescription(trimmedDescription + (calendarLinkLine != null
                         ? $"\n\n{calendarLinkLine}"
                         : "") + (messageLinkLine != null
                         ? $"\n{messageLinkLine}"
                         : ""))
-                    .Build();
+                    .Build()};
             });
 
             Log.Information("Updated announcement embed.");
