@@ -194,6 +194,11 @@ namespace Prima.Tests.Mocks
             return Task.CompletedTask;
         }
 
+        public Task<bool> RemoveUser(string world, string name)
+        {
+            return Task.FromResult(true);
+        }
+
         public Task RemoveBrokenUsers()
         {
             return Task.CompletedTask;

@@ -400,6 +400,26 @@ namespace Prima.Stable.Modules
             }
         }
 
+        [Command("unlink", RunMode = RunMode.Async)]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        public async Task UnlinkCharacter(params string[] args)
+        {
+            var world = args[0].ToLower();
+            var name = args[1] + " " + args[2];
+            world = RegexSearches.NonAlpha.Replace(world, string.Empty);
+            name = RegexSearches.AngleBrackets.Replace(name, string.Empty);
+            name = RegexSearches.UnicodeApostrophe.Replace(name, string.Empty);
+
+            if (!await Db.RemoveUser(world, name))
+            {
+                await ReplyAsync(
+                    "No user matching that world and name was found. Please double-check the spelling of the world and name.");
+                return;
+            }
+
+            await ReplyAsync("User unlinked.");
+        }
+
         // Verify BA clear status.
         [Command("verify", RunMode = RunMode.Async)]
         [Description("[FFXIV] Get content completion vanity roles.")]

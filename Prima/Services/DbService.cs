@@ -306,6 +306,14 @@ namespace Prima.Services
 
         public Task UpdateUser(DiscordXIVUser user) => AddUser(user);
 
+        public async Task<bool> RemoveUser(string world, string name)
+        {
+            var result = await _users.DeleteOneAsync(u =>
+                string.Equals(u.Name, name, StringComparison.InvariantCultureIgnoreCase) &&
+                string.Equals(u.World, world, StringComparison.InvariantCultureIgnoreCase));
+            return result.DeletedCount > 0;
+        }
+
         public Task RemoveBrokenUsers()
         {
             var deleteFilter = Builders<DiscordXIVUser>.Filter.Eq("DiscordId", 0UL);
