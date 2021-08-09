@@ -60,7 +60,7 @@ namespace Prima.Stable.Modules
             var postChannel = guild.GetTextChannel(guildConfig.ReportChannel);
             var threadStart = await postChannel.SendMessageAsync($"<@&{guildConfig.Roles["Moderator"]}> {Context.User.Mention} just sent a modmail!");
 
-            var threadName = Context.User.Username ?? Context.User.ToString();
+            var threadName = Context.User.Username;
             IThreadChannel thread =
                 postChannel.Threads.FirstOrDefault(t => t.Name == threadName)
                 ?? await postChannel.CreateThreadAsync(threadName, message: threadStart);
