@@ -228,7 +228,7 @@ namespace Prima.Stable.Modules
 
             if (userMention == null || parameters.Length < 3)
             {
-                var reply = await ReplyAsync($"{Context.User.Mention}, please enter that command in the format `{prefix}theyare Mention World Name Surname`.");
+                await ReplyAsync($"{Context.User.Mention}, please enter that command in the format `{prefix}theyare Mention World Name Surname`.");
                 return;
             }
             var world = parameters[0].ToLower();
@@ -335,6 +335,8 @@ namespace Prima.Stable.Modules
             Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
             
             await ActivateUser(member, existingLodestoneId, foundCharacter, guildConfig);
+
+            await Context.Channel.SendMessageAsync(embed: responseEmbed);
         }
 
         private const ulong BozjaRole = 588913532410527754;
