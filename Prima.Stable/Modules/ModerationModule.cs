@@ -65,7 +65,7 @@ namespace Prima.Stable.Modules
                 postChannel.Threads.FirstOrDefault(t => t.Name == threadName)
                 ?? await postChannel.CreateThreadAsync(threadName, message: threadStart);
             
-            if (output.Length > 2000) // This can only be the case once, no need for a loop.
+            while (output.Length > 2000)
             {
                 await thread.SendMessageAsync(output[..2000]);
                 output = output[2000..];
