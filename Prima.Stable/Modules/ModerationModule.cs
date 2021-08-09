@@ -11,6 +11,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Prima.DiscordNet.Extensions;
+using Prima.Resources;
+using Color = Discord.Color;
 
 namespace Prima.Stable.Modules
 {
@@ -35,25 +37,7 @@ namespace Prima.Stable.Modules
             }
             var responseMessage = await Context.Channel.SendMessageAsync(Properties.Resources.ReportThankYou);
 
-            var guild = Context.Guild;
-            if (guild == null)
-            {
-                foreach (var otherGuild in Context.User.MutualGuilds)
-                {
-                    if (Db.Guilds.Any(g => g.Id == otherGuild.Id))
-                    {
-                        guild = otherGuild;
-                        break;
-                    }
-                }
-            }
-
-            if (guild == null)
-            {
-                await ReplyAsync(
-                    "No shared guilds were found. This is almost certainly an error - please send your report to a staff member directly.");
-                return;
-            }
+            var guild = Context.Client.GetGuild(SpecialGuilds.CrystalExploratoryMissions);
 
             var member = guild.GetUser(Context.User.Id);
 
