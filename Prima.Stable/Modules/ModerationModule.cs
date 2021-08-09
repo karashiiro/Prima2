@@ -27,7 +27,7 @@ namespace Prima.Stable.Modules
         [Command("modmail", RunMode = RunMode.Async)]
         [Alias("report")]
         [Description("Privately report information to the administration.")]
-        public async Task ReportAsync([Remainder] string p = "")
+        public async Task ReportAsync([Remainder] string output = "")
         {
             if (Context.Guild != null)
             {
@@ -58,12 +58,13 @@ namespace Prima.Stable.Modules
             var guildConfig = Db.Guilds.Single(g => g.Id == guild.Id);
 
             var postChannel = guild.GetTextChannel(guildConfig.ReportChannel);
+            var threadStart = await postChannel.SendMessageAsync($"<@&{guildConfig.Roles["Moderator"]}> {Context.User.Mention} just sent a modmail!");
+
             var threadName = Context.User.Username ?? Context.User.ToString();
             IThreadChannel thread =
                 postChannel.Threads.FirstOrDefault(t => t.Name == threadName)
-                ?? await postChannel.CreateThreadAsync(threadName);
-
-            var output = $"<@&{guildConfig.Roles["Moderator"]}> {Context.User.Mention} just sent a modmail: {p}";
+                ?? await postChannel.CreateThreadAsync(threadName, message: threadStart);
+            
             if (output.Length > 2000) // This can only be the case once, no need for a loop.
             {
                 await thread.SendMessageAsync(output[..2000]);
