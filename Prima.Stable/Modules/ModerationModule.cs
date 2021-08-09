@@ -55,15 +55,18 @@ namespace Prima.Stable.Modules
                 return;
             }
 
+            var member = guild.GetUser(Context.User.Id);
+
             var guildConfig = Db.Guilds.Single(g => g.Id == guild.Id);
 
             var postChannel = guild.GetTextChannel(guildConfig.ReportChannel);
-            var threadStart = await postChannel.SendMessageAsync($"<@&{guildConfig.Roles["Moderator"]}> {Context.User.Mention} just sent a modmail!");
+            var threadStart = await postChannel.SendMessageAsync($"{Context.User.Mention} just sent a modmail!");
 
-            var threadName = Context.User.Username;
+            var threadName = member.Nickname ?? Context.User.Username;
             IThreadChannel thread =
                 postChannel.Threads.FirstOrDefault(t => t.Name == threadName)
                 ?? await postChannel.CreateThreadAsync(threadName, message: threadStart);
+            await thread.SendMessageAsync($"<@&{guildConfig.Roles["Moderator"]}>");
             
             while (output.Length > 2000)
             {
