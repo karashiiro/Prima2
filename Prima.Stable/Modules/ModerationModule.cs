@@ -58,16 +58,21 @@ namespace Prima.Stable.Modules
             var guildConfig = Db.Guilds.Single(g => g.Id == guild.Id);
 
             var postChannel = guild.GetTextChannel(guildConfig.ReportChannel);
+            var threadName = Context.User.Username ?? Context.User.ToString();
+            IThreadChannel thread =
+                postChannel.Threads.FirstOrDefault(t => t.Name == threadName)
+                ?? await postChannel.CreateThreadAsync(threadName);
+
             var output = $"<@&{guildConfig.Roles["Moderator"]}> {Context.User.Mention} just sent a modmail: {p}";
             if (output.Length > 2000) // This can only be the case once, no need for a loop.
             {
-                await postChannel.SendMessageAsync(output[..2000]);
+                await thread.SendMessageAsync(output[..2000]);
                 output = output[2000..];
             }
-            await postChannel.SendMessageAsync(output);
+            await thread.SendMessageAsync(output);
             foreach (var attachment in Context.Message.Attachments)
             {
-                await postChannel.SendFileAsync(Path.Combine(Db.Config.TempDir, attachment.Filename), string.Empty);
+                await thread.SendFileAsync(Path.Combine(Db.Config.TempDir, attachment.Filename), string.Empty);
             }
             if (Context.Guild != null)
             {
