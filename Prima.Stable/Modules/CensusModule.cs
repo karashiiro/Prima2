@@ -405,8 +405,9 @@ namespace Prima.Stable.Modules
         public async Task UnlinkCharacter(params string[] args)
         {
             var world = args[0].ToLower();
-            var name = args[1] + " " + args[2];
+            var name = Util.Capitalize(args[1]) + " " + Util.Capitalize(args[2]);
             world = RegexSearches.NonAlpha.Replace(world, string.Empty);
+            world = Util.Capitalize(world);
             name = RegexSearches.AngleBrackets.Replace(name, string.Empty);
             name = RegexSearches.UnicodeApostrophe.Replace(name, string.Empty);
 

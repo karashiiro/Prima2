@@ -308,9 +308,9 @@ namespace Prima.Services
 
         public async Task<bool> RemoveUser(string world, string name)
         {
-            var result = await _users.DeleteOneAsync(u =>
-                string.Equals(u.Name, name, StringComparison.InvariantCultureIgnoreCase) &&
-                string.Equals(u.World, world, StringComparison.InvariantCultureIgnoreCase));
+            var filterBuilder = Builders<DiscordXIVUser>.Filter;
+            var filter = filterBuilder.Eq(props => props.World, world) & filterBuilder.Eq(props => props.Name, name);
+            var result = await _users.DeleteOneAsync(filter);
             return result.DeletedCount > 0;
         }
 
