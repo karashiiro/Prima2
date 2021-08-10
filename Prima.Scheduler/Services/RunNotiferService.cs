@@ -82,9 +82,6 @@ namespace Prima.Scheduler.Services
                             continue;
                         }
 
-                        Log.Information("Redownloading user list.");
-                        await Task.WhenAny(guild.DownloadUsersAsync(), Task.Delay(5000, token));
-
                         var guildConfig = _db.Guilds.FirstOrDefault(gc => gc.Id == guild.Id);
                         if (guildConfig == null)
                         {

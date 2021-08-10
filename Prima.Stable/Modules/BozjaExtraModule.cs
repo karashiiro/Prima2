@@ -118,9 +118,10 @@ namespace Prima.Stable.Modules
         public async Task AddDelubrumProgRoleAsync([Remainder] string args)
         {
             var isFFLogs = FFLogsUtils.IsLogLink(args);
+            Log.Information($"FFLogs link provided: {isFFLogs}");
+
             if (isFFLogs)
             {
-                await Context.Guild.DownloadUsersAsync();
                 await ReadLog(args);
                 return;
             }
@@ -130,6 +131,7 @@ namespace Prima.Stable.Modules
                 && !executor.HasRole(579916868035411968, Context) // or Mentor
                 && !executor.GuildPermissions.KickMembers) // or can kick users
             {
+                Log.Information("User does not have roler role.");
                 var res = await ReplyAsync($"{Context.User.Mention}, you don't have the roler role!");
                 await Task.Delay(5000);
                 await res.DeleteAsync();
@@ -137,8 +139,7 @@ namespace Prima.Stable.Modules
             }
 
             var words = args.Split(' ');
-
-            await Context.Guild.DownloadUsersAsync();
+            
             var members = words
                 .Where(w => w.StartsWith('<'))
                 .Select(idStr => RegexSearches.NonNumbers.Replace(idStr, ""))
@@ -153,13 +154,18 @@ namespace Prima.Stable.Modules
                 string.Equals(r.Name.ToLowerInvariant(), roleName.ToLowerInvariant(), StringComparison.InvariantCultureIgnoreCase));
             if (role == null)
             {
+                Log.Information("Role name invalid.");
                 var res = await ReplyAsync($"{Context.User.Mention}, no role by that name exists! Make sure you spelled it correctly.");
                 await Task.Delay(5000);
                 await res.DeleteAsync();
                 return;
             }
 
-            if (!DelubrumProgressionRoles.Roles.Keys.Contains(role.Id)) return;
+            if (!DelubrumProgressionRoles.Roles.Keys.Contains(role.Id))
+            {
+                Log.Information("Role key invalid.");
+                return;
+            }
             var contingentRoles = DelubrumProgressionRoles.GetContingentRoles(role.Id)
                 .Select(Context.Guild.GetRole)
                 .ToList();
@@ -188,8 +194,7 @@ namespace Prima.Stable.Modules
         public async Task RemoveDelubrumProgRoleAsync([Remainder] string args)
         {
             var words = args.Split(' ');
-
-            await Context.Guild.DownloadUsersAsync();
+            
             var members = words
                 .Where(w => w.StartsWith('<'))
                 .Select(idStr => RegexSearches.NonNumbers.Replace(idStr, ""))

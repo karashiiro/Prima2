@@ -186,7 +186,6 @@ namespace Prima.Queue.Services
                         var host = guild.Users.FirstOrDefault(u => u.ToString() == embed.Author.Value.Name);
                         if (host == null)
                         {
-                            await guild.DownloadUsersAsync();
                             host = guild.Users.FirstOrDefault(u => u.ToString() == embed.Author.Value.Name);
                         }
 
