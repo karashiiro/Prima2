@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using System.Linq;
+using Discord;
 using Discord.Commands;
 using Prima.Services;
 using System.Threading.Tasks;
@@ -27,7 +28,7 @@ namespace Prima.Stable.Modules
         {
             var channel = await Context.Client.GetChannelAsync(590757405927669769) as ITextChannel;
             var message = await channel.GetMessageAsync(590798375931346954);
-            var emote = await Context.Guild.GetEmoteAsync(588913444712087564);
+            var emote = message.Reactions.Keys.FirstOrDefault(r => r.Name == "Diadem");
             await message.RemoveAllReactionsForEmoteAsync(emote);
         }
     }
