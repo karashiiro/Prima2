@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
 using Prima.Services;
 using System.Threading.Tasks;
