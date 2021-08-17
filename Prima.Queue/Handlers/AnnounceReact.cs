@@ -50,6 +50,9 @@ namespace Prima.Queue.Handlers
                 guildConfig.SocialScheduleOutputChannel,
                 guildConfig.DelubrumNormalScheduleOutputChannel,
                 guildConfig.DelubrumScheduleOutputChannel,
+
+                guildConfig.CastrumScheduleOutputChannel,
+                guildConfig.ScheduleOutputChannel, // BA
             };
             if (noQueueChannels.Contains(message.Channel.Id)) return;
 
