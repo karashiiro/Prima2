@@ -24,9 +24,11 @@ namespace Prima.Stable.Handlers
             // Kupo Bot always posts join and leave notifications, as opposed to the system log
             // which only sometimes posts join messages. Kupo Bot doesn't have the aforementioned
             // MEMBER_ADD event issue.
-            if (await channel.Guild.GetChannelAsync(857729033562226748) != null)
+            const ulong kupoBotJoinLog = 857729033562226748;
+            if (await channel.Guild.GetChannelAsync(kupoBotJoinLog) != null)
             {
-                if (channel.Id == 857729033562226748 && message.Author.Id == 107256979105267712)
+                const ulong kupoBot = 107256979105267712;
+                if (channel.Id == kupoBotJoinLog && message.Author.Id == kupoBot)
                 {
                     // Try to get the message embed footer text
                     var embed = message.Embeds.FirstOrDefault();
