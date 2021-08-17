@@ -56,7 +56,7 @@ namespace Prima.Stable
 
             client.MessageDeleted += (message, channel) => AuditDeletion.Handler(db, client, message, channel);
             client.MessageReceived += message => ChatCleanup.Handler(db, web, templates, message);
-            client.MessageReceived += message => WelcomeCard.Handler(templates, message);
+            client.MessageReceived += message => WelcomeCard.Handler(client, templates, message);
 
             client.MessageReceived += message => MessageCache.Handler(db, message);
             client.MessageReceived += message => TriggerDispatcher.Handler(client, message);

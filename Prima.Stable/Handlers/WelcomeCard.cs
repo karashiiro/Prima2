@@ -10,7 +10,7 @@ namespace Prima.Stable.Handlers
 {
     public static class WelcomeCard
     {
-        public static async Task Handler(ITemplateProvider templates, SocketMessage message)
+        public static async Task Handler(IDiscordClient client, ITemplateProvider templates, SocketMessage message)
         {
             // This is being done this way rather than with the MEMBER_ADD gateway event because
             // that event just isn't being received. All intents are enabled, and the bot is not
@@ -23,7 +23,11 @@ namespace Prima.Stable.Handlers
 
             await user.SendMessageAsync(embed: templates.Execute("cemjoin.md", new
             {
-                //
+                GuildName = channel.Guild.Name,
+                BotMention = client.CurrentUser.Mention,
+                ContentRolesChannelLink = "<#590757405927669769>",
+                HowDoesThisWorkChannelLink = "<#582762593865695243>",
+                RulesChannelLink = "<#550707138348187648>",
             })
                 .ToEmbedBuilder()
                 .WithColor(Color.DarkOrange)
