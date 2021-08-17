@@ -30,7 +30,7 @@ namespace Prima.Stable.Handlers
                 RulesChannelLink = "<#550707138348187648>",
             })
                 .ToEmbedBuilder()
-                .WithColor(Color.DarkOrange)
+                .WithColor(Color.Orange)
                 .Build());
         }
     }
