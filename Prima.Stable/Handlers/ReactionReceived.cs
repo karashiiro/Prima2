@@ -18,7 +18,6 @@ namespace Prima.Stable.Handlers
 
         private const ulong BozjaRole = 588913532410527754;
         private const ulong EurekaRole = 588913087818498070;
-        private const ulong DiademRole = 588913444712087564;
 
         public static Task HandlerAdd(IDbService db, CharacterLookup lodestone, Cacheable<IUserMessage, ulong> message, Cacheable<IMessageChannel, ulong> cchannel, SocketReaction reaction)
         {
@@ -45,7 +44,7 @@ namespace Prima.Stable.Handlers
                     var role = member.Guild.GetRole(roleId);
                     var dbEntry = db.Users.FirstOrDefault(u => u.DiscordId == reaction.UserId);
 
-                    if (roleId is BozjaRole or EurekaRole or DiademRole)
+                    if (roleId is BozjaRole or EurekaRole)
                     {
                         if (dbEntry == null)
                         {
