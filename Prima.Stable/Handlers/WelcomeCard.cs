@@ -1,12 +1,9 @@
-﻿using System.Linq;
-using Discord;
+﻿using Discord;
 using Discord.WebSocket;
 using Prima.DiscordNet.Extensions;
 using Prima.Resources;
 using Prima.Services;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Serilog;
 using Color = Discord.Color;
 
 namespace Prima.Stable.Handlers
