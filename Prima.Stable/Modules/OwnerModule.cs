@@ -22,14 +22,5 @@ namespace Prima.Stable.Modules
             await Db.RemoveBrokenUsers();
             await ReplyAsync("Done!");
         }
-
-        [Command("removediademreactions")]
-        public async Task RemoveDiademReactions()
-        {
-            var channel = await Context.Client.GetChannelAsync(590757405927669769) as ITextChannel;
-            var message = await channel.GetMessageAsync(590798375931346954);
-            var emote = message.Reactions.Keys.FirstOrDefault(r => r.Name == "Diadem");
-            await message.RemoveAllReactionsForEmoteAsync(emote);
-        }
     }
 }
