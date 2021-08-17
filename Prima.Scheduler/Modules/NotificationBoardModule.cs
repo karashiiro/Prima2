@@ -241,6 +241,9 @@ namespace Prima.Scheduler.Modules
                             guildConfig.SocialScheduleOutputChannel,
                             guildConfig.DelubrumNormalScheduleOutputChannel,
                             guildConfig.DelubrumScheduleOutputChannel,
+
+                            guildConfig.CastrumScheduleOutputChannel,
+                            guildConfig.ScheduleOutputChannel, // BA
                         };
 
                         if (!noQueueChannels.Contains(channel.Id))
