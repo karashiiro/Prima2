@@ -28,6 +28,9 @@ namespace Prima.Stable.Handlers
                     var footer = embed?.Footer?.Text;
                     if (string.IsNullOrEmpty(footer)) return;
 
+                    var leaving = embed.Description.Contains("left");
+                    if (leaving) return;
+
                     var userIdMatch = new Regex(@"\d+").Match(footer);
                     if (!userIdMatch.Success) return;
 
