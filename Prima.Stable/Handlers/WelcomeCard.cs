@@ -20,7 +20,11 @@ namespace Prima.Stable.Handlers
             if (message.Channel is not IGuildChannel channel || channel.Guild.Id != SpecialGuilds.CrystalExploratoryMissions) return;
 
             IUser user = null;
-            if (await channel.Guild.GetChannelAsync(857729033562226748) != null) // Kupo Bot join channel, posts 100% of the time
+            // If the Kupo Bot join log channel exists, use it and ignore the system log.
+            // Kupo Bot always posts join and leave notifications, as opposed to the system log
+            // which only sometimes posts join messages. Kupo Bot doesn't have the aforementioned
+            // MEMBER_ADD event issue.
+            if (await channel.Guild.GetChannelAsync(857729033562226748) != null)
             {
                 if (channel.Id == 857729033562226748 && message.Author.Id == 107256979105267712)
                 {
@@ -42,7 +46,7 @@ namespace Prima.Stable.Handlers
                     user = await client.GetUserAsync(userId);
                 }
             }
-            else if (channel.Id == channel.Guild.SystemChannelId && message.Source == MessageSource.System) // Fallback to system channel, sometimes doesn't post
+            else if (channel.Id == channel.Guild.SystemChannelId && message.Source == MessageSource.System)
             {
                 user = message.Author;
             }
