@@ -11,5 +11,7 @@
             ;
 
         public const ulong EmoteStorage1 = 596753120051200027;
+
+        public const ulong PrimaShouji = 550910482194890781;
     }
 }

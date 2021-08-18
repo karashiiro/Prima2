@@ -442,7 +442,11 @@ namespace Prima.Stable.Modules
             }
 #endif
 
-            var guild = Context.Guild ?? Context.Client.Guilds.First(g => Context.Client.Rest.GetGuildUserAsync(g.Id, Context.User.Id).GetAwaiter().GetResult() != null);
+            var guild = Context.Guild ?? Context.Client.Guilds
+#if !DEBUG
+                .Where(g => g.Id != SpecialGuilds.PrimaShouji)
+#endif
+                .First(g => Context.Client.Rest.GetGuildUserAsync(g.Id, Context.User.Id).GetAwaiter().GetResult() != null);
             Log.Information("Mutual guild ID: {GuildId}", guild.Id);
 
             var guildConfig = Db.Guilds.First(g => g.Id == guild.Id);
