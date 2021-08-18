@@ -149,6 +149,12 @@ namespace Prima.Scheduler.Services
                         continue;
                     }
 
+                    // Hacky solution to avoid rare situations where people get spammed with notifications
+                    if (timestamp.AddMinutes(-22) < DateTimeOffset.Now)
+                    {
+                        continue;
+                    }
+
                     Log.Information("{Username} - ETA {TimeUntil} hrs.", embed.Author?.Name, (timestamp - DateTimeOffset.Now).TotalHours);
 
                     // ReSharper disable once InvertIf
