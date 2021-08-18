@@ -60,7 +60,7 @@ namespace Prima.Stable.Handlers
                 GuildName = channel.Guild.Name,
                 BotMention = client.CurrentUser.Mention,
                 ContentRolesChannelLink = "<#590757405927669769>",
-                HowDoesThisWorkChannelLink = "<#582762593865695243>",
+                HowDoesThisWorkChannelLink = "<#877659281481162803>",
                 RulesChannelLink = "<#550707138348187648>",
             })
                 .ToEmbedBuilder()
