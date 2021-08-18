@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
+using Discord.Rest;
 using Prima.DiscordNet.Attributes;
 
 namespace Prima.DiscordNet
@@ -69,6 +70,16 @@ namespace Prima.DiscordNet
         }
 
         public static bool HasRole(this SocketGuildUser member, IRole role)
+        {
+            return member.HasRole(role?.Id ?? 0);
+        }
+
+        public static bool HasRole(this RestGuildUser member, ulong roleId)
+        {
+            return member.RoleIds.FirstOrDefault(r => r == roleId) != default;
+        }
+
+        public static bool HasRole(this RestGuildUser member, IRole role)
         {
             return member.HasRole(role?.Id ?? 0);
         }

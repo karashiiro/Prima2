@@ -444,7 +444,7 @@ namespace Prima.Stable.Modules
 
             var guild = Context.Guild ?? Context.Client.Guilds
 #if !DEBUG
-                .Where(g => g.Id != SpecialGuilds.PrimaShouji)
+                .Where(g => g.Id != SpecialGuilds.PrimaShouji && g.Id != SpecialGuilds.EmoteStorage1)
 #endif
                 .First(g => Context.Client.Rest.GetGuildUserAsync(g.Id, Context.User.Id).GetAwaiter().GetResult() != null);
             Log.Information("Mutual guild ID: {GuildId}", guild.Id);
@@ -452,7 +452,7 @@ namespace Prima.Stable.Modules
             var guildConfig = Db.Guilds.First(g => g.Id == guild.Id);
             var prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
 
-            var member = guild.GetUser(Context.User.Id);
+            var member = await Context.Client.Rest.GetGuildUserAsync(guild.Id, Context.User.Id);
             var arsenalMaster = guild.GetRole(ulong.Parse(guildConfig.Roles["Arsenal Master"]));
             var cleared = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared"]));
             var clearedCastrumLacusLitore = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Castrum"]));
@@ -541,11 +541,11 @@ namespace Prima.Stable.Modules
                 await member.AddRoleAsync(clearedDRS);
                 await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, clearedDRS.Name));
 
-                var queenProg = member.Guild.Roles.FirstOrDefault(r => r.Name == "The Queen Progression");
+                var queenProg = guild.Roles.FirstOrDefault(r => r.Name == "The Queen Progression");
                 var contingentRoles = DelubrumProgressionRoles.GetContingentRoles(queenProg?.Id ?? 0);
                 foreach (var crId in contingentRoles)
                 {
-                    var cr = member.Guild.GetRole(crId);
+                    var cr = guild.GetRole(crId);
                     if (!member.HasRole(cr)) continue;
                     await member.RemoveRoleAsync(cr);
                     Log.Information("Role {RoleName} removed from {User}.", cr.Name, member.ToString());
