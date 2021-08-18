@@ -53,9 +53,6 @@ namespace Prima.Scheduler.Services
                 foreach (var run in runs)
                 {
                     var timeDiff = (DateTime.FromBinary(run.RunTime) - DateTime.Now).TotalMilliseconds;
-#if DEBUG
-                    Log.Debug(timeDiff.ToString(CultureInfo.InvariantCulture));
-#endif
 
                     if (timeDiff < Threshold)
                     {
