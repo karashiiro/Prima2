@@ -71,17 +71,19 @@ namespace Prima.Scheduler.Services
         {
             var ichannel = await cchannel.GetOrDownloadAsync();
 
-            if (reaction.Emote is not Emoji { Name: "📳" } || ichannel is not SocketGuildChannel channel)
+            if (reaction.Emote is not Emoji { Name: "📳" } || ichannel is not IGuildChannel channel)
                 return;
 
-            var run = _db.Events.FirstOrDefault(e => e.MessageId3 == cmessage.Id);
+            // Match runs on either the embed message ID, or the message ID of the announcement post itself
+            var run = _db.Events.FirstOrDefault(e => e.EmbedMessageId == cmessage.Id)
+                      ?? _db.Events.FirstOrDefault(e => e.MessageId3 == cmessage.Id);
             if (run == null || run.Notified || run.RunTime < DateTime.Now.ToBinary() || run.SubscribedUsers.Contains(reaction.UserId.ToString()) || reaction.UserId == run.LeaderId || reaction.UserId == _client.CurrentUser.Id)
                 return;
 
             await _db.AddMemberToEvent(run, reaction.UserId);
 
-            var leader = channel.GetUser(run.LeaderId);
-            var member = _client.GetUser(reaction.UserId);
+            var leader = await _client.Rest.GetGuildUserAsync(channel.GuildId, run.LeaderId);
+            var member = await _client.Rest.GetGuildUserAsync(channel.GuildId, reaction.UserId);
 
             var runTime = DateTime.FromBinary(run.RunTime);
 
@@ -89,11 +91,12 @@ namespace Prima.Scheduler.Services
             // ReSharper disable once JoinDeclarationAndInitializer
             TimeZoneInfo tzi;
             var (customTzi, localizedRunTime) = Util.GetLocalizedTimeForUser(dbUser, runTime);
-            tzi = customTzi ?? TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
+            var serverTimeZone = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
+            tzi = customTzi ?? serverTimeZone;
             if (localizedRunTime != default)
             {
                 runTime = localizedRunTime;
-                runTime = runTime.AddHours(8);
+                runTime = runTime.AddHours(-serverTimeZone.BaseUtcOffset.Hours - (serverTimeZone.IsDaylightSavingTime(DateTime.Now) ? 1 : 0));
             }
 
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
@@ -108,17 +111,19 @@ namespace Prima.Scheduler.Services
         {
             var ichannel = await cchannel.GetOrDownloadAsync();
 
-            if (reaction.Emote is not Emoji { Name: "📳" } || ichannel is not SocketGuildChannel channel)
+            if (reaction.Emote is not Emoji { Name: "📳" } || ichannel is not IGuildChannel channel)
                 return;
 
-            var run = _db.Events.FirstOrDefault(e => e.MessageId3 == cmessage.Id);
+            // Match runs on either the embed message ID, or the message ID of the announcement post itself
+            var run = _db.Events.FirstOrDefault(e => e.EmbedMessageId == cmessage.Id)
+                      ?? _db.Events.FirstOrDefault(e => e.MessageId3 == cmessage.Id);
             if (run == null || run.Notified || run.RunTime < DateTime.Now.ToBinary() || !run.SubscribedUsers.Contains(reaction.UserId.ToString()) || reaction.UserId == run.LeaderId || reaction.UserId == _client.CurrentUser.Id)
                 return;
 
-            await _db.RemoveMemberToEvent(run, reaction.UserId);
+            await _db.RemoveMemberFromEvent(run, reaction.UserId);
 
-            var leader = channel.GetUser(run.LeaderId);
-            var member = _client.GetUser(reaction.UserId);
+            var leader = await _client.Rest.GetGuildUserAsync(channel.GuildId, run.LeaderId);
+            var member = await _client.Rest.GetGuildUserAsync(channel.GuildId, reaction.UserId);
             await member.SendMessageAsync($"You have un-RSVP'd for {leader.Nickname ?? leader.Username}'s run.");
 
             Log.Information("Removed member {MemberId} from run {MessageId}.", reaction.UserId, run.MessageId3);

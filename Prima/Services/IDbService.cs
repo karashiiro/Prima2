@@ -81,7 +81,7 @@ namespace Prima.Services
 
         Task AddMemberToEvent(ScheduledEvent @event, ulong memberId);
 
-        Task RemoveMemberToEvent(ScheduledEvent @event, ulong memberId);
+        Task RemoveMemberFromEvent(ScheduledEvent @event, ulong memberId);
 
         Task<ScheduledEvent> TryRemoveScheduledEvent(DateTime when, ulong userId);
 

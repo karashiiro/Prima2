@@ -219,7 +219,7 @@ namespace Prima.Tests.Mocks
             return Task.CompletedTask;
         }
 
-        public Task RemoveMemberToEvent(ScheduledEvent @event, ulong memberId)
+        public Task RemoveMemberFromEvent(ScheduledEvent @event, ulong memberId)
         {
             return Task.CompletedTask;
         }
