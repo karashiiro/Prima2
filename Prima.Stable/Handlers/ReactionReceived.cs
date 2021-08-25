@@ -19,20 +19,20 @@ namespace Prima.Stable.Handlers
         private const ulong BozjaRole = 588913532410527754;
         private const ulong EurekaRole = 588913087818498070;
 
-        public static Task HandlerAdd(IDbService db, CharacterLookup lodestone, Cacheable<IUserMessage, ulong> message, Cacheable<IMessageChannel, ulong> cchannel, SocketReaction reaction)
+        public static Task HandlerAdd(DiscordSocketClient client, IDbService db, CharacterLookup lodestone, Cacheable<IUserMessage, ulong> message, Cacheable<IMessageChannel, ulong> cchannel, SocketReaction reaction)
         {
-            Task.Run(() => HandlerAddAsync(db, lodestone, message, cchannel, reaction));
+            Task.Run(() => HandlerAddAsync(client, db, lodestone, message, cchannel, reaction));
             return Task.CompletedTask;
         }
 
-        private static async Task HandlerAddAsync(IDbService db, CharacterLookup lodestone, Cacheable<IUserMessage, ulong> message, Cacheable<IMessageChannel, ulong> cchannel, SocketReaction reaction)
+        private static async Task HandlerAddAsync(DiscordSocketClient client, IDbService db, CharacterLookup lodestone, Cacheable<IUserMessage, ulong> message, Cacheable<IMessageChannel, ulong> cchannel, SocketReaction reaction)
         {
             var ichannel = await cchannel.GetOrDownloadAsync();
 
             if (ichannel is SocketGuildChannel channel)
             {
                 var guild = channel.Guild;
-                var member = guild.GetUser(reaction.UserId);
+                var member = guild.GetUser(reaction.UserId) ?? (IGuildUser)await client.Rest.GetGuildUserAsync(guild.Id, reaction.UserId);
                 var disConfig = db.Guilds.FirstOrDefault(g => g.Id == guild.Id);
                 if (disConfig == null)
                 {
