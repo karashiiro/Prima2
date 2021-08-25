@@ -1,7 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.Net;
-using Discord.WebSocket;
 using Prima.DiscordNet;
 using Prima.DiscordNet.Attributes;
 using Prima.Game.FFXIV;
@@ -112,7 +111,7 @@ namespace Prima.Stable.Modules
                 }
             }
 
-            var member = guild.GetUser(Context.User.Id) ?? (IGuildUser) await Context.Client.Rest.GetGuildUserAsync(guild.Id, Context.User.Id);
+            var member = guild.GetUser(Context.User.Id) ?? (IGuildUser)await Context.Client.Rest.GetGuildUserAsync(guild.Id, Context.User.Id);
 
             using var typing = Context.Channel.EnterTypingState();
 
@@ -262,7 +261,7 @@ namespace Prima.Stable.Modules
 #endif
                 .First(g => Context.Client.Rest.GetGuildUserAsync(g.Id, userMention.Id).GetAwaiter().GetResult() != null);
 
-            var member = guild.GetUser(userMention.Id) ?? (IGuildUser) await Context.Client.Rest.GetGuildUserAsync(guild.Id, userMention.Id);
+            var member = guild.GetUser(userMention.Id) ?? (IGuildUser)await Context.Client.Rest.GetGuildUserAsync(guild.Id, userMention.Id);
 
             // Fetch the character.
             using var typing = Context.Channel.EnterTypingState();
@@ -340,7 +339,7 @@ namespace Prima.Stable.Modules
             catch (HttpException) { }
 
             Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
-            
+
             await ActivateUser(member, existingLodestoneId, foundCharacter, guildConfig);
 
             await Context.Channel.SendMessageAsync(embed: responseEmbed);
