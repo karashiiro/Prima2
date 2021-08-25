@@ -27,6 +27,7 @@ namespace Prima.Game.FFXIV
                 return false;
             }
 
+            Log.Information("{Bio}, {Token}", bio, token);
             return bio.Contains(token);
         }
     }
