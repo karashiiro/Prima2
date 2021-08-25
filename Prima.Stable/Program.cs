@@ -47,7 +47,7 @@ namespace Prima.Stable
             await ffLogs.Initialize();
 
             client.ReactionAdded += (message, channel, reaction)
-                => ReactionReceived.HandlerAdd(db, lodestone, message, channel, reaction);
+                => ReactionReceived.HandlerAdd(client, db, lodestone, message, channel, reaction);
             client.ReactionRemoved += (message, channel, reaction)
                 => ReactionReceived.HandlerRemove(db, message, channel, reaction);
 
