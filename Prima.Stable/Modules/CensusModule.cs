@@ -462,12 +462,6 @@ namespace Prima.Stable.Modules
             var clearedDalriada = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Dalriada"]));
             var dalriadaRaider = guild.GetRole(ulong.Parse(guildConfig.Roles["Dalriada Raider"]));
 
-            if (member.HasRole(arsenalMaster) && member.HasRole(siegeLiege) && member.HasRole(savageQueen) && member.HasRole(dalriadaRaider))
-            {
-                await ReplyAsync(Properties.Resources.MemberAlreadyHasRoleError);
-                return;
-            }
-
             using var typing = Context.Channel.EnterTypingState();
 
             var user = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id);
@@ -492,8 +486,6 @@ namespace Prima.Stable.Modules
                 return;
             }
 
-            var mounts = await Lodestone.GetCharacterMounts(lodestoneId);
-
             var hasAchievement = false;
             var hasMount = false;
             var hasCastrumLLAchievement1 = false;
@@ -514,6 +506,13 @@ namespace Prima.Stable.Modules
                 await Db.UpdateUser(user);
             }
 
+            if (achievements.Any(achievement => achievement.ID == 2227)) // We're On Your Side I
+            {
+                Log.Information("Added role " + cleared.Name);
+                await member.AddRoleAsync(cleared);
+                await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, cleared.Name));
+                hasMount = true;
+            }
             if (achievements.Any(achievement => achievement.ID == 2229)) // We're On Your Side III
             {
                 Log.Information("Added role " + arsenalMaster.Name);
@@ -573,13 +572,6 @@ namespace Prima.Stable.Modules
                 await member.AddRoleAsync(dalriadaRaider);
                 await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, dalriadaRaider.Name));
                 hasDalriadaAchievement2 = true;
-            }
-            if (mounts.Any(m => m.Name == "Demi-Ozma"))
-            {
-                Log.Information("Added role {Role} to {DiscordName}.", cleared.Name, Context.User.ToString());
-                await member.AddRoleAsync(cleared);
-                await ReplyAsync(Properties.Resources.LodestoneBAMountSuccess);
-                hasMount = true;
             }
 
             if (!hasAchievement && !hasMount && !hasCastrumLLAchievement1 && !hasCastrumLLAchievement2 && !hasDRSAchievement1 && !hasDRSAchievement2 && !hasDalriadaAchievement1 && !hasDalriadaAchievement2)
