@@ -62,6 +62,8 @@ namespace Prima.Stable.Handlers
                 ContentRolesChannelLink = "<#590757405927669769>",
                 HowDoesThisWorkChannelLink = "<#877659281481162803>",
                 RulesChannelLink = "<#550707138348187648>",
+                HelpChannelLink = "<#550777867173232661>",
+                OtherUsefulServersChannelLink = "<#569322805351415808>",
             })
                 .ToEmbedBuilder()
                 .WithColor(Color.Orange)

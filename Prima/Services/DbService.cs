@@ -345,7 +345,7 @@ namespace Prima.Services
             await _events.UpdateOneAsync(e => e.MessageId3 == @event.MessageId3, update);
         }
 
-        public async Task RemoveMemberToEvent(ScheduledEvent @event, ulong memberId)
+        public async Task RemoveMemberFromEvent(ScheduledEvent @event, ulong memberId)
         {
             var existing = await (await _events.FindAsync(e => e.MessageId3 == @event.MessageId3)).FirstOrDefaultAsync();
             if (existing == null)
