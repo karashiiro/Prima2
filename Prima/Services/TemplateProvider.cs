@@ -57,7 +57,7 @@ namespace Prima.Services
             // ReSharper disable once LoopCanBeConvertedToQuery
             foreach (var token in replaceableTokens)
             {
-                template = template.Replace("{{." + token + "}}", templateData.GetPropertyValue(token)?.ToString());
+                template = template.Replace("{{." + token + "}}", templateData.GetPropertyValue(token ?? "")?.ToString());
             }
 
             template = template.Trim();

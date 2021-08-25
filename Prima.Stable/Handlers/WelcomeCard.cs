@@ -12,7 +12,7 @@ namespace Prima.Stable.Handlers
 {
     public static class WelcomeCard
     {
-        public static async Task Handler(IDiscordClient client, ITemplateProvider templates, SocketMessage message)
+        public static async Task Handler(DiscordSocketClient client, ITemplateProvider templates, SocketMessage message)
         {
             // This is being done this way rather than with the MEMBER_ADD gateway event because
             // that event just isn't being received. All intents are enabled, and the bot is not
@@ -45,7 +45,7 @@ namespace Prima.Stable.Handlers
 
                     if (!ulong.TryParse(userIdMatch.Value, out var userId)) return;
 
-                    user = await client.GetUserAsync(userId);
+                    user = client.GetUser(userId) ?? (IUser) await client.Rest.GetUserAsync(userId);
                 }
             }
             else if (channel.Id == channel.Guild.SystemChannelId && message.Source == MessageSource.System)
