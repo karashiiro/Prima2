@@ -1,7 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.Net;
-using Discord.WebSocket;
 using Prima.DiscordNet;
 using Prima.DiscordNet.Attributes;
 using Prima.Game.FFXIV;
@@ -50,7 +49,11 @@ namespace Prima.Stable.Modules
             }
 #endif
 
-            var guild = Context.Guild ?? Context.User.MutualGuilds.First(g => Db.Guilds.Any(gc => gc.Id == g.Id));
+            var guild = Context.Guild ?? Context.Client.Guilds
+#if !DEBUG
+                .Where(g => g.Id != SpecialGuilds.PrimaShouji && g.Id != SpecialGuilds.EmoteStorage1)
+#endif
+                .First(g => Context.Client.Rest.GetGuildUserAsync(g.Id, Context.User.Id).GetAwaiter().GetResult() != null);
             Log.Information("Mutual guild ID: {GuildId}", guild.Id);
 
             var guildConfig = Db.Guilds.Single(g => g.Id == guild.Id);
@@ -108,7 +111,7 @@ namespace Prima.Stable.Modules
                 }
             }
 
-            var member = guild.GetUser(Context.User.Id);
+            var member = guild.GetUser(Context.User.Id) ?? (IGuildUser)await Context.Client.Rest.GetGuildUserAsync(guild.Id, Context.User.Id);
 
             using var typing = Context.Channel.EnterTypingState();
 
@@ -208,7 +211,7 @@ namespace Prima.Stable.Modules
             Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
 
             var finalReply = await Context.Channel.SendMessageAsync(embed: responseEmbed);
-            if (member.Roles.All(r => r.Name != "Time Out"))
+            if (!member.MemberHasRole(573340288815333386, Context))
             {
                 await ActivateUser(member, existingLodestoneId, foundCharacter, guildConfig);
             }
@@ -221,16 +224,19 @@ namespace Prima.Stable.Modules
         // Set someone else's character.
         [Command("theyare", RunMode = RunMode.Async)]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        public async Task TheyAreAsync(SocketUser userMention, params string[] parameters)
+        public async Task TheyAreAsync(string userMentionStr, params string[] parameters)
         {
             var guildConfig = Db.Guilds.Single(g => g.Id == Context.Guild.Id);
             var prefix = guildConfig.Prefix == ' ' ? Db.Config.Prefix : guildConfig.Prefix;
 
-            if (userMention == null || parameters.Length < 3)
+            if (userMentionStr == null || parameters.Length < 3)
             {
                 await ReplyAsync($"{Context.User.Mention}, please enter that command in the format `{prefix}theyare Mention World Name Surname`.");
                 return;
             }
+
+            var userMention = await DiscordUtilities.GetUserFromMention(userMentionStr, Context);
+
             var world = parameters[0].ToLower();
             var name = parameters[1] + " " + parameters[2];
             world = RegexSearches.NonAlpha.Replace(world, string.Empty);
@@ -249,13 +255,13 @@ namespace Prima.Stable.Modules
 
             var force = parameters.Length >= 4 && parameters[3].ToLower() == "force";
 
-            var guild = Context.Guild ?? userMention.MutualGuilds.First();
-            var member = guild.GetUser(userMention.Id);
-            if (member == null)
-            {
-                guild = userMention.MutualGuilds.First();
-                member = guild.GetUser(userMention.Id);
-            }
+            var guild = Context.Guild ?? Context.Client.Guilds
+#if !DEBUG
+                .Where(g => g.Id != SpecialGuilds.PrimaShouji && g.Id != SpecialGuilds.EmoteStorage1)
+#endif
+                .First(g => Context.Client.Rest.GetGuildUserAsync(g.Id, userMention.Id).GetAwaiter().GetResult() != null);
+
+            var member = guild.GetUser(userMention.Id) ?? (IGuildUser)await Context.Client.Rest.GetGuildUserAsync(guild.Id, userMention.Id);
 
             // Fetch the character.
             using var typing = Context.Channel.EnterTypingState();
@@ -272,7 +278,7 @@ namespace Prima.Stable.Modules
             }
 
             if (!force && !await LodestoneUtils.VerifyCharacter(Lodestone, ulong.Parse(foundCharacter.LodestoneId),
-                Context.User.Id.ToString()))
+                member.Id.ToString()))
             {
                 await ReplyAsync("That character does not have their Lodestone ID in their bio; please have them add it. " +
                                  "Alternatively, append `force` to the end of the command to skip this check.");
@@ -294,8 +300,8 @@ namespace Prima.Stable.Modules
                 }
 
                 Log.Information("Lodestone character forced off of {UserId}.", existingDiscordUser.DiscordId);
-                var memberRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
-                var existingMember = member.Guild.GetUser(existingDiscordUser.DiscordId);
+                var memberRole = guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
+                var existingMember = guild.GetUser(existingDiscordUser.DiscordId);
                 await existingMember.RemoveRoleAsync(memberRole);
             }
 
@@ -333,7 +339,7 @@ namespace Prima.Stable.Modules
             catch (HttpException) { }
 
             Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
-            
+
             await ActivateUser(member, existingLodestoneId, foundCharacter, guildConfig);
 
             await Context.Channel.SendMessageAsync(embed: responseEmbed);
@@ -343,7 +349,7 @@ namespace Prima.Stable.Modules
         private const ulong EurekaRole = 588913087818498070;
         private const ulong DiademRole = 588913444712087564;
 
-        private async Task ActivateUser(SocketGuildUser member, string oldLodestoneId, DiscordXIVUser dbEntry, DiscordGuildConfiguration guildConfig)
+        private async Task ActivateUser(IGuildUser member, string oldLodestoneId, DiscordXIVUser dbEntry, DiscordGuildConfiguration guildConfig)
         {
             var memberRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
             await member.AddRoleAsync(memberRole);
@@ -462,12 +468,6 @@ namespace Prima.Stable.Modules
             var clearedDalriada = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Dalriada"]));
             var dalriadaRaider = guild.GetRole(ulong.Parse(guildConfig.Roles["Dalriada Raider"]));
 
-            if (member.HasRole(arsenalMaster) && member.HasRole(siegeLiege) && member.HasRole(savageQueen) && member.HasRole(dalriadaRaider))
-            {
-                await ReplyAsync(Properties.Resources.MemberAlreadyHasRoleError);
-                return;
-            }
-
             using var typing = Context.Channel.EnterTypingState();
 
             var user = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id);
@@ -492,8 +492,6 @@ namespace Prima.Stable.Modules
                 return;
             }
 
-            var mounts = await Lodestone.GetCharacterMounts(lodestoneId);
-
             var hasAchievement = false;
             var hasMount = false;
             var hasCastrumLLAchievement1 = false;
@@ -514,6 +512,13 @@ namespace Prima.Stable.Modules
                 await Db.UpdateUser(user);
             }
 
+            if (achievements.Any(achievement => achievement.ID == 2227)) // We're On Your Side I
+            {
+                Log.Information("Added role " + cleared.Name);
+                await member.AddRoleAsync(cleared);
+                await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, cleared.Name));
+                hasMount = true;
+            }
             if (achievements.Any(achievement => achievement.ID == 2229)) // We're On Your Side III
             {
                 Log.Information("Added role " + arsenalMaster.Name);
@@ -573,13 +578,6 @@ namespace Prima.Stable.Modules
                 await member.AddRoleAsync(dalriadaRaider);
                 await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, dalriadaRaider.Name));
                 hasDalriadaAchievement2 = true;
-            }
-            if (mounts.Any(m => m.Name == "Demi-Ozma"))
-            {
-                Log.Information("Added role {Role} to {DiscordName}.", cleared.Name, Context.User.ToString());
-                await member.AddRoleAsync(cleared);
-                await ReplyAsync(Properties.Resources.LodestoneBAMountSuccess);
-                hasMount = true;
             }
 
             if (!hasAchievement && !hasMount && !hasCastrumLLAchievement1 && !hasCastrumLLAchievement2 && !hasDRSAchievement1 && !hasDRSAchievement2 && !hasDalriadaAchievement1 && !hasDalriadaAchievement2)

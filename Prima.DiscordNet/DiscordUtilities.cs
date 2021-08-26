@@ -39,6 +39,12 @@ namespace Prima.DiscordNet
             var fileStream = await http.GetStreamAsync(new Uri(uri));
             await context.Channel.SendFileAsync(fileStream, fileName);
         }
+
+        public static async Task<IUser> GetUserFromMention(string userMention, ICommandContext context)
+        {
+            var id = ulong.Parse(string.Join("", userMention.Where(char.IsDigit).ToArray()));
+            return await context.Client.GetUserAsync(id);
+        }
     }
 
     public static class DiscordUserExtensions

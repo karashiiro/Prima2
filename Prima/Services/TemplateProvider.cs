@@ -52,19 +52,29 @@ namespace Prima.Services
                 throw new KeyNotFoundException("Template file not found. Did you register it as an embedded resource?", e);
             }
 
+            if (template == null)
+            {
+                throw new NullReferenceException("template is null.");
+            }
+
             var replaceableTokens = GetReplaceableTokens(template);
 
             // ReSharper disable once LoopCanBeConvertedToQuery
             foreach (var token in replaceableTokens)
             {
-                template = template.Replace("{{." + token + "}}", templateData.GetPropertyValue(token)?.ToString());
+                if (token == null) continue;
+                if (templateData == null) throw new NullReferenceException("templateData is null.");
+
+                var oldValue = "{{." + token + "}}";
+                var newValue = templateData.GetPropertyValue(token);
+                template = template.Replace(oldValue, newValue?.ToString() ?? token);
             }
 
             template = template.Trim();
             return new ResolvedTemplate(template);
         }
 
-        private static readonly Regex TokenRegex = new(@"\{\{.(?<Token>.+)\}\}", RegexOptions.Compiled);
+        private static readonly Regex TokenRegex = new(@"\{\{.(?<Token>(\p{L}+|\p{M}+|\p{N}+)+)\}\}", RegexOptions.Compiled);
         private static IEnumerable<string> GetReplaceableTokens(string template)
         {
             return TokenRegex.Matches(template)

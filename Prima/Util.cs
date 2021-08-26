@@ -282,7 +282,7 @@ namespace Prima
         /// Get the value of an object property by its string name.
         /// </summary>
         public static object GetPropertyValue(this object? obj, string propName)
-            => obj.GetType().GetProperty(propName).GetValue(obj, null);
+            => obj?.GetType().GetProperty(propName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance)?.GetValue(obj, null);
 
         /// <summary>
         /// Returns true if the object has the specified property.
