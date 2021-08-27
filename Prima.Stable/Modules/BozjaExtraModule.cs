@@ -144,7 +144,7 @@ namespace Prima.Stable.Modules
                 .Where(w => w.StartsWith('<'))
                 .Select(idStr => RegexSearches.NonNumbers.Replace(idStr, ""))
                 .Select(ulong.Parse)
-                .Select(id => Context.Guild.GetUser(id));
+                .Select(id => Context.Guild.GetUser(id) ?? (IGuildUser)Context.Client.Rest.GetGuildUserAsync(Context.Guild.Id, id).GetAwaiter().GetResult());
 
             var roleName = string.Join(' ', words.Where(w => !w.StartsWith('<')));
             roleName = RegexSearches.UnicodeApostrophe.Replace(roleName, "'");
@@ -175,7 +175,7 @@ namespace Prima.Stable.Modules
                 {
                     try
                     {
-                        return m.AddRolesAsync(contingentRoles.Where(r => !m.HasRole(r)));
+                        return m.AddRolesAsync(contingentRoles.Where(r => !m.MemberHasRole(r, Context)));
                     }
                     catch (Exception e)
                     {
@@ -199,7 +199,7 @@ namespace Prima.Stable.Modules
                 .Where(w => w.StartsWith('<'))
                 .Select(idStr => RegexSearches.NonNumbers.Replace(idStr, ""))
                 .Select(ulong.Parse)
-                .Select(id => Context.Guild.GetUser(id));
+                .Select(id => Context.Guild.GetUser(id) ?? (IGuildUser)Context.Client.Rest.GetGuildUserAsync(Context.Guild.Id, id).GetAwaiter().GetResult());
 
             var roleName = string.Join(' ', words.Where(w => !w.StartsWith('<')));
             roleName = RegexSearches.UnicodeApostrophe.Replace(roleName, "'");

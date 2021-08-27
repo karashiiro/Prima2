@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Discord.Net.Labs" Version="3.0.1-pre" />
+    <PackageReference Include="Discord.Net.Labs" Version="3.0.2" />
   </ItemGroup>
 
 </Project>
