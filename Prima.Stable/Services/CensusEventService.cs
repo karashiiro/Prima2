@@ -30,24 +30,20 @@ namespace Prima.Stable.Services
             _cemUnverifiedMembers = new List<ulong>();
         }
 
-        public async Task GuildMemberUpdated(Cacheable<SocketGuildUser, ulong> oldMember, SocketGuildUser newMember)
+        public async Task GuildMemberUpdated(Cacheable<SocketGuildUser, ulong> cacheableOldMember, SocketGuildUser newMember)
         {
-            if (newMember == null)
-            {
-                throw new ArgumentNullException(nameof(newMember));
-            }
-
             // Note: Use EnforcementEnabled or something in DB.
-            switch (newMember.Guild.Id)
+            var oldMember = await cacheableOldMember.GetOrDownloadAsync();
+            switch (oldMember.Guild.Id)
             {
                 case 550702475112480769:
-                    await CEMNamingScheme(SpecialGuilds.CrystalExploratoryMissions, oldMember, newMember);
+                    await CEMNamingScheme(SpecialGuilds.CrystalExploratoryMissions, cacheableOldMember, newMember);
                     break;
                 case 550910482194890781:
-                    await CEMNamingScheme(SpecialGuilds.CrystalExploratoryMissions, oldMember, newMember);
+                    await CEMNamingScheme(SpecialGuilds.CrystalExploratoryMissions, cacheableOldMember, newMember);
                     break;
                 case 318592736066273280:
-                    await CEMNamingScheme(SpecialGuilds.CrystalExploratoryMissions, oldMember, newMember);
+                    await CEMNamingScheme(SpecialGuilds.CrystalExploratoryMissions, cacheableOldMember, newMember);
                     break;
             }
         }
@@ -133,6 +129,8 @@ namespace Prima.Stable.Services
 
             var statusChannel = await newMember.Guild.GetChannelAsync(guildConfig.StatusChannel) as SocketTextChannel;
             if (oldMember?.Nickname == newMember.Nickname) return; // They might just be editing their avatar or something.
+
+            Log.Information("Checking nickname for user {UserId}", oldMember?.Id ?? 0);
             try
             {
                 var user = _db.Users.Single(u => u.DiscordId == newMember.Id);

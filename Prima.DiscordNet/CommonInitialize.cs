@@ -22,6 +22,7 @@ namespace Prima.DiscordNet
                 AlwaysDownloadUsers = true,
                 LargeThreshold = 250,
                 MessageCacheSize = 10000,
+                GatewayIntents = GatewayIntents.All,
             };
 
             return ConfigurePartialServiceCollection(disConfig);
