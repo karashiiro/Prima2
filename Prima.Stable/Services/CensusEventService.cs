@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
+using Prima.Resources;
 
 namespace Prima.Stable.Services
 {
@@ -40,13 +41,13 @@ namespace Prima.Stable.Services
             switch (newMember.Guild.Id)
             {
                 case 550702475112480769:
-                    await CEMNamingScheme(oldMember, newMember);
+                    await CEMNamingScheme(SpecialGuilds.CrystalExploratoryMissions, oldMember, newMember);
                     break;
                 case 550910482194890781:
-                    await CEMNamingScheme(oldMember, newMember);
+                    await CEMNamingScheme(SpecialGuilds.CrystalExploratoryMissions, oldMember, newMember);
                     break;
                 case 318592736066273280:
-                    await CEMNamingScheme(oldMember, newMember);
+                    await CEMNamingScheme(SpecialGuilds.CrystalExploratoryMissions, oldMember, newMember);
                     break;
             }
         }
@@ -109,8 +110,10 @@ namespace Prima.Stable.Services
         // For example, if someone's default nickname is "(Balmung) Nota Realuser" and
         // they set their Discord nickname to "Absolutely", their nickname will change
         // to "(Absolutely) Nota Realuser".
-        private async Task CEMNamingScheme(Cacheable<SocketGuildUser, ulong> cOldMember, SocketGuildUser newMember)
+        private async Task CEMNamingScheme(ulong guildId, Cacheable<SocketGuildUser, ulong> cOldMember, SocketGuildUser nullableNewMember)
         {
+            var newMember = nullableNewMember ?? (IGuildUser)await _client.Rest.GetGuildUserAsync(guildId, cOldMember.Id);
+
             DiscordGuildConfiguration guildConfig;
             try
             {
@@ -128,7 +131,7 @@ namespace Prima.Stable.Services
                 // No download branch; downloaded data will have the new data
             }
 
-            var statusChannel = newMember.Guild.GetChannel(guildConfig.StatusChannel) as SocketTextChannel;
+            var statusChannel = await newMember.Guild.GetChannelAsync(guildConfig.StatusChannel) as SocketTextChannel;
             if (oldMember?.Nickname == newMember.Nickname) return; // They might just be editing their avatar or something.
             try
             {
