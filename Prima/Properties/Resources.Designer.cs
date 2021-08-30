@@ -188,6 +188,24 @@ namespace Prima.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to in the future, please only use the modmail command in my DMs. Though your modmail is being processed, using my DM to make the modmail helps maintain everyone&apos;s privacy. Thank you ^^.
+        /// </summary>
+        public static string ModmailInGuildWarning {
+            get {
+                return ResourceManager.GetString("ModmailInGuildWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Thank you for your modmail. The moderators will read it as soon as they are available..
+        /// </summary>
+        public static string ModmailThankYou {
+            get {
+                return ResourceManager.GetString("ModmailThankYou", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to That command must be used in a guild!.
         /// </summary>
         public static string MustBeUsedInGuildError {
@@ -202,24 +220,6 @@ namespace Prima.Properties {
         public static string RegexNotFoundError {
             get {
                 return ResourceManager.GetString("RegexNotFoundError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to in the future, please only use the report command in my DMs. Though your report is being processed, using my DM to make the report helps maintain everyone&apos;s privacy. Thank you ^^.
-        /// </summary>
-        public static string ReportInGuildWarning {
-            get {
-                return ResourceManager.GetString("ReportInGuildWarning", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Thank you for your report. The moderators will read it as soon as they are available..
-        /// </summary>
-        public static string ReportThankYou {
-            get {
-                return ResourceManager.GetString("ReportThankYou", resourceCulture);
             }
         }
         

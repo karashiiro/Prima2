@@ -160,17 +160,17 @@ You can check your privacy settings here: https://na.finalfantasyxiv.com/lodesto
   <data name="MentionNotProvidedError" xml:space="preserve">
     <value>Please provide a user mention in your command.</value>
   </data>
+  <data name="ModmailInGuildWarning" xml:space="preserve">
+    <value>in the future, please only use the modmail command in my DMs. Though your modmail is being processed, using my DM to make the modmail helps maintain everyone's privacy. Thank you ^^</value>
+  </data>
+  <data name="ModmailThankYou" xml:space="preserve">
+    <value>Thank you for your modmail. The moderators will read it as soon as they are available.</value>
+  </data>
   <data name="MustBeUsedInGuildError" xml:space="preserve">
     <value>That command must be used in a guild!</value>
   </data>
   <data name="RegexNotFoundError" xml:space="preserve">
     <value>The specified regular expression was not found in the database.</value>
-  </data>
-  <data name="ReportInGuildWarning" xml:space="preserve">
-    <value>in the future, please only use the report command in my DMs. Though your report is being processed, using my DM to make the report helps maintain everyone's privacy. Thank you ^^</value>
-  </data>
-  <data name="ReportThankYou" xml:space="preserve">
-    <value>Thank you for your report. The moderators will read it as soon as they are available.</value>
   </data>
   <data name="UnsavedMessageAttachmentsWarning" xml:space="preserve">
     <value>Unsaved message attachments linked below. Please be aware that attempting to access deleted files may return 403 Forbidden from the CDN.</value>

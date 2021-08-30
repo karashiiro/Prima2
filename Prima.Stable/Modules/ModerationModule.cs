@@ -35,7 +35,7 @@ namespace Prima.Stable.Modules
             {
                 _ = WarnOfPublicReport();
             }
-            var responseMessage = await Context.Channel.SendMessageAsync(Properties.Resources.ReportThankYou);
+            var responseMessage = await Context.Channel.SendMessageAsync(Properties.Resources.ModmailThankYou);
 
             var guild = Context.Client.GetGuild(SpecialGuilds.CrystalExploratoryMissions);
 
@@ -72,7 +72,7 @@ namespace Prima.Stable.Modules
 
         private async Task WarnOfPublicReport()
         {
-            var warning = await ReplyAsync(Context.User.Mention + ", " + Properties.Resources.ReportInGuildWarning);
+            var warning = await ReplyAsync(Context.User.Mention + ", " + Properties.Resources.ModmailInGuildWarning);
             await Task.Delay(5000);
             await warning.DeleteAsync();
         }
