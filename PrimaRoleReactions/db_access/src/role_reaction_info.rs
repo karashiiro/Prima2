@@ -6,4 +6,6 @@ pub struct RoleReactionInfo {
     pub channel_id: String,
     pub emoji_id: String,
     pub role_id: String,
+    pub eureka: Option<bool>,
+    pub bozja: Option<bool>,
 }

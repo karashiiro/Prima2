@@ -79,6 +79,8 @@ impl RoleReactionsDatabase {
             "channel_id": rr_info.channel_id.to_string(),
             "emoji_id": rr_info.emoji_id.to_string(),
             "role_id": rr_info.role_id.to_string(),
+            "eureka": rr_info.eureka,
+            "bozja": rr_info.bozja,
         };
 
         let existing = collection.find_one(filter, None).await?;

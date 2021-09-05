@@ -74,6 +74,8 @@ async fn read_role_reaction_info(
         channel_id: channel_id.to_string(),
         emoji_id: emoji_id.to_string(),
         role_id: role_id.to_string(),
+        eureka: Some(false),
+        bozja: Some(false),
     })
 }
 
