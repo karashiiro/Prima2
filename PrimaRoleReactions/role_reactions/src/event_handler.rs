@@ -1,6 +1,7 @@
 use crate::event_handler::reactions::ReactionChange;
-use serenity::model::interactions::{
-    ApplicationCommand, ApplicationCommandOptionType, Interaction, InteractionData,
+use serenity::model::interactions::Interaction;
+use serenity::model::prelude::application_command::{
+    ApplicationCommand, ApplicationCommandOptionType,
 };
 use serenity::model::prelude::Reaction;
 use serenity::prelude::{Context, EventHandler};
@@ -89,49 +90,125 @@ impl EventHandler for Handler {
         .await
         .unwrap();
         println!("Registered slash command /removerolereaction");
+
+        ApplicationCommand::create_global_application_command(&ctx.http, |command| {
+            command
+                .name("seteurekarole")
+                .description(
+                    "Sets a registered role reaction to be used as the Eureka special role.",
+                )
+                .create_option(|o| {
+                    o.name("channel")
+                        .description("The channel the existing role reaction is in.")
+                        .kind(ApplicationCommandOptionType::Channel)
+                        .required(true)
+                })
+                .create_option(|o| {
+                    o.name("role")
+                        .description("The role ID of the role.")
+                        .kind(ApplicationCommandOptionType::Role)
+                        .required(true)
+                })
+        })
+        .await
+        .unwrap();
+        println!("Registered slash command /seteurekarole");
+
+        ApplicationCommand::create_global_application_command(&ctx.http, |command| {
+            command
+                .name("setbozjarole")
+                .description(
+                    "Sets a registered role reaction to be used as the Bozja special role.",
+                )
+                .create_option(|o| {
+                    o.name("channel")
+                        .description("The channel the existing role reaction is in.")
+                        .kind(ApplicationCommandOptionType::Channel)
+                        .required(true)
+                })
+                .create_option(|o| {
+                    o.name("role")
+                        .description("The role ID of the role.")
+                        .kind(ApplicationCommandOptionType::Role)
+                        .required(true)
+                })
+        })
+        .await
+        .unwrap();
+        println!("Registered slash command /setbozjarole");
+
+        ApplicationCommand::create_global_application_command(&ctx.http, |command| {
+            command
+                .name("unseteurekarole")
+                .description("Unsets a registered role reaction as the Eureka special role.")
+                .create_option(|o| {
+                    o.name("channel")
+                        .description("The channel the role reaction is in.")
+                        .kind(ApplicationCommandOptionType::Channel)
+                        .required(true)
+                })
+                .create_option(|o| {
+                    o.name("role")
+                        .description("The role ID of the role.")
+                        .kind(ApplicationCommandOptionType::Role)
+                        .required(true)
+                })
+        })
+        .await
+        .unwrap();
+        println!("Registered slash command /unseteurekarole");
+
+        ApplicationCommand::create_global_application_command(&ctx.http, |command| {
+            command
+                .name("unsetbozjarole")
+                .description("Unsets a registered role reaction as the Bozja special role.")
+                .create_option(|o| {
+                    o.name("channel")
+                        .description("The channel the role reaction is in.")
+                        .kind(ApplicationCommandOptionType::Channel)
+                        .required(true)
+                })
+                .create_option(|o| {
+                    o.name("role")
+                        .description("The role ID of the role.")
+                        .kind(ApplicationCommandOptionType::Role)
+                        .required(true)
+                })
+        })
+        .await
+        .unwrap();
+        println!("Registered slash command /unsetbozjarole");
     }
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
-        if interaction.guild_id.is_none() {
-            return;
-        }
+        if let Some(c) = interaction.application_command() {
+            let data = &c.data;
 
-        if let Some(data) = interaction.clone().data {
-            if let InteractionData::ApplicationCommand(c) = data {
-                println!(
-                    "Received slash command: /{} {}\n\tOptions: {}",
-                    c.name,
-                    c.options
-                        .iter()
-                        .map(|opt| opt.value.as_ref().unwrap().as_str().unwrap())
-                        .collect::<Vec<&str>>()
-                        .join(" "),
-                    c.options
-                        .iter()
-                        .map(|opt| opt.name.as_str())
-                        .collect::<Vec<&str>>()
-                        .join(" ")
-                );
+            println!(
+                "Received slash command: /{} {}\n\tOptions: {}",
+                data.name,
+                data.options
+                    .iter()
+                    .map(|opt| opt.value.as_ref().unwrap().as_str().unwrap())
+                    .collect::<Vec<&str>>()
+                    .join(" "),
+                data.options
+                    .iter()
+                    .map(|opt| opt.name.as_str())
+                    .collect::<Vec<&str>>()
+                    .join(" ")
+            );
+
+            match data.name.as_str() {
+                "rolereactions" => slash_commands::role_reactions(&ctx, &c).await,
+                "addrolereaction" => slash_commands::add_role_reaction(&ctx, &c).await,
+                "removerolereaction" => slash_commands::remove_role_reaction(&ctx, &c).await,
+                "seteurekarole" => slash_commands::declare_eureka_role(&ctx, &c).await,
+                "setbozjarole" => slash_commands::declare_bozja_role(&ctx, &c).await,
+                "unseteurekarole" => slash_commands::undeclare_eureka_role(&ctx, &c).await,
+                "unsetbozjarole" => slash_commands::undeclare_bozja_role(&ctx, &c).await,
+                _ => println!("Slash command was unknown."),
             }
-        }
-
-        match interaction.clone().data {
-            None => {}
-            Some(data) => match data {
-                InteractionData::ApplicationCommand(c) => match c.name.as_str() {
-                    "rolereactions" => slash_commands::role_reactions(&ctx, &interaction).await,
-                    "addrolereaction" => {
-                        slash_commands::add_role_reaction(&ctx, &interaction).await
-                    }
-                    "removerolereaction" => {
-                        slash_commands::remove_role_reaction(&ctx, &interaction).await
-                    }
-                    _ => {
-                        println!("Slash command was unknown.")
-                    }
-                },
-                InteractionData::MessageComponent(_) => {}
-            },
         }
     }
 }

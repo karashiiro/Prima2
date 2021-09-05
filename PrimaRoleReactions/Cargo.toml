@@ -9,7 +9,7 @@ edition = "2018"
 members = ["role_reactions", "db_access"]
 
 [dependencies]
-serenity = "0.10"
+serenity = "0.10.9"
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
 role_reactions = { path = "./role_reactions" }
 db_access = { path = "./db_access" }

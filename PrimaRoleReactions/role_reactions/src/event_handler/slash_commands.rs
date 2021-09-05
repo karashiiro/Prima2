@@ -1,14 +1,18 @@
 use crate::typemaps::RoleReactionsDatabaseContainer;
 use db_access::role_reaction_info::RoleReactionInfo;
 use serenity::builder::CreateInteractionResponseData;
-use serenity::model::prelude::{
-    ApplicationCommandInteractionData, Interaction, InteractionData, InteractionResponseType,
+use serenity::model::prelude::application_command::{
+    ApplicationCommandInteraction, ApplicationCommandInteractionData,
 };
+use serenity::model::prelude::InteractionResponseType;
 use serenity::prelude::Context;
 use serenity::utils::Colour;
 
-async fn create_interaction_response<F>(ctx: &Context, interaction: &Interaction, f: F)
-where
+async fn create_interaction_response<F>(
+    ctx: &Context,
+    interaction: &ApplicationCommandInteraction,
+    f: F,
+) where
     F: FnOnce(&mut CreateInteractionResponseData) -> &mut CreateInteractionResponseData,
 {
     interaction
@@ -23,11 +27,9 @@ where
 
 async fn read_role_reaction_info(
     ctx: &Context,
-    interaction: &Interaction,
+    interaction: &ApplicationCommandInteraction,
     data: &ApplicationCommandInteractionData,
 ) -> Option<RoleReactionInfo> {
-    //let mut options_iterator = data.options.iter();
-
     let channel_id = data
         .options
         .iter()
@@ -79,15 +81,18 @@ async fn read_role_reaction_info(
     })
 }
 
-pub async fn role_reactions(ctx: &Context, interaction: &Interaction) {
-    if !interaction
+fn interaction_can_manage_roles(interaction: &ApplicationCommandInteraction) -> bool {
+    interaction
         .member
         .as_ref()
         .unwrap()
         .permissions
         .unwrap()
         .manage_roles()
-    {
+}
+
+pub async fn role_reactions(ctx: &Context, interaction: &ApplicationCommandInteraction) {
+    if !interaction_can_manage_roles(&interaction) {
         return;
     }
 
@@ -145,15 +150,8 @@ pub async fn role_reactions(ctx: &Context, interaction: &Interaction) {
     }
 }
 
-pub async fn add_role_reaction(ctx: &Context, interaction: &Interaction) {
-    if !interaction
-        .member
-        .as_ref()
-        .unwrap()
-        .permissions
-        .unwrap()
-        .manage_roles()
-    {
+pub async fn add_role_reaction(ctx: &Context, interaction: &ApplicationCommandInteraction) {
+    if !interaction_can_manage_roles(&interaction) {
         return;
     }
 
@@ -162,45 +160,28 @@ pub async fn add_role_reaction(ctx: &Context, interaction: &Interaction) {
         .get::<RoleReactionsDatabaseContainer>()
         .expect("Expected RoleReactionsDatabaseContainer in TypeMap");
 
-    match interaction.clone().data {
-        None => {}
-        Some(data) => match data {
-            InteractionData::ApplicationCommand(c) => {
-                let role_reaction = read_role_reaction_info(ctx, interaction, &c).await;
-                if role_reaction.is_none() {
-                    return;
-                }
+    let role_reaction = read_role_reaction_info(ctx, &interaction, &interaction.data).await;
+    if role_reaction.is_none() {
+        return;
+    }
 
-                match db.add_role_reaction(role_reaction.unwrap()).await {
-                    Ok(_) => {
-                        create_interaction_response(ctx, interaction, |m| {
-                            m.content("Role reaction added.")
-                        })
-                        .await
-                    }
-                    Err(error) => {
-                        println!("Failed to add role reaction: {:?}", error);
-                        create_interaction_response(ctx, interaction, |m| {
-                            m.content("Failed to add role reaction.")
-                        })
-                        .await;
-                    }
-                }
-            }
-            InteractionData::MessageComponent(_) => {}
-        },
+    match db.add_role_reaction(role_reaction.unwrap()).await {
+        Ok(_) => {
+            create_interaction_response(ctx, &interaction, |m| m.content("Role reaction added."))
+                .await
+        }
+        Err(error) => {
+            println!("Failed to add role reaction: {:?}", error);
+            create_interaction_response(ctx, &interaction, |m| {
+                m.content("Failed to add role reaction.")
+            })
+            .await;
+        }
     }
 }
 
-pub async fn remove_role_reaction(ctx: &Context, interaction: &Interaction) {
-    if !interaction
-        .member
-        .as_ref()
-        .unwrap()
-        .permissions
-        .unwrap()
-        .manage_roles()
-    {
+pub async fn remove_role_reaction(ctx: &Context, interaction: &ApplicationCommandInteraction) {
+    if !interaction_can_manage_roles(&interaction) {
         return;
     }
 
@@ -209,32 +190,158 @@ pub async fn remove_role_reaction(ctx: &Context, interaction: &Interaction) {
         .get::<RoleReactionsDatabaseContainer>()
         .expect("Expected RoleReactionsDatabaseContainer in TypeMap");
 
-    match interaction.clone().data {
-        None => {}
-        Some(data) => match data {
-            InteractionData::ApplicationCommand(c) => {
-                let role_reaction = read_role_reaction_info(ctx, interaction, &c).await;
-                if role_reaction.is_none() {
-                    return;
-                }
+    let role_reaction = read_role_reaction_info(ctx, &interaction, &interaction.data).await;
+    if role_reaction.is_none() {
+        return;
+    }
 
-                match db.remove_role_reaction(role_reaction.unwrap()).await {
-                    Ok(_) => {
-                        create_interaction_response(ctx, interaction, |m| {
-                            m.content("Role reaction removed.")
-                        })
-                        .await
-                    }
-                    Err(error) => {
-                        println!("Failed to remove role reaction: {:?}", error);
-                        create_interaction_response(ctx, interaction, |m| {
-                            m.content("Failed to remove role reaction.")
-                        })
-                        .await
-                    }
-                }
-            }
-            InteractionData::MessageComponent(_) => {}
-        },
+    match db.remove_role_reaction(role_reaction.unwrap()).await {
+        Ok(_) => {
+            create_interaction_response(ctx, &interaction, |m| m.content("Role reaction removed."))
+                .await
+        }
+        Err(error) => {
+            println!("Failed to remove role reaction: {:?}", error);
+            create_interaction_response(ctx, &interaction, |m| {
+                m.content("Failed to remove role reaction.")
+            })
+            .await
+        }
+    }
+}
+
+pub async fn declare_eureka_role(ctx: &Context, interaction: &ApplicationCommandInteraction) {
+    if !interaction_can_manage_roles(&interaction) {
+        return;
+    }
+
+    let data = ctx.data.read().await;
+    let db = data
+        .get::<RoleReactionsDatabaseContainer>()
+        .expect("Expected RoleReactionsDatabaseContainer in TypeMap");
+
+    let role_reaction = read_role_reaction_info(ctx, &interaction, &interaction.data).await;
+    if role_reaction.is_none() {
+        return;
+    }
+
+    let rr_info = role_reaction.unwrap();
+
+    match db.declare_eureka_role(rr_info, true).await {
+        Ok(_) => {
+            create_interaction_response(ctx, &interaction, |m| {
+                m.content("Role reaction set to Eureka role.")
+            })
+            .await
+        }
+        Err(error) => {
+            println!("Failed to set Eureka flag on role: {:?}", error);
+            create_interaction_response(ctx, &interaction, |m| {
+                m.content("Failed to set Eureka flag on role.")
+            })
+            .await
+        }
+    }
+}
+
+pub async fn declare_bozja_role(ctx: &Context, interaction: &ApplicationCommandInteraction) {
+    if !interaction_can_manage_roles(&interaction) {
+        return;
+    }
+
+    let data = ctx.data.read().await;
+    let db = data
+        .get::<RoleReactionsDatabaseContainer>()
+        .expect("Expected RoleReactionsDatabaseContainer in TypeMap");
+
+    let role_reaction = read_role_reaction_info(ctx, &interaction, &interaction.data).await;
+    if role_reaction.is_none() {
+        return;
+    }
+
+    let rr_info = role_reaction.unwrap();
+
+    match db.declare_bozja_role(rr_info, true).await {
+        Ok(_) => {
+            create_interaction_response(ctx, &interaction, |m| {
+                m.content("Role reaction set to Bozja role.")
+            })
+            .await
+        }
+        Err(error) => {
+            println!("Failed to set Bozja flag on role: {:?}", error);
+            create_interaction_response(ctx, &interaction, |m| {
+                m.content("Failed to set Bozja flag on role.")
+            })
+            .await
+        }
+    }
+}
+
+pub async fn undeclare_eureka_role(ctx: &Context, interaction: &ApplicationCommandInteraction) {
+    if !interaction_can_manage_roles(&interaction) {
+        return;
+    }
+
+    let data = ctx.data.read().await;
+    let db = data
+        .get::<RoleReactionsDatabaseContainer>()
+        .expect("Expected RoleReactionsDatabaseContainer in TypeMap");
+
+    let role_reaction = read_role_reaction_info(ctx, &interaction, &interaction.data).await;
+    if role_reaction.is_none() {
+        return;
+    }
+
+    let rr_info = role_reaction.unwrap();
+
+    match db.declare_eureka_role(rr_info, false).await {
+        Ok(_) => {
+            create_interaction_response(ctx, &interaction, |m| {
+                m.content("Role reaction unset as Eureka role.")
+            })
+            .await
+        }
+        Err(error) => {
+            println!("Failed to unset Eureka flag on role: {:?}", error);
+            create_interaction_response(ctx, &interaction, |m| {
+                m.content("Failed to unset Eureka flag on role.")
+            })
+            .await
+        }
+    }
+}
+
+pub async fn undeclare_bozja_role(ctx: &Context, interaction: &ApplicationCommandInteraction) {
+    if !interaction_can_manage_roles(&interaction) {
+        return;
+    }
+
+    let data = ctx.data.read().await;
+    let db = data
+        .get::<RoleReactionsDatabaseContainer>()
+        .expect("Expected RoleReactionsDatabaseContainer in TypeMap");
+
+    let role_reaction = read_role_reaction_info(ctx, &interaction, &interaction.data).await;
+    if role_reaction.is_none() {
+        return;
+    }
+
+    let rr_info = role_reaction.unwrap();
+
+    match db.declare_bozja_role(rr_info, false).await {
+        Ok(_) => {
+            create_interaction_response(ctx, &interaction, |m| {
+                m.content("Role reaction unset as Bozja role.")
+            })
+            .await
+        }
+        Err(error) => {
+            println!("Failed to unset Bozja flag on role: {:?}", error);
+            create_interaction_response(ctx, &interaction, |m| {
+                m.content("Failed to unset Bozja flag on role.")
+            })
+            .await
+        }
     }
 }

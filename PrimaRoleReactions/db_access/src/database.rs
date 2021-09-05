@@ -122,6 +122,58 @@ impl RoleReactionsDatabase {
         Ok(())
     }
 
+    /**
+     * Enables or disables the Eureka flag for an existing role reaction.
+     */
+    pub async fn declare_eureka_role(
+        &self,
+        rr_info: RoleReactionInfo,
+        is_eureka: bool,
+    ) -> Result<(), mongodb::error::Error> {
+        let collection = self.get_collection::<RoleReactionInfo>(ROLE_REACTION_COLLECTION);
+        let filter = doc! {
+            "guild_id": rr_info.guild_id.to_string(),
+            "channel_id": rr_info.channel_id.to_string(),
+            "role_id": rr_info.role_id.to_string(),
+        };
+
+        let update = doc! {
+            "$set": {
+                "eureka": is_eureka,
+            },
+        };
+
+        collection.find_one_and_update(filter, update, None).await?;
+
+        Ok(())
+    }
+
+    /**
+     * Enables or disables the Bozja flag for an existing role reaction.
+     */
+    pub async fn declare_bozja_role(
+        &self,
+        rr_info: RoleReactionInfo,
+        is_bozja: bool,
+    ) -> Result<(), mongodb::error::Error> {
+        let collection = self.get_collection::<RoleReactionInfo>(ROLE_REACTION_COLLECTION);
+        let filter = doc! {
+            "guild_id": rr_info.guild_id.to_string(),
+            "channel_id": rr_info.channel_id.to_string(),
+            "role_id": rr_info.role_id.to_string(),
+        };
+
+        let update = doc! {
+            "$set": {
+                "bozja": is_bozja,
+            },
+        };
+
+        collection.find_one_and_update(filter, update, None).await?;
+
+        Ok(())
+    }
+
     fn get_collection<
         T: serde::Serialize + for<'de> serde::Deserialize<'de> + std::marker::Unpin + std::fmt::Debug,
     >(
