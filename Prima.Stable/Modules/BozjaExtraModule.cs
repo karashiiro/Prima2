@@ -544,5 +544,10 @@ namespace Prima.Stable.Modules
         [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task MinoTrapAsync() => ReplyAsync("https://clips.twitch.tv/PoisedCovertDumplingsItsBoshyTime-Vu4V6JZqHzM9LPUf");
+
+        [Command("specialboys", RunMode = RunMode.Async)]
+        [RateLimit(TimeSeconds = 10, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public Task SpecialBoysAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/yjcMDyb.png");
     }
 }
