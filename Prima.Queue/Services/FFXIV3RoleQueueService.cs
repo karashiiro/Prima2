@@ -110,7 +110,7 @@ namespace Prima.Queue.Services
 
             foreach (var uid in uids)
             {
-                var user = (IUser)_client.GetUser(uid) ?? await _client.Rest.GetUserAsync(uid);
+                var user = await _client.GetUserAsync(uid);
                 if (user == null)
                 {
                     Log.Warning("User {User} could not be fetched, alerting in queue channel.", uid.ToString());
@@ -140,7 +140,7 @@ namespace Prima.Queue.Services
             
             foreach (var uid in almostUids ?? Enumerable.Empty<ulong>())
             {
-                var user = (IUser)_client.GetUser(uid) ?? await _client.Rest.GetUserAsync(uid);
+                var user = await _client.GetUserAsync(uid);
                 try
                 {
                     await user.SendMessageAsync(

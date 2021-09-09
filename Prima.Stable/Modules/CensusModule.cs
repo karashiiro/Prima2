@@ -675,7 +675,7 @@ namespace Prima.Stable.Modules
                 return;
             }
 
-            var user = await Context.Client.Rest.GetUserAsync(found.DiscordId);
+            var user = await Context.Client.GetUserAsync(found.DiscordId);
 
             var responseEmbed = new EmbedBuilder()
                 .WithTitle(user.ToString())
