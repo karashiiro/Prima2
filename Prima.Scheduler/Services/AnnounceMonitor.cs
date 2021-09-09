@@ -242,11 +242,11 @@ namespace Prima.Scheduler.Services
             }
         }
 
-        private IAsyncEnumerable<SocketUser> GetRunReactors(ulong eventId)
+        private IAsyncEnumerable<ValueTask<IUser>> GetRunReactors(ulong eventId)
         {
             return _db.EventReactions
                 .Where(er => er.EventId == eventId)
-                .Select(er => _client.GetUser(er.UserId));
+                .Select(er => _client.GetUserAsync(er.UserId));
         }
 
         private async Task NotifyMembers(IGuildUser host, IMessage embedMessage, IEmbed embed, CancellationToken token)
@@ -257,8 +257,10 @@ namespace Prima.Scheduler.Services
             var eventId = ulong.Parse(embed.Footer.Value.Text);
 
             var reactors = GetRunReactors(eventId);
-            await foreach (var user in reactors.WithCancellation(token))
+            await foreach (var userTask in reactors.WithCancellation(token))
             {
+                var user = await userTask;
+
                 if (user == null || user.IsBot) continue;
 
                 try
