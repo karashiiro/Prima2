@@ -36,19 +36,34 @@ namespace Prima.Stable.Services
                     .ToListAsync(token);
                 if (toRemove.Any())
                 {
-                    Log.Information("Removing roles from {UserCount} users...", toRemove.Count);
+                    Log.Information("Removing {RoleCount} roles...", toRemove.Count);
+
+                    var failCount = 0;
                     foreach (var tr in toRemove)
                     {
                         var guild = _client.GetGuild(tr.GuildId);
                         var role = guild.GetRole(tr.RoleId);
-                        var user = guild.GetUser(tr.UserId);
-                        Log.Information("Removing role {Role} from {User}.", role.Name, user.ToString());
+
+                        var user = await _client.GetUserAsync(tr.UserId);
+                        var member = guild.GetUser(user.Id);
+                        if (member == null)
+                        {
+                            failCount++;
+                            continue;
+                        }
+
+                        Log.Information("Removing role {Role} from {User}.", role.Name, member.ToString());
                         try
                         {
-                            await user.RemoveRoleAsync(role);
+                            await member.RemoveRoleAsync(role);
                         }
                         catch { /* ignored */ }
                         await _db.RemoveTimedRole(tr.RoleId, tr.UserId);
+                    }
+
+                    if (failCount != 0)
+                    {
+                        Log.Information("Failed to remove {FailCount} roles.", failCount);
                     }
                 }
 
@@ -60,16 +75,16 @@ namespace Prima.Stable.Services
             }
         }
 
-        private bool disposedValue;
+        private bool _disposedValue;
         protected virtual void Dispose(bool disposing)
         {
-            if (disposedValue) return;
+            if (_disposedValue) return;
             if (!disposing) return;
 
             _tokenSource?.Cancel();
             _tokenSource?.Dispose();
 
-            disposedValue = true;
+            _disposedValue = true;
         }
 
         public void Dispose()
