@@ -497,6 +497,19 @@ namespace Prima.Stable.Modules
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task BozjaMemoriesAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/JSCoxi8.png");
 
+        [Command("qg", RunMode = RunMode.Async)]
+        [Description("Shows the Queen's Guard guide.")]
+        [RateLimit(TimeSeconds = 120, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public async Task QgAsync()
+        {
+            await DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/vbpph3t.png");
+            await DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/pkdrt09.png");
+            await DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/613149980114550794/891468340541919252/testbomb_20fps.gif");
+            await DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/U2rTaAg.png");
+            await DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/kqaMaEC.png");
+        }
+
         [Command("qgreflect", RunMode = RunMode.Async)]
         [Description("Shows Queen's Guard reflect positions.")]
         [RateLimit(TimeSeconds = 10, Global = true)]
