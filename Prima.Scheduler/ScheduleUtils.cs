@@ -101,10 +101,6 @@ namespace Prima.Scheduler
             if (iOutChannel is not ITextChannel outChannel)
                 return;
 
-            var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
-            var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
-            var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
-
             var postsUpdated = 0;
 
             var postsToUpdate = db.Events.Where(e => !e.Notified && e.RunKindCastrum == RunDisplayTypeCastrum.None);
@@ -133,6 +129,10 @@ namespace Prima.Scheduler
                 var leaderName = leader.Nickname ?? leader.ToString();
 
                 var runTime = DateTime.FromBinary(run.RunTime);
+
+                var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
+                var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
+                var tzAbbr = tzi.IsDaylightSavingTime(runTime) ? tzAbbrs.Daylight : tzAbbrs.Standard;
 
                 var newEmbed = message.Embeds.FirstOrDefault()?.ToEmbedBuilder()
                     .WithTitle(

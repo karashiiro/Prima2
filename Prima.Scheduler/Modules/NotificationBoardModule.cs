@@ -70,7 +70,7 @@ namespace Prima.Scheduler.Modules
 
             var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
-            var isDST = tzi.IsDaylightSavingTime(DateTime.Now);
+            var isDST = tzi.IsDaylightSavingTime(time);
             var tzAbbr = isDST ? tzAbbrs.Daylight : tzAbbrs.Standard;
             var timeMod = -tzi.BaseUtcOffset.Hours;
             if (isDST)
@@ -133,7 +133,7 @@ namespace Prima.Scheduler.Modules
 
             var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
-            var isDST = tzi.IsDaylightSavingTime(DateTime.Now);
+            var isDST = tzi.IsDaylightSavingTime(newRunTime);
             var tzAbbr = isDST ? tzAbbrs.Daylight : tzAbbrs.Standard;
             var timeMod = -tzi.BaseUtcOffset.Hours;
             if (isDST)
@@ -331,7 +331,7 @@ namespace Prima.Scheduler.Modules
             {
                 var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
                 var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
-                var isDST = tzi.IsDaylightSavingTime(DateTime.Now);
+                var isDST = tzi.IsDaylightSavingTime(newTime);
                 var tzAbbr = isDST ? tzAbbrs.Daylight : tzAbbrs.Standard;
                 var timeMod = -tzi.BaseUtcOffset.Hours;
                 if (isDST)
@@ -396,7 +396,7 @@ namespace Prima.Scheduler.Modules
             }
 
             var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
-            var isDST = tzi.IsDaylightSavingTime(DateTime.Now);
+            var isDST = tzi.IsDaylightSavingTime(time);
             var timeMod = -tzi.BaseUtcOffset.Hours;
             if (isDST)
                 timeMod -= 1;

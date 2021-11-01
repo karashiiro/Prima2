@@ -96,11 +96,11 @@ namespace Prima.Scheduler.Services
             if (localizedRunTime != default)
             {
                 runTime = localizedRunTime;
-                runTime = runTime.AddHours(-serverTimeZone.BaseUtcOffset.Hours - (serverTimeZone.IsDaylightSavingTime(DateTime.Now) ? 1 : 0));
+                runTime = runTime.AddHours(-serverTimeZone.BaseUtcOffset.Hours - (serverTimeZone.IsDaylightSavingTime(runTime) ? 1 : 0));
             }
 
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
-            var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
+            var tzAbbr = tzi.IsDaylightSavingTime(runTime) ? tzAbbrs.Daylight : tzAbbrs.Standard;
 
             await member.SendMessageAsync($"You have RSVP'd for {leader.Nickname ?? leader.Username}'s run on on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({tzAbbr}) [{runTime.DayOfWeek}, {(Month)runTime.Month} {runTime.Day}]! :thumbsup:");
 
