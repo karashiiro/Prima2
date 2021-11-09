@@ -80,6 +80,8 @@ namespace Prima.Stable.Services
                     {
                         Log.Error(e, "Failed to delete message from channel {ChannelId} in KeepClean!", channel.Id);
                     }
+
+                    await Task.Delay(1000);
                 }
             }
         }
