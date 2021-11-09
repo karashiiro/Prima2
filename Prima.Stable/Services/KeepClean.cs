@@ -32,27 +32,34 @@ namespace Prima.Stable.Services
             {
                 if (_client.LoginState != LoginState.LoggedIn) continue;
 
-                var cem = _client.GetGuild(SpecialGuilds.CrystalExploratoryMissions);
-                if (cem == null) continue;
-
-                Log.Information("Cleaning rosters...");
-
-                var rosterChannels = RosterChannels.Channels
-                    .Values
-                    .ToDictionary(id => id, id => cem.GetTextChannel(id));
-
-                foreach (var (id, rosterChannel) in rosterChannels)
+                try
                 {
-                    if (rosterChannel == null)
+                    var cem = _client.GetGuild(SpecialGuilds.CrystalExploratoryMissions);
+                    if (cem == null) continue;
+
+                    Log.Information("Cleaning rosters...");
+
+                    var rosterChannels = RosterChannels.Channels
+                        .Values
+                        .ToDictionary(id => id, id => cem.GetTextChannel(id));
+
+                    foreach (var (id, rosterChannel) in rosterChannels)
                     {
-                        Log.Information("Got null roster channel in KeepClean with ID: {ChannelId}!", id);
-                        continue;
+                        if (rosterChannel == null)
+                        {
+                            Log.Information("Got null roster channel in KeepClean with ID: {ChannelId}!", id);
+                            continue;
+                        }
+
+                        await CleanChannel(rosterChannel, new TimeSpan(72, 0, 0));
                     }
 
-                    await CleanChannel(rosterChannel, new TimeSpan(72, 0, 0));
+                    await Task.Delay(new TimeSpan(1, 0, 0), token).ConfigureAwait(false);
                 }
-
-                await Task.Delay(new TimeSpan(1, 0, 0), token).ConfigureAwait(false);
+                catch (Exception e)
+                {
+                    Log.Error(e, "Something bad happened in KeepClean");
+                }
             }
         }
 
