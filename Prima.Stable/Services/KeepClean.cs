@@ -54,7 +54,7 @@ namespace Prima.Stable.Services
                         await CleanChannel(rosterChannel, new TimeSpan(72, 0, 0));
                     }
 
-                    await Task.Delay(new TimeSpan(1, 0, 0), token).ConfigureAwait(false);
+                    await Task.Delay(new TimeSpan(0, 5, 0), token).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
