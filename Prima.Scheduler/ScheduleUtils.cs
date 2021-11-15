@@ -131,18 +131,16 @@ namespace Prima.Scheduler
                 var runTime = DateTime.FromBinary(run.RunTime);
 
                 var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
-                var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
-                var tzAbbr = tzi.IsDaylightSavingTime(runTime) ? tzAbbrs.Daylight : tzAbbrs.Standard;
 
+                var timeOffset = new DateTimeOffset(runTime.AddHours(-tzi.BaseUtcOffset.Hours));
                 var newEmbed = message.Embeds.FirstOrDefault()?.ToEmbedBuilder()
                     .WithTitle(
-                        $"Run scheduled by {leaderName} on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({tzAbbr}) " +
-                        $"[{runTime.DayOfWeek}, {(Month)runTime.Month} {runTime.Day}]!")
+                        $"Run scheduled by {leaderName} at <t:{timeOffset.ToUnixTimeSeconds()}:F>!")
                     .WithDescription("React to the :vibration_mode: on their message to be notified 30 minutes before it begins!\n\n" +
                                      $"**{guild.GetUser(run.LeaderId).Mention}'s full message: {originalMessage.GetJumpUrl()}**\n\n" +
                                      $"{new string(run.Description.Take(1650).ToArray())}{(run.Description.Length > 1650 ? "..." : "")}\n\n" +
                                      $"**Schedule Overview: <{guildConfig.BASpreadsheetLink}>**")
-                    .WithTimestamp(runTime.AddHours(-tzi.BaseUtcOffset.Hours))
+                    .WithTimestamp(timeOffset)
                     .Build();
 
                 if (newEmbed == null)
