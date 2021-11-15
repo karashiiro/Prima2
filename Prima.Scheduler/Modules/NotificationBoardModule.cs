@@ -496,6 +496,8 @@ namespace Prima.Scheduler.Modules
 
         private async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, SocketUser user, DateTime time)
         {
+            using var typing = Context.Channel.EnterTypingState();
+
             var announcements = new List<(IUserMessage, IEmbed)>();
 
             await foreach (var page in channel.GetMessagesAsync())
@@ -551,8 +553,10 @@ namespace Prima.Scheduler.Modules
             }
         }
 
-        private static async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, ulong eventId)
+        private async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, ulong eventId)
         {
+            using var typing = Context.Channel.EnterTypingState();
+
             await foreach (var page in channel.GetMessagesAsync())
             {
                 foreach (var message in page)
