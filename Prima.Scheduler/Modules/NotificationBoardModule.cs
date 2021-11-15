@@ -276,7 +276,7 @@ namespace Prima.Scheduler.Modules
 
         private static bool LineContainsLastJumpUrl(string l)
         {
-            return l.StartsWith("Message Link: https://discordapp.com/channels/");
+            return l.StartsWith("Message Link: https://discordapp.com/channels/") || l.StartsWith("Message Link: https://discord.com/channels/");
         }
 
         [Command("reactions", RunMode = RunMode.Async)]
