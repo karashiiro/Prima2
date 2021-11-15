@@ -179,24 +179,14 @@ namespace Prima.Scheduler.Modules
                 foreach (var message in page)
                 {
                     if (message.Embeds.All(e => e.Type != EmbedType.Rich)) continue;
-                    var embed = message.Embeds.FirstOrDefault(e => e.Type == EmbedType.Rich);
+                    var embed = message.Embeds.First(e => e.Type == EmbedType.Rich);
 
-                    if (embed?.Timestamp == null) continue;
-
-                    var embedBuilder = embed.ToEmbedBuilder();
-
-                    var timeOffset = embed.Timestamp.Value;
-                    var host = Context.Guild.Users.FirstOrDefault(u => u.ToString() == embed.Author?.Name);
-                    if (host != null)
-                    {
-                        embedBuilder.WithTitle(
-                            $"Event scheduled by {host.Nickname ?? host.ToString()} at <t:{timeOffset.ToUnixTimeSeconds()}:F>!");
-                    }
+                    if (!embed.Timestamp.HasValue) continue;
 
                     await message.DeleteAsync();
                     if (embed.Timestamp.Value < DateTimeOffset.Now) continue;
 
-                    embeds.Add(embedBuilder.Build());
+                    embeds.Add(embed);
                 }
             }
 
