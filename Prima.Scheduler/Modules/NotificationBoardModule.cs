@@ -208,8 +208,9 @@ namespace Prima.Scheduler.Modules
                         .Where(l => !LineContainsLastJumpUrl(l))
                         .Where(l => !LineContainsCalendarLink(l))
                         .Aggregate("", (agg, nextLine) => agg + nextLine + '\n');
-                    var trimmedDescription =
-                        linkTrimmedDescription.Substring(0, Math.Min(1700, linkTrimmedDescription.Length));
+                    var trimmedDescription = linkTrimmedDescription
+                        .Substring(0, Math.Min(1700, linkTrimmedDescription.Length))
+                        .Trim();
                     if (trimmedDescription.Length != linkTrimmedDescription.Length)
                     {
                         trimmedDescription += "...";
