@@ -204,35 +204,31 @@ namespace Prima.Scheduler.Modules
                     var embedBuilder = embed.ToEmbedBuilder();
 
                     var lines = embed.Description.Split('\n');
-                    var messageLinkLine = lines.LastOrDefault(LineContainsLastJumpUrl);
-                    if (messageLinkLine == null)
+                    var linkTrimmedDescription = lines
+                        .Where(l => !LineContainsLastJumpUrl(l))
+                        .Where(l => !LineContainsCalendarLink(l))
+                        .Aggregate("", (agg, nextLine) => agg + nextLine + '\n');
+                    var trimmedDescription =
+                        linkTrimmedDescription.Substring(0, Math.Min(1700, linkTrimmedDescription.Length));
+                    if (trimmedDescription.Length != linkTrimmedDescription.Length)
                     {
-                        var linkTrimmedDescription = lines
-                            .Where(l => !LineContainsLastJumpUrl(l))
-                            .Where(l => !LineContainsCalendarLink(l))
-                            .Aggregate("", (agg, nextLine) => agg + nextLine + '\n');
-                        var trimmedDescription =
-                            linkTrimmedDescription.Substring(0, Math.Min(1700, linkTrimmedDescription.Length));
-                        if (trimmedDescription.Length != linkTrimmedDescription.Length)
-                        {
-                            trimmedDescription += "...";
-                        }
+                        trimmedDescription += "...";
+                    }
 
-                        var calendarLinkLine = lines.LastOrDefault(LineContainsCalendarLink);
-                        messageLinkLine =
-                            $"Message Link: https://discordapp.com/channels/{guild.Id}/{Context.Channel.Id}/{embed.Footer?.Text}";
+                    var calendarLinkLine = lines.LastOrDefault(LineContainsCalendarLink);
+                    var messageLinkLine =
+                        $"Message Link: https://discordapp.com/channels/{guild.Id}/{Context.Channel.Id}/{embed.Footer?.Text}";
 
-                        embedBuilder.WithDescription(trimmedDescription + (calendarLinkLine != null
-                            ? $"\n\n{calendarLinkLine}"
-                            : "") + $"\n{messageLinkLine}");
+                    embedBuilder.WithDescription(trimmedDescription + (calendarLinkLine != null
+                        ? $"\n\n{calendarLinkLine}"
+                        : "") + $"\n{messageLinkLine}");
 
-                        var host = Context.Guild.Users.FirstOrDefault(u => u.ToString() == embed.Author?.Name);
-                        if (host != null && embed.Timestamp.HasValue)
-                        {
-                            var timeOffset = embed.Timestamp.Value;
-                            embedBuilder.WithTitle(
-                                $"Event scheduled by {host.Nickname ?? host.ToString()} at <t:{timeOffset.ToUnixTimeSeconds()}:F>!");
-                        }
+                    var host = Context.Guild.Users.FirstOrDefault(u => u.ToString() == embed.Author?.Name);
+                    if (host != null && embed.Timestamp.HasValue)
+                    {
+                        var timeOffset = embed.Timestamp.Value;
+                        embedBuilder.WithTitle(
+                            $"Event scheduled by {host.Nickname ?? host.ToString()} at <t:{timeOffset.ToUnixTimeSeconds()}:F>!");
                     }
 
                     var m = await channel.SendMessageAsync(embed.Footer?.Text, embed: embedBuilder.Build());
