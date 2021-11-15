@@ -217,7 +217,7 @@ namespace Prima.Scheduler.Modules
 
                     var calendarLinkLine = lines.LastOrDefault(LineContainsCalendarLink);
                     var messageLinkLine =
-                        $"Message Link: https://discordapp.com/channels/{guild.Id}/{Context.Channel.Id}/{embed.Footer?.Text}";
+                        $"Message Link: https://discordapp.com/channels/{guild.Id}/{channel.Id}/{embed.Footer?.Text}";
 
                     embedBuilder.WithDescription(trimmedDescription + (calendarLinkLine != null
                         ? $"\n\n{calendarLinkLine}"
