@@ -29,8 +29,8 @@ namespace Prima.Stable.Modules
             if (guildConfig != null && guildConfig.Prefix != ' ')
                 prefix = guildConfig.Prefix.ToString();
 
-            var baseCommands = await DiscordUtilities.GetFormattedCommandList(typeof(BAExtraModule), prefix, except: new List<string> { "bahelp" });
-            var hostCommands = await DiscordUtilities.GetFormattedCommandList(typeof(RunModule), prefix);
+            var baseCommands = DiscordUtilities.GetFormattedCommandList(typeof(BAExtraModule), prefix, except: new List<string> { "bahelp" });
+            var hostCommands = DiscordUtilities.GetFormattedCommandList(typeof(RunModule), prefix);
 
             var embed = new EmbedBuilder()
                 .WithTitle("Useful Commands (Baldesion Arsenal)")

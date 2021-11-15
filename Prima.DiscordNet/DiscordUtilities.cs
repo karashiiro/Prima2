@@ -14,7 +14,7 @@ namespace Prima.DiscordNet
 {
     public static class DiscordUtilities
     {
-        public static async Task<string> GetFormattedCommandList(
+        public static string GetFormattedCommandList(
             Type module,
             string prefix,
             ICollection<string> except = null)
