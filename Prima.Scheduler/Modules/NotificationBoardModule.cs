@@ -69,9 +69,7 @@ namespace Prima.Scheduler.Modules
             }
 
             var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
-            var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
             var isDST = tzi.IsDaylightSavingTime(time);
-            var tzAbbr = isDST ? tzAbbrs.Daylight : tzAbbrs.Standard;
             var timeMod = -tzi.BaseUtcOffset.Hours;
             if (isDST)
                 timeMod -= 1;
@@ -88,6 +86,7 @@ namespace Prima.Scheduler.Modules
                 StartTime = XmlConvert.ToString(time.AddHours(timeMod), XmlDateTimeSerializationMode.Utc),
             });
 
+            var timeOffset = new DateTimeOffset(time.AddHours(timeMod));
             var member = Context.Guild.GetUser(Context.User.Id);
             var color = RunDisplayTypes.GetColorCastrum();
             await outputChannel.SendMessageAsync(Context.Message.Id.ToString(), embed: new EmbedBuilder()
@@ -95,8 +94,8 @@ namespace Prima.Scheduler.Modules
                     .WithIconUrl(Context.User.GetAvatarUrl())
                     .WithName(Context.User.ToString()))
                 .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
-                .WithTimestamp(time.AddHours(timeMod))
-                .WithTitle($"Event scheduled by {member?.Nickname ?? Context.User.ToString()} on {time.DayOfWeek} at {time.ToShortTimeString()} ({tzAbbr})!")
+                .WithTimestamp(timeOffset)
+                .WithTitle($"Event scheduled by {member?.Nickname ?? Context.User.ToString()} at <t:{timeOffset.ToUnixTimeSeconds()}:F>!")
                 .WithDescription(trimmedDescription + $"\n\n[Copy to Google Calendar]({eventLink})\nMessage Link: {Context.Message.GetJumpUrl()}")
                 .WithFooter(Context.Message.Id.ToString())
                 .Build());
@@ -132,12 +131,11 @@ namespace Prima.Scheduler.Modules
             var newRunTime = Util.GetDateTime(args);
 
             var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
-            var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
             var isDST = tzi.IsDaylightSavingTime(newRunTime);
-            var tzAbbr = isDST ? tzAbbrs.Daylight : tzAbbrs.Standard;
             var timeMod = -tzi.BaseUtcOffset.Hours;
             if (isDST)
                 timeMod -= 1;
+            var timeOffset = new DateTimeOffset(newRunTime.AddHours(timeMod));
 
             var host = Context.Guild.Users.FirstOrDefault(u => u.ToString() == embed.Author?.Name);
             await embedMessage.ModifyAsync(props =>
@@ -146,10 +144,10 @@ namespace Prima.Scheduler.Modules
                 if (host != null)
                 {
                     builder = builder.WithTitle(
-                        $"Event scheduled by {host.Nickname ?? host.ToString()} on {newRunTime.DayOfWeek} at {newRunTime.ToShortTimeString()} ({tzAbbr})!");
+                        $"Event scheduled by {host.Nickname ?? host.ToString()} at <t:{timeOffset.ToUnixTimeSeconds()}:F>!");
                 }
                 props.Embeds = new[] { builder
-                    .WithTimestamp(newRunTime.AddHours(timeMod))
+                    .WithTimestamp(timeOffset)
                     .Build() };
             });
 
@@ -227,6 +225,14 @@ namespace Prima.Scheduler.Modules
                         embedBuilder.WithDescription(trimmedDescription + (calendarLinkLine != null
                             ? $"\n\n{calendarLinkLine}"
                             : "") + $"\n{messageLinkLine}");
+
+                        var host = Context.Guild.Users.FirstOrDefault(u => u.ToString() == embed.Author?.Name);
+                        if (host != null && embed.Timestamp.HasValue)
+                        {
+                            var timeOffset = embed.Timestamp.Value;
+                            embedBuilder.WithTitle(
+                                $"Event scheduled by {host.Nickname ?? host.ToString()} at <t:{timeOffset.ToUnixTimeSeconds()}:F>!");
+                        }
                     }
 
                     var m = await channel.SendMessageAsync(embed.Footer?.Text, embed: embedBuilder.Build());
@@ -330,20 +336,19 @@ namespace Prima.Scheduler.Modules
             if (embedMessage != null)
             {
                 var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
-                var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
                 var isDST = tzi.IsDaylightSavingTime(newTime);
-                var tzAbbr = isDST ? tzAbbrs.Daylight : tzAbbrs.Standard;
                 var timeMod = -tzi.BaseUtcOffset.Hours;
                 if (isDST)
                     timeMod -= 1;
+                var timeOffset = new DateTimeOffset(newTime.AddHours(timeMod));
 
                 var member = Context.Guild.GetUser(Context.User.Id);
                 await embedMessage.ModifyAsync(props =>
                 {
                     props.Embeds = new[] { embed
                         .ToEmbedBuilder()
-                        .WithTimestamp(newTime.AddHours(timeMod))
-                        .WithTitle($"Event scheduled by {member?.Nickname ?? Context.User.ToString()} on {newTime.DayOfWeek} at {newTime.ToShortTimeString()} ({tzAbbr})!")
+                        .WithTimestamp(timeOffset)
+                        .WithTitle($"Event scheduled by {member?.Nickname ?? Context.User.ToString()} at <t:{timeOffset.ToUnixTimeSeconds()}:F>!")
                         .Build() };
                 });
 
@@ -502,9 +507,10 @@ namespace Prima.Scheduler.Modules
                     var embed = restMessage.Embeds.FirstOrDefault();
                     if (embed?.Footer == null) continue;
 
-                    if (embed.Author?.Name != user.ToString()
-                          || !embed.Title.Contains(time.ToShortTimeString())
-                          || !embed.Title.Contains(time.DayOfWeek.ToString())) continue;
+                    var embedTime = embed.Timestamp;
+                    if (embedTime == null) continue;
+
+                    if (embed.Author?.Name != user.ToString() || embedTime.Value.DateTime != time) continue;
 
                     announcements.Add((restMessage, embed));
                 }

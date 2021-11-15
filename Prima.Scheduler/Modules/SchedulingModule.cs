@@ -138,16 +138,15 @@ namespace Prima.Scheduler.Modules
                 @event.RunTime = runTime.ToBinary();
 
                 var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
-                var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
                 var isDST = tzi.IsDaylightSavingTime(runTime);
-                var tzAbbr = isDST ? tzAbbrs.Daylight : tzAbbrs.Standard;
                 var timeMod = -tzi.BaseUtcOffset.Hours;
                 if (isDST)
                     timeMod -= 1;
+                var timeOffset = new DateTimeOffset(runTime.AddHours(timeMod));
 
                 await Context.Channel.SendMessageAsync(
-                    $"{Context.User.Mention} has just scheduled a run on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({tzAbbr})!\n" +
-                    $"React to the 📳 on their message to be notified 30 minutes before it begins!");
+                    $"{Context.User.Mention} has just scheduled a run at <t:{timeOffset.ToUnixTimeSeconds()}:F>!\n" +
+                    "React to the 📳 on their message to be notified 30 minutes before it begins!");
                 await message.AddReactionAsync(new Emoji("📳"));
 
                 var color = @event.RunKindCastrum == RunDisplayTypeCastrum.None ? RunDisplayTypes.GetColor(@event.RunKind) : RunDisplayTypes.GetColorCastrum();
@@ -157,8 +156,7 @@ namespace Prima.Scheduler.Modules
                 {
                     var embed = new EmbedBuilder()
                         .WithTitle(
-                            $"Run scheduled by {leaderName} on {runTime.DayOfWeek} at {runTime.ToShortTimeString()} ({tzAbbr}) " +
-                            $"[{runTime.DayOfWeek}, {(Month)runTime.Month} {runTime.Day}]!")
+                            $"Run scheduled by {leaderName} at <t:{timeOffset.ToUnixTimeSeconds()}:F>!")
                         .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
                         .WithDescription(
                             "React to the :vibration_mode: on their message to be notified 30 minutes before it begins!\n\n" +
@@ -260,13 +258,14 @@ namespace Prima.Scheduler.Modules
 
             await Sheets.RemoveEvent(result, guildConfig.BASpreadsheetId);
 
+            var whenOffset = new DateTimeOffset(when);
             var leaderName = (Context.User as IGuildUser)?.Nickname ?? Context.User.Username;
             foreach (var uid in result.SubscribedUsers)
             {
                 var user = Context.Guild.GetUser(ulong.Parse(uid));
                 if (user == null)
                     continue;
-                await user.SendMessageAsync($"The run for reacted to, scheduled by {leaderName} on {when.DayOfWeek} at {when.ToShortTimeString()}, has been cancelled.");
+                await user.SendMessageAsync($"The run for reacted to, scheduled by {leaderName} at <t:{whenOffset.ToUnixTimeSeconds()}:F>, has been cancelled.");
             }
         }
 
@@ -383,21 +382,19 @@ namespace Prima.Scheduler.Modules
             await Db.UpdateScheduledEvent(@event);
 
             var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
-            var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
             var isDST = tzi.IsDaylightSavingTime(newRunTime);
-            var tzAbbr = isDST ? tzAbbrs.Daylight : tzAbbrs.Standard;
             var timeMod = -tzi.BaseUtcOffset.Hours;
             if (isDST)
                 timeMod -= 1;
 
+            var timeOffset = new DateTimeOffset(newRunTime.AddHours(timeMod));
             var leaderName = (Context.User as IGuildUser)?.Nickname ?? Context.User.Username;
             var embedChannel = Context.Guild.GetTextChannel(guildConfig.ScheduleOutputChannel);
             var embedMessage = await embedChannel.GetMessageAsync(@event.EmbedMessageId) as IUserMessage;
             // ReSharper disable once PossibleNullReferenceException
             var embed = embedMessage.Embeds.FirstOrDefault()?.ToEmbedBuilder()
-                .WithTitle($"Run scheduled by {leaderName} on {newRunTime.DayOfWeek} at {newRunTime.ToShortTimeString()} ({tzAbbr}) " +
-                           $"[{newRunTime.DayOfWeek}, {(Month)newRunTime.Month} {newRunTime.Day}]!")
-                .WithTimestamp(newRunTime.AddHours(timeMod))
+                .WithTitle($"Run scheduled by {leaderName} at <t:{timeOffset.ToUnixTimeSeconds()}:F>!")
+                .WithTimestamp(timeOffset)
                 .Build();
             await embedMessage.ModifyAsync(properties => properties.Embeds = new[] { embed });
 
@@ -406,12 +403,14 @@ namespace Prima.Scheduler.Modules
             await SortEmbeds(embedChannel);
 
             await ReplyAsync("Run rescheduled successfully.");
+
+            var oldOffset = new DateTimeOffset(currentRunTime);
             foreach (var uid in @event.SubscribedUsers)
             {
                 var user = Context.Guild.GetUser(ulong.Parse(uid));
                 if (user == null)
                     continue;
-                await user.SendMessageAsync($"The run for reacted to, scheduled by {leaderName} on {currentRunTime.DayOfWeek} at {currentRunTime.ToShortTimeString()}, has been rescheduled to {newRunTime.DayOfWeek} at {newRunTime.ToShortTimeString()}");
+                await user.SendMessageAsync($"The run for reacted to, scheduled by {leaderName} at <t:{oldOffset.ToUnixTimeSeconds()}:F>, has been rescheduled to <t:{timeOffset.ToUnixTimeSeconds()}:F>");
             }
         }
 
