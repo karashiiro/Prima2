@@ -355,14 +355,39 @@ namespace Prima.Stable.Modules
             await member.AddRoleAsync(memberRole);
             Log.Information("Added {DiscordName} to {Role}.", member.ToString(), memberRole.Name);
 
+            if (oldLodestoneId != dbEntry.LodestoneId || !CrystalWorlds.List.Contains(dbEntry.World))
+            {
+                var guild = Context.Guild;
+                var roles = new[]
+                {
+                    guild.GetRole(DiademRole),
+                    guild.GetRole(EurekaRole),
+                    guild.GetRole(BozjaRole),
+                };
+                
+                roles = roles.Concat(new[]
+                {
+                    guild.GetRole(ulong.Parse(guildConfig.Roles["Arsenal Master"])),
+                    guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared"])),
+                    guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Castrum"])),
+                    guild.GetRole(ulong.Parse(guildConfig.Roles["Siege Liege"])),
+                    guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Delubrum Savage"])),
+                    guild.GetRole(ulong.Parse(guildConfig.Roles["Savage Queen"])),
+                    guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Dalriada"])),
+                    guild.GetRole(ulong.Parse(guildConfig.Roles["Dalriada Raider"])),
+                }).ToArray();
+
+                await member.RemoveRolesAsync(roles);
+            }
+
             var contentRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles[MostRecentZoneRole]));
-            if (contentRole != null && Worlds.List.Contains(dbEntry.World))
+            if (CrystalWorlds.List.Contains(dbEntry.World))
             {
                 var data = await Lodestone.GetCharacter(ulong.Parse(dbEntry.LodestoneId));
                 var highestCombatLevel = 0;
                 foreach (var classJob in data["ClassJobs"].ToObject<CharacterLookup.ClassJob[]>())
                 {
-                    if (classJob.JobID >= 8 && classJob.JobID <= 18) continue;
+                    if (classJob.JobID is >= 8 and <= 18) continue;
                     if (classJob.Level > highestCombatLevel)
                     {
                         highestCombatLevel = classJob.Level;
@@ -376,33 +401,6 @@ namespace Prima.Stable.Modules
 
                 await member.AddRoleAsync(contentRole);
                 Log.Information("Added {DiscordName} to {Role}.", member.ToString(), contentRole.Name);
-            }
-            else if (!Worlds.List.Contains(dbEntry.World))
-            {
-                var guild = Context.Guild;
-                var roles = new[]
-                {
-                    guild.GetRole(DiademRole),
-                    guild.GetRole(EurekaRole),
-                    guild.GetRole(BozjaRole),
-                };
-
-                if (oldLodestoneId != dbEntry.LodestoneId)
-                {
-                    roles = roles.Concat(new[]
-                    {
-                        guild.GetRole(ulong.Parse(guildConfig.Roles["Arsenal Master"])),
-                        guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared"])),
-                        guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Castrum"])),
-                        guild.GetRole(ulong.Parse(guildConfig.Roles["Siege Liege"])),
-                        guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Delubrum Savage"])),
-                        guild.GetRole(ulong.Parse(guildConfig.Roles["Savage Queen"])),
-                        guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Dalriada"])),
-                        guild.GetRole(ulong.Parse(guildConfig.Roles["Dalriada Raider"])),
-                    }).ToArray();
-                }
-
-                await member.RemoveRolesAsync(roles);
             }
         }
 

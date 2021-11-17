@@ -2,7 +2,7 @@
 
 namespace Prima.Stable.Resources
 {
-    public static class Worlds
+    public static class CrystalWorlds
     {
         public static IEnumerable<string> List => new[] {
             "Balmung",

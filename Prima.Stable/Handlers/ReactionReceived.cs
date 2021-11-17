@@ -54,7 +54,7 @@ namespace Prima.Stable.Handlers
                             return;
                         }
 
-                        if (!Worlds.List.Contains(dbEntry.World))
+                        if (!CrystalWorlds.List.Contains(dbEntry.World))
                         {
                             await member.SendMessageAsync("Characters outside of Crystal (see <https://na.finalfantasyxiv.com/lodestone/worldstatus/>) may not access our scheduling tools.");
                             return;
