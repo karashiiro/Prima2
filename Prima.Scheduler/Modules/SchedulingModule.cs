@@ -156,7 +156,7 @@ namespace Prima.Scheduler.Modules
                 {
                     var embed = new EmbedBuilder()
                         .WithTitle(
-                            $"Run scheduled by {leaderName} at <t:{timeOffset.ToUnixTimeSeconds()}:F>!")
+                            $"Run scheduled by {leaderName} at <t:{timeOffset.ToUnixTimeSeconds()}:F> (Your local time)!")
                         .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
                         .WithDescription(
                             "React to the :vibration_mode: on their message to be notified 30 minutes before it begins!\n\n" +
@@ -393,7 +393,7 @@ namespace Prima.Scheduler.Modules
             var embedMessage = await embedChannel.GetMessageAsync(@event.EmbedMessageId) as IUserMessage;
             // ReSharper disable once PossibleNullReferenceException
             var embed = embedMessage.Embeds.FirstOrDefault()?.ToEmbedBuilder()
-                .WithTitle($"Run scheduled by {leaderName} at <t:{timeOffset.ToUnixTimeSeconds()}:F>!")
+                .WithTitle($"Run scheduled by {leaderName} at <t:{timeOffset.ToUnixTimeSeconds()}:F> (Your local time)!")
                 .WithTimestamp(timeOffset)
                 .Build();
             await embedMessage.ModifyAsync(properties => properties.Embeds = new[] { embed });

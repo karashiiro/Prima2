@@ -144,7 +144,7 @@ namespace Prima.Scheduler.Modules
                 if (host != null)
                 {
                     builder = builder.WithTitle(
-                        $"Event scheduled by {host.Nickname ?? host.ToString()} at <t:{timeOffset.ToUnixTimeSeconds()}:F>!");
+                        $"Event scheduled by {host.Nickname ?? host.ToString()} at <t:{timeOffset.ToUnixTimeSeconds()}:F> (Your local time)!");
                 }
                 props.Embeds = new[] { builder
                     .WithTimestamp(timeOffset)
@@ -229,7 +229,7 @@ namespace Prima.Scheduler.Modules
                     {
                         var timeOffset = embed.Timestamp.Value;
                         embedBuilder.WithTitle(
-                            $"Event scheduled by {host.Nickname ?? host.ToString()} at <t:{timeOffset.ToUnixTimeSeconds()}:F>!");
+                            $"Event scheduled by {host.Nickname ?? host.ToString()} at <t:{timeOffset.ToUnixTimeSeconds()}:F> (Your local time)!");
                     }
 
                     var m = await channel.SendMessageAsync(embed.Footer?.Text, embed: embedBuilder.Build());
