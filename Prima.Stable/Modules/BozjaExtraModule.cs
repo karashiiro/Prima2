@@ -562,5 +562,10 @@ namespace Prima.Stable.Modules
         [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task SpecialBoysAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/yjcMDyb.png");
+
+        [Command("drn", RunMode = RunMode.Async)]
+        [RateLimit(TimeSeconds = 10, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public Task DrnAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/y0jNEno.png");
     }
 }
