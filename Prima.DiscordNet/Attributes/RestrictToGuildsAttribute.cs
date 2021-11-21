@@ -28,7 +28,9 @@ namespace Prima.DiscordNet.Attributes
 
             return Task.FromResult(GuildIds.Contains(guildUser.GuildId)
                 ? PreconditionResult.FromSuccess()
-                : PreconditionResult.FromError("This guild does not support usage of this command."));
+                : PreconditionResult.FromError("This guild does not support usage of this command.\n" +
+                                               $"Command guilds: {GuildIds.Aggregate("", (agg, next) => agg + " " + next)}\n" +
+                                               $"Target guild: {guildUser.GuildId}"));
         }
     }
 }

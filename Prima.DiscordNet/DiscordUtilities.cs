@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Discord.Rest;
 using Prima.DiscordNet.Attributes;
+using Serilog;
 
 namespace Prima.DiscordNet
 {
@@ -36,7 +37,9 @@ namespace Prima.DiscordNet
         public static async Task PostImage(HttpClient http, SocketCommandContext context, string uri)
         {
             var fileName = uri.Split('/').Last();
+            Log.Information("Fetching image from {Url}", uri);
             var fileStream = await http.GetStreamAsync(new Uri(uri));
+            Log.Information("Sending image {Filename}", fileName);
             await context.Channel.SendFileAsync(fileStream, fileName);
         }
 
