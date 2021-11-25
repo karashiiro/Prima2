@@ -504,10 +504,15 @@ namespace Prima.Stable.Modules
         public async Task QgAsync()
         {
             await DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/vbpph3t.png");
+            await Task.Delay(200);
             await DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/pkdrt09.png");
+            await Task.Delay(200);
             await DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/613149980114550794/891468340541919252/testbomb_20fps.gif");
+            await Task.Delay(200);
             await DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/U2rTaAg.png");
+            await Task.Delay(200);
             await DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/kqaMaEC.png");
+            await Task.Delay(200);
             await DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/c6XyZJd.png");
         }
 
