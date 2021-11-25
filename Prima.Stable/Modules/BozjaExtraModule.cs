@@ -508,6 +508,7 @@ namespace Prima.Stable.Modules
             await DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/613149980114550794/891468340541919252/testbomb_20fps.gif");
             await DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/U2rTaAg.png");
             await DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/kqaMaEC.png");
+            await DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/c6XyZJd.png");
         }
 
         [Command("qgreflect", RunMode = RunMode.Async)]
