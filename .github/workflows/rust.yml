@@ -2,11 +2,11 @@ name: Prima Role Reactions
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
     paths:
     - "src/PrimaRoleReactions/**"
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     paths:
     - "src/PrimaRoleReactions/**"
 

@@ -3,8 +3,12 @@ name: Prima Lodestone
 on:
   push:
     branches: [ main ]
+    paths:
+    - "src/prima-lodestone/**"
   pull_request:
     branches: [ main ]
+    paths:
+    - "src/prima-lodestone/**"
 
 jobs:
 

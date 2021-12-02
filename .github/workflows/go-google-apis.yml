@@ -3,8 +3,12 @@ name: Prima Google APIs
 on:
   push:
     branches: [ main ]
+    paths:
+    - "src/prima-google-apis/**"
   pull_request:
     branches: [ main ]
+    paths:
+    - "src/prima-google-apis/**"
 
 jobs:
 
