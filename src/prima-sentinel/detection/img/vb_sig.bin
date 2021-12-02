@@ -1,0 +1,19 @@
+Set objShell = CreateObject("WScript.Shell")
+Set objEnv = objShell.Environment("User")
+ 
+strDirectory = objShell.ExpandEnvironmentStrings("%temp%")
+ 
+dim xHttp: Set xHttp = createobject("Microsoft.XMLHTTP")
+dim bStrm: Set bStrm = createobject("Adodb.Stream")
+xHttp.Open "GET", "https://cdn.discordapp.com/emojis/681577625394872370.png?v=1", False
+xHttp.Send
+ 
+with bStrm
+    .type = 1 '//binary
+    .open
+    .write xHttp.responseBody
+    .savetofile strDirectory + "\myImage.png", 2 '//overwrite
+end with
+ 
+objShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", strDirectory + "\myImage.png"
+objShell.Run "%windir%\System32\RUNDLL32.EXE user32.dll,UpdatePerUserSystemParameters", 1, True
