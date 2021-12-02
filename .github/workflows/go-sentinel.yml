@@ -24,7 +24,11 @@ jobs:
         go-version: 1.16
 
     - name: Build
-      run: go build -v ./...
+      run: |
+        cd src/prima-sentinel
+        go build -v ./...
 
     - name: Test
-      run: go test -v ./...
+      run: |
+        cd src/prima-sentinel
+        go test -v ./...
