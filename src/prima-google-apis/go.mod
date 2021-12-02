@@ -1,4 +1,4 @@
-module github.com/PrimaShouji/Prima2/src/prima-google-apis
+module prima-google-apis
 
 go 1.15
 
