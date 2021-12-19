@@ -43,7 +43,7 @@ namespace Prima.Stable.Modules
                 return;
             }
 
-            var zone = string.Join(' ', args[2..^0]);
+            var zone = string.Join(' ', args[2..]);
             var (mapFile, sizeFactor) = await GetMapAndSizeFactor(zone);
             if (mapFile == null)
             {
