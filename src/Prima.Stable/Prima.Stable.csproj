@@ -13,7 +13,7 @@
   <ItemGroup>
     <PackageReference Include="Discord.Net.Labs" Version="3.5.0" />
     <PackageReference Include="FFXIVWeather.Lumina" Version="2.0.0" />
-    <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
     <PackageReference Include="TimeZoneNames" Version="4.2.0" />
   </ItemGroup>
 
