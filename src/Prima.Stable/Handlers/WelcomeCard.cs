@@ -4,6 +4,7 @@ using Prima.DiscordNet.Extensions;
 using Prima.Services;
 using Serilog;
 using System.Threading.Tasks;
+using Prima.Resources;
 using Color = Discord.Color;
 
 namespace Prima.Stable.Handlers
@@ -18,19 +19,22 @@ namespace Prima.Stable.Handlers
                 return;
             }
 
-            await user.SendMessageAsync(embed: templates.Execute("cemjoin.md", new
+            if (user.Guild.Id == SpecialGuilds.CrystalExploratoryMissions)
             {
-                GuildName = user.Guild.Name,
-                BotMention = client.CurrentUser.Mention,
-                ContentRolesChannelLink = "<#590757405927669769>",
-                HowDoesThisWorkChannelLink = "<#877659281481162803>",
-                RulesChannelLink = "<#550707138348187648>",
-                HelpChannelLink = "<#550777867173232661>",
-                OtherUsefulServersChannelLink = "<#569322805351415808>",
-            })
-                .ToEmbedBuilder()
-                .WithColor(Color.Orange)
-                .Build());
+                await user.SendMessageAsync(embed: templates.Execute("cemjoin.md", new
+                    {
+                        GuildName = user.Guild.Name,
+                        BotMention = client.CurrentUser.Mention,
+                        ContentRolesChannelLink = "<#590757405927669769>",
+                        HowDoesThisWorkChannelLink = "<#877659281481162803>",
+                        RulesChannelLink = "<#550707138348187648>",
+                        HelpChannelLink = "<#550777867173232661>",
+                        OtherUsefulServersChannelLink = "<#569322805351415808>",
+                    })
+                    .ToEmbedBuilder()
+                    .WithColor(Color.Orange)
+                    .Build());
+            }
         }
     }
 }
