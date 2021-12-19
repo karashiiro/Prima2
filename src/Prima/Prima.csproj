@@ -14,6 +14,7 @@
     <None Remove="Templates\automod\delete.md" />
     <None Remove="Templates\automod\postban.md" />
     <None Remove="Templates\automod\softblock.md" />
+    <None Remove="Templates\captcha.md" />
     <None Remove="Templates\cemjoin.md" />
     <None Remove="Templates\privacy.md" />
     <None Remove="Templates\test.md" />
@@ -24,6 +25,7 @@
     <EmbeddedResource Include="Templates\automod\delete.md" />
     <EmbeddedResource Include="Templates\automod\postban.md" />
     <EmbeddedResource Include="Templates\automod\softblock.md" />
+    <EmbeddedResource Include="Templates\captcha.md" />
     <EmbeddedResource Include="Templates\cemjoin.md" />
     <EmbeddedResource Include="Templates\privacy.md" />
     <EmbeddedResource Include="Templates\test.md" />

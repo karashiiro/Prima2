@@ -59,15 +59,17 @@ namespace Prima.Services
 
             var replaceableTokens = GetReplaceableTokens(template);
 
-            // ReSharper disable once LoopCanBeConvertedToQuery
-            foreach (var token in replaceableTokens)
+            if (templateData != null)
             {
-                if (token == null) continue;
-                if (templateData == null) throw new NullReferenceException("templateData is null.");
+                // ReSharper disable once LoopCanBeConvertedToQuery
+                foreach (var token in replaceableTokens)
+                {
+                    if (token == null) continue;
 
-                var oldValue = "{{." + token + "}}";
-                var newValue = templateData.GetPropertyValue(token);
-                template = template.Replace(oldValue, newValue?.ToString() ?? token);
+                    var oldValue = "{{." + token + "}}";
+                    var newValue = templateData.GetPropertyValue(token);
+                    template = template.Replace(oldValue, newValue?.ToString() ?? token);
+                }
             }
 
             template = template.Trim();
