@@ -20,11 +20,36 @@ namespace Prima.Stable.Modules
     public class CensusModule : ModuleBase<SocketCommandContext>
     {
         public IDbService Db { get; set; }
+        public Captcha Captcha { get; set; }
         public CharacterLookup Lodestone { get; set; }
 
         private const int MessageDeleteDelay = 10000;
 
         private const string MostRecentZoneRole = "Bozja";
+
+        [Command("captcha")]
+        public async Task CaptchaAsync([Remainder] string test = "")
+        {
+            var id = Context.User.Id.ToString();
+            if (!Captcha.IsPending(id))
+            {
+                await ReplyAsync("You do not have a pending CAPTCHA test.");
+                return;
+            }
+
+            var isVerified = await Captcha.Verify(id, test);
+            if (!isVerified)
+            {
+                await ReplyAsync("CAPTCHA failed; please try again with a new image:");
+                var verificationImage = await Captcha.Generate(id);
+                await Context.User.SendFileAsync(verificationImage, "captcha.png");
+                return;
+            }
+
+            // Do the role stuff
+
+            await ReplyAsync("Verification successful, welcome to the server!");
+        }
 
         // Declare yourself as a character.
         [Command("iam", RunMode = RunMode.Async)]
