@@ -296,7 +296,7 @@ namespace Prima.Queue.Services
             {
                 await user.SendMessageAsync(message);
             }
-            catch (HttpException e) when (e.DiscordCode == 50007)
+            catch (HttpException e) when (e.DiscordCode == DiscordErrorCode.CannotSendMessageToUser)
             {
                 Log.Warning("Can't send direct message to user {User}.", user.ToString());
             }
@@ -314,6 +314,8 @@ namespace Prima.Queue.Services
             _tokenSource?.Cancel();
             _tokenSource?.Dispose();
             _disposed = true;
+
+            GC.SuppressFinalize(this);
         }
     }
 }

@@ -82,7 +82,7 @@ namespace Prima.Stable.Modules
                     "▫️ Stygimoloch Lord Progression\n" +
                     "▫️ The Queen Progression");
             }
-            catch (HttpException e) when (e.DiscordCode == 50007)
+            catch (HttpException e) when (e.DiscordCode == DiscordErrorCode.CannotSendMessageToUser)
             {
                 Log.Warning("Can't send direct message to user {User}.", member.ToString());
             }

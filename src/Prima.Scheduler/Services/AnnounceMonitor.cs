@@ -236,7 +236,7 @@ namespace Prima.Scheduler.Services
             {
                 await host.SendMessageAsync("The run you scheduled is set to begin in 30 minutes!");
             }
-            catch (HttpException e) when (e.DiscordCode == 50007)
+            catch (HttpException e) when (e.DiscordCode == DiscordErrorCode.CannotSendMessageToUser)
             {
                 Log.Warning("Can't send direct message to user {User}.", host.ToString());
             }
@@ -267,7 +267,7 @@ namespace Prima.Scheduler.Services
                 {
                     await user.SendMessageAsync($"The run you reacted to (hosted by {host.Nickname ?? host.Username}) is beginning in 30 minutes!");
                 }
-                catch (HttpException e) when (e.DiscordCode == 50007)
+                catch (HttpException e) when (e.DiscordCode == DiscordErrorCode.CannotSendMessageToUser)
                 {
                     Log.Warning("Can't send direct message to user {User}.", host.ToString());
                 }
@@ -284,6 +284,8 @@ namespace Prima.Scheduler.Services
             _tokenSource?.Cancel();
             _tokenSource?.Dispose();
             _disposed = true;
+
+            GC.SuppressFinalize(this);
         }
     }
 }

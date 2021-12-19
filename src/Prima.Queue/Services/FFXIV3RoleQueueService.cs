@@ -126,7 +126,7 @@ namespace Prima.Queue.Services
                         "This is a measure in place to avoid leads having to pull numerous AFK users before your run.\n" +
                         "Please rejoin the queue if you are still active.");
                 }
-                catch (HttpException e) when (e.DiscordCode == 50007)
+                catch (HttpException e) when ((int)(e.DiscordCode ?? 0) == 50007)
                 {
                     Log.Warning("User {User} has disabled guild DMs.", user.ToString());
                     await SendToQueueChannel(uid);
@@ -149,7 +149,7 @@ namespace Prima.Queue.Services
                     Log.Information("Warned {User} of imminent timeout from queue {QueueName}.", user.ToString(),
                         queueName);
                 }
-                catch (HttpException e) when (e.DiscordCode == 50007)
+                catch (HttpException e) when (e.DiscordCode == DiscordErrorCode.CannotSendMessageToUser)
                 {
                     Log.Warning("User {User} has disabled guild DMs.", user.ToString());
                 }
