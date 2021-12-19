@@ -567,7 +567,7 @@ namespace Prima.Stable.Modules
         [Command("specialboys", RunMode = RunMode.Async)]
         [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task SpecialBoysAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/yjcMDyb.png");
+        public Task SpecialBoysAsync() => DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/908419620279574578/922266962363568188/Philippe_QG.png");
 
         [Command("drnspeedrun", RunMode = RunMode.Async)]
         [Description("Shows DRN speedrun loadouts.")]
