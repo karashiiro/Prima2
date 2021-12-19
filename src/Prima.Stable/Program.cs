@@ -90,6 +90,7 @@ namespace Prima.Stable
                 .AddSingleton<TimedRoleManager>()
                 .AddSingleton<FFLogsClient>()
                 .AddSingleton<CharacterLookup>()
+                .AddSingleton<Captcha>()
                 .AddSingleton<KeepClean>()
                 .AddSingleton<EphemeralPinManager>();
             return sc.BuildServiceProvider();
