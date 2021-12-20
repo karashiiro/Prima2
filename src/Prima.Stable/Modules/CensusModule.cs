@@ -87,7 +87,7 @@ namespace Prima.Stable.Modules
                 {
                     await Context.Message.DeleteAsync();
                 }
-                catch (HttpException) { } // Message was already deleted.
+                catch (Exception) { } // Message was already deleted.
             }).Start();
 
             var world = "";
@@ -162,9 +162,13 @@ namespace Prima.Stable.Modules
                 return;
             }
 
+            Log.Information("Verified user {0}", Context.User.Id);
+
             // Get the existing database entry, if it exists.
             var existingLodestoneId = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id)?.LodestoneId;
             var existingDiscordUser = Db.Users.FirstOrDefault(u => u.LodestoneId == foundCharacter.LodestoneId);
+
+            Log.Information("Fetched database entry for user {UserId}. null: {DbEntryIsNull}", Context.User.Id, existingDiscordUser == null);
 
             // Disallow duplicate characters (CEM policy).
             if (existingDiscordUser != null)
@@ -185,6 +189,8 @@ namespace Prima.Stable.Modules
             user.Verified = true;
             foundCharacter.DiscordId = Context.User.Id;
             await Db.AddUser(user);
+
+            Log.Information("Added user {UserId} to the database", Context.User.Id);
 
             // We use the user-provided parameter because the Lodestone format includes the data center.
             var outputName = $"({world}) {foundCharacter.Name}";
@@ -353,8 +359,9 @@ namespace Prima.Stable.Modules
         {
             var memberRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
             await member.AddRoleAsync(memberRole);
-            Log.Information("Added {DiscordName} to {Role}.", member.ToString(), memberRole.Name);
+            Log.Information("Added {DiscordName} to {Role}", member.ToString(), memberRole.Name);
 
+            Log.Information("Checking Lodestone ID and home world for user {DiscordName}", member.ToString());
             if (oldLodestoneId != dbEntry.LodestoneId || !CrystalWorlds.List.Contains(dbEntry.World))
             {
                 var guild = Context.Guild;
@@ -378,8 +385,14 @@ namespace Prima.Stable.Modules
                 }).ToArray();
 
                 await member.RemoveRolesAsync(roles);
+                Log.Information("Removed achievement roles from {DiscordName}", member.ToString());
+            }
+            else
+            {
+                Log.Information("Nothing to do");
             }
 
+            Log.Information("Checking default content level for user {DiscordName}", member.ToString());
             var contentRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles[MostRecentZoneRole]));
             if (CrystalWorlds.List.Contains(dbEntry.World))
             {
@@ -401,6 +414,10 @@ namespace Prima.Stable.Modules
 
                 await member.AddRoleAsync(contentRole);
                 Log.Information("Added {DiscordName} to {Role}.", member.ToString(), contentRole.Name);
+            }
+            else
+            {
+                Log.Information("Nothing to do");
             }
         }
 

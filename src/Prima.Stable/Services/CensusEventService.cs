@@ -34,6 +34,12 @@ namespace Prima.Stable.Services
         {
             // Note: Use EnforcementEnabled or something in DB.
             var oldMember = await cacheableOldMember.GetOrDownloadAsync();
+            if (oldMember == null)
+            {
+                Log.Warning("Tried to respond to a guild member update for user {UserId}, but they were null!", cacheableOldMember.Id);
+                return;
+            }
+
             switch (oldMember.Guild.Id)
             {
                 case 550702475112480769:
