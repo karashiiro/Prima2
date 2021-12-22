@@ -13,7 +13,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
-using TimeZoneNames;
 using Color = Discord.Color;
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -47,9 +46,9 @@ namespace Prima.Scheduler.Modules
                 return;
             }
 
-            var parameters = args.Substring(0, splitIndex).Trim();
+            var parameters = args[..splitIndex].Trim();
             var description = args[(splitIndex + 1)..].Trim();
-            var trimmedDescription = description.Substring(0, Math.Min(1700, description.Length));
+            var trimmedDescription = description[..Math.Min(1700, description.Length)];
             if (trimmedDescription.Length != description.Length)
             {
                 trimmedDescription += "...";
@@ -313,15 +312,18 @@ namespace Prima.Scheduler.Modules
             if (outputChannel == null) return;
 
             var username = Context.User.ToString();
-            var times = args.Split('|');
-
-            var curTime = Util.GetDateTime(times[0]);
-            if (curTime < DateTime.Now)
+            var times = args.Split('|').Select(a => a.Trim()).ToArray();
+            if (times.Length < 2)
             {
-                await ReplyAsync("The first time is in the past!");
+                await ReplyAsync("Failed to read command. Usage: `~reannounce Old Time Or Original Message ID | New Time`");
                 return;
             }
 
+            IUserMessage embedMessage;
+            IEmbed embed;
+            DateTime curTime;
+
+            // Read the second time
             var newTime = Util.GetDateTime(times[1]);
             if (newTime < DateTime.Now)
             {
@@ -329,16 +331,50 @@ namespace Prima.Scheduler.Modules
                 return;
             }
 
-            var (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, curTime);
+            var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
+            var isDST = tzi.IsDaylightSavingTime(newTime);
+            var timeMod = -tzi.BaseUtcOffset.Hours;
+            if (isDST)
+                timeMod -= 1;
+            var timeOffset = new DateTimeOffset(newTime.AddHours(timeMod));
+
+            // Check if the user entered a message ID instead of a time
+            if (times[0].Length > 8 && times[0].All(char.IsDigit))
+            {
+                if (!ulong.TryParse(times[0], out var announceMessageId))
+                {
+                    await ReplyAsync("Could not read message ID!");
+                    return;
+                }
+
+                var announceMessage = await Context.Channel.GetMessageAsync(announceMessageId);
+                if (announceMessage == null)
+                {
+                    await ReplyAsync("The message with that ID does not exist in this channel!");
+                    return;
+                }
+
+                (embedMessage, embed) = await FindAnnouncementById(outputChannel, Context.User, times[0]);
+
+                curTime = embed.Timestamp.Value.DateTime;
+            }
+            else
+            {
+                // Read the first time
+                curTime = Util.GetDateTime(times[0]);
+                if (curTime < DateTime.Now)
+                {
+                    await ReplyAsync("The first time is in the past!");
+                    return;
+                }
+
+                (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, curTime);
+
+                curTime = curTime.AddHours(timeMod);
+            }
+
             if (embedMessage != null)
             {
-                var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
-                var isDST = tzi.IsDaylightSavingTime(newTime);
-                var timeMod = -tzi.BaseUtcOffset.Hours;
-                if (isDST)
-                    timeMod -= 1;
-                var timeOffset = new DateTimeOffset(newTime.AddHours(timeMod));
-
                 var member = Context.Guild.GetUser(Context.User.Id);
                 await embedMessage.ModifyAsync(props =>
                 {
@@ -350,7 +386,7 @@ namespace Prima.Scheduler.Modules
                 });
 
 #if DEBUG
-                var @event = await FindEvent("drs", username, curTime.AddHours(timeMod));
+                var @event = await FindEvent("drs", username, curTime);
                 if (@event != null)
                 {
                     @event.StartTime = XmlConvert.ToString(newTime.AddHours(timeMod),
@@ -358,7 +394,7 @@ namespace Prima.Scheduler.Modules
                     await Calendar.UpdateEvent("drs", @event);
                 }
 #else
-                var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), username, curTime.AddHours(timeMod));
+                var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), username, curTime);
                 if (@event != null)
                 {
                     @event.StartTime = XmlConvert.ToString(newTime.AddHours(timeMod),
@@ -390,20 +426,53 @@ namespace Prima.Scheduler.Modules
             if (outputChannel == null) return;
 
             var username = Context.User.ToString();
-            var time = Util.GetDateTime(args);
-            if (time < DateTime.Now)
+
+            IUserMessage embedMessage;
+            IEmbed embed;
+            DateTime time;
+
+            // Check if the user entered a message ID instead of a time
+            var splitArgs = args.Split();
+            if (splitArgs.Length >= 1 && splitArgs[0].Length > 8 && splitArgs[0].All(char.IsDigit))
             {
-                await ReplyAsync("That time is in the past!");
-                return;
+                if (!ulong.TryParse(splitArgs[0], out var announceMessageId))
+                {
+                    await ReplyAsync("Could not read message ID!");
+                    return;
+                }
+
+                var announceMessage = await Context.Channel.GetMessageAsync(announceMessageId);
+                if (announceMessage == null)
+                {
+                    await ReplyAsync("The message with that ID does not exist in this channel!");
+                    return;
+                }
+                
+                (embedMessage, embed) = await FindAnnouncementById(outputChannel, Context.User, splitArgs[0].Trim());
+
+                time = embed.Timestamp.Value.DateTime;
+            }
+            else
+            {
+                // Read time from message
+                time = Util.GetDateTime(args);
+                if (time < DateTime.Now)
+                {
+                    await ReplyAsync("That time is in the past!");
+                    return;
+                }
+
+                (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, time);
+
+                var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
+                var isDST = tzi.IsDaylightSavingTime(time);
+                var timeMod = -tzi.BaseUtcOffset.Hours;
+                if (isDST)
+                    timeMod -= 1;
+
+                time = time.AddHours(timeMod);
             }
 
-            var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
-            var isDST = tzi.IsDaylightSavingTime(time);
-            var timeMod = -tzi.BaseUtcOffset.Hours;
-            if (isDST)
-                timeMod -= 1;
-
-            var (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, time);
             if (embedMessage != null)
             {
                 await embedMessage.ModifyAsync(props =>
@@ -422,9 +491,9 @@ namespace Prima.Scheduler.Modules
                 }).Start();
 
 #if DEBUG
-                var @event = await FindEvent("drs", username, time.AddHours(timeMod));
+                var @event = await FindEvent("drs", username, time);
 #else
-                var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), username, time.AddHours(timeMod));
+                var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), username, time);
 #endif
                 if (@event != null)
                 {
@@ -489,6 +558,30 @@ namespace Prima.Scheduler.Modules
             await ReplyAsync(typeOrder.Aggregate("Estimated run counts by type:\n```",
                                  (agg, type) => agg + $"\n{type}: {(eventCounts.ContainsKey(type) ? eventCounts[type] : 0)}") +
                              "\n```");
+        }
+
+        private async Task<(IUserMessage, IEmbed)> FindAnnouncementById(IMessageChannel channel, SocketUser user, string id)
+        {
+            using var typing = Context.Channel.EnterTypingState();
+            await foreach (var page in channel.GetMessagesAsync())
+            {
+                foreach (var message in page)
+                {
+                    var restMessage = (IUserMessage)message;
+
+                    var embed = restMessage.Embeds.FirstOrDefault();
+                    if (embed?.Footer == null) continue;
+
+                    var embedTime = embed.Timestamp;
+                    if (embedTime == null) continue;
+
+                    if (embed.Author?.Name != user.ToString() || restMessage.Content != id) continue;
+
+                    return (restMessage, embed);
+                }
+            }
+
+            return (null, null);
         }
 
         private async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, SocketUser user, DateTime time)
