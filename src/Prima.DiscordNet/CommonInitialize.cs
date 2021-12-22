@@ -22,7 +22,7 @@ namespace Prima.DiscordNet
                 AlwaysDownloadUsers = true,
                 LargeThreshold = 250,
                 MessageCacheSize = 10000,
-                GatewayIntents = GatewayIntents.All & ~GatewayIntents.GuildInvites & ~GatewayIntents.GuildPresences & ~GatewayIntents.GuildScheduledEvents,
+                GatewayIntents = GatewayIntents.All ^ GatewayIntents.GuildInvites ^ GatewayIntents.GuildScheduledEvents,
             };
 
             return ConfigurePartialServiceCollection(disConfig);
