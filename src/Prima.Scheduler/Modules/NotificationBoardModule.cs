@@ -331,13 +331,6 @@ namespace Prima.Scheduler.Modules
                 return;
             }
 
-            var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
-            var isDST = tzi.IsDaylightSavingTime(newTime);
-            var timeMod = -tzi.BaseUtcOffset.Hours;
-            if (isDST)
-                timeMod -= 1;
-            var timeOffset = new DateTimeOffset(newTime.AddHours(timeMod));
-
             // Check if the user entered a message ID instead of a time
             if (times[0].Length > 8 && times[0].All(char.IsDigit))
             {
@@ -369,9 +362,15 @@ namespace Prima.Scheduler.Modules
                 }
 
                 (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, curTime);
-
-                curTime = curTime.AddHours(timeMod);
             }
+
+            var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
+            var isDST = tzi.IsDaylightSavingTime(newTime);
+            var timeMod = -tzi.BaseUtcOffset.Hours;
+            if (isDST)
+                timeMod -= 1;
+            var timeOffset = new DateTimeOffset(newTime.AddHours(timeMod));
+            curTime = curTime.AddHours(timeMod);
 
             if (embedMessage != null)
             {
@@ -463,15 +462,15 @@ namespace Prima.Scheduler.Modules
                 }
 
                 (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, time);
-
-                var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
-                var isDST = tzi.IsDaylightSavingTime(time);
-                var timeMod = -tzi.BaseUtcOffset.Hours;
-                if (isDST)
-                    timeMod -= 1;
-
-                time = time.AddHours(timeMod);
             }
+
+            var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
+            var isDST = tzi.IsDaylightSavingTime(time);
+            var timeMod = -tzi.BaseUtcOffset.Hours;
+            if (isDST)
+                timeMod -= 1;
+
+            time = time.AddHours(timeMod);
 
             if (embedMessage != null)
             {
