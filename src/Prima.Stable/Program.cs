@@ -66,6 +66,8 @@ namespace Prima.Stable
 
             client.UserVoiceStateUpdated += mute.OnVoiceJoin;
 
+            client.ButtonExecuted += component => Modmail.Handler(db, component);
+
             Log.Information("Prima.Stable logged in!");
 
             await Task.Delay(-1);

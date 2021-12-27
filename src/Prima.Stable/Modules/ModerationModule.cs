@@ -1,6 +1,8 @@
 ﻿using Discord;
 using Discord.Commands;
 using Prima.DiscordNet.Attributes;
+using Prima.DiscordNet.Extensions;
+using Prima.Resources;
 using Prima.Services;
 using Prima.Stable.Handlers;
 using System;
@@ -10,8 +12,6 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Prima.DiscordNet.Extensions;
-using Prima.Resources;
 using Color = Discord.Color;
 
 namespace Prima.Stable.Modules
@@ -25,10 +25,23 @@ namespace Prima.Stable.Modules
         public IDbService Db { get; set; }
         public ITemplateProvider Templates { get; set; }
 
+        [Command("setusermodmail")]
+        public async Task SetUserModmailChannelAsync(ITextChannel channel)
+        {
+            await channel.SendMessageAsync(
+                embed: new EmbedBuilder()
+                    .WithColor(Color.Orange)
+                    .WithDescription("⏬ Please click the button underneath this message to open a modmail!")
+                    .Build(),
+                component: new ComponentBuilder()
+                    .WithButton("Open Ticket", "cem-modmail")
+                    .Build());
+        }
+
         // Submit a report.
         [Command("modmail", RunMode = RunMode.Async)]
         [Alias("report")]
-        [Description("Privately report information to the administration.")]
+        [Description("Privately report information to the server staff.")]
         public async Task ReportAsync([Remainder] string output = "")
         {
             if (Context.Guild != null)
@@ -51,7 +64,7 @@ namespace Prima.Stable.Modules
                 postChannel.Threads.FirstOrDefault(t => t.Name == threadName)
                 ?? await postChannel.CreateThreadAsync(threadName, message: threadStart);
             await thread.SendMessageAsync($"<@&{guildConfig.Roles["Moderator"]}>");
-            
+
             while (output.Length > 2000)
             {
                 await thread.SendMessageAsync(output[..2000]);
@@ -147,10 +160,10 @@ namespace Prima.Stable.Modules
             var member = Context.Guild.GetUser(uid);
 
             await member.SendMessageAsync(embed: Templates.Execute("automod/postban.md", new
-                {
-                    GuildName = Context.Guild.Name,
-                    BanReason = reason,
-                    BanAppealsUrl = "https://cem-ban-appeals.netlify.app/",
+            {
+                GuildName = Context.Guild.Name,
+                BanReason = reason,
+                BanAppealsUrl = "https://cem-ban-appeals.netlify.app/",
             })
                 .ToEmbedBuilder()
                 .WithColor(Color.Red)
