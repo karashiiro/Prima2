@@ -425,18 +425,35 @@ namespace Prima.Stable.Modules
         [RequireUserPermission(GuildPermission.KickMembers)]
         public async Task UnlinkCharacter(params string[] args)
         {
-            var world = args[0].ToLower();
-            var name = Util.Capitalize(args[1]) + " " + Util.Capitalize(args[2]);
-            world = RegexSearches.NonAlpha.Replace(world, string.Empty);
-            world = Util.Capitalize(world);
-            name = RegexSearches.AngleBrackets.Replace(name, string.Empty);
-            name = RegexSearches.UnicodeApostrophe.Replace(name, string.Empty);
-
-            if (!await Db.RemoveUser(world, name))
+            if (args.Length == 1)
             {
-                await ReplyAsync(
-                    "No user matching that world and name was found. Please double-check the spelling of the world and name.");
-                return;
+                if (!ulong.TryParse(args[0], out var lodestoneId))
+                {
+                    await ReplyAsync("The Lodestone ID provided is poorly-formatted. Please make sure it is only numbers and try again.");
+                    return;
+                }
+
+                if (!await Db.RemoveUser(lodestoneId))
+                {
+                    await ReplyAsync("No user matching that Lodestone ID was found.");
+                    return;
+                }
+            }
+            else
+            {
+                var world = args[0].ToLower();
+                var name = Util.Capitalize(args[1]) + " " + Util.Capitalize(args[2]);
+                world = RegexSearches.NonAlpha.Replace(world, string.Empty);
+                world = Util.Capitalize(world);
+                name = RegexSearches.AngleBrackets.Replace(name, string.Empty);
+                name = RegexSearches.UnicodeApostrophe.Replace(name, string.Empty);
+
+                if (!await Db.RemoveUser(world, name))
+                {
+                    await ReplyAsync(
+                        "No user matching that world and name was found. Please double-check the spelling of the world and name.");
+                    return;
+                }
             }
 
             await ReplyAsync("User unlinked.");

@@ -199,6 +199,11 @@ namespace Prima.Tests.Mocks
             return Task.FromResult(true);
         }
 
+        public Task<bool> RemoveUser(ulong lodestoneId)
+        {
+            return Task.FromResult(true);
+        }
+
         public Task RemoveBrokenUsers()
         {
             return Task.CompletedTask;

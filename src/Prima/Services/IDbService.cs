@@ -73,6 +73,8 @@ namespace Prima.Services
 
         Task<bool> RemoveUser(string world, string name);
 
+        Task<bool> RemoveUser(ulong lodestoneId);
+
         Task RemoveBrokenUsers();
 
         Task AddScheduledEvent(ScheduledEvent @event);

@@ -314,6 +314,14 @@ namespace Prima.Services
             return result.DeletedCount > 0;
         }
 
+        public async Task<bool> RemoveUser(ulong lodestoneId)
+        {
+            var filterBuilder = Builders<DiscordXIVUser>.Filter;
+            var filter = filterBuilder.Eq(props => props.LodestoneId, lodestoneId.ToString());
+            var result = await _users.DeleteOneAsync(filter);
+            return result.DeletedCount > 0;
+        }
+
         public Task RemoveBrokenUsers()
         {
             var deleteFilter = Builders<DiscordXIVUser>.Filter.Eq("DiscordId", 0UL);
