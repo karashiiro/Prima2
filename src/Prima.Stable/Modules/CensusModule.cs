@@ -532,14 +532,15 @@ namespace Prima.Stable.Modules
             var hasDRSAchievement2 = false;
             var hasDalriadaAchievement1 = false;
             var hasDalriadaAchievement2 = false;
-            if (!await LodestoneUtils.VerifyCharacter(Lodestone, ulong.Parse(user.LodestoneId), Context.User.Id.ToString()))
-            {
-                await ReplyAsync(Properties.Resources.LodestoneDiscordIdNotFoundError);
-                return;
-            }
-
+            
             if (!user.Verified)
             {
+                if (!await LodestoneUtils.VerifyCharacter(Lodestone, ulong.Parse(user.LodestoneId), Context.User.Id.ToString()))
+                {
+                    await ReplyAsync(Properties.Resources.LodestoneDiscordIdNotFoundError);
+                    return;
+                }
+
                 user.Verified = true;
                 await Db.UpdateUser(user);
             }
