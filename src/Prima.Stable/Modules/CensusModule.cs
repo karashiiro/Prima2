@@ -376,12 +376,8 @@ namespace Prima.Stable.Modules
                 {
                     guild.GetRole(ulong.Parse(guildConfig.Roles["Arsenal Master"])),
                     guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared"])),
-                    guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Castrum"])),
-                    guild.GetRole(ulong.Parse(guildConfig.Roles["Siege Liege"])),
                     guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Delubrum Savage"])),
                     guild.GetRole(ulong.Parse(guildConfig.Roles["Savage Queen"])),
-                    guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Dalriada"])),
-                    guild.GetRole(ulong.Parse(guildConfig.Roles["Dalriada Raider"])),
                 }).ToArray();
 
                 await member.RemoveRolesAsync(roles);
