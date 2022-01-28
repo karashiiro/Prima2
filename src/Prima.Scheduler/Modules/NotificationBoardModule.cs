@@ -85,6 +85,9 @@ namespace Prima.Scheduler.Modules
                 StartTime = XmlConvert.ToString(time.AddHours(timeMod), XmlDateTimeSerializationMode.Utc),
             });
 
+            var eventDescription = trimmedDescription +
+                                   $"\n\n[Copy to Google Calendar]({eventLink})\nMessage Link: {Context.Message.GetJumpUrl()}";
+
             var timeOffset = new DateTimeOffset(time.AddHours(timeMod));
             var member = Context.Guild.GetUser(Context.User.Id);
             var color = RunDisplayTypes.GetColorCastrum();
@@ -95,7 +98,7 @@ namespace Prima.Scheduler.Modules
                 .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
                 .WithTimestamp(timeOffset)
                 .WithTitle($"Event scheduled by {member?.Nickname ?? Context.User.ToString()} at <t:{timeOffset.ToUnixTimeSeconds()}:F>!")
-                .WithDescription(trimmedDescription + $"\n\n[Copy to Google Calendar]({eventLink})\nMessage Link: {Context.Message.GetJumpUrl()}")
+                .WithDescription(eventDescription)
                 .WithFooter(Context.Message.Id.ToString())
                 .Build());
 
@@ -206,10 +209,9 @@ namespace Prima.Scheduler.Modules
                     var linkTrimmedDescription = lines
                         .Where(l => !LineContainsLastJumpUrl(l))
                         .Where(l => !LineContainsCalendarLink(l))
-                        .Aggregate("", (agg, nextLine) => agg + nextLine + '\n');
-                    var trimmedDescription = linkTrimmedDescription
-                        .Substring(0, Math.Min(1700, linkTrimmedDescription.Length))
+                        .Aggregate("", (agg, nextLine) => agg + nextLine + '\n')
                         .Trim();
+                    var trimmedDescription = linkTrimmedDescription[..Math.Min(1700, linkTrimmedDescription.Length)].Trim();
                     if (trimmedDescription.Length != linkTrimmedDescription.Length)
                     {
                         trimmedDescription += "...";
