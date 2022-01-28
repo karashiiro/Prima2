@@ -79,7 +79,6 @@ namespace Prima.Stable.Modules
                     "▫️ Trinity Seeker Progression\n" +
                     "▫️ Queen's Guard Progression\n" +
                     "▫️ Trinity Avowed Progression\n" +
-                    "▫️ Stygimoloch Lord Progression\n" +
                     "▫️ The Queen Progression");
             }
             catch (HttpException e) when (e.DiscordCode == DiscordErrorCode.CannotSendMessageToUser)
