@@ -64,7 +64,8 @@ namespace Prima.Stable.Handlers
                         var highestCombatLevel = 0;
                         foreach (var classJob in data["ClassJobs"].ToObject<CharacterLookup.ClassJob[]>())
                         {
-                            if (classJob.JobID is >= 8 and <= 18) continue;
+                            // Skip non-DoW/DoM or BLU
+                            if (classJob.JobID is >= 8 and <= 18 or 36) continue;
                             if (classJob.Level > highestCombatLevel)
                             {
                                 highestCombatLevel = classJob.Level;
