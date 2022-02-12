@@ -36,7 +36,9 @@ namespace Prima.Scheduler
         public static IMessageChannel GetOutputChannel(DiscordGuildConfiguration guildConfig, SocketGuild guild, IMessageChannel inputChannel)
         {
             ulong outputChannelId;
-            if (inputChannel.Id == guildConfig.SocialScheduleInputChannel)
+            if (inputChannel.Id == guildConfig.ScheduleInputChannel)
+                outputChannelId = guildConfig.ScheduleOutputChannel;
+            else if (inputChannel.Id == guildConfig.SocialScheduleInputChannel)
                 outputChannelId = guildConfig.SocialScheduleOutputChannel;
             else if (inputChannel.Id == guildConfig.ZadnorThingScheduleInputChannel)
                 outputChannelId = guildConfig.ZadnorThingScheduleOutputChannel;
@@ -58,18 +60,17 @@ namespace Prima.Scheduler
 
             if (channelId == guildConfig.CastrumScheduleOutputChannel)
                 return "cll";
-            else if (channelId == guildConfig.BozjaClusterScheduleOutputChannel)
+            if (channelId == guildConfig.BozjaClusterScheduleOutputChannel)
                 return "bcf";
-            else if (channelId == guildConfig.DelubrumScheduleOutputChannel)
+            if (channelId == guildConfig.DelubrumScheduleOutputChannel)
                 return "drs";
-            else if (channelId == guildConfig.DelubrumNormalScheduleOutputChannel)
+            if (channelId == guildConfig.DelubrumNormalScheduleOutputChannel)
                 return "dr";
-            else if (channelId == guildConfig.ZadnorThingScheduleOutputChannel)
+            if (channelId == guildConfig.ZadnorThingScheduleOutputChannel)
                 return "zad";
-            else if (channelId == guildConfig.SocialScheduleOutputChannel)
-                return "social";
-            else
-                return null;
+            if (channelId == guildConfig.ScheduleOutputChannel)
+                return "ba";
+            return channelId == guildConfig.SocialScheduleOutputChannel ? "social" : null;
         }
 
         public static TimeZoneInfo TimeZoneFromAbbr(string abbr)
