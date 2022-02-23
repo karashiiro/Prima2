@@ -15,7 +15,6 @@ namespace Prima.Tests.Mocks
 
         public IEnumerable<DiscordGuildConfiguration> Guilds => _guilds;
         public IEnumerable<DiscordXIVUser> Users => _users;
-        public IEnumerable<ScheduledEvent> Events => _events;
         public IEnumerable<CachedMessage> CachedMessages => _cachedMessages;
         public IEnumerable<ChannelDescription> ChannelDescriptions => _channelDescriptions;
         public IAsyncEnumerable<EventReaction> EventReactions => _eventReactions.ToAsyncEnumerable();
@@ -26,7 +25,6 @@ namespace Prima.Tests.Mocks
 
         private readonly IList<DiscordGuildConfiguration> _guilds;
         private readonly IList<DiscordXIVUser> _users;
-        private readonly IList<ScheduledEvent> _events;
         private readonly IList<CachedMessage> _cachedMessages;
         private readonly IList<ChannelDescription> _channelDescriptions;
         private readonly IList<EventReaction> _eventReactions;
@@ -38,7 +36,6 @@ namespace Prima.Tests.Mocks
         {
             _guilds = new SynchronizedCollection<DiscordGuildConfiguration>();
             _users = new SynchronizedCollection<DiscordXIVUser>();
-            _events = new SynchronizedCollection<ScheduledEvent>();
             _cachedMessages = new SynchronizedCollection<CachedMessage>();
             _channelDescriptions = new SynchronizedCollection<ChannelDescription>();
             _eventReactions = new SynchronizedCollection<EventReaction>();
@@ -208,32 +205,7 @@ namespace Prima.Tests.Mocks
         {
             return Task.CompletedTask;
         }
-
-        public Task AddScheduledEvent(ScheduledEvent @event)
-        {
-            return Task.CompletedTask;
-        }
-
-        public Task UpdateScheduledEvent(ScheduledEvent newEvent)
-        {
-            return Task.CompletedTask;
-        }
-
-        public Task AddMemberToEvent(ScheduledEvent @event, ulong memberId)
-        {
-            return Task.CompletedTask;
-        }
-
-        public Task RemoveMemberFromEvent(ScheduledEvent @event, ulong memberId)
-        {
-            return Task.CompletedTask;
-        }
-
-        public Task<ScheduledEvent> TryRemoveScheduledEvent(DateTime when, ulong userId)
-        {
-            return Task.FromResult<ScheduledEvent>(null);
-        }
-
+        
         public Task CacheMessage(CachedMessage message)
         {
             return Task.CompletedTask;

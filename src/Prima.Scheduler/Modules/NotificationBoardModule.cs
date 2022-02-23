@@ -10,6 +10,7 @@ using Prima.Services;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
@@ -54,7 +55,7 @@ namespace Prima.Scheduler.Modules
                 trimmedDescription += "...";
             }
 
-            if (parameters.IndexOf(":", StringComparison.Ordinal) == -1)
+            if (!parameters.Contains(":"))
             {
                 await ReplyAsync($"{Context.User.Mention}, please specify a time for your run in your command!");
                 return;
@@ -522,6 +523,8 @@ namespace Prima.Scheduler.Modules
         [Description("Lists the estimated number of runs of each type for Delubrum Reginae (Savage) right now.")]
         public async Task ListDRSRunCountsByType([Remainder] string args = "")
         {
+            Log.Information(args);
+
             var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
             if (guildConfig == null) return;
 
