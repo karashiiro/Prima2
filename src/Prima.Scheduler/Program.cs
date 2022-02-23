@@ -10,11 +10,11 @@ using System.Threading.Tasks;
 
 namespace Prima.Scheduler
 {
-    class Program
+    public static class Program
     {
-        static void Main(string[] args) => MainAsync(args).GetAwaiter().GetResult();
+        public static void Main() => MainAsync().GetAwaiter().GetResult();
 
-        private static async Task MainAsync(string[] args)
+        private static async Task MainAsync()
         {
             var sc = CommonInitialize.Main();
 
@@ -23,19 +23,13 @@ namespace Prima.Scheduler
             await CommonInitialize.ConfigureServicesAsync(services);
 
             var client = services.GetRequiredService<DiscordSocketClient>();
-            var events = services.GetRequiredService<EventService>();
             var db = services.GetRequiredService<IDbService>();
             var calendar = services.GetRequiredService<CalendarApi>();
 
-            client.MessageUpdated += events.OnMessageEdit;
-            client.ReactionAdded += events.OnReactionAdd;
-            client.ReactionRemoved += events.OnReactionRemove;
-
-            client.MessageUpdated += (_, message, channel) => AnnounceEdit.Handler(client, calendar, db, message);
-            client.ReactionAdded += (cachedMessage, channel, reaction)
+            client.MessageUpdated += (_, message, _) => AnnounceEdit.Handler(client, calendar, db, message);
+            client.ReactionAdded += (cachedMessage, _, reaction)
                 => AnnounceReact.HandlerAdd(client, db, cachedMessage, reaction);
-
-            services.GetRequiredService<RunNotiferService>().Initialize();
+            
             services.GetRequiredService<AnnounceMonitor>().Initialize();
 
             Log.Information("Prima Scheduler logged in!");
@@ -45,9 +39,6 @@ namespace Prima.Scheduler
 
         private static ServiceProvider ConfigureServices(IServiceCollection sc)
         {
-            sc.AddSingleton<EventService>();
-            sc.AddSingleton<RunNotiferService>();
-            sc.AddSingleton<SpreadsheetService>();
             sc.AddSingleton<AnnounceMonitor>();
             sc.AddSingleton<CalendarApi>();
             return sc.BuildServiceProvider();

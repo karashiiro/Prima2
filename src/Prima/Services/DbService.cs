@@ -27,7 +27,6 @@ namespace Prima.Services
 
         public IEnumerable<DiscordGuildConfiguration> Guilds => _guildConfig.AsQueryable().ToEnumerable();
         public IEnumerable<DiscordXIVUser> Users => _users.AsQueryable().ToEnumerable();
-        public IEnumerable<ScheduledEvent> Events => _events.AsQueryable().ToEnumerable();
         public IEnumerable<CachedMessage> CachedMessages => _messageCache.AsQueryable().ToEnumerable();
         public IEnumerable<ChannelDescription> ChannelDescriptions => _channelDescriptions.AsQueryable().ToEnumerable();
         public IAsyncEnumerable<EventReaction> EventReactions => _eventReactions.AsQueryable().ToAsyncEnumerable();
@@ -39,7 +38,6 @@ namespace Prima.Services
         private readonly IMongoCollection<GlobalConfiguration> _config;
         private readonly IMongoCollection<DiscordGuildConfiguration> _guildConfig;
         private readonly IMongoCollection<DiscordXIVUser> _users;
-        private readonly IMongoCollection<ScheduledEvent> _events;
         private readonly IMongoCollection<CachedMessage> _messageCache;
         private readonly IMongoCollection<ChannelDescription> _channelDescriptions;
         private readonly IMongoCollection<EventReaction> _eventReactions;
@@ -61,9 +59,6 @@ namespace Prima.Services
 
             _users = database.GetCollection<DiscordXIVUser>("Users");
             Log.Information("User collection status: {DbStatus} documents found.", _users.EstimatedDocumentCount());
-
-            _events = database.GetCollection<ScheduledEvent>("ScheduledEvents");
-            Log.Information("Event collection status: {DbStatus} documents found.", _events.EstimatedDocumentCount());
 
             _messageCache = database.GetCollection<CachedMessage>("CachedMessages");
             Log.Information("Message cache collection status: {DbStatus} documents found.", _messageCache.EstimatedDocumentCount());
@@ -326,53 +321,6 @@ namespace Prima.Services
         {
             var deleteFilter = Builders<DiscordXIVUser>.Filter.Eq("DiscordId", 0UL);
             return _users.DeleteManyAsync(deleteFilter);
-        }
-
-        public Task AddScheduledEvent(ScheduledEvent @event)
-            => _events.InsertOneAsync(@event);
-
-        public async Task UpdateScheduledEvent(ScheduledEvent newEvent)
-        {
-            var existing = await (await _events.FindAsync(e => e.MessageId3 == newEvent.MessageId3)).FirstOrDefaultAsync();
-            if (existing == null)
-            {
-                await AddScheduledEvent(newEvent);
-                return;
-            }
-            await _events.ReplaceOneAsync(e => e.MessageId3 == newEvent.MessageId3, newEvent);
-        }
-
-        public async Task AddMemberToEvent(ScheduledEvent @event, ulong memberId)
-        {
-            var existing = await (await _events.FindAsync(e => e.MessageId3 == @event.MessageId3)).FirstOrDefaultAsync();
-            if (existing == null)
-            {
-                return;
-            }
-            var update = Builders<ScheduledEvent>.Update.Push("SubscribedUsers", memberId.ToString());
-            await _events.UpdateOneAsync(e => e.MessageId3 == @event.MessageId3, update);
-        }
-
-        public async Task RemoveMemberFromEvent(ScheduledEvent @event, ulong memberId)
-        {
-            var existing = await (await _events.FindAsync(e => e.MessageId3 == @event.MessageId3)).FirstOrDefaultAsync();
-            if (existing == null)
-            {
-                return;
-            }
-            var update = Builders<ScheduledEvent>.Update.Pull("SubscribedUsers", memberId.ToString());
-            await _events.UpdateOneAsync(e => e.MessageId3 == @event.MessageId3, update);
-        }
-
-        public async Task<ScheduledEvent> TryRemoveScheduledEvent(DateTime when, ulong userId)
-        {
-            var existing = await _events.FindAsync(e => e.RunTime == when.ToBinary() && e.LeaderId == userId);
-            var @event = await existing.FirstOrDefaultAsync();
-            if (@event != null)
-            {
-                await _events.DeleteOneAsync(e => e.RunTime == when.ToBinary());
-            }
-            return @event;
         }
 
         public Task CacheMessage(CachedMessage message)
