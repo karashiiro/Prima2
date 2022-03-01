@@ -120,7 +120,7 @@ namespace Prima
 
         public static string HtIdString()
         {
-            return IsUnix() ? "America/Honolulu" : "Hawaiian Standard Time";
+            return IsUnix() ? "Pacific/Honolulu" : "Hawaiian Standard Time";
         }
 
         public static string AktIdString()
