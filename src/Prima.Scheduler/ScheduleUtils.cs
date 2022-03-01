@@ -73,20 +73,25 @@ namespace Prima.Scheduler
             return channelId == guildConfig.SocialScheduleOutputChannel ? "social" : null;
         }
 
-        private static TimeZoneInfo GetTimeZone(string id)
-            => TimeZoneInfo.FindSystemTimeZoneById(id);
+        private static TimeZoneInfo CreateTimeZone(string id, double utcOffset, string displayName)
+            => TimeZoneInfo.CreateCustomTimeZone(id, TimeSpan.FromHours(utcOffset), displayName, displayName);
 
         public static TimeZoneInfo TimeZoneFromAbbr(string abbr)
         {
             abbr = abbr.ToUpperInvariant();
             return abbr switch
             {
-                "HST" => GetTimeZone(Util.IsUnix() ? "America/Honolulu" : "Hawaiian Standard Time"),
-                "AKDT" or "AKST" => GetTimeZone(Util.IsUnix() ? "America/Anchorage" : "Alaskan Standard Time"),
-                "PDT" or "PST" => GetTimeZone(Util.IsUnix() ? "America/Los_Angeles" : "Pacific Standard Time"),
-                "MDT" or "MST" => GetTimeZone(Util.IsUnix() ? "America/Phoenix" : "Mountain Standard Time"),
-                "CDT" or "CST" => GetTimeZone(Util.IsUnix() ? "America/Chicago" : "Central Standard Time"),
-                "EDT" or "EST" => GetTimeZone(Util.IsUnix() ? "America/New_York" : "Eastern Standard Time"),
+                "HST" => CreateTimeZone("X_HST", -10, "Hawaiian Standard Time"),
+                "AKST" => CreateTimeZone("X_AKST", -9, "Alaskan Standard Time"),
+                "AKDT" => CreateTimeZone("X_AKDT", -8, "Alaskan Daylight Time"),
+                "PST" => CreateTimeZone("X_PST", -8, "Pacific Standard Time"),
+                "PDT" => CreateTimeZone("X_PDT", -7, "Pacific Daylight Time"),
+                "MST" => CreateTimeZone("X_MST", -7, "Mountain Standard Time"),
+                "MDT" => CreateTimeZone("X_MDT", -6, "Mountain Daylight Time"),
+                "CST" => CreateTimeZone("X_CST", -6, "Central Standard Time"),
+                "CDT" => CreateTimeZone("X_CDT", -5, "Central Daylight Time"),
+                "EST" => CreateTimeZone("X_EST", -5, "Eastern Standard Time"),
+                "EDT" => CreateTimeZone("X_EDT", -4, "Eastern Daylight Time"),
                 _ => throw new ArgumentException("The specified time zone is not currently supported."),
             };
         }

@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 using Prima.Scheduler;
 
 namespace Prima.Tests
@@ -7,21 +8,22 @@ namespace Prima.Tests
     public class ScheduleUtilTests
     {
         [Test]
-        [TestCase("HST", "Hawaiian Standard Time")]
-        [TestCase("AKST", "Alaskan Standard Time")]
-        [TestCase("AKDT", "Alaskan Standard Time")]
-        [TestCase("PST", "Pacific Standard Time")]
-        [TestCase("PDT", "Pacific Standard Time")]
-        [TestCase("MST", "Mountain Standard Time")]
-        [TestCase("MDT", "Mountain Standard Time")]
-        [TestCase("CST", "Central Standard Time")]
-        [TestCase("CDT", "Central Standard Time")]
-        [TestCase("EST", "Eastern Standard Time")]
-        [TestCase("EDT", "Eastern Standard Time")]
-        public void TimeZoneFromAbbr_Works(string abbr, string expectedId)
+        [TestCase("HST", -10)]
+        [TestCase("AKST", -9)]
+        [TestCase("AKDT", -8)]
+        [TestCase("PST", -8)]
+        [TestCase("PDT", -7)]
+        [TestCase("MST", -7)]
+        [TestCase("MDT", -6)]
+        [TestCase("CST", -6)]
+        [TestCase("CDT", -5)]
+        [TestCase("EST", -5)]
+        [TestCase("EDT", -4)]
+        public void TimeZoneFromAbbr_Works(string abbr, int expectedOffset)
         {
             var tzi = ScheduleUtils.TimeZoneFromAbbr(abbr);
-            Assert.That(tzi?.Id.StartsWith(expectedId) ?? false, "Expected {0}, got {1}.", expectedId, tzi?.Id ?? "");
+            var expectedOffsetUtc = TimeSpan.FromHours(expectedOffset);
+            Assert.That(tzi?.BaseUtcOffset == expectedOffsetUtc, "Expected {0}, got {1}.", expectedOffsetUtc, tzi?.BaseUtcOffset);
         }
     }
 }
