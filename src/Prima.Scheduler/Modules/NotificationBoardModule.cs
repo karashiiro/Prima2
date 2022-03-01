@@ -60,7 +60,7 @@ namespace Prima.Scheduler.Modules
                 return;
             }
 
-            var time = ScheduleUtils.GetDateTime(parameters);
+            var (time, _) = ScheduleUtils.GetDateTime(parameters);
             if (time < DateTime.Now)
             {
                 await ReplyAsync("You cannot announce an event in the past!");
@@ -130,7 +130,7 @@ namespace Prima.Scheduler.Modules
                 return;
             }
 
-            var newRunTime = ScheduleUtils.GetDateTime(args);
+            var (newRunTime, _) = ScheduleUtils.GetDateTime(args);
 
             var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
             var isDST = tzi.IsDaylightSavingTime(newRunTime);
@@ -287,7 +287,7 @@ namespace Prima.Scheduler.Modules
             var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, Context.Guild, Context.Channel);
             if (outputChannel == null) return;
 
-            var time = ScheduleUtils.GetDateTime(args);
+            var (time, _) = ScheduleUtils.GetDateTime(args);
 
             var (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, time);
             if (embedMessage != null && embed?.Footer != null && ulong.TryParse(embed.Footer?.Text, out var originalMessageId))
@@ -326,7 +326,7 @@ namespace Prima.Scheduler.Modules
             DateTime curTime;
 
             // Read the second time
-            var newTime = ScheduleUtils.GetDateTime(times[1]);
+            var (newTime, _) = ScheduleUtils.GetDateTime(times[1]);
             if (newTime < DateTime.Now)
             {
                 await ReplyAsync("The second time is in the past!");
@@ -356,7 +356,7 @@ namespace Prima.Scheduler.Modules
             else
             {
                 // Read the first time
-                curTime = ScheduleUtils.GetDateTime(times[0]);
+                (curTime, _) = ScheduleUtils.GetDateTime(times[0]);
                 if (curTime < DateTime.Now)
                 {
                     await ReplyAsync("The first time is in the past!");
@@ -456,7 +456,7 @@ namespace Prima.Scheduler.Modules
             else
             {
                 // Read time from message
-                time = ScheduleUtils.GetDateTime(args);
+                (time, _) = ScheduleUtils.GetDateTime(args);
                 if (time < DateTime.Now)
                 {
                     await ReplyAsync("That time is in the past!");

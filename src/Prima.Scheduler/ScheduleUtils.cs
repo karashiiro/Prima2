@@ -73,6 +73,9 @@ namespace Prima.Scheduler
             return channelId == guildConfig.SocialScheduleOutputChannel ? "social" : null;
         }
 
+        private static bool MightBeTimeZone(string x)
+            => x.ToUpperInvariant().EndsWith("T") && x.Length is <= 4 and > 1;
+
         private static TimeZoneInfo CreateTimeZone(string id, double utcOffset, string displayName)
             => TimeZoneInfo.CreateCustomTimeZone(id, TimeSpan.FromHours(utcOffset), displayName, displayName);
 
@@ -81,6 +84,7 @@ namespace Prima.Scheduler
             abbr = abbr.ToUpperInvariant();
             return abbr switch
             {
+                // TODO: Invariant time zones like PT and ET
                 "HST" => CreateTimeZone("X_HST", -10, "Hawaiian Standard Time"),
                 "AKST" => CreateTimeZone("X_AKST", -9, "Alaskan Standard Time"),
                 "AKDT" => CreateTimeZone("X_AKDT", -8, "Alaskan Daylight Time"),
@@ -98,15 +102,17 @@ namespace Prima.Scheduler
 
         /// <summary>
         /// Gets a day of the week and a time from a set of strings.
+        ///
+        /// All this is copied from Roo's scheduler (with minor tweaks).
         /// </summary>
-        public static DateTime GetDateTime(string keywords)
+        public static (DateTime, TimeZoneInfo) GetDateTime(string keywords)
         {
-            // All this is copied from Roo's scheduler (with minor tweaks)
             var year = DateTime.Now.Year;
             var month = DateTime.Now.Month;
             var day = DateTime.Now.Day;
             var hour = DateTime.Now.Hour;
             var minute = DateTime.Now.Minute;
+            var timeZone = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
             var dayOfWeek = -1;
 
             // Check to see if it matches a recognized time format
@@ -134,9 +140,19 @@ namespace Prima.Scheduler
 
             var splitKeywords = RegexSearches.Whitespace.Split(keywords);
 
-            // Check to see if it matches a recognized date format.
             foreach (var keyword in splitKeywords)
             {
+                // Check to see if it matches a recognized time zone
+                if (MightBeTimeZone(keyword))
+                {
+                    try
+                    {
+                        timeZone = TimeZoneFromAbbr(keyword);
+                    }
+                    catch (ArgumentException) { /* ignore */ }
+                }
+
+                // Check to see if it matches a recognized date format
                 var dateResult = RegexSearches.Date.Match(keyword);
                 if (dateResult.Success)
                 {
@@ -151,7 +167,7 @@ namespace Prima.Scheduler
                     continue;
                 }
 
-                // Check for days of the week, possibly abbreviated.
+                // Check for days of the week, possibly abbreviated
                 if (dayOfWeek == -1)
                 {
                     dayOfWeek = keyword.ToLowerInvariant() switch
@@ -175,7 +191,7 @@ namespace Prima.Scheduler
                 finalDate = finalDate.AddDays((dayOfWeek - (int)finalDate.DayOfWeek + 7) % 7);
             }
 
-            return finalDate;
+            return (finalDate, timeZone);
         }
     }
 }
