@@ -23,7 +23,7 @@ namespace Prima.Tests
         {
             var tzi = ScheduleUtils.TimeZoneFromAbbr(abbr);
             var expectedOffsetUtc = TimeSpan.FromHours(expectedOffset);
-            Assert.That(tzi?.BaseUtcOffset == expectedOffsetUtc, "Expected {0}, got {1}.", expectedOffsetUtc, tzi?.BaseUtcOffset);
+            Assert.That(tzi?.BaseUtcOffset.Hours == expectedOffset, "Expected {0}, got {1}.", expectedOffsetUtc, tzi?.BaseUtcOffset);
         }
 
         [TestCase("HT", -10, -10)]
@@ -37,7 +37,7 @@ namespace Prima.Tests
             var tzi = ScheduleUtils.TimeZoneFromAbbr(abbr);
             var expectedOffset1Utc = TimeSpan.FromHours(expectedOffset1);
             var expectedOffset2Utc = TimeSpan.FromHours(expectedOffset2);
-            Assert.That(tzi?.BaseUtcOffset == expectedOffset1Utc || tzi?.BaseUtcOffset == expectedOffset2Utc,
+            Assert.That(tzi?.BaseUtcOffset.Hours == expectedOffset1 || tzi?.BaseUtcOffset.Hours == expectedOffset2,
                 "Expected {0} or {1}, got {2}.", expectedOffset1Utc, expectedOffset2Utc, tzi?.BaseUtcOffset);
         }
 
@@ -71,6 +71,70 @@ namespace Prima.Tests
         {
             var (output, _) = ScheduleUtils.ParseTime(input);
             Assert.AreEqual(new DateTime(expectedYear, expectedMonth, expectedDay, expectedHour, expectedMinute, expectedSecond), output);
+        }
+
+        [Test]
+        [TestCase("7/29 1:00PM PST", -8, 7, 29, 13, 0, 0)]
+        [TestCase("7/29 1:00PM pst", -8, 7, 29, 13, 0, 0)]
+        [TestCase("7/29 1:00PM EST", -5, 7, 29, 13, 0, 0)]
+        [TestCase("7/29 1:00PM est", -5, 7, 29, 13, 0, 0)]
+        [TestCase("7/29 1:00PM EDT", -4, 7, 29, 13, 0, 0)]
+        [TestCase("7/29 1:00PM edt", -4, 7, 29, 13, 0, 0)]
+        public void ParseTime_WorksAsExpectedWithTimeZone(string input, int expectedOffset, int expectedMonth, int expectedDay, int expectedHour, int expectedMinute, int expectedSecond)
+        {
+            var (output, tzi) = ScheduleUtils.ParseTime(input);
+
+            Assert.AreEqual(expectedMonth, output.Month);
+            Assert.AreEqual(expectedDay, output.Day);
+            Assert.AreEqual(expectedHour, output.Hour);
+            Assert.AreEqual(expectedMinute, output.Minute);
+            Assert.AreEqual(expectedSecond, output.Second);
+
+            var expectedOffsetUtc = TimeSpan.FromHours(expectedOffset);
+            Assert.That(tzi?.BaseUtcOffset.Hours == expectedOffset, "Expected {0}, got {1}.", expectedOffsetUtc, tzi?.BaseUtcOffset);
+        }
+
+        [Test]
+        [TestCase("7/29 1:00PM PT", -8, -7, 7, 29, 13, 0, 0)]
+        [TestCase("7/29 1:00PM pt", -8, -7, 7, 29, 13, 0, 0)]
+        [TestCase("7/29 1:00PM ET", -5, -4, 7, 29, 13, 0, 0)]
+        [TestCase("7/29 1:00PM et", -5, -4, 7, 29, 13, 0, 0)]
+        public void ParseTime_WorksAsExpectedWithTimeZone_2c(string input, int expectedOffset1, int expectedOffset2, int expectedMonth, int expectedDay, int expectedHour, int expectedMinute, int expectedSecond)
+        {
+            var (output, tzi) = ScheduleUtils.ParseTime(input);
+
+            Assert.AreEqual(expectedMonth, output.Month);
+            Assert.AreEqual(expectedDay, output.Day);
+            Assert.AreEqual(expectedHour, output.Hour);
+            Assert.AreEqual(expectedMinute, output.Minute);
+            Assert.AreEqual(expectedSecond, output.Second);
+
+            var expectedOffset1Utc = TimeSpan.FromHours(expectedOffset1);
+            var expectedOffset2Utc = TimeSpan.FromHours(expectedOffset2);
+            Assert.That(tzi?.BaseUtcOffset.Hours == expectedOffset1 || tzi?.BaseUtcOffset.Hours == expectedOffset2,
+                "Expected {0} or {1}, got {2}.", expectedOffset1Utc, expectedOffset2Utc, tzi?.BaseUtcOffset);
+        }
+
+        [Test]
+        [TestCase("7/29/2020 1:00PM PST", -8, 2020, 7, 29, 13, 0, 0)]
+        [TestCase("7/29/2020 1:00PM pst", -8, 2020, 7, 29, 13, 0, 0)]
+        [TestCase("7/29/2020 1:00PM EST", -5, 2020, 7, 29, 13, 0, 0)]
+        [TestCase("7/29/2020 1:00PM est", -5, 2020, 7, 29, 13, 0, 0)]
+        [TestCase("7/29/2020 1:00PM EDT", -4, 2020, 7, 29, 13, 0, 0)]
+        [TestCase("7/29/2020 1:00PM edt", -4, 2020, 7, 29, 13, 0, 0)]
+        public void ParseTime_WorksAsExpectedWithYearAndTimeZone(string input, int expectedOffset, int expectedYear, int expectedMonth, int expectedDay, int expectedHour, int expectedMinute, int expectedSecond)
+        {
+            var (output, tzi) = ScheduleUtils.ParseTime(input);
+
+            Assert.AreEqual(expectedYear, output.Year);
+            Assert.AreEqual(expectedMonth, output.Month);
+            Assert.AreEqual(expectedDay, output.Day);
+            Assert.AreEqual(expectedHour, output.Hour);
+            Assert.AreEqual(expectedMinute, output.Minute);
+            Assert.AreEqual(expectedSecond, output.Second);
+
+            var expectedOffsetUtc = TimeSpan.FromHours(expectedOffset);
+            Assert.That(tzi?.BaseUtcOffset.Hours == expectedOffset, "Expected {0}, got {1}.", expectedOffsetUtc, tzi?.BaseUtcOffset);
         }
     }
 }
