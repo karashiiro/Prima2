@@ -105,7 +105,7 @@ namespace Prima.Scheduler
         ///
         /// All this is copied from Roo's scheduler (with minor tweaks).
         /// </summary>
-        public static (DateTime, TimeZoneInfo) GetDateTime(string keywords)
+        public static (DateTime, TimeZoneInfo) ParseTime(string keywords)
         {
             var year = DateTime.Now.Year;
             var month = DateTime.Now.Month;
