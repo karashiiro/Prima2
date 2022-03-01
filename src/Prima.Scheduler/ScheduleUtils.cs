@@ -73,17 +73,22 @@ namespace Prima.Scheduler
             return channelId == guildConfig.SocialScheduleOutputChannel ? "social" : null;
         }
 
+        private static TimeZoneInfo GetTimeZone(string id)
+            => TimeZoneInfo.FindSystemTimeZoneById(id);
+
         public static TimeZoneInfo TimeZoneFromAbbr(string abbr)
         {
-            abbr = abbr.ToLowerInvariant();
-            return TimeZoneInfo.GetSystemTimeZones()
-                .FirstOrDefault(tzi =>
-                {
-                    var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
-                    return tzAbbrs.Daylight?.ToLowerInvariant() == abbr
-                           || tzAbbrs.Standard?.ToLowerInvariant() == abbr
-                           || tzAbbrs.Generic?.ToLowerInvariant() == abbr;
-                });
+            abbr = abbr.ToUpperInvariant();
+            return abbr switch
+            {
+                "HST" => GetTimeZone(Util.IsUnix() ? "America/Honolulu" : "Hawaiian Standard Time"),
+                "AKDT" or "AKST" => GetTimeZone(Util.IsUnix() ? "America/Anchorage" : "Alaskan Standard Time"),
+                "PDT" or "PST" => GetTimeZone(Util.IsUnix() ? "America/Los_Angeles" : "Pacific Standard Time"),
+                "MDT" or "MST" => GetTimeZone(Util.IsUnix() ? "America/Phoenix" : "Mountain Standard Time"),
+                "CDT" or "CST" => GetTimeZone(Util.IsUnix() ? "America/Chicago" : "Central Standard Time"),
+                "EDT" or "EST" => GetTimeZone(Util.IsUnix() ? "America/New_York" : "Eastern Standard Time"),
+                _ => throw new ArgumentException("The specified time zone is not currently supported."),
+            };
         }
     }
 }

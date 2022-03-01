@@ -240,16 +240,12 @@ namespace Prima
             return (tzi, outTime);
         }
 
+        public static bool IsUnix()
+            => Environment.OSVersion.Platform == PlatformID.Unix;
+
         public static string PstIdString()
         {
-            if (Environment.OSVersion.Platform == PlatformID.Unix)
-            {
-                return "America/Los_Angeles";
-            }
-            else
-            {
-                return "Pacific Standard Time";
-            }
+            return IsUnix() ? "America/Los_Angeles" : "Pacific Standard Time";
         }
 
         public static string Capitalize(string input)
