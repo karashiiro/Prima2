@@ -10,7 +10,6 @@ using Prima.Services;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
@@ -61,7 +60,7 @@ namespace Prima.Scheduler.Modules
                 return;
             }
 
-            var time = Util.GetDateTime(parameters);
+            var time = ScheduleUtils.GetDateTime(parameters);
             if (time < DateTime.Now)
             {
                 await ReplyAsync("You cannot announce an event in the past!");
@@ -131,7 +130,7 @@ namespace Prima.Scheduler.Modules
                 return;
             }
 
-            var newRunTime = Util.GetDateTime(args);
+            var newRunTime = ScheduleUtils.GetDateTime(args);
 
             var tzi = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
             var isDST = tzi.IsDaylightSavingTime(newRunTime);
@@ -288,7 +287,7 @@ namespace Prima.Scheduler.Modules
             var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, Context.Guild, Context.Channel);
             if (outputChannel == null) return;
 
-            var time = Util.GetDateTime(args);
+            var time = ScheduleUtils.GetDateTime(args);
 
             var (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, time);
             if (embedMessage != null && embed?.Footer != null && ulong.TryParse(embed.Footer?.Text, out var originalMessageId))
@@ -327,7 +326,7 @@ namespace Prima.Scheduler.Modules
             DateTime curTime;
 
             // Read the second time
-            var newTime = Util.GetDateTime(times[1]);
+            var newTime = ScheduleUtils.GetDateTime(times[1]);
             if (newTime < DateTime.Now)
             {
                 await ReplyAsync("The second time is in the past!");
@@ -357,7 +356,7 @@ namespace Prima.Scheduler.Modules
             else
             {
                 // Read the first time
-                curTime = Util.GetDateTime(times[0]);
+                curTime = ScheduleUtils.GetDateTime(times[0]);
                 if (curTime < DateTime.Now)
                 {
                     await ReplyAsync("The first time is in the past!");
@@ -449,7 +448,7 @@ namespace Prima.Scheduler.Modules
                     await ReplyAsync("The message with that ID does not exist in this channel!");
                     return;
                 }
-                
+
                 (embedMessage, embed) = await FindAnnouncementById(outputChannel, Context.User, splitArgs[0].Trim());
 
                 time = embed.Timestamp.Value.DateTime;
@@ -457,7 +456,7 @@ namespace Prima.Scheduler.Modules
             else
             {
                 // Read time from message
-                time = Util.GetDateTime(args);
+                time = ScheduleUtils.GetDateTime(args);
                 if (time < DateTime.Now)
                 {
                     await ReplyAsync("That time is in the past!");

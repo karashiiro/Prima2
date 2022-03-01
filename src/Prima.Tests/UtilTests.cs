@@ -1,5 +1,6 @@
 ﻿using System;
 using NUnit.Framework;
+using Prima.Scheduler;
 
 namespace Prima.Tests
 {
@@ -9,7 +10,7 @@ namespace Prima.Tests
         [Test]
         public void GetDateTime_HandlesNoon()
         {
-            var output = Util.GetDateTime("7/30 12:00PM");
+            var output = ScheduleUtils.GetDateTime("7/30 12:00PM");
 
             Assert.AreEqual(12, output.Hour);
             Assert.AreEqual(0, output.Minute);
@@ -21,7 +22,7 @@ namespace Prima.Tests
         [TestCase("7/29 3PM", 7, 29, 15, 0, 0)]
         public void GetDateTime_WorksAsExpected(string input, int expectedMonth, int expectedDay, int expectedHour, int expectedMinute, int expectedSecond)
         {
-            var output = Util.GetDateTime(input);
+            var output = ScheduleUtils.GetDateTime(input);
 
             Assert.AreEqual(expectedMonth, output.Month);
             Assert.AreEqual(expectedDay, output.Day);
@@ -34,7 +35,7 @@ namespace Prima.Tests
         [TestCase("7/29/2020 1:00PM", 2020, 7, 29, 13, 0, 0)]
         public void GetDateTime_WorksAsExpectedWithYear(string input, int expectedYear, int expectedMonth, int expectedDay, int expectedHour, int expectedMinute, int expectedSecond)
         {
-            var output = Util.GetDateTime(input);
+            var output = ScheduleUtils.GetDateTime(input);
             Assert.AreEqual(new DateTime(expectedYear, expectedMonth, expectedDay, expectedHour, expectedMinute, expectedSecond), output);
         }
     }

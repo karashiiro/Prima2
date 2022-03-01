@@ -95,5 +95,87 @@ namespace Prima.Scheduler
                 _ => throw new ArgumentException("The specified time zone is not currently supported."),
             };
         }
+
+        /// <summary>
+        /// Gets a day of the week and a time from a set of strings.
+        /// </summary>
+        public static DateTime GetDateTime(string keywords)
+        {
+            // All this is copied from Roo's scheduler (with minor tweaks)
+            var year = DateTime.Now.Year;
+            var month = DateTime.Now.Month;
+            var day = DateTime.Now.Day;
+            var hour = DateTime.Now.Hour;
+            var minute = DateTime.Now.Minute;
+            var dayOfWeek = -1;
+
+            // Check to see if it matches a recognized time format
+            var timeResult = RegexSearches.Time.Match(string.Join(' ', keywords));
+            if (timeResult.Success)
+            {
+                var time = timeResult.Value.ToLowerInvariant().Replace(" ", "");
+                hour = int.Parse(RegexSearches.TimeHours.Match(time).Value);
+
+                var minuteMatch = RegexSearches.TimeMinutes.Match(time);
+                minute = int.Parse(minuteMatch.Success ? minuteMatch.Value : "0");
+
+                var meridiem = RegexSearches.TimeMeridiem.Match(time).Value;
+
+                if (!meridiem.StartsWith("a") && hour != 12)
+                {
+                    hour += 12;
+                }
+
+                if (meridiem.StartsWith("a") && hour == 12)
+                {
+                    hour = 0;
+                }
+            }
+
+            var splitKeywords = RegexSearches.Whitespace.Split(keywords);
+
+            // Check to see if it matches a recognized date format.
+            foreach (var keyword in splitKeywords)
+            {
+                var dateResult = RegexSearches.Date.Match(keyword);
+                if (dateResult.Success)
+                {
+                    var date = dateResult.Value.Trim();
+                    var mmddyyyy = date.Split("/").Select(int.Parse).ToArray();
+                    month = mmddyyyy[0];
+                    day = mmddyyyy[1];
+                    if (mmddyyyy.Length == 3)
+                    {
+                        year = mmddyyyy[2];
+                    }
+                    continue;
+                }
+
+                // Check for days of the week, possibly abbreviated.
+                if (dayOfWeek == -1)
+                {
+                    dayOfWeek = keyword.ToLowerInvariant() switch
+                    {
+                        "日" or "日曜日" or "su" or "sun" or "sunday" => (int)DayOfWeek.Sunday,
+                        "月" or "月曜日" or "m" or "mo" or "mon" or "monday" => (int)DayOfWeek.Monday,
+                        "火" or "火曜日" or "t" or "tu" or "tue" or "tues" or "tuesday" => (int)DayOfWeek.Tuesday,
+                        "水" or "水曜日" or "w" or "wed" or "wednesday" => (int)DayOfWeek.Wednesday,
+                        "木" or "木曜日" or "th" or "thu" or "thursday" => (int)DayOfWeek.Thursday,
+                        "金" or "金曜日" or "f" or "fri" or "friday" => (int)DayOfWeek.Friday,
+                        "土" or "土曜日" or "sa" or "sat" or "saturday" => (int)DayOfWeek.Saturday,
+                        _ => -1,
+                    };
+                }
+            }
+
+            // Check to make sure everything got set here, and then...
+            var finalDate = new DateTime(year, month, day, hour, minute, 0, DateTimeKind.Utc);
+            if (dayOfWeek >= 0)
+            {
+                finalDate = finalDate.AddDays((dayOfWeek - (int)finalDate.DayOfWeek + 7) % 7);
+            }
+
+            return finalDate;
+        }
     }
 }
