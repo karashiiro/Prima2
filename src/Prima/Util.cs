@@ -118,9 +118,34 @@ namespace Prima
         public static bool IsUnix()
             => Environment.OSVersion.Platform == PlatformID.Unix;
 
-        public static string PstIdString()
+        public static string HtIdString()
+        {
+            return IsUnix() ? "America/Honolulu" : "Hawaiian Standard Time";
+        }
+
+        public static string AktIdString()
+        {
+            return IsUnix() ? "America/Anchorage" : "Alaskan Standard Time";
+        }
+
+        public static string PtIdString()
         {
             return IsUnix() ? "America/Los_Angeles" : "Pacific Standard Time";
+        }
+
+        public static string MtIdString()
+        {
+            return IsUnix() ? "America/Phoenix" : "Mountain Standard Time";
+        }
+
+        public static string CtIdString()
+        {
+            return IsUnix() ? "America/Chicago" : "Central Standard Time";
+        }
+
+        public static string EtIdString()
+        {
+            return IsUnix() ? "America/New_York" : "Eastern Standard Time";
         }
 
         public static string Capitalize(string input)

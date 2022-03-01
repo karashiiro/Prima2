@@ -2,13 +2,10 @@
 using Discord.WebSocket;
 using Prima.Models;
 using Prima.Resources;
-using Prima.Services;
-using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using TimeZoneNames;
 
 namespace Prima.Scheduler
 {
@@ -84,18 +81,23 @@ namespace Prima.Scheduler
             abbr = abbr.ToUpperInvariant();
             return abbr switch
             {
-                // TODO: Invariant time zones like PT and ET
                 "HST" => CreateTimeZone("X_HST", -10, "Hawaiian Standard Time"),
+                "HT" => TimeZoneInfo.FindSystemTimeZoneById(Util.HtIdString()),
                 "AKST" => CreateTimeZone("X_AKST", -9, "Alaskan Standard Time"),
                 "AKDT" => CreateTimeZone("X_AKDT", -8, "Alaskan Daylight Time"),
+                "AKT" => TimeZoneInfo.FindSystemTimeZoneById(Util.AktIdString()),
                 "PST" => CreateTimeZone("X_PST", -8, "Pacific Standard Time"),
                 "PDT" => CreateTimeZone("X_PDT", -7, "Pacific Daylight Time"),
+                "PT" => TimeZoneInfo.FindSystemTimeZoneById(Util.PtIdString()),
                 "MST" => CreateTimeZone("X_MST", -7, "Mountain Standard Time"),
                 "MDT" => CreateTimeZone("X_MDT", -6, "Mountain Daylight Time"),
+                "MT" => TimeZoneInfo.FindSystemTimeZoneById(Util.MtIdString()),
                 "CST" => CreateTimeZone("X_CST", -6, "Central Standard Time"),
                 "CDT" => CreateTimeZone("X_CDT", -5, "Central Daylight Time"),
+                "CT" => TimeZoneInfo.FindSystemTimeZoneById(Util.CtIdString()),
                 "EST" => CreateTimeZone("X_EST", -5, "Eastern Standard Time"),
                 "EDT" => CreateTimeZone("X_EDT", -4, "Eastern Daylight Time"),
+                "ET" => TimeZoneInfo.FindSystemTimeZoneById(Util.EtIdString()),
                 _ => throw new ArgumentException("The specified time zone is not currently supported."),
             };
         }
@@ -112,7 +114,7 @@ namespace Prima.Scheduler
             var day = DateTime.Now.Day;
             var hour = DateTime.Now.Hour;
             var minute = DateTime.Now.Minute;
-            var timeZone = TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
+            var timeZone = TimeZoneInfo.FindSystemTimeZoneById(Util.PtIdString());
             var dayOfWeek = -1;
 
             // Check to see if it matches a recognized time format

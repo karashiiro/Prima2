@@ -26,6 +26,21 @@ namespace Prima.Tests
             Assert.That(tzi?.BaseUtcOffset == expectedOffsetUtc, "Expected {0}, got {1}.", expectedOffsetUtc, tzi?.BaseUtcOffset);
         }
 
+        [TestCase("HT", -10, -10)]
+        [TestCase("AKT", -9, -8)]
+        [TestCase("PT", -8, -7)]
+        [TestCase("MT", -7, -6)]
+        [TestCase("CT", -6, -5)]
+        [TestCase("ET", -5, -4)]
+        public void TimeZoneFromAbbr_Works_2c(string abbr, int expectedOffset1, int expectedOffset2)
+        {
+            var tzi = ScheduleUtils.TimeZoneFromAbbr(abbr);
+            var expectedOffset1Utc = TimeSpan.FromHours(expectedOffset1);
+            var expectedOffset2Utc = TimeSpan.FromHours(expectedOffset2);
+            Assert.That(tzi?.BaseUtcOffset == expectedOffset1Utc || tzi?.BaseUtcOffset == expectedOffset2Utc,
+                "Expected {0} or {1}, got {2}.", expectedOffset1Utc, expectedOffset2Utc, tzi?.BaseUtcOffset);
+        }
+
         [Test]
         public void ParseTime_HandlesNoon()
         {

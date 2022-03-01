@@ -50,7 +50,7 @@ namespace Prima.Stable.Modules
 
             var dbUser = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id);
             var (customTzi, _) = Util.GetLocalizedTimeForUser(dbUser, DateTime.Now);
-            var tzi = customTzi ?? TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
+            var tzi = customTzi ?? TimeZoneInfo.FindSystemTimeZoneById(Util.PtIdString());
 
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
             var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
@@ -93,7 +93,7 @@ namespace Prima.Stable.Modules
 
             var dbUser = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id);
             var (customTzi, _) = Util.GetLocalizedTimeForUser(dbUser, DateTime.Now);
-            var tzi = customTzi ?? TimeZoneInfo.FindSystemTimeZoneById(Util.PstIdString());
+            var tzi = customTzi ?? TimeZoneInfo.FindSystemTimeZoneById(Util.PtIdString());
 
             var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
             var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
