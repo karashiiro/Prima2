@@ -107,7 +107,7 @@ namespace Prima.Scheduler
         ///
         /// All this is copied from Roo's scheduler (with minor tweaks).
         /// </summary>
-        public static (DateTime, TimeZoneInfo) ParseTime(string keywords)
+        public static (DateTimeOffset, TimeZoneInfo) ParseTime(string keywords)
         {
             var year = DateTime.Now.Year;
             var month = DateTime.Now.Month;
@@ -187,7 +187,7 @@ namespace Prima.Scheduler
             }
 
             // Check to make sure everything got set here, and then...
-            var finalDate = new DateTime(year, month, day, hour, minute, 0, DateTimeKind.Utc);
+            var finalDate = new DateTimeOffset(year, month, day, hour, minute, 0, timeZone.BaseUtcOffset);
             if (dayOfWeek >= 0)
             {
                 finalDate = finalDate.AddDays((dayOfWeek - (int)finalDate.DayOfWeek + 7) % 7);
