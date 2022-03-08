@@ -70,7 +70,7 @@ namespace Prima.Tests
         public void ParseTime_WorksAsExpectedWithYear(string input, int expectedYear, int expectedMonth, int expectedDay, int expectedHour, int expectedMinute, int expectedSecond)
         {
             var (output, _) = ScheduleUtils.ParseTime(input);
-            Assert.AreEqual(new DateTime(expectedYear, expectedMonth, expectedDay, expectedHour, expectedMinute, expectedSecond), output);
+            Assert.AreEqual(new DateTime(expectedYear, expectedMonth, expectedDay, expectedHour, expectedMinute, expectedSecond), output.DateTime);
         }
 
         [Test]
