@@ -61,15 +61,14 @@ namespace Prima.Scheduler.Modules
             }
 
             var (time, tzi) = ScheduleUtils.ParseTime(parameters);
+            var isDST = tzi.IsDaylightSavingTime(time);
+            if (isDST)
+                time = time.AddHours(-1);
             if (time < DateTimeOffset.Now)
             {
                 await ReplyAsync("You cannot announce an event in the past!");
                 return;
             }
-            
-            var isDST = tzi.IsDaylightSavingTime(time);
-            if (isDST)
-                time = time.AddHours(-1);
 
             var eventLink =
 #if DEBUG
@@ -85,8 +84,7 @@ namespace Prima.Scheduler.Modules
 
             var eventDescription = trimmedDescription +
                                    $"\n\n[Copy to Google Calendar]({eventLink})\nMessage Link: {Context.Message.GetJumpUrl()}";
-
-            var timeOffset = new DateTimeOffset(time.UtcDateTime);
+            
             var member = Context.Guild.GetUser(Context.User.Id);
             var color = RunDisplayTypes.GetColorCastrum();
             await outputChannel.SendMessageAsync(Context.Message.Id.ToString(), embed: new EmbedBuilder()
@@ -94,8 +92,8 @@ namespace Prima.Scheduler.Modules
                     .WithIconUrl(Context.User.GetAvatarUrl())
                     .WithName(Context.User.ToString()))
                 .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
-                .WithTimestamp(timeOffset)
-                .WithTitle($"Event scheduled by {member?.Nickname ?? Context.User.ToString()} at <t:{timeOffset.ToUnixTimeSeconds()}:F>!")
+                .WithTimestamp(time)
+                .WithTitle($"Event scheduled by {member?.Nickname ?? Context.User.ToString()} at <t:{time.ToUnixTimeSeconds()}:F>!")
                 .WithDescription(eventDescription)
                 .WithFooter(Context.Message.Id.ToString())
                 .Build());
@@ -105,12 +103,12 @@ namespace Prima.Scheduler.Modules
             await SortEmbeds(guildConfig, Context.Guild, outputChannel);
         }
 
-        private async Task<MiniEvent> FindEvent(string calendarClass, string title, DateTime startTime)
+        private async Task<MiniEvent> FindEvent(string calendarClass, string title, DateTimeOffset startTime)
         {
             var events = await Calendar.GetEvents(calendarClass);
             return events.FirstOrDefault(e =>
             {
-                var eventStartTime = XmlConvert.ToDateTime(e.StartTime, XmlDateTimeSerializationMode.Utc);
+                var eventStartTime = XmlConvert.ToDateTimeOffset(e.StartTime);
                 return e.Title == title && eventStartTime == startTime;
             });
         }
@@ -283,7 +281,7 @@ namespace Prima.Scheduler.Modules
 
             var (time, _) = ScheduleUtils.ParseTime(args);
 
-            var (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, time.UtcDateTime);
+            var (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, time);
             if (embedMessage != null && embed?.Footer != null && ulong.TryParse(embed.Footer?.Text, out var originalMessageId))
             {
                 var count = await Db.EventReactions
@@ -318,7 +316,6 @@ namespace Prima.Scheduler.Modules
             IUserMessage embedMessage;
             IEmbed embed;
             DateTimeOffset curTime;
-            TimeZoneInfo tzi = null;
 
             // Read the second time
             var (newTime, _) = ScheduleUtils.ParseTime(times[1]);
@@ -346,31 +343,26 @@ namespace Prima.Scheduler.Modules
 
                 (embedMessage, embed) = await FindAnnouncementById(outputChannel, Context.User, times[0]);
 
-                curTime = embed.Timestamp.Value.DateTime;
+                curTime = embed.Timestamp.Value;
             }
             else
             {
                 // Read the first time
-                (curTime, tzi) = ScheduleUtils.ParseTime(times[0]);
+                var (tempTime, tzi) = ScheduleUtils.ParseTime(times[0]);
+                curTime = tempTime;
+
+                var isDST = tzi.IsDaylightSavingTime(curTime);
+                if (isDST)
+                    curTime = curTime.AddHours(-1);
+
                 if (curTime < DateTimeOffset.Now)
                 {
                     await ReplyAsync("The first time is in the past!");
                     return;
                 }
 
-                (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, curTime.UtcDateTime);
+                (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, curTime);
             }
-
-            tzi ??= TimeZoneInfo.FindSystemTimeZoneById(Util.PtIdString());
-
-            // Daylight savings time adjustments
-            var isNewDST = tzi.IsDaylightSavingTime(newTime);
-            if (isNewDST)
-                newTime = newTime.AddHours(-1);
-
-            var isCurDST = tzi.IsDaylightSavingTime(curTime);
-            if (isCurDST)
-                curTime = curTime.AddHours(-1);
 
             if (embedMessage != null)
             {
@@ -385,21 +377,29 @@ namespace Prima.Scheduler.Modules
                 });
 
 #if DEBUG
-                var @event = await FindEvent("drs", username, curTime.UtcDateTime);
+                var @event = await FindEvent("drs", username, curTime);
                 if (@event != null)
                 {
                     @event.StartTime = XmlConvert.ToString(newTime.UtcDateTime,
                         XmlDateTimeSerializationMode.Utc);
                     await Calendar.UpdateEvent("drs", @event);
                 }
+                else
+                {
+                    Log.Warning("Failed to find calendar entry for event.");
+                }
 #else
-                var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), username, curTime.UtcDateTime);
+                var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), username, curTime);
                 if (@event != null)
                 {
                     @event.StartTime = XmlConvert.ToString(newTime.UtcDateTime,
                         XmlDateTimeSerializationMode.Utc);
                     await Calendar.UpdateEvent(
                         ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), @event);
+                }
+                else
+                {
+                    Log.Warning("Failed to find calendar entry for event.");
                 }
 #endif
 
@@ -431,7 +431,6 @@ namespace Prima.Scheduler.Modules
             IUserMessage embedMessage;
             IEmbed embed;
             DateTimeOffset time;
-            TimeZoneInfo tzi = null;
 
             // Check if the user entered a message ID instead of a time
             var splitArgs = args.Split();
@@ -452,30 +451,26 @@ namespace Prima.Scheduler.Modules
 
                 (embedMessage, embed) = await FindAnnouncementById(outputChannel, Context.User, splitArgs[0].Trim());
 
-                time = embed.Timestamp.Value.DateTime;
+                time = embed.Timestamp.Value;
             }
             else
             {
                 // Read time from message
-                var (timeTemp, tziTemp) = ScheduleUtils.ParseTime(args);
+                var (timeTemp, tzi) = ScheduleUtils.ParseTime(args);
                 time = timeTemp;
-                tzi = tziTemp;
+
+                var isDST = tzi.IsDaylightSavingTime(time);
+                if (isDST)
+                    time = time.AddHours(-1);
+
                 if (time.ToOffset(tzi.BaseUtcOffset) < DateTimeOffset.Now.ToOffset(tzi.BaseUtcOffset))
                 {
                     await ReplyAsync("That time is in the past!");
                     return;
                 }
 
-                (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, time.UtcDateTime);
+                (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, time);
             }
-
-            tzi ??= TimeZoneInfo.FindSystemTimeZoneById(Util.PtIdString());
-            var isDST = tzi.IsDaylightSavingTime(time);
-            var timeMod = -tzi.BaseUtcOffset.Hours;
-            if (isDST)
-                timeMod -= 1;
-
-            time = time.AddHours(timeMod);
 
             if (embedMessage != null)
             {
@@ -488,16 +483,18 @@ namespace Prima.Scheduler.Modules
                         .Build() };
                 });
 
-                new Task(async () =>
+                async void DeleteEmbed()
                 {
                     await Task.Delay(1000 * 60 * 60 * 2); // 2 hours
                     await embedMessage.DeleteAsync();
-                }).Start();
+                }
+
+                new Task(DeleteEmbed).Start();
 
 #if DEBUG
-                var @event = await FindEvent("drs", username, time.UtcDateTime);
+                var @event = await FindEvent("drs", username, time);
 #else
-                var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), username, time.UtcDateTime);
+                var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), username, time);
 #endif
                 if (@event != null)
                 {
@@ -506,6 +503,10 @@ namespace Prima.Scheduler.Modules
 #else
                     await Calendar.DeleteEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), @event.ID);
 #endif
+                }
+                else
+                {
+                    Log.Warning("Failed to find calendar entry for event.");
                 }
 
                 if (embed?.Footer != null)
@@ -566,7 +567,7 @@ namespace Prima.Scheduler.Modules
                              "\n```");
         }
 
-        private async Task<(IUserMessage, IEmbed)> FindAnnouncementById(IMessageChannel channel, SocketUser user, string id)
+        private async Task<(IUserMessage, IEmbed)> FindAnnouncementById(IMessageChannel channel, IPresence user, string id)
         {
             using var typing = Context.Channel.EnterTypingState();
             await foreach (var page in channel.GetMessagesAsync())
@@ -590,7 +591,7 @@ namespace Prima.Scheduler.Modules
             return (null, null);
         }
 
-        private async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, SocketUser user, DateTime time)
+        private async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, IPresence user, DateTimeOffset time)
         {
             using var typing = Context.Channel.EnterTypingState();
 
@@ -608,7 +609,7 @@ namespace Prima.Scheduler.Modules
                     var embedTime = embed.Timestamp;
                     if (embedTime == null) continue;
 
-                    if (embed.Author?.Name != user.ToString() || embedTime.Value.DateTime != time) continue;
+                    if (embed.Author?.Name != user.ToString() || embedTime.Value != time) continue;
 
                     announcements.Add((restMessage, embed));
                 }
