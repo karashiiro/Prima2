@@ -135,7 +135,7 @@ namespace Prima
 
         public static string MtIdString()
         {
-            return IsUnix() ? "America/Phoenix" : "Mountain Standard Time";
+            return IsUnix() ? "America/Denver" : "Mountain Standard Time";
         }
 
         public static string CtIdString()
