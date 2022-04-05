@@ -524,7 +524,7 @@ namespace Prima.Stable.Modules
 
         [Command("qg", RunMode = RunMode.Async)]
         [Description("Shows the Queen's Guard guide.")]
-        [RateLimit(TimeSeconds = 120, Global = true)]
+        [RateLimit(TimeSeconds = 30, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task QgAsync()
         {
