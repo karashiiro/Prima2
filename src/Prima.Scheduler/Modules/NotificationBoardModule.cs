@@ -486,7 +486,14 @@ namespace Prima.Scheduler.Modules
                 async void DeleteEmbed()
                 {
                     await Task.Delay(1000 * 60 * 60 * 2); // 2 hours
-                    await embedMessage.DeleteAsync();
+                    try
+                    {
+                        await embedMessage.DeleteAsync();
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e, "Failed to delete embed message. It may have already been deleted!");
+                    }
                 }
 
                 new Task(DeleteEmbed).Start();
