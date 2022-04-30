@@ -3,6 +3,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
@@ -38,7 +39,10 @@ namespace Prima.DiscordNet
         {
             var fileName = uri.Split('/').Last();
             Log.Information("Fetching image from {Url}", uri);
-            var fileStream = await http.GetStreamAsync(new Uri(uri));
+            await using var fileStream = await http.GetStreamAsync(new Uri(uri));
+            await using var fileStreamCopy = new MemoryStream();
+            await fileStream.CopyToAsync(fileStreamCopy);
+            fileStreamCopy.Seek(0, SeekOrigin.Begin);
             Log.Information("Sending image {Filename}", fileName);
             await context.Channel.SendFileAsync(fileStream, fileName);
         }
