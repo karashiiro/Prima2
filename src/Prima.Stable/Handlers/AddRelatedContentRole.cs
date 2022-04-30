@@ -1,11 +1,10 @@
-﻿using Discord.WebSocket;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
+using Discord.WebSocket;
 using Prima.DiscordNet;
 using Prima.Resources;
 using Serilog;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Prima.Stable.Handlers
 {
@@ -26,7 +25,7 @@ namespace Prima.Stable.Handlers
 
             // This is incredibly hacky just to get the job done, don't judge
             var memberRoles = newMember.Roles.Select(r => r.Name.ToLowerInvariant()).ToList();
-            
+
             // Eureka
             if (memberRoles.Any(r =>
                 {
