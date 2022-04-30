@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Discord;
 using Prima.DiscordNet;
 using Prima.Resources;
+using Serilog;
 
 namespace Prima.Stable.Handlers
 {
@@ -12,9 +14,15 @@ namespace Prima.Stable.Handlers
         /// <summary>
         /// Check for missing content roles that a person probably wants, and add them.
         /// </summary>
-        public static async Task Handler(SocketGuildUser newMember)
+        public static async Task Handler(Cacheable<SocketGuildUser, ulong> oldMemberCached, SocketGuildUser newMember)
         {
             if (newMember.Guild.Id != SpecialGuilds.CrystalExploratoryMissions) return;
+
+            // Ignore event if a role is not being added
+            if (oldMemberCached.HasValue && oldMemberCached.Value.Roles.Count >= newMember.Roles.Count)
+            {
+                return;
+            }
 
             // This is incredibly hacky just to get the job done, don't judge
             var memberRoles = newMember.Roles.Select(r => r.Name.ToLowerInvariant()).ToList();
@@ -38,6 +46,7 @@ namespace Prima.Stable.Handlers
                 var contentRole = newMember.Guild.GetRole(588913087818498070);
                 if (!newMember.HasRole(contentRole))
                 {
+                    Log.Information("Adding role {RoleName} to user {DiscordUser}", contentRole.Name, newMember.ToString());
                     await newMember.AddRoleAsync(contentRole);
                 }
             }
@@ -61,6 +70,7 @@ namespace Prima.Stable.Handlers
                 var contentRole = newMember.Guild.GetRole(588913532410527754);
                 if (!newMember.HasRole(contentRole))
                 {
+                    Log.Information("Adding role {RoleName} to user {DiscordUser}", contentRole.Name, newMember.ToString());
                     await newMember.AddRoleAsync(contentRole);
                 }
             }
@@ -71,6 +81,7 @@ namespace Prima.Stable.Handlers
                 var contentRole = newMember.Guild.GetRole(933531316845170708);
                 if (!newMember.HasRole(contentRole))
                 {
+                    Log.Information("Adding role {RoleName} to user {DiscordUser}", contentRole.Name, newMember.ToString());
                     await newMember.AddRoleAsync(contentRole);
                 }
             }
