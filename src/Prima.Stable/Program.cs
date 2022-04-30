@@ -63,6 +63,7 @@ namespace Prima.Stable
             client.UserJoined += user => WelcomeCard.Handler(client, templates, user);
 
             client.GuildMemberUpdated += censusEvents.GuildMemberUpdated;
+            client.GuildMemberUpdated += (_, newMember) => AddRelatedContentRole.Handler(newMember);
 
             client.UserVoiceStateUpdated += mute.OnVoiceJoin;
 

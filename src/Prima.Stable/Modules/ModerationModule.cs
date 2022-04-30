@@ -33,7 +33,7 @@ namespace Prima.Stable.Modules
                     .WithColor(Color.Orange)
                     .WithDescription("⏬ Please click the button underneath this message to open a modmail!")
                     .Build(),
-                component: new ComponentBuilder()
+                components: new ComponentBuilder()
                     .WithButton("Open Ticket", "cem-modmail")
                     .Build());
         }
