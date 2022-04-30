@@ -44,7 +44,7 @@ namespace Prima.DiscordNet
             await fileStream.CopyToAsync(fileStreamCopy);
             fileStreamCopy.Seek(0, SeekOrigin.Begin);
             Log.Information("Sending image {Filename}", fileName);
-            await context.Channel.SendFileAsync(fileStream, fileName);
+            await context.Channel.SendFileAsync(fileStreamCopy, fileName);
         }
 
         public static async Task<IUser> GetUserFromMention(string userMention, ICommandContext context)
