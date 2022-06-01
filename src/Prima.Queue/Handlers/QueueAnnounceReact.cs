@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Prima.Queue.Handlers
 {
-    public static class AnnounceReact
+    public static class QueueAnnounceReact
     {
         private static readonly IDictionary<string, FFXIVRole> RoleReactions = new Dictionary<string, FFXIVRole>
         {

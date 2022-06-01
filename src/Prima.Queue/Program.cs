@@ -28,7 +28,7 @@ namespace Prima.Queue
             services.GetRequiredService<QueueAnnouncementMonitor>().Initialize();
 
             client.ReactionAdded += (message, _, reaction)
-                => AnnounceReact.HandlerAdd(client, queueService, db, message, reaction);
+                => QueueAnnounceReact.HandlerAdd(client, queueService, db, message, reaction);
 
             Log.Information("Prima Queue logged in!");
 

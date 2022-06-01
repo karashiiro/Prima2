@@ -352,7 +352,14 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
+# Rider
+.idea/
+
+# VSCode
+.vscode/
+
+# Data files in dumb places
+temp/
+
 *.json
 *.db
-
-temp/
