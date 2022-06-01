@@ -5,11 +5,11 @@ namespace Prima.Application.Logging;
 
 [SuppressMessage("Performance", "CA1822:Mark members as static")]
 [SuppressMessage("ReSharper", "TemplateIsNotCompileTimeConstantProblem")]
-public class Logger
+public class AppLogger : IAppLogger
 {
     private static bool _serilogInitialized;
     
-    public Logger()
+    public AppLogger()
     {
         if (!_serilogInitialized)
         {

@@ -33,7 +33,7 @@ sc.AddSingleton(_ => new DiscordSocketClient(disConfig));
 sc.AddSingleton<CommandService>();
 sc.AddSingleton<CommandHandlingService>();
 sc.AddSingleton<DiagnosticService>();
-sc.AddSingleton<Logger>();
+sc.AddSingleton<IAppLogger, AppLogger>();
 sc.AddSingleton<HttpClient>();
 sc.AddSingleton<IDbService, DbService>();
 sc.AddSingleton<RateLimitService>();
@@ -72,7 +72,7 @@ sc.AddSingleton<PasswordGenerator>();
 var services = sc.BuildServiceProvider();
 
 // Fit our logger onto Discord.NET's logging interface
-var logger = services.GetRequiredService<Logger>();
+var logger = services.GetRequiredService<IAppLogger>();
 
 Task LogAsync(LogMessage message)
 {
