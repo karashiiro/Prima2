@@ -10,7 +10,6 @@ using Prima.DiscordNet.Services;
 using Prima.Game.FFXIV;
 using Prima.Game.FFXIV.FFLogs;
 using Prima.Game.FFXIV.XIVAPI;
-using Prima.Queue.Handlers;
 using Prima.Queue.Services;
 using Prima.Scheduler.GoogleApis.Services;
 using Prima.Scheduler.Handlers;
@@ -18,6 +17,7 @@ using Prima.Scheduler.Services;
 using Prima.Services;
 using Prima.Stable.Handlers;
 using Prima.Stable.Services;
+using Quartz;
 
 var disConfig = new DiscordSocketConfig
 {
@@ -68,6 +68,12 @@ sc.AddSingleton<FFXIV3RoleQueueService>();
 sc.AddSingleton<QueueAnnouncementMonitor>();
 sc.AddSingleton<ExpireQueuesService>();
 sc.AddSingleton<PasswordGenerator>();
+
+// Add scheduler
+sc.AddQuartz(q =>
+{
+    q.UseMicrosoftDependencyInjectionJobFactory();
+});
 
 var services = sc.BuildServiceProvider();
 
