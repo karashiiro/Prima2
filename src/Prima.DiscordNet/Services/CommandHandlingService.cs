@@ -29,9 +29,9 @@ namespace Prima.DiscordNet.Services
             _discord.MessageReceived += MessageReceivedAsync;
         }
 
-        public Task InitializeAsync()
+        public Task InitializeAsync(Assembly assembly = null)
         {
-            return _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+            return _commands.AddModulesAsync(assembly ?? Assembly.GetEntryAssembly(), _services);
         }
 
         private async Task MessageReceivedAsync(SocketMessage rawMessage)

@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace Prima.Stable
 {
-    static class Program
+    public static class Program
     {
         static void Main(string[] args) => MainAsync(args).GetAwaiter().GetResult();
 

@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Reflection;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -127,7 +128,10 @@ await client.StartAsync();
 
 logger.Info("Prima is now logged in!");
 
-await services.GetRequiredService<CommandHandlingService>().InitializeAsync();
+var commandHandler = services.GetRequiredService<CommandHandlingService>();
+await commandHandler.InitializeAsync(Assembly.GetAssembly(typeof(Prima.Queue.Program)));
+await commandHandler.InitializeAsync(Assembly.GetAssembly(typeof(Prima.Scheduler.Program)));
+await commandHandler.InitializeAsync(Assembly.GetAssembly(typeof(Prima.Stable.Program)));
 
 // TODO: Refactor all of the callbacks below into more cohesive modules
 
