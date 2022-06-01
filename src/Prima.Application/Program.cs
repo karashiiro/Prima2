@@ -132,6 +132,7 @@ var commandHandler = services.GetRequiredService<CommandHandlingService>();
 await commandHandler.InitializeAsync(Assembly.GetAssembly(typeof(Prima.Queue.Program)));
 await commandHandler.InitializeAsync(Assembly.GetAssembly(typeof(Prima.Scheduler.Program)));
 await commandHandler.InitializeAsync(Assembly.GetAssembly(typeof(Prima.Stable.Program)));
+await commandHandler.InitializeAsync();
 
 // TODO: Refactor all of the callbacks below into more cohesive modules
 
