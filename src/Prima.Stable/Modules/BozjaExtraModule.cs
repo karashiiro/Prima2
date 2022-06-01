@@ -79,10 +79,9 @@ namespace Prima.Stable.Modules
                     "▫️ Trinity Seeker Progression\n" +
                     "▫️ Queen's Guard Progression\n" +
                     "▫️ Trinity Avowed Progression\n" +
-                    "▫️ Stygimoloch Lord Progression\n" +
                     "▫️ The Queen Progression");
             }
-            catch (HttpException e) when (e.DiscordCode == 50007)
+            catch (HttpException e) when (e.DiscordCode == DiscordErrorCode.CannotSendMessageToUser)
             {
                 Log.Warning("Can't send direct message to user {User}.", member.ToString());
             }
@@ -478,6 +477,32 @@ namespace Prima.Stable.Modules
                 lfgReclearMembers.Count()));
         }
 
+        [Command("lostactions", RunMode = RunMode.Async)]
+        [Description("Shows the Lost Action guide images.")]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public Task LostActionsAsync()
+        {
+            return ReplyAsync(embed: new EmbedBuilder()
+                .WithTitle("Lost Actions commands")
+                .WithDescription("~bozjakit - General use Bozja/Zadnor loadout guide\n" +
+                                 "~drnspeedrun - Delubrum Reginae (Normal) loadout guide\n" +
+                                 "~drskit - Delubrum Reginae (Savage) loadout guide")
+                .WithColor(Color.DarkOrange)
+                .Build());
+        }
+
+        [Command("bozjakit", RunMode = RunMode.Async)]
+        [Description("Shows the Bozja/Zadnor Lost Actions loadout guide.")]
+        [RateLimit(TimeSeconds = 10, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public Task BozjaKitAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/4Isvsra.png");
+
+        [Command("drskit", RunMode = RunMode.Async)]
+        [Description("Shows the Delubrum Reginae (Savage) loadout guide.")]
+        [RateLimit(TimeSeconds = 10, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public Task DrsKitAsync() => ReplyAsync("https://docs.google.com/spreadsheets/d/11aMSvRlvVkv9ZhDdks19ge1p0HipHOq8RGAIe-N4UxU/edit?usp=sharing");
+        
         [Command("star", RunMode = RunMode.Async)]
         [Description("Shows the Bozjan Southern Front star mob guide.")]
         [RateLimit(TimeSeconds = 10, Global = true)]
@@ -499,7 +524,7 @@ namespace Prima.Stable.Modules
 
         [Command("qg", RunMode = RunMode.Async)]
         [Description("Shows the Queen's Guard guide.")]
-        [RateLimit(TimeSeconds = 120, Global = true)]
+        [RateLimit(TimeSeconds = 30, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task QgAsync()
         {
@@ -567,7 +592,7 @@ namespace Prima.Stable.Modules
         [Command("specialboys", RunMode = RunMode.Async)]
         [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task SpecialBoysAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/yjcMDyb.png");
+        public Task SpecialBoysAsync() => DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/908419620279574578/922266962363568188/Philippe_QG.png");
 
         [Command("drnspeedrun", RunMode = RunMode.Async)]
         [Description("Shows DRN speedrun loadouts.")]

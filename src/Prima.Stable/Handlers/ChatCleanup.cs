@@ -7,14 +7,13 @@ using Prima.Services;
 using Serilog;
 using System;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using SixLabors.ImageSharp;
 using Color = Discord.Color;
-using ImageFormat = System.Drawing.Imaging.ImageFormat;
 
 namespace Prima.Stable.Handlers
 {
@@ -167,14 +166,14 @@ namespace Prima.Stable.Handlers
 
             foreach (var attachment in rawMessage.Attachments)
             {
-                var justFileName = attachment.Filename.Substring(0, attachment.Filename.LastIndexOf("."));
+                var justFileName = attachment.Filename[..attachment.Filename.LastIndexOf(".", StringComparison.InvariantCulture)];
                 if (attachment.Filename.ToLower().EndsWith(".bmp") || attachment.Filename.ToLower().EndsWith(".dib"))
                 {
                     try
                     {
                         var timer = new Stopwatch();
-                        using var bitmap = new Bitmap(Path.Combine(db.Config.TempDir, attachment.Filename));
-                        bitmap.Save(Path.Combine(db.Config.TempDir, justFileName + ".png"), ImageFormat.Png);
+                        using var bitmap = await SixLabors.ImageSharp.Image.LoadAsync(Path.Combine(db.Config.TempDir, attachment.Filename));
+                        await bitmap.SaveAsPngAsync(Path.Combine(db.Config.TempDir, justFileName + ".png"));
                         timer.Stop();
                         Log.Information("Processed BMP from {DiscordName}, ({Time}ms)!", $"{rawMessage.Author.Username}#{rawMessage.Author.Discriminator}", timer.ElapsedMilliseconds);
                         await (guildChannel as ITextChannel).SendFileAsync(Path.Combine(db.Config.TempDir, justFileName + ".png"), $"{rawMessage.Author.Mention}: Your file has been automatically converted from BMP/DIB to PNG (BMP files don't render automatically).");

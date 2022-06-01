@@ -17,3 +17,4 @@ prima-google-apis
 
 *.yml
 *.json
+.vscode

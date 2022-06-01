@@ -25,7 +25,7 @@ namespace Prima.Stable.Modules
         private const int MessageDeleteDelay = 10000;
 
         private const string MostRecentZoneRole = "Bozja";
-
+        
         // Declare yourself as a character.
         [Command("iam", RunMode = RunMode.Async)]
         [Alias("i am")]
@@ -87,7 +87,7 @@ namespace Prima.Stable.Modules
                 {
                     await Context.Message.DeleteAsync();
                 }
-                catch (HttpException) { } // Message was already deleted.
+                catch (Exception) { } // Message was already deleted.
             }).Start();
 
             var world = "";
@@ -162,9 +162,13 @@ namespace Prima.Stable.Modules
                 return;
             }
 
+            Log.Information("Verified user {0}", Context.User.Id);
+
             // Get the existing database entry, if it exists.
             var existingLodestoneId = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id)?.LodestoneId;
             var existingDiscordUser = Db.Users.FirstOrDefault(u => u.LodestoneId == foundCharacter.LodestoneId);
+
+            Log.Information("Fetched database entry for user {UserId}. null: {DbEntryIsNull}", Context.User.Id, existingDiscordUser == null);
 
             // Disallow duplicate characters (CEM policy).
             if (existingDiscordUser != null)
@@ -185,6 +189,8 @@ namespace Prima.Stable.Modules
             user.Verified = true;
             foundCharacter.DiscordId = Context.User.Id;
             await Db.AddUser(user);
+
+            Log.Information("Added user {UserId} to the database", Context.User.Id);
 
             // We use the user-provided parameter because the Lodestone format includes the data center.
             var outputName = $"({world}) {foundCharacter.Name}";
@@ -353,8 +359,9 @@ namespace Prima.Stable.Modules
         {
             var memberRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
             await member.AddRoleAsync(memberRole);
-            Log.Information("Added {DiscordName} to {Role}.", member.ToString(), memberRole.Name);
+            Log.Information("Added {DiscordName} to {Role}", member.ToString(), memberRole.Name);
 
+            Log.Information("Checking Lodestone ID and home world for user {DiscordName}", member.ToString());
             if (oldLodestoneId != dbEntry.LodestoneId || !CrystalWorlds.List.Contains(dbEntry.World))
             {
                 var guild = Context.Guild;
@@ -369,17 +376,19 @@ namespace Prima.Stable.Modules
                 {
                     guild.GetRole(ulong.Parse(guildConfig.Roles["Arsenal Master"])),
                     guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared"])),
-                    guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Castrum"])),
-                    guild.GetRole(ulong.Parse(guildConfig.Roles["Siege Liege"])),
                     guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Delubrum Savage"])),
                     guild.GetRole(ulong.Parse(guildConfig.Roles["Savage Queen"])),
-                    guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Dalriada"])),
-                    guild.GetRole(ulong.Parse(guildConfig.Roles["Dalriada Raider"])),
                 }).ToArray();
 
                 await member.RemoveRolesAsync(roles);
+                Log.Information("Removed achievement roles from {DiscordName}", member.ToString());
+            }
+            else
+            {
+                Log.Information("Nothing to do");
             }
 
+            Log.Information("Checking default content level for user {DiscordName}", member.ToString());
             var contentRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles[MostRecentZoneRole]));
             if (CrystalWorlds.List.Contains(dbEntry.World))
             {
@@ -387,7 +396,8 @@ namespace Prima.Stable.Modules
                 var highestCombatLevel = 0;
                 foreach (var classJob in data["ClassJobs"].ToObject<CharacterLookup.ClassJob[]>())
                 {
-                    if (classJob.JobID is >= 8 and <= 18) continue;
+                    // Skip non-DoW/DoM or BLU
+                    if (classJob.JobID is >= 8 and <= 18 or 36) continue;
                     if (classJob.Level > highestCombatLevel)
                     {
                         highestCombatLevel = classJob.Level;
@@ -402,24 +412,45 @@ namespace Prima.Stable.Modules
                 await member.AddRoleAsync(contentRole);
                 Log.Information("Added {DiscordName} to {Role}.", member.ToString(), contentRole.Name);
             }
+            else
+            {
+                Log.Information("Nothing to do");
+            }
         }
 
         [Command("unlink", RunMode = RunMode.Async)]
         [RequireUserPermission(GuildPermission.KickMembers)]
         public async Task UnlinkCharacter(params string[] args)
         {
-            var world = args[0].ToLower();
-            var name = Util.Capitalize(args[1]) + " " + Util.Capitalize(args[2]);
-            world = RegexSearches.NonAlpha.Replace(world, string.Empty);
-            world = Util.Capitalize(world);
-            name = RegexSearches.AngleBrackets.Replace(name, string.Empty);
-            name = RegexSearches.UnicodeApostrophe.Replace(name, string.Empty);
-
-            if (!await Db.RemoveUser(world, name))
+            if (args.Length == 1)
             {
-                await ReplyAsync(
-                    "No user matching that world and name was found. Please double-check the spelling of the world and name.");
-                return;
+                if (!ulong.TryParse(args[0], out var lodestoneId))
+                {
+                    await ReplyAsync("The Lodestone ID provided is poorly-formatted. Please make sure it is only numbers and try again.");
+                    return;
+                }
+
+                if (!await Db.RemoveUser(lodestoneId))
+                {
+                    await ReplyAsync("No user matching that Lodestone ID was found.");
+                    return;
+                }
+            }
+            else
+            {
+                var world = args[0].ToLower();
+                var name = Util.Capitalize(args[1]) + " " + Util.Capitalize(args[2]);
+                world = RegexSearches.NonAlpha.Replace(world, string.Empty);
+                world = Util.Capitalize(world);
+                name = RegexSearches.AngleBrackets.Replace(name, string.Empty);
+                name = RegexSearches.UnicodeApostrophe.Replace(name, string.Empty);
+
+                if (!await Db.RemoveUser(world, name))
+                {
+                    await ReplyAsync(
+                        "No user matching that world and name was found. Please double-check the spelling of the world and name.");
+                    return;
+                }
             }
 
             await ReplyAsync("User unlinked.");
@@ -459,12 +490,8 @@ namespace Prima.Stable.Modules
             var member = await Context.Client.Rest.GetGuildUserAsync(guild.Id, Context.User.Id);
             var arsenalMaster = guild.GetRole(ulong.Parse(guildConfig.Roles["Arsenal Master"]));
             var cleared = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared"]));
-            var clearedCastrumLacusLitore = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Castrum"]));
-            var siegeLiege = guild.GetRole(ulong.Parse(guildConfig.Roles["Siege Liege"]));
             var clearedDRS = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Delubrum Savage"]));
             var savageQueen = guild.GetRole(ulong.Parse(guildConfig.Roles["Savage Queen"]));
-            var clearedDalriada = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Dalriada"]));
-            var dalriadaRaider = guild.GetRole(ulong.Parse(guildConfig.Roles["Dalriada Raider"]));
 
             using var typing = Context.Channel.EnterTypingState();
 
@@ -498,14 +525,15 @@ namespace Prima.Stable.Modules
             var hasDRSAchievement2 = false;
             var hasDalriadaAchievement1 = false;
             var hasDalriadaAchievement2 = false;
-            if (!await LodestoneUtils.VerifyCharacter(Lodestone, ulong.Parse(user.LodestoneId), Context.User.Id.ToString()))
-            {
-                await ReplyAsync(Properties.Resources.LodestoneDiscordIdNotFoundError);
-                return;
-            }
-
+            
             if (!user.Verified)
             {
+                if (!await LodestoneUtils.VerifyCharacter(Lodestone, ulong.Parse(user.LodestoneId), Context.User.Id.ToString()))
+                {
+                    await ReplyAsync(Properties.Resources.LodestoneDiscordIdNotFoundError);
+                    return;
+                }
+
                 user.Verified = true;
                 await Db.UpdateUser(user);
             }
@@ -523,20 +551,6 @@ namespace Prima.Stable.Modules
                 await member.AddRoleAsync(arsenalMaster);
                 await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, arsenalMaster.Name));
                 hasAchievement = true;
-            }
-            if (achievements.Any(achievement => achievement.ID == 2680)) // Operation: Eagle's Nest I
-            {
-                Log.Information("Added role " + clearedCastrumLacusLitore.Name);
-                await member.AddRoleAsync(clearedCastrumLacusLitore);
-                await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, clearedCastrumLacusLitore.Name));
-                hasCastrumLLAchievement1 = true;
-            }
-            if (achievements.Any(achievement => achievement.ID == 2682)) // Operation: Eagle's Nest III
-            {
-                Log.Information("Added role " + siegeLiege.Name);
-                await member.AddRoleAsync(siegeLiege);
-                await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, siegeLiege.Name));
-                hasCastrumLLAchievement2 = true;
             }
             if (achievements.Any(achievement => achievement.ID == 2765)) // Operation: Savage Queen of Swords I
             {
@@ -562,20 +576,6 @@ namespace Prima.Stable.Modules
                 await member.AddRoleAsync(savageQueen);
                 await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, savageQueen.Name));
                 hasDRSAchievement2 = true;
-            }
-            if (achievements.Any(achievement => achievement.ID == 2874)) // Hell to Pay I
-            {
-                Log.Information("Added role " + clearedDalriada.Name);
-                await member.AddRoleAsync(clearedDalriada);
-                await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, clearedDalriada.Name));
-                hasDalriadaAchievement1 = true;
-            }
-            if (achievements.Any(achievement => achievement.ID == 2876)) // Hell to Pay III
-            {
-                Log.Information("Added role " + dalriadaRaider.Name);
-                await member.AddRoleAsync(dalriadaRaider);
-                await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, dalriadaRaider.Name));
-                hasDalriadaAchievement2 = true;
             }
 
             if (!hasAchievement && !hasMount && !hasCastrumLLAchievement1 && !hasCastrumLLAchievement2 && !hasDRSAchievement1 && !hasDRSAchievement2 && !hasDalriadaAchievement1 && !hasDalriadaAchievement2)

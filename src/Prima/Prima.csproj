@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <LangVersion>9.0</LangVersion>
     <ApplicationIcon />
     <StartupObject />
@@ -14,6 +14,7 @@
     <None Remove="Templates\automod\delete.md" />
     <None Remove="Templates\automod\postban.md" />
     <None Remove="Templates\automod\softblock.md" />
+    <None Remove="Templates\captcha.md" />
     <None Remove="Templates\cemjoin.md" />
     <None Remove="Templates\privacy.md" />
     <None Remove="Templates\test.md" />
@@ -24,6 +25,7 @@
     <EmbeddedResource Include="Templates\automod\delete.md" />
     <EmbeddedResource Include="Templates\automod\postban.md" />
     <EmbeddedResource Include="Templates\automod\softblock.md" />
+    <EmbeddedResource Include="Templates\captcha.md" />
     <EmbeddedResource Include="Templates\cemjoin.md" />
     <EmbeddedResource Include="Templates\privacy.md" />
     <EmbeddedResource Include="Templates\test.md" />
@@ -31,13 +33,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
-    <PackageReference Include="MongoDB.Driver" Version="2.13.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.15.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.0" />
-    <PackageReference Include="System.Linq.Async" Version="5.0.0" />
-    <PackageReference Include="System.ServiceModel.Primitives" Version="4.8.1" />
-    <PackageReference Include="TimeZoneNames" Version="4.2.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
+    <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
+    <PackageReference Include="TimeZoneNames" Version="5.0.1" />
   </ItemGroup>
 
   <ItemGroup>

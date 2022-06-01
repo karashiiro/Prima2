@@ -61,7 +61,7 @@ namespace Prima.Queue.Services
 
                 foreach (var channel in scheduleChannels)
                 {
-                    tasks.Add(CheckRuns(guild, channel.Id, 120, async (host, embedMessage, embed) =>
+                    tasks.Add(CheckRuns(guild, channel.Id, 120, async (_, embedMessage, embed) =>
                     {
                         var queue = await GetEventQueue(guildConfig, embedMessage, embed);
                         if (queue == null)
@@ -90,7 +90,7 @@ namespace Prima.Queue.Services
                         await Task.WhenAll(notificationTasks);
                     }, token));
 
-                    tasks.Add(CheckRuns(guild, channel.Id, 60, async (host, embedMessage, embed) =>
+                    tasks.Add(CheckRuns(guild, channel.Id, 60, async (_, embedMessage, embed) =>
                     {
                         var queue = await GetEventQueue(guildConfig, embedMessage, embed);
                         if (queue == null)
@@ -120,7 +120,7 @@ namespace Prima.Queue.Services
                         await Task.WhenAll(notificationTasks);
                     }, token));
 
-                    tasks.Add(CheckRuns(guild, channel.Id, 30, async (host, embedMessage, embed) =>
+                    tasks.Add(CheckRuns(guild, channel.Id, 30, async (_, embedMessage, embed) =>
                     {
                         var queue = await GetEventQueue(guildConfig, embedMessage, embed);
                         if (queue == null)
@@ -223,6 +223,7 @@ namespace Prima.Queue.Services
         private async Task<FFXIVDiscordIntegratedQueue> GetEventQueue(DiscordGuildConfiguration guildConfig, IMessage embedMessage, IEmbed eventInfo)
         {
 #if DEBUG
+            await Task.Delay(1);
             return _queueService.GetOrCreateQueue(QueueInfo.LfgChannels[766712049316265985]);
 #else
             var channelId = embedMessage.Channel.Id;
@@ -296,7 +297,7 @@ namespace Prima.Queue.Services
             {
                 await user.SendMessageAsync(message);
             }
-            catch (HttpException e) when (e.DiscordCode == 50007)
+            catch (HttpException e) when (e.DiscordCode == DiscordErrorCode.CannotSendMessageToUser)
             {
                 Log.Warning("Can't send direct message to user {User}.", user.ToString());
             }
@@ -314,6 +315,8 @@ namespace Prima.Queue.Services
             _tokenSource?.Cancel();
             _tokenSource?.Dispose();
             _disposed = true;
+
+            GC.SuppressFinalize(this);
         }
     }
 }

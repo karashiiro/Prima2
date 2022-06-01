@@ -2,9 +2,10 @@
 using Lumina;
 using Newtonsoft.Json.Linq;
 using Prima.DiscordNet.Attributes;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using System;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -42,7 +43,7 @@ namespace Prima.Stable.Modules
                 return;
             }
 
-            var zone = string.Join(' ', args[2..^0]);
+            var zone = string.Join(' ', args[2..]);
             var (mapFile, sizeFactor) = await GetMapAndSizeFactor(zone);
             if (mapFile == null)
             {
@@ -50,19 +51,24 @@ namespace Prima.Stable.Modules
                 return;
             }
 
-            using var map = Image.FromStream(mapFile);
-            using var redFlag = Image.FromStream(await Http.GetStreamAsync(new Uri("http://heavenswhere.com/icons/redflag.png")));
+            using var map = await Image.LoadAsync(mapFile);
+            using var redFlag = await Image.LoadAsync(await Http.GetStreamAsync(new Uri("http://heavenswhere.com/icons/redflag.png")));
             var flagWidth = map.Width / 18f;
             var flagHeight = map.Height / 18f;
             var mapScale = GetMapScale(map.Width, sizeFactor);
 
-            using var drawing = new Bitmap(map.Width, map.Height, PixelFormat.Format32bppArgb);
-            using var g = Graphics.FromImage(drawing);
-            g.DrawImage(map, 0, 0);
-            g.DrawImage(redFlag, x * mapScale - flagWidth / 2, y * mapScale - flagHeight / 2, flagWidth, flagHeight);
+            redFlag.Mutate(ctx => ctx.Resize(new Size((int)flagWidth, (int)flagHeight)));
+
+            using var canvas = new Image<Rgba32>(map.Width, map.Height);
+            canvas.Mutate(ctx =>
+            {
+                ctx.DrawImage(map, new Point(0, 0), 1.0f);
+                ctx.DrawImage(redFlag,
+                    new Point((int)(x * mapScale - flagWidth / 2), (int)(y * mapScale - flagHeight / 2)), 1.0f);
+            });
 
             await using var mapToSend = new MemoryStream();
-            drawing.Save(mapToSend, ImageFormat.Jpeg);
+            await canvas.SaveAsJpegAsync(mapToSend);
             mapToSend.Seek(0, SeekOrigin.Begin);
 
             await Context.Channel.SendFileAsync(mapToSend, $"{zone}.jpg");

@@ -8,6 +8,13 @@ using Serilog;
 
 namespace Prima.Scheduler.GoogleApis.Services
 {
+    public class CalendarApiException : Exception
+    {
+        public CalendarApiException(string message) : base(message)
+        {
+        }
+    }
+
     public class CalendarApi
     {
         private const string BaseAddress = "http://localhost:7552/calendar";
@@ -28,7 +35,7 @@ namespace Prima.Scheduler.GoogleApis.Services
             catch (HttpRequestException)
             {
                 Log.Warning(CannotConnectMessage);
-                return new MiniEvent[0];
+                return Array.Empty<MiniEvent>();
             }
         }
 
@@ -41,7 +48,7 @@ namespace Prima.Scheduler.GoogleApis.Services
                 var res = await _http.PostAsync(uri, newEventJson);
                 var body = await res.Content.ReadAsStringAsync();
                 var ecr = JsonConvert.DeserializeObject<EventCreateResponse>(body);
-                return ecr.EventLink;
+                return ecr?.EventLink ?? throw new CalendarApiException("Failed to deserialize API response.");
             }
             catch (HttpRequestException)
             {
@@ -88,9 +95,7 @@ namespace Prima.Scheduler.GoogleApis.Services
             try
             {
                 var res = await _http.DeleteAsync(uri);
-                var body = await res.Content.ReadAsStringAsync();
-                var gr = JsonConvert.DeserializeObject<GenericResponse>(body);
-                return true;
+                return res.IsSuccessStatusCode;
             }
             catch (HttpRequestException)
             {

@@ -60,9 +60,6 @@ sc.AddSingleton<KeepClean>();
 sc.AddSingleton<EphemeralPinManager>();
 
 // Add old Prima.Scheduler services
-sc.AddSingleton<EventService>();
-sc.AddSingleton<RunNotiferService>();
-sc.AddSingleton<SpreadsheetService>();
 sc.AddSingleton<AnnounceMonitor>();
 sc.AddSingleton<CalendarApi>();
 
@@ -164,33 +161,23 @@ client.MessageReceived += message => TriggerDispatcher.Handler(client, message);
 client.UserJoined += user => WelcomeCard.Handler(client, templates, user);
 
 client.GuildMemberUpdated += censusEvents.GuildMemberUpdated;
+client.GuildMemberUpdated += AddRelatedContentRole.Handler;
 
 client.UserVoiceStateUpdated += mute.OnVoiceJoin;
 
+client.ButtonExecuted += component => Modmail.Handler(db, component);
+
 // Initialize the old Prima.Scheduler services
-services.GetRequiredService<RunNotiferService>().Initialize();
 services.GetRequiredService<AnnounceMonitor>().Initialize();
 
 // Add the old Prima.Scheduler callbacks
-var events = services.GetRequiredService<EventService>();
 var calendar = services.GetRequiredService<CalendarApi>();
-
-client.MessageUpdated += events.OnMessageEdit;
-client.ReactionAdded += events.OnReactionAdd;
-client.ReactionRemoved += events.OnReactionRemove;
 
 client.MessageUpdated += (_, message, _) => AnnounceEdit.Handler(client, calendar, db, message);
 client.ReactionAdded += (cachedMessage, _, reaction)
     => AnnounceReact.HandlerAdd(client, db, cachedMessage, reaction);
 
-// Initialize the old Prima.Queue services
-services.GetRequiredService<QueueAnnouncementMonitor>().Initialize();
-
-var queueService = services.GetRequiredService<FFXIV3RoleQueueService>();
-
-// Add the old Prima.Queue callbacks
-client.ReactionAdded += (message, _, reaction)
-    => QueueAnnounceReact.HandlerAdd(client, queueService, db, message, reaction);
+// Skip the old Prima.Queue services and callbacks since we aren't using them right now
 
 // Suspend the entrypoint task forever
 await Task.Delay(-1);

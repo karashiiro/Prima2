@@ -12,7 +12,6 @@ namespace Prima.Services
 
         IEnumerable<DiscordGuildConfiguration> Guilds { get; }
         IEnumerable<DiscordXIVUser> Users { get; }
-        IEnumerable<ScheduledEvent> Events { get; }
         IEnumerable<CachedMessage> CachedMessages { get; }
         IEnumerable<ChannelDescription> ChannelDescriptions { get; }
         IAsyncEnumerable<EventReaction> EventReactions { get; }
@@ -73,17 +72,9 @@ namespace Prima.Services
 
         Task<bool> RemoveUser(string world, string name);
 
+        Task<bool> RemoveUser(ulong lodestoneId);
+
         Task RemoveBrokenUsers();
-
-        Task AddScheduledEvent(ScheduledEvent @event);
-
-        Task UpdateScheduledEvent(ScheduledEvent newEvent);
-
-        Task AddMemberToEvent(ScheduledEvent @event, ulong memberId);
-
-        Task RemoveMemberFromEvent(ScheduledEvent @event, ulong memberId);
-
-        Task<ScheduledEvent> TryRemoveScheduledEvent(DateTime when, ulong userId);
 
         Task CacheMessage(CachedMessage message);
 

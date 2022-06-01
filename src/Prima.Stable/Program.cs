@@ -63,8 +63,11 @@ namespace Prima.Stable
             client.UserJoined += user => WelcomeCard.Handler(client, templates, user);
 
             client.GuildMemberUpdated += censusEvents.GuildMemberUpdated;
+            client.GuildMemberUpdated += AddRelatedContentRole.Handler;
 
             client.UserVoiceStateUpdated += mute.OnVoiceJoin;
+
+            client.ButtonExecuted += component => Modmail.Handler(db, component);
 
             Log.Information("Prima.Stable logged in!");
 

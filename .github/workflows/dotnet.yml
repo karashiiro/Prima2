@@ -1,10 +1,24 @@
-name: .NET Build/Test
+name: Prima Core
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
+    paths:
+    - "src/Prima.DiscordNet/**"
+    - "src/Prima.Queue/**"
+    - "src/Prima.Scheduler/**"
+    - "src/Prima.Stable/**"
+    - "src/Prima.Tests/**"
+    - "src/Prima/**"
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
+    paths:
+    - "src/Prima.DiscordNet/**"
+    - "src/Prima.Queue/**"
+    - "src/Prima.Scheduler/**"
+    - "src/Prima.Stable/**"
+    - "src/Prima.Tests/**"
+    - "src/Prima/**"
 
 jobs:
   dotnet_build:

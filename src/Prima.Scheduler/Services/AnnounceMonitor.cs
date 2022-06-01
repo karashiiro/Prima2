@@ -44,79 +44,81 @@ namespace Prima.Scheduler.Services
 
             while (!token.IsCancellationRequested)
             {
-                var guild = _client.GetGuild(guildConfig.Id);
-
-                var drsCheck = CheckRuns(guild, guildConfig.DelubrumScheduleOutputChannel, 30, async (host, embedMessage, embed) =>
+                try
                 {
-                    var success = await AssignHostRole(guild, host);
-                    if (!success) return;
+                    var guild = _client.GetGuild(guildConfig.Id);
 
-                    await AssignExecutorRole(guild, host);
-                    await NotifyMembers(host, embedMessage, embed, token);
-                    await host.SendMessageAsync(
-                        "You have been given the Delubrum Host role for 4 1/2 hours!\n" +
-                        "You can now use the command `~setroler @User` to give them access to the progression " +
-                        "role commands `~addprogrole @User Role Name` and `~removeprogrole @User Role Name`!\n" +
-                        "You can also modify multiple users at once by using `~addprogrole @User1 @User2 Role Name`.\n\n" +
-                        "Available roles:\n" +
-                        "▫️ Trinity Seeker Progression\n" +
-                        "▫️ Queen's Guard Progression\n" +
-                        "▫️ Trinity Avowed Progression\n" +
-                        "▫️ Stygimoloch Lord Progression\n" +
-                        "▫️ The Queen Progression");
-                }, token);
+                    var drsCheck = CheckRuns(guild, guildConfig.DelubrumScheduleOutputChannel, 30,
+                        async (host, embedMessage, embed) =>
+                        {
+                            var success = await AssignHostRole(guild, host);
+                            if (!success) return;
 
-                var drnCheck = CheckRuns(guild, guildConfig.DelubrumNormalScheduleOutputChannel, 30, async (host, embedMessage, embed) =>
-                {
-                    var success = await AssignHostRole(guild, host);
-                    if (!success) return;
+                            await AssignExecutorRole(guild, host);
+                            await NotifyMembers(host, embedMessage, embed, token);
+                            await host.SendMessageAsync(
+                                "You have been given the Delubrum Host role for 4 1/2 hours!\n" +
+                                "You can now use the command `~setroler @User` to give them access to the progression " +
+                                "role commands `~addprogrole @User Role Name` and `~removeprogrole @User Role Name`!\n" +
+                                "You can also modify multiple users at once by using `~addprogrole @User1 @User2 Role Name`.\n\n" +
+                                "Available roles:\n" +
+                                "▫️ Trinity Seeker Progression\n" +
+                                "▫️ Queen's Guard Progression\n" +
+                                "▫️ Trinity Avowed Progression\n" +
+                                "▫️ The Queen Progression");
+                        }, token);
 
-                    await NotifyLead(host);
-                    await NotifyMembers(host, embedMessage, embed, token);
-                }, token);
+                    var drnCheck = CheckRuns(guild, guildConfig.DelubrumNormalScheduleOutputChannel, 30,
+                        async (host, embedMessage, embed) =>
+                        {
+                            var success = await AssignHostRole(guild, host);
+                            if (!success) return;
 
-                var clusterCheck = CheckRuns(guild, guildConfig.BozjaClusterScheduleOutputChannel, 30, async (host, embedMessage, embed) =>
-                {
-                    var success = await AssignHostRole(guild, host);
-                    if (!success) return;
+                            await NotifyLead(host);
+                            await NotifyMembers(host, embedMessage, embed, token);
+                        }, token);
 
-                    await NotifyLead(host);
-                    await NotifyMembers(host, embedMessage, embed, token);
-                }, token);
+                    var bozjaZadnorCheck = CheckRuns(guild, guildConfig.BozjaClusterScheduleOutputChannel, 30,
+                        async (host, embedMessage, embed) =>
+                        {
+                            var success = await AssignHostRole(guild, host);
+                            if (!success) return;
 
-                var castrumCheck = CheckRuns(guild, guildConfig.CastrumScheduleOutputChannel, 30, async (host, embedMessage, embed) =>
-                {
-                    var success = await AssignHostRole(guild, host);
-                    if (!success) return;
+                            await NotifyLead(host);
+                            await NotifyMembers(host, embedMessage, embed, token);
+                        }, token);
 
-                    await NotifyLead(host);
-                    await NotifyMembers(host, embedMessage, embed, token);
-                }, token);
+                    var castrumCheck = CheckRuns(guild, guildConfig.CastrumScheduleOutputChannel, 30,
+                        async (host, embedMessage, embed) =>
+                        {
+                            var success = await AssignHostRole(guild, host);
+                            if (!success) return;
 
-                var zadnorCheck = CheckRuns(guild, guildConfig.ZadnorThingScheduleOutputChannel, 30, async (host, embedMessage, embed) =>
-                {
-                    var success = await AssignHostRole(guild, host);
-                    if (!success) return;
+                            await NotifyLead(host);
+                            await NotifyMembers(host, embedMessage, embed, token);
+                        }, token);
 
-                    await NotifyLead(host);
-                    await NotifyMembers(host, embedMessage, embed, token);
-                }, token);
+                    var socialCheck = CheckRuns(guild, guildConfig.SocialScheduleOutputChannel, 30,
+                        async (host, embedMessage, embed) =>
+                        {
+                            var success = await AssignSocialHostRole(guild, host);
+                            if (!success) return;
 
-                var socialCheck = CheckRuns(guild, guildConfig.SocialScheduleOutputChannel, 30, async (host, embedMessage, embed) =>
-                {
-                    var success = await AssignSocialHostRole(guild, host);
-                    if (!success) return;
+                            await NotifyLead(host);
+                            await NotifyMembers(host, embedMessage, embed, token);
+                        }, token);
 
-                    await NotifyLead(host);
-                    await NotifyMembers(host, embedMessage, embed, token);
-                }, token);
-
-                await Task.WhenAll(drsCheck, drnCheck, clusterCheck, castrumCheck, zadnorCheck, socialCheck);
+                    await Task.WhenAll(drsCheck, drnCheck, bozjaZadnorCheck, castrumCheck, socialCheck);
 #if DEBUG
-                await Task.Delay(3000, token);
+                    await Task.Delay(3000, token);
 #else
-                await Task.Delay(new TimeSpan(0, 5, 0), token);
+                    await Task.Delay(new TimeSpan(0, 5, 0), token);
 #endif
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, "An exception was thrown while checking user events.");
+                }
             }
         }
 
@@ -236,7 +238,7 @@ namespace Prima.Scheduler.Services
             {
                 await host.SendMessageAsync("The run you scheduled is set to begin in 30 minutes!");
             }
-            catch (HttpException e) when (e.DiscordCode == 50007)
+            catch (HttpException e) when (e.DiscordCode == DiscordErrorCode.CannotSendMessageToUser)
             {
                 Log.Warning("Can't send direct message to user {User}.", host.ToString());
             }
@@ -267,7 +269,7 @@ namespace Prima.Scheduler.Services
                 {
                     await user.SendMessageAsync($"The run you reacted to (hosted by {host.Nickname ?? host.Username}) is beginning in 30 minutes!");
                 }
-                catch (HttpException e) when (e.DiscordCode == 50007)
+                catch (HttpException e) when (e.DiscordCode == DiscordErrorCode.CannotSendMessageToUser)
                 {
                     Log.Warning("Can't send direct message to user {User}.", host.ToString());
                 }
@@ -284,6 +286,8 @@ namespace Prima.Scheduler.Services
             _tokenSource?.Cancel();
             _tokenSource?.Dispose();
             _disposed = true;
+
+            GC.SuppressFinalize(this);
         }
     }
 }

@@ -11,40 +11,41 @@ namespace Prima.Tests.Mocks
 {
     public class MemoryDb : IDbService
     {
-        public GlobalConfiguration Config => _globalConfiguration;
+        public GlobalConfiguration Config { get; }
 
         public IEnumerable<DiscordGuildConfiguration> Guilds => _guilds;
         public IEnumerable<DiscordXIVUser> Users => _users;
-        public IEnumerable<ScheduledEvent> Events => _events;
         public IEnumerable<CachedMessage> CachedMessages => _cachedMessages;
         public IEnumerable<ChannelDescription> ChannelDescriptions => _channelDescriptions;
         public IAsyncEnumerable<EventReaction> EventReactions => _eventReactions.ToAsyncEnumerable();
         public IAsyncEnumerable<TimedRole> TimedRoles => _timedRoles.ToAsyncEnumerable();
-        public IAsyncEnumerable<Vote> Votes => throw new NotImplementedException();
-        public IAsyncEnumerable<VoteHost> VoteHosts => throw new NotImplementedException();
-        public IAsyncEnumerable<EphemeralPin> EphemeralPins => throw new NotImplementedException();
+        public IAsyncEnumerable<Vote> Votes => _votes.ToAsyncEnumerable();
+        public IAsyncEnumerable<VoteHost> VoteHosts => _voteHosts.ToAsyncEnumerable();
+        public IAsyncEnumerable<EphemeralPin> EphemeralPins => _ephemeralPins.ToAsyncEnumerable();
 
         private readonly IList<DiscordGuildConfiguration> _guilds;
         private readonly IList<DiscordXIVUser> _users;
-        private readonly IList<ScheduledEvent> _events;
         private readonly IList<CachedMessage> _cachedMessages;
         private readonly IList<ChannelDescription> _channelDescriptions;
         private readonly IList<EventReaction> _eventReactions;
         private readonly IList<TimedRole> _timedRoles;
-
-        private readonly GlobalConfiguration _globalConfiguration;
+        private readonly IList<Vote> _votes;
+        private readonly IList<VoteHost> _voteHosts;
+        private readonly IList<EphemeralPin> _ephemeralPins;
 
         public MemoryDb()
         {
             _guilds = new SynchronizedCollection<DiscordGuildConfiguration>();
             _users = new SynchronizedCollection<DiscordXIVUser>();
-            _events = new SynchronizedCollection<ScheduledEvent>();
             _cachedMessages = new SynchronizedCollection<CachedMessage>();
             _channelDescriptions = new SynchronizedCollection<ChannelDescription>();
             _eventReactions = new SynchronizedCollection<EventReaction>();
             _timedRoles = new SynchronizedCollection<TimedRole>();
+            _votes = new SynchronizedCollection<Vote>();
+            _voteHosts = new SynchronizedCollection<VoteHost>();
+            _ephemeralPins = new SynchronizedCollection<EphemeralPin>();
 
-            _globalConfiguration = new GlobalConfiguration();
+            Config = new GlobalConfiguration();
         }
 
         public Task SetGlobalConfigurationProperty(string key, string value)
@@ -52,7 +53,7 @@ namespace Prima.Tests.Mocks
             var field = typeof(GlobalConfiguration).GetField(key);
             if (field == null)
                 throw new ArgumentException($"Property {key} does not exist on GlobalConfiguration.");
-            field.SetValue(_globalConfiguration, value);
+            field.SetValue(Config, value);
             return Task.CompletedTask;
         }
 
@@ -82,22 +83,22 @@ namespace Prima.Tests.Mocks
 
         public Task<bool> AddEphemeralPin(ulong guildId, ulong channelId, ulong messageId, ulong pinnerRoleId, ulong pinnerId, DateTime pinTime)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(true);
         }
 
         public Task<bool> RemoveEphemeralPin(ulong messageId)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(true);
         }
 
         public Task<bool> AddVoteHost(ulong messageId, ulong ownerId)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(true);
         }
 
         public Task<bool> RemoveVoteHost(ulong messageId)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(true);
         }
 
         public Task<bool> AddEventReaction(ulong eventId, ulong userId)
@@ -176,26 +177,39 @@ namespace Prima.Tests.Mocks
 
         public Task AddGuildTextGreylistEntry(ulong guildId, string regexString)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
 
         public Task RemoveGuildTextGreylistEntry(ulong guildId, string regexString)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
 
         public Task AddUser(DiscordXIVUser user)
         {
+            _users.Add(user);
             return Task.CompletedTask;
         }
 
         public Task UpdateUser(DiscordXIVUser user)
         {
+            var i = _users.IndexOf(u => u.DiscordId == user.DiscordId);
+            _users[i] = user;
             return Task.CompletedTask;
         }
 
         public Task<bool> RemoveUser(string world, string name)
         {
+            var i = _users.IndexOf(u => string.Equals(u.World, world, StringComparison.InvariantCultureIgnoreCase)
+                                        && string.Equals(u.Name, name, StringComparison.InvariantCultureIgnoreCase));
+            _users.RemoveAt(i);
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> RemoveUser(ulong lodestoneId)
+        {
+            var i = _users.IndexOf(u => u.LodestoneId == lodestoneId.ToString());
+            _users.RemoveAt(i);
             return Task.FromResult(true);
         }
 
@@ -203,32 +217,7 @@ namespace Prima.Tests.Mocks
         {
             return Task.CompletedTask;
         }
-
-        public Task AddScheduledEvent(ScheduledEvent @event)
-        {
-            return Task.CompletedTask;
-        }
-
-        public Task UpdateScheduledEvent(ScheduledEvent newEvent)
-        {
-            return Task.CompletedTask;
-        }
-
-        public Task AddMemberToEvent(ScheduledEvent @event, ulong memberId)
-        {
-            return Task.CompletedTask;
-        }
-
-        public Task RemoveMemberFromEvent(ScheduledEvent @event, ulong memberId)
-        {
-            return Task.CompletedTask;
-        }
-
-        public Task<ScheduledEvent> TryRemoveScheduledEvent(DateTime when, ulong userId)
-        {
-            return Task.FromResult<ScheduledEvent>(null);
-        }
-
+        
         public Task CacheMessage(CachedMessage message)
         {
             return Task.CompletedTask;
@@ -256,12 +245,12 @@ namespace Prima.Tests.Mocks
 
         public Task<bool> AddVote(ulong messageId, ulong userId, string reactionName)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(true);
         }
 
         public Task<bool> RemoveVote(ulong messageId, ulong userId)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(true);
         }
     }
 }
