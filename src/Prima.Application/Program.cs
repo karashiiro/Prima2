@@ -7,6 +7,7 @@ using FFXIVWeather.Lumina;
 using Lumina;
 using Microsoft.Extensions.DependencyInjection;
 using Prima.Application.Logging;
+using Prima.Application.Scheduling;
 using Prima.DiscordNet.Services;
 using Prima.Game.FFXIV;
 using Prima.Game.FFXIV.FFLogs;
@@ -14,7 +15,6 @@ using Prima.Game.FFXIV.XIVAPI;
 using Prima.Queue.Services;
 using Prima.Scheduler.GoogleApis.Services;
 using Prima.Scheduler.Handlers;
-using Prima.Scheduler.Services;
 using Prima.Services;
 using Prima.Stable.Handlers;
 using Prima.Stable.Services;
@@ -61,7 +61,6 @@ sc.AddSingleton<KeepClean>();
 sc.AddSingleton<EphemeralPinManager>();
 
 // Add old Prima.Scheduler services
-sc.AddSingleton<AnnounceMonitor>();
 sc.AddSingleton<CalendarApi>();
 
 // Add old Prima.Queue services
@@ -74,6 +73,51 @@ sc.AddSingleton<PasswordGenerator>();
 sc.AddQuartz(q =>
 {
     q.UseMicrosoftDependencyInjectionJobFactory();
+
+    q.ScheduleJob<CheckDelubrumSavageEventsJob>(
+        t => t
+            .WithIdentity("drsEventsTrigger")
+            .StartNow()
+            .WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()),
+        j => j
+            .WithIdentity("drsEventsJob")
+            .WithDescription("Scheduled DRS Events Check"));
+    
+    q.ScheduleJob<CheckDelubrumNormalEventsJob>(
+        t => t
+            .WithIdentity("drnEventsTrigger")
+            .StartNow()
+            .WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()),
+        j => j
+            .WithIdentity("drnEventsJob")
+            .WithDescription("Scheduled DRN Events Check"));
+    
+    q.ScheduleJob<CheckBozjaEventsJob>(
+        t => t
+            .WithIdentity("bozZadEventsTrigger")
+            .StartNow()
+            .WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()),
+        j => j
+            .WithIdentity("bozZadEventsJob")
+            .WithDescription("Scheduled Bozja/Zadnor Events Check"));
+    
+    q.ScheduleJob<CheckCastrumEventsJob>(
+        t => t
+            .WithIdentity("castrumEventsTrigger")
+            .StartNow()
+            .WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()),
+        j => j
+            .WithIdentity("castrumEventsJob")
+            .WithDescription("Scheduled Castrum Events Check"));
+    
+    q.ScheduleJob<CheckSocialEventsJob>(
+        t => t
+            .WithIdentity("socialEventsTrigger")
+            .StartNow()
+            .WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()),
+        j => j
+            .WithIdentity("socialEventsJob")
+            .WithDescription("Scheduled Social Events Check"));
 });
 
 var services = sc.BuildServiceProvider();
@@ -177,9 +221,6 @@ client.GuildMemberUpdated += AddRelatedContentRole.Handler;
 client.UserVoiceStateUpdated += mute.OnVoiceJoin;
 
 client.ButtonExecuted += component => Modmail.Handler(db, component);
-
-// Initialize the old Prima.Scheduler services
-services.GetRequiredService<AnnounceMonitor>().Initialize();
 
 // Add the old Prima.Scheduler callbacks
 var calendar = services.GetRequiredService<CalendarApi>();
