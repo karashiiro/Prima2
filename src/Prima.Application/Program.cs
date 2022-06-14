@@ -132,39 +132,37 @@ var host = Host.CreateDefaultBuilder()
 // Fit our logger onto Discord.NET's logging interface
 var logger = host.Services.GetRequiredService<ILogger<DiscordSocketClient>>();
 
-Task LogAsync(LogMessage message)
+void LogDiscordMessage(LogSeverity severity, Exception exception, string source, string message)
 {
-    switch (message.Severity)
+    if (logger is null)
     {
-        case LogSeverity.Critical:
-            logger.LogError(message.Exception, $"{message.Source}: {message.Message}");
-            break;
-        case LogSeverity.Error:
-            logger.LogError(message.Exception, $"{message.Source}: {message.Message}");
-            break;
-        case LogSeverity.Warning:
-            logger.LogWarning(message.Exception, $"{message.Source}: {message.Message}");
-            break;
-        case LogSeverity.Info:
-            logger.LogInformation(message.Exception, $"{message.Source}: {message.Message}");
-            break;
-        case LogSeverity.Verbose:
-            logger.LogTrace(message.Exception, $"{message.Source}: {message.Message}");
-            break;
-        case LogSeverity.Debug:
-            logger.LogDebug(message.Exception, $"{message.Source}: {message.Message}");
-            break;
-        default:
-            throw new InvalidOperationException($"Invalid log level \"{message.Severity}\".");
+        throw new InvalidOperationException($"{nameof(logger)} is null.");
     }
     
+    Action<Exception, string, object[]> logFunc = severity switch
+    {
+        LogSeverity.Critical => logger.LogError,
+        LogSeverity.Error => logger.LogError,
+        LogSeverity.Warning => logger.LogWarning,
+        LogSeverity.Info => logger.LogInformation,
+        LogSeverity.Verbose => logger.LogTrace,
+        LogSeverity.Debug => logger.LogDebug,
+        _ => throw new ArgumentOutOfRangeException(nameof(severity))
+    };
+
+    logFunc(exception, "{Source}: {Message}", new object[]{ source, message });
+}
+
+Task LogDiscord(LogMessage message)
+{
+    LogDiscordMessage(message.Severity, message.Exception, message.Source, message.Message);
     return Task.CompletedTask;
 }
 
 var client = host.Services.GetRequiredService<DiscordSocketClient>();
 
-client.Log += LogAsync;
-host.Services.GetRequiredService<CommandService>().Log += LogAsync;
+client.Log += LogDiscord;
+host.Services.GetRequiredService<CommandService>().Log += LogDiscord;
 
 // Ensure that we have a bot token
 var token = Environment.GetEnvironmentVariable("PRIMA_BOT_TOKEN");
