@@ -3,11 +3,10 @@ using Microsoft.Extensions.Logging;
 using Prima.DiscordNet;
 using Prima.Resources;
 using Prima.Services;
-using Quartz;
 
 namespace Prima.Application.Scheduling;
 
-public class CheckDelubrumSavageEventsJob : CheckEventChannelJob, IJob
+public class CheckDelubrumSavageEventsJob : CheckEventChannelJob
 {
     public CheckDelubrumSavageEventsJob(ILogger<CheckDelubrumSavageEventsJob> logger, DiscordSocketClient client, IDbService db) : base(logger, client, db)
     {

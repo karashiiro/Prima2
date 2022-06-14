@@ -3,11 +3,10 @@ using Microsoft.Extensions.Logging;
 using Prima.DiscordNet;
 using Prima.Resources;
 using Prima.Services;
-using Quartz;
 
 namespace Prima.Application.Scheduling;
 
-public class CheckBozjaEventsJob : CheckEventChannelJob, IJob
+public class CheckBozjaEventsJob : CheckEventChannelJob
 {
     public CheckBozjaEventsJob(ILogger<CheckBozjaEventsJob> logger, DiscordSocketClient client, IDbService db) : base(logger, client, db)
     {

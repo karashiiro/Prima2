@@ -7,7 +7,7 @@ using Quartz;
 
 namespace Prima.Application.Scheduling;
 
-public abstract class CheckEventChannelJob
+public abstract class CheckEventChannelJob : IJob
 {
     protected readonly ILogger Logger;
     protected readonly DiscordSocketClient Client;
