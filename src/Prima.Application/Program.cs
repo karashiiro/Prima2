@@ -126,6 +126,7 @@ var host = Host.CreateDefaultBuilder()
             options.WaitForJobsToComplete = true;
         });
     })
+    .UseConsoleLifetime()
     .Build();
 
 // Fit our logger onto Discord.NET's logging interface
@@ -235,8 +236,5 @@ client.ReactionAdded += (cachedMessage, _, reaction)
 
 // Skip the old Prima.Queue services and callbacks since we aren't using them right now
 
-// Start the host
-await host.StartAsync();
-
-// Suspend the entrypoint task forever
-await Task.Delay(-1);
+// Run the host
+await host.RunAsync();
