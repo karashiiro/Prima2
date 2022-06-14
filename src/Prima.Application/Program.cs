@@ -6,7 +6,8 @@ using Discord.WebSocket;
 using FFXIVWeather.Lumina;
 using Lumina;
 using Microsoft.Extensions.DependencyInjection;
-using Prima.Application.Logging;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Prima.Application.Scheduling;
 using Prima.DiscordNet.Services;
 using Prima.Game.FFXIV;
@@ -20,132 +21,137 @@ using Prima.Stable.Handlers;
 using Prima.Stable.Services;
 using Quartz;
 
-var disConfig = new DiscordSocketConfig
-{
-    AlwaysDownloadUsers = true,
-    LargeThreshold = 250,
-    MessageCacheSize = 10000,
-    GatewayIntents = GatewayIntents.All,
-};
+var host = Host.CreateDefaultBuilder()
+    .ConfigureServices((_, sc) =>
+    {
+        var disConfig = new DiscordSocketConfig
+        {
+            AlwaysDownloadUsers = true,
+            LargeThreshold = 250,
+            MessageCacheSize = 10000,
+            GatewayIntents = GatewayIntents.All,
+        };
+        
+        sc.AddSingleton(_ => new DiscordSocketClient(disConfig));
+        sc.AddSingleton<CommandService>();
+        sc.AddSingleton<CommandHandlingService>();
+        sc.AddSingleton<DiagnosticService>();
+        sc.AddSingleton<HttpClient>();
+        sc.AddSingleton<IDbService, DbService>();
+        sc.AddSingleton<RateLimitService>();
+        sc.AddSingleton<ITemplateProvider, TemplateProvider>();
+        
+        // TODO: Refactor all of the services below into more cohesive modules
 
-// Set up services for dependency injection
-var sc = new ServiceCollection();
-sc.AddSingleton(_ => new DiscordSocketClient(disConfig));
-sc.AddSingleton<CommandService>();
-sc.AddSingleton<CommandHandlingService>();
-sc.AddSingleton<DiagnosticService>();
-sc.AddSingleton<IAppLogger, AppLogger>();
-sc.AddSingleton<HttpClient>();
-sc.AddSingleton<IDbService, DbService>();
-sc.AddSingleton<RateLimitService>();
-sc.AddSingleton<ITemplateProvider, TemplateProvider>();
+        // Add old Prima.Stable services
+        sc.AddSingleton<WebClient>();
+        sc.AddSingleton<CensusEventService>();
+        sc.AddSingleton<PresenceService>();
+        sc.AddSingleton<XIVAPIClient>();
+        sc.AddSingleton(_ => new GameData(Environment.OSVersion.Platform == PlatformID.Win32NT
+                ? @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack"
+                : Path.Combine(Environment.GetEnvironmentVariable("HOME")
+                               ?? throw new ArgumentException("No HOME variable set!"), "sqpack"), 
+            new LuminaOptions { PanicOnSheetChecksumMismatch = false }));
+        sc.AddSingleton<FFXIVWeatherLuminaService>();
+        sc.AddSingleton<MuteService>();
+        sc.AddSingleton<TimedRoleManager>();
+        sc.AddSingleton<FFLogsClient>();
+        sc.AddSingleton<CharacterLookup>();
+        sc.AddSingleton<KeepClean>();
+        sc.AddSingleton<EphemeralPinManager>();
 
-// TODO: Refactor all of the services below into more cohesive modules
+        // Add old Prima.Scheduler services
+        sc.AddSingleton<CalendarApi>();
 
-// Add old Prima.Stable services
-sc.AddSingleton<WebClient>();
-sc.AddSingleton<CensusEventService>();
-sc.AddSingleton<PresenceService>();
-sc.AddSingleton<XIVAPIClient>();
-sc.AddSingleton(_ => new GameData(Environment.OSVersion.Platform == PlatformID.Win32NT
-        ? @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack"
-        : Path.Combine(Environment.GetEnvironmentVariable("HOME")
-                       ?? throw new ArgumentException("No HOME variable set!"), "sqpack"), 
-    new LuminaOptions { PanicOnSheetChecksumMismatch = false }));
-sc.AddSingleton<FFXIVWeatherLuminaService>();
-sc.AddSingleton<MuteService>();
-sc.AddSingleton<TimedRoleManager>();
-sc.AddSingleton<FFLogsClient>();
-sc.AddSingleton<CharacterLookup>();
-sc.AddSingleton<KeepClean>();
-sc.AddSingleton<EphemeralPinManager>();
+        // Add old Prima.Queue services
+        sc.AddSingleton<FFXIV3RoleQueueService>();
+        sc.AddSingleton<QueueAnnouncementMonitor>();
+        sc.AddSingleton<ExpireQueuesService>();
+        sc.AddSingleton<PasswordGenerator>();
 
-// Add old Prima.Scheduler services
-sc.AddSingleton<CalendarApi>();
+        // Add scheduler
+        sc.AddQuartz(q =>
+        {
+            q.UseMicrosoftDependencyInjectionJobFactory();
 
-// Add old Prima.Queue services
-sc.AddSingleton<FFXIV3RoleQueueService>();
-sc.AddSingleton<QueueAnnouncementMonitor>();
-sc.AddSingleton<ExpireQueuesService>();
-sc.AddSingleton<PasswordGenerator>();
+            q.ScheduleJob<CheckDelubrumSavageEventsJob>(
+                t => t
+                    .WithIdentity("drsEventsTrigger")
+                    .StartNow()
+                    .WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()),
+                j => j
+                    .WithIdentity("drsEventsJob")
+                    .WithDescription("Scheduled DRS Events Check"));
+            
+            q.ScheduleJob<CheckDelubrumNormalEventsJob>(
+                t => t
+                    .WithIdentity("drnEventsTrigger")
+                    .StartNow()
+                    .WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()),
+                j => j
+                    .WithIdentity("drnEventsJob")
+                    .WithDescription("Scheduled DRN Events Check"));
+            
+            q.ScheduleJob<CheckBozjaEventsJob>(
+                t => t
+                    .WithIdentity("bozZadEventsTrigger")
+                    .StartNow()
+                    .WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()),
+                j => j
+                    .WithIdentity("bozZadEventsJob")
+                    .WithDescription("Scheduled Bozja/Zadnor Events Check"));
+            
+            q.ScheduleJob<CheckCastrumEventsJob>(
+                t => t
+                    .WithIdentity("castrumEventsTrigger")
+                    .StartNow()
+                    .WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()),
+                j => j
+                    .WithIdentity("castrumEventsJob")
+                    .WithDescription("Scheduled Castrum Events Check"));
+            
+            q.ScheduleJob<CheckSocialEventsJob>(
+                t => t
+                    .WithIdentity("socialEventsTrigger")
+                    .StartNow()
+                    .WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()),
+                j => j
+                    .WithIdentity("socialEventsJob")
+                    .WithDescription("Scheduled Social Events Check"));
+        });
 
-// Add scheduler
-sc.AddQuartz(q =>
-{
-    q.UseMicrosoftDependencyInjectionJobFactory();
-
-    q.ScheduleJob<CheckDelubrumSavageEventsJob>(
-        t => t
-            .WithIdentity("drsEventsTrigger")
-            .StartNow()
-            .WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()),
-        j => j
-            .WithIdentity("drsEventsJob")
-            .WithDescription("Scheduled DRS Events Check"));
-    
-    q.ScheduleJob<CheckDelubrumNormalEventsJob>(
-        t => t
-            .WithIdentity("drnEventsTrigger")
-            .StartNow()
-            .WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()),
-        j => j
-            .WithIdentity("drnEventsJob")
-            .WithDescription("Scheduled DRN Events Check"));
-    
-    q.ScheduleJob<CheckBozjaEventsJob>(
-        t => t
-            .WithIdentity("bozZadEventsTrigger")
-            .StartNow()
-            .WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()),
-        j => j
-            .WithIdentity("bozZadEventsJob")
-            .WithDescription("Scheduled Bozja/Zadnor Events Check"));
-    
-    q.ScheduleJob<CheckCastrumEventsJob>(
-        t => t
-            .WithIdentity("castrumEventsTrigger")
-            .StartNow()
-            .WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()),
-        j => j
-            .WithIdentity("castrumEventsJob")
-            .WithDescription("Scheduled Castrum Events Check"));
-    
-    q.ScheduleJob<CheckSocialEventsJob>(
-        t => t
-            .WithIdentity("socialEventsTrigger")
-            .StartNow()
-            .WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()),
-        j => j
-            .WithIdentity("socialEventsJob")
-            .WithDescription("Scheduled Social Events Check"));
-});
-
-var services = sc.BuildServiceProvider();
+        sc.AddQuartzHostedService(options =>
+        {
+            options.WaitForJobsToComplete = true;
+        });
+    })
+    .Build();
 
 // Fit our logger onto Discord.NET's logging interface
-var logger = services.GetRequiredService<IAppLogger>();
+var logger = host.Services.GetRequiredService<ILogger<DiscordSocketClient>>();
 
 Task LogAsync(LogMessage message)
 {
     switch (message.Severity)
     {
         case LogSeverity.Critical:
-            logger.Fatal(message.Exception, $"{message.Source}: {message.Message}");
+            logger.LogError(message.Exception, $"{message.Source}: {message.Message}");
             break;
         case LogSeverity.Error:
-            logger.Error(message.Exception, $"{message.Source}: {message.Message}");
+            logger.LogError(message.Exception, $"{message.Source}: {message.Message}");
             break;
         case LogSeverity.Warning:
-            logger.Warn(message.Exception, $"{message.Source}: {message.Message}");
+            logger.LogWarning(message.Exception, $"{message.Source}: {message.Message}");
             break;
         case LogSeverity.Info:
-            logger.Info(message.Exception, $"{message.Source}: {message.Message}");
+            logger.LogInformation(message.Exception, $"{message.Source}: {message.Message}");
             break;
         case LogSeverity.Verbose:
-            logger.Verbose(message.Exception, $"{message.Source}: {message.Message}");
+            logger.LogTrace(message.Exception, $"{message.Source}: {message.Message}");
             break;
         case LogSeverity.Debug:
-            logger.Debug(message.Exception, $"{message.Source}: {message.Message}");
+            logger.LogDebug(message.Exception, $"{message.Source}: {message.Message}");
             break;
         default:
             throw new InvalidOperationException($"Invalid log level \"{message.Severity}\".");
@@ -154,10 +160,10 @@ Task LogAsync(LogMessage message)
     return Task.CompletedTask;
 }
 
-var client = services.GetRequiredService<DiscordSocketClient>();
+var client = host.Services.GetRequiredService<DiscordSocketClient>();
 
 client.Log += LogAsync;
-services.GetRequiredService<CommandService>().Log += LogAsync;
+host.Services.GetRequiredService<CommandService>().Log += LogAsync;
 
 // Ensure that we have a bot token
 var token = Environment.GetEnvironmentVariable("PRIMA_BOT_TOKEN");
@@ -170,9 +176,7 @@ if (string.IsNullOrEmpty(token))
 await client.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("PRIMA_BOT_TOKEN"));
 await client.StartAsync();
 
-logger.Info("Prima is now logged in!");
-
-var commandHandler = services.GetRequiredService<CommandHandlingService>();
+var commandHandler = host.Services.GetRequiredService<CommandHandlingService>();
 await commandHandler.InitializeAsync(Assembly.GetAssembly(typeof(Prima.Queue.Program)));
 await commandHandler.InitializeAsync(Assembly.GetAssembly(typeof(Prima.Scheduler.Program)));
 await commandHandler.InitializeAsync(Assembly.GetAssembly(typeof(Prima.Stable.Program)));
@@ -181,10 +185,10 @@ await commandHandler.InitializeAsync();
 // TODO: Refactor all of the callbacks below into more cohesive modules
 
 // Initialize the old Prima.Stable services
-var keepClean = services.GetRequiredService<KeepClean>();
-var roleRemover = services.GetRequiredService<TimedRoleManager>();
-var ephemeralPinner = services.GetRequiredService<EphemeralPinManager>();
-var ffLogs = services.GetRequiredService<FFLogsClient>();
+var keepClean = host.Services.GetRequiredService<KeepClean>();
+var roleRemover = host.Services.GetRequiredService<TimedRoleManager>();
+var ephemeralPinner = host.Services.GetRequiredService<EphemeralPinManager>();
+var ffLogs = host.Services.GetRequiredService<FFLogsClient>();
 
 keepClean.Initialize();
 roleRemover.Initialize();
@@ -192,12 +196,12 @@ ephemeralPinner.Initialize();
 await ffLogs.Initialize();
 
 // Add the old Prima.Stable callbacks
-var db = services.GetRequiredService<IDbService>();
-var web = services.GetRequiredService<WebClient>();
-var lodestone = services.GetRequiredService<CharacterLookup>();
-var templates = services.GetRequiredService<ITemplateProvider>();
-var censusEvents = services.GetRequiredService<CensusEventService>();
-var mute = services.GetRequiredService<MuteService>();
+var db = host.Services.GetRequiredService<IDbService>();
+var web = host.Services.GetRequiredService<WebClient>();
+var lodestone = host.Services.GetRequiredService<CharacterLookup>();
+var templates = host.Services.GetRequiredService<ITemplateProvider>();
+var censusEvents = host.Services.GetRequiredService<CensusEventService>();
+var mute = host.Services.GetRequiredService<MuteService>();
 
 client.ReactionAdded += (message, channel, reaction)
     => ReactionReceived.HandlerAdd(client, db, lodestone, message, channel, reaction);
@@ -223,13 +227,16 @@ client.UserVoiceStateUpdated += mute.OnVoiceJoin;
 client.ButtonExecuted += component => Modmail.Handler(db, component);
 
 // Add the old Prima.Scheduler callbacks
-var calendar = services.GetRequiredService<CalendarApi>();
+var calendar = host.Services.GetRequiredService<CalendarApi>();
 
 client.MessageUpdated += (_, message, _) => AnnounceEdit.Handler(client, calendar, db, message);
 client.ReactionAdded += (cachedMessage, _, reaction)
     => AnnounceReact.HandlerAdd(client, db, cachedMessage, reaction);
 
 // Skip the old Prima.Queue services and callbacks since we aren't using them right now
+
+// Start the host
+await host.StartAsync();
 
 // Suspend the entrypoint task forever
 await Task.Delay(-1);

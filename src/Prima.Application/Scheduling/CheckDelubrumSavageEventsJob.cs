@@ -1,15 +1,15 @@
-﻿using Discord;
-using Discord.WebSocket;
-using Prima.Application.Logging;
+﻿using Discord.WebSocket;
+using Microsoft.Extensions.Logging;
 using Prima.DiscordNet;
 using Prima.Resources;
 using Prima.Services;
+using Quartz;
 
 namespace Prima.Application.Scheduling;
 
-public class CheckDelubrumSavageEventsJob : CheckEventChannelJob
+public class CheckDelubrumSavageEventsJob : CheckEventChannelJob, IJob
 {
-    public CheckDelubrumSavageEventsJob(IAppLogger logger, DiscordSocketClient client, IDbService db) : base(logger, client, db)
+    public CheckDelubrumSavageEventsJob(ILogger<CheckDelubrumSavageEventsJob> logger, DiscordSocketClient client, IDbService db) : base(logger, client, db)
     {
     }
 
@@ -34,7 +34,7 @@ public class CheckDelubrumSavageEventsJob : CheckEventChannelJob
         var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == SpecialGuilds.CrystalExploratoryMissions);
         if (guildConfig == null)
         {
-            Logger.Error("No guild configuration found for the default guild!");
+            Logger.LogError("No guild configuration found for the default guild!");
             return;
         }
         
@@ -62,7 +62,7 @@ public class CheckDelubrumSavageEventsJob : CheckEventChannelJob
         var currentHost = guild.GetRole(RunHostData.RoleId);
         var runPinner = guild.GetRole(RunHostData.PinnerRoleId);
 
-        Logger.Info("Assigning roles...");
+        Logger.LogInformation("Assigning roles...");
         if (HostUser == null || HostUser.HasRole(currentHost)) return false;
 
         try
@@ -74,7 +74,7 @@ public class CheckDelubrumSavageEventsJob : CheckEventChannelJob
         }
         catch (Exception e)
         {
-            Logger.Error(e, "Failed to add host role to {User}!", currentHost?.ToString() ?? "null");
+            Logger.LogError(e, "Failed to add host role to {User}!", currentHost?.ToString() ?? "null");
             return false;
         }
     }

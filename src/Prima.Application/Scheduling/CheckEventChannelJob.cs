@@ -1,15 +1,15 @@
 ﻿using Discord;
 using Discord.Net;
 using Discord.WebSocket;
-using Prima.Application.Logging;
+using Microsoft.Extensions.Logging;
 using Prima.Services;
 using Quartz;
 
 namespace Prima.Application.Scheduling;
 
-public abstract class CheckEventChannelJob : IJob
+public abstract class CheckEventChannelJob
 {
-    protected readonly IAppLogger Logger;
+    protected readonly ILogger Logger;
     protected readonly DiscordSocketClient Client;
     protected readonly IDbService Db;
 
@@ -17,7 +17,7 @@ public abstract class CheckEventChannelJob : IJob
     protected IMessage? EmbedMessage;
     protected IEmbed? Embed;
 
-    protected CheckEventChannelJob(IAppLogger logger, DiscordSocketClient client, IDbService db)
+    protected CheckEventChannelJob(ILogger logger, DiscordSocketClient client, IDbService db)
     {
         Logger = logger;
         Client = client;
@@ -26,17 +26,17 @@ public abstract class CheckEventChannelJob : IJob
     
     public async Task Execute(IJobExecutionContext ctx)
     {
+        Logger.LogInformation("Executing event channel check");
         try
         {
             var guildId = await GetGuildId();
             var channelId = await GetChannelId();
-            
             var guild = Client.GetGuild(guildId);
             await CheckRuns(guild, channelId, 30, OnMatch);
         }
         catch (Exception e)
         {
-            Logger.Error(e, "Failed to execute event channel check.");
+            Logger.LogError(e, "Failed to execute event channel check");
         }
     }
 
@@ -50,7 +50,7 @@ public abstract class CheckEventChannelJob : IJob
     {
         if (HostUser == null)
         {
-            Logger.Warn("Host user is null; cannot send notification.");
+            Logger.LogWarning("Host user is null; cannot send notification");
             return;
         }
         
@@ -60,17 +60,17 @@ public abstract class CheckEventChannelJob : IJob
         }
         catch (HttpException e) when (e.DiscordCode == DiscordErrorCode.CannotSendMessageToUser)
         {
-            Logger.Warn("Can't send direct message to user {User}.", HostUser.Username + '#' + HostUser.Discriminator);
+            Logger.LogWarning("Can't send direct message to user {User}", HostUser.Username + '#' + HostUser.Discriminator);
         }
     }
     
     protected async Task NotifyMembers(string message)
     {
-        Logger.Info("Notifying {Count} reactors...", EmbedMessage?.Reactions.Count ?? -1);
+        Logger.LogInformation("Notifying {Count} reactors...", EmbedMessage?.Reactions.Count ?? -1);
         
         if (Embed == null)
         {
-            Logger.Warn("Embed is null; cannot send notification.");
+            Logger.LogWarning("Embed is null; cannot send notification");
             return;
         }
 
@@ -89,7 +89,7 @@ public abstract class CheckEventChannelJob : IJob
             }
             catch (HttpException e) when (e.DiscordCode == DiscordErrorCode.CannotSendMessageToUser)
             {
-                Logger.Warn("Can't send direct message to user {User}.", user.Username + '#' + user.Discriminator);
+                Logger.LogWarning("Can't send direct message to user {User}", user.Username + '#' + user.Discriminator);
             }
         }
 
@@ -105,7 +105,7 @@ public abstract class CheckEventChannelJob : IJob
             return;
         }
 
-        Logger.Info("Checking runs...");
+        Logger.LogInformation("Checking runs...");
 
         await foreach (var page in channel.GetMessagesAsync())
         {
@@ -131,12 +131,12 @@ public abstract class CheckEventChannelJob : IJob
                     continue;
                 }
 
-                Logger.Info("{Username} - ETA {TimeUntil} hrs.", embed?.Author?.Name ?? "", (timestamp - DateTimeOffset.Now).TotalHours);
+                Logger.LogInformation("{Username} - ETA {TimeUntil} hrs.", embed?.Author?.Name ?? "", (timestamp - DateTimeOffset.Now).TotalHours);
 
                 // ReSharper disable once InvertIf
                 if (timestamp.AddMinutes(-minutesBefore) <= DateTimeOffset.Now && embed?.Author.HasValue == true)
                 {
-                    Logger.Info("Run matched!");
+                    Logger.LogInformation("Run matched!");
 
                     var host = guild.Users.FirstOrDefault(u => u.ToString() == embed.Author.Value.Name)
                                ?? guild.Users.FirstOrDefault(u => u.ToString() == embed.Author.Value.Name);
@@ -151,7 +151,7 @@ public abstract class CheckEventChannelJob : IJob
                     }
                     catch (Exception e)
                     {
-                        Logger.Error(e, "error: uncaught exception in onMatch");
+                        Logger.LogError(e, "error: uncaught exception in onMatch");
                     }
                 }
             }

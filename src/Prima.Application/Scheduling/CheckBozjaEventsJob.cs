@@ -1,14 +1,15 @@
 ﻿using Discord.WebSocket;
-using Prima.Application.Logging;
+using Microsoft.Extensions.Logging;
 using Prima.DiscordNet;
 using Prima.Resources;
 using Prima.Services;
+using Quartz;
 
 namespace Prima.Application.Scheduling;
 
-public class CheckBozjaEventsJob : CheckEventChannelJob
+public class CheckBozjaEventsJob : CheckEventChannelJob, IJob
 {
-    public CheckBozjaEventsJob(IAppLogger logger, DiscordSocketClient client, IDbService db) : base(logger, client, db)
+    public CheckBozjaEventsJob(ILogger<CheckBozjaEventsJob> logger, DiscordSocketClient client, IDbService db) : base(logger, client, db)
     {
     }
 
@@ -33,7 +34,7 @@ public class CheckBozjaEventsJob : CheckEventChannelJob
         var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == SpecialGuilds.CrystalExploratoryMissions);
         if (guildConfig == null)
         {
-            Logger.Error("No guild configuration found for the default guild!");
+            Logger.LogError("No guild configuration found for the default guild!");
             return;
         }
         
@@ -51,7 +52,7 @@ public class CheckBozjaEventsJob : CheckEventChannelJob
         var currentHost = guild.GetRole(RunHostData.RoleId);
         var runPinner = guild.GetRole(RunHostData.PinnerRoleId);
 
-        Logger.Info("Assigning roles...");
+        Logger.LogInformation("Assigning roles...");
         if (HostUser == null || HostUser.HasRole(currentHost)) return false;
 
         try
@@ -63,7 +64,7 @@ public class CheckBozjaEventsJob : CheckEventChannelJob
         }
         catch (Exception e)
         {
-            Logger.Error(e, "Failed to add host role to {User}!", currentHost?.ToString() ?? "null");
+            Logger.LogError(e, "Failed to add host role to {User}!", currentHost?.ToString() ?? "null");
             return false;
         }
     }
