@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Prima.DiscordNet\Modules\CommonModule.cs" Link="Modules\CommonModule.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Discord.Net.Labs" Version="3.6.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.2" />
     <PackageReference Include="TimeZoneNames" Version="5.0.1" />
