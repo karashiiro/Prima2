@@ -10,6 +10,7 @@ using Prima.Services;
 using Prima.Stable.Resources;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Color = Discord.Color;
@@ -365,20 +366,20 @@ namespace Prima.Stable.Modules
             if (oldLodestoneId != dbEntry.LodestoneId || !CrystalWorlds.List.Contains(dbEntry.World))
             {
                 var guild = Context.Guild;
-                var roles = new[]
-                {
-                    guild.GetRole(DiademRole),
-                    guild.GetRole(EurekaRole),
-                    guild.GetRole(BozjaRole),
-                };
-                
-                roles = roles.Concat(new[]
-                {
-                    guild.GetRole(ulong.Parse(guildConfig.Roles["Arsenal Master"])),
-                    guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared"])),
-                    guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Delubrum Savage"])),
-                    guild.GetRole(ulong.Parse(guildConfig.Roles["Savage Queen"])),
-                }).ToArray();
+                IEnumerable<IRole> roles = new[]
+                    {
+                        guild.GetRole(DiademRole),
+                        guild.GetRole(EurekaRole),
+                        guild.GetRole(BozjaRole),
+                    }
+                    .Concat(new[]
+                    {
+                        guild.GetRole(ulong.Parse(guildConfig.Roles["Arsenal Master"])),
+                        guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared"])),
+                        guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Delubrum Savage"])),
+                        guild.GetRole(ulong.Parse(guildConfig.Roles["Savage Queen"])),
+                    })
+                    .Where(r => r != null);
 
                 await member.RemoveRolesAsync(roles);
                 Log.Information("Removed achievement roles from {DiscordName}", member.ToString());
