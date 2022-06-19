@@ -25,7 +25,7 @@ public class CheckBozjaEventsJob : CheckEventChannelJob
             throw new InvalidOperationException("No guild configuration found for the default guild!");
         }
 
-        return Task.FromResult(guildConfig.CastrumScheduleOutputChannel);
+        return Task.FromResult(guildConfig.BozjaClusterScheduleOutputChannel);
     }
 
     protected override async Task OnMatch()

@@ -25,7 +25,7 @@ public class CheckDelubrumSavageEventsJob : CheckEventChannelJob
             throw new InvalidOperationException("No guild configuration found for the default guild!");
         }
 
-        return Task.FromResult(guildConfig.CastrumScheduleOutputChannel);
+        return Task.FromResult(guildConfig.DelubrumScheduleOutputChannel);
     }
 
     protected override async Task OnMatch()
