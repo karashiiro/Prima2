@@ -131,14 +131,23 @@ namespace Prima.Stable.Modules
             }
             catch (CharacterNotFound)
             {
-                var reply = await ReplyAsync($"{Context.User.Mention}, no character matching that name and world was found. Are you sure you typed your world name correctly?");
+                var reply = await ReplyAsync(
+                    $"{Context.User.Mention}, no character matching that name and world was found. Are you sure you typed your world name correctly?");
                 await Task.Delay(MessageDeleteDelay);
                 await reply.DeleteAsync();
                 return;
             }
             catch (NotMatchingFilter)
             {
-                var reply = await ReplyAsync($"{Context.User.Mention}, that character does not have any combat jobs at Level {guildConfig.MinimumLevel}.");
+                var reply = await ReplyAsync(
+                    $"{Context.User.Mention}, that character does not have any combat jobs at Level {guildConfig.MinimumLevel}.");
+                await Task.Delay(MessageDeleteDelay);
+                await reply.DeleteAsync();
+                return;
+            }
+            catch (CharacterLookupError)
+            {
+                var reply = await ReplyAsync($"{Context.User.Mention}, failed to search for character.");
                 await Task.Delay(MessageDeleteDelay);
                 await reply.DeleteAsync();
                 return;
