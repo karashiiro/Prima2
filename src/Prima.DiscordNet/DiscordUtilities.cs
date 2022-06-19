@@ -77,12 +77,12 @@ namespace Prima.DiscordNet
             return user.HasRole(role.Id, context);
         }
 
-        public static bool HasRole(this SocketGuildUser member, ulong roleId)
+        public static bool HasRole(this IGuildUser member, ulong roleId)
         {
-            return member.Roles.FirstOrDefault(r => r.Id == roleId) != null;
+            return member.RoleIds.Contains(roleId);
         }
 
-        public static bool HasRole(this SocketGuildUser member, IRole role)
+        public static bool HasRole(this IGuildUser member, IRole role)
         {
             return member.HasRole(role?.Id ?? 0);
         }

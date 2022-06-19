@@ -13,7 +13,7 @@ public abstract class CheckEventChannelJob : IJob
     protected readonly DiscordSocketClient Client;
     protected readonly IDbService Db;
 
-    protected SocketGuildUser? HostUser;
+    protected IGuildUser? HostUser;
     protected IMessage? EmbedMessage;
     protected IEmbed? Embed;
 
@@ -32,6 +32,12 @@ public abstract class CheckEventChannelJob : IJob
             var guildId = await GetGuildId();
             var channelId = await GetChannelId();
             var guild = Client.GetGuild(guildId);
+            if (guild == null)
+            {
+                Logger.LogInformation("Guild {GuildId} was null, retrying later...", guildId);
+                return;
+            }
+            
             await CheckRuns(guild, channelId, 30, OnMatch);
         }
         catch (Exception e)
@@ -101,7 +107,7 @@ public abstract class CheckEventChannelJob : IJob
         var channel = guild.GetTextChannel(channelId);
         if (channel == null)
         {
-            await Task.Delay(3000);
+            Logger.LogInformation("Channel {ChannelId} was null, retrying later...", channelId);
             return;
         }
 
@@ -131,15 +137,19 @@ public abstract class CheckEventChannelJob : IJob
                     continue;
                 }
 
-                Logger.LogInformation("{Username} - ETA {TimeUntil} hrs.", embed?.Author?.Name ?? "", (timestamp - DateTimeOffset.Now).TotalHours);
+                Logger.LogInformation("{Username} - ETA {TimeUntil} hrs", embed?.Author?.Name ?? "", (timestamp - DateTimeOffset.Now).TotalHours);
 
                 // ReSharper disable once InvertIf
                 if (timestamp.AddMinutes(-minutesBefore) <= DateTimeOffset.Now && embed?.Author.HasValue == true)
                 {
                     Logger.LogInformation("Run matched!");
 
-                    var host = guild.Users.FirstOrDefault(u => u.ToString() == embed.Author.Value.Name)
-                               ?? guild.Users.FirstOrDefault(u => u.ToString() == embed.Author.Value.Name);
+                    var host = (await guild.SearchUsersAsync(embed.Author.Value.Name))
+                        .FirstOrDefault(u => u.Nickname == embed.Author.Value.Name || u.ToString() == embed.Author.Value.Name);
+                    if (host == null)
+                    {
+                        Logger.LogError("Could not find user {HostUsername}", embed.Author.Value.Name);
+                    }
 
                     HostUser = host;
                     EmbedMessage = message;
@@ -151,7 +161,7 @@ public abstract class CheckEventChannelJob : IJob
                     }
                     catch (Exception e)
                     {
-                        Logger.LogError(e, "error: uncaught exception in onMatch");
+                        Logger.LogError(e, "Exception in onMatch");
                     }
                 }
             }
