@@ -44,14 +44,20 @@ namespace Prima.Stable.Modules
             else
             {
                 var match = MessageRef.Match(messageRef);
-                if (match.Success)
+                var result = match.Success
+                    ? ulong.TryParse(match.Groups["MessageID"].Value, out messageId)
+                    : ulong.TryParse(messageRef, out messageId);
+                if (!result)
                 {
-                    ulong.TryParse(match.Groups["MessageID"].Value, out messageId);
+                    await ReplyAsync("Failed to parse message!");
+                    return;
                 }
-                else
-                {
-                    ulong.TryParse(messageRef, out messageId);
-                }
+            }
+
+            if (messageId == 0)
+            {
+                await ReplyAsync("Could not retrieve referenced message!");
+                return;
             }
 
             var message = await Context.Channel.GetMessageAsync(messageId);
