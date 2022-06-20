@@ -144,7 +144,11 @@ public abstract class CheckEventChannelJob : IJob
                 {
                     Logger.LogInformation("Run matched!");
 
-                    var host = (await guild.SearchUsersAsync(embed.Author.Value.Name))
+                    Logger.LogInformation("Downloading users...");
+                    await Client.DownloadUsersAsync(new[] { guild });
+                    Logger.LogInformation("All users downloaded");
+                    
+                    var host = guild.Users
                         .FirstOrDefault(u => u.Nickname == embed.Author.Value.Name || u.ToString() == embed.Author.Value.Name);
                     if (host == null)
                     {

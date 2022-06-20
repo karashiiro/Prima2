@@ -85,5 +85,12 @@ namespace Prima.Stable.Modules
 
             await ReplyAsync("Role color updated!");
         }
+
+        public async Task FindGuildUser(string name)
+        {
+            var user = Context.Guild.Users
+                .FirstOrDefault(u => u.Nickname == name || u.ToString() == name);
+            await ReplyAsync($"User: {user?.ToString() ?? "(not found)"}");
+        }
     }
 }
