@@ -86,6 +86,7 @@ namespace Prima.Stable.Modules
             await ReplyAsync("Role color updated!");
         }
 
+        [Command("checkcache")]
         public async Task FindGuildUser(string name)
         {
             var user = Context.Guild.Users
