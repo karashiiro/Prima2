@@ -5,6 +5,8 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Prima.DiscordNet;
 using Color = Discord.Color;
 
 namespace Prima.Stable.Modules
@@ -14,6 +16,8 @@ namespace Prima.Stable.Modules
     [RequireUserPermission(ChannelPermission.ManageRoles)]
     public class AdminModule : ModuleBase<SocketCommandContext>
     {
+        public ILogger<AdminModule> Logger { get; set; }
+
         [Command("changehost")]
         public async Task ChangeAnnouncementHost(ulong scheduleChannelId, ulong messageId, ulong newHostId)
         {
@@ -89,9 +93,15 @@ namespace Prima.Stable.Modules
         [Command("checkcache")]
         public async Task FindGuildUser(string name)
         {
-            var user = Context.Guild.Users
-                .FirstOrDefault(u => u.Nickname == name || u.ToString() == name);
-            await ReplyAsync($"User: {user?.ToString() ?? "(not found)"}");
+            var sender = Context.Guild.GetUser(Context.User.Id);
+            var user = await DiscordUtilities.GetGuildUser(Context.Client, Context.Guild, name);
+            Logger.LogInformation("Sender nickname: \"{Nickname}\"", sender.Nickname);
+            Logger.LogInformation("Sender username: \"{Username}\"", sender.ToString());
+            Logger.LogInformation("Sender username (trimmed): \"{Username}\"", $"{sender.Username.Trim()}#{sender.Discriminator}");
+            await ReplyAsync($"User: {user?.ToString() ?? "(not found)"}\n" +
+                             $"Total users: {Context.Guild.Users.Count}\n" +
+                             $"Sender nickname: `{sender.Nickname}`\n" +
+                             $"Sender username: `{sender}`");
         }
     }
 }

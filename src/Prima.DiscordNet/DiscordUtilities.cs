@@ -52,6 +52,18 @@ namespace Prima.DiscordNet
             var id = ulong.Parse(string.Join("", userMention.Where(char.IsDigit).ToArray()));
             return await context.Client.GetUserAsync(id);
         }
+
+        public static async Task<IGuildUser?> GetGuildUser(DiscordSocketClient client, SocketGuild guild, string name)
+        {
+            await client.DownloadUsersAsync(new[] { guild });
+            return guild.Users
+                .FirstOrDefault(u => u.Nickname == name || u.ToString() == name || GetCleanUsername(u) == name);
+        }
+
+        public static string GetCleanUsername(IUser user)
+        {
+            return $"{user.Username.Trim()}#{user.Discriminator}"; // Is this a bug in Discord.NET?
+        }
     }
 
     public static class DiscordUserExtensions

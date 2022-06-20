@@ -2,6 +2,7 @@
 using Discord.Net;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
+using Prima.DiscordNet;
 using Prima.Services;
 using Quartz;
 
@@ -66,7 +67,7 @@ public abstract class CheckEventChannelJob : IJob
         }
         catch (HttpException e) when (e.DiscordCode == DiscordErrorCode.CannotSendMessageToUser)
         {
-            Logger.LogWarning("Can't send direct message to user {User}", HostUser.Username + '#' + HostUser.Discriminator);
+            Logger.LogWarning("Can't send direct message to user {User}", DiscordUtilities.GetCleanUsername(HostUser));
         }
     }
     
@@ -95,7 +96,7 @@ public abstract class CheckEventChannelJob : IJob
             }
             catch (HttpException e) when (e.DiscordCode == DiscordErrorCode.CannotSendMessageToUser)
             {
-                Logger.LogWarning("Can't send direct message to user {User}", user.Username + '#' + user.Discriminator);
+                Logger.LogWarning("Can't send direct message to user {User}", DiscordUtilities.GetCleanUsername(user));
             }
         }
 
@@ -144,12 +145,7 @@ public abstract class CheckEventChannelJob : IJob
                 {
                     Logger.LogInformation("Run matched!");
 
-                    Logger.LogInformation("Downloading users...");
-                    await Client.DownloadUsersAsync(new[] { guild });
-                    Logger.LogInformation("All users downloaded");
-                    
-                    var host = guild.Users
-                        .FirstOrDefault(u => u.Nickname == embed.Author.Value.Name || u.ToString() == embed.Author.Value.Name);
+                    var host = await DiscordUtilities.GetGuildUser(Client, guild, embed.Author.Value.Name);
                     if (host == null)
                     {
                         Logger.LogError("Could not find user {HostUsername}", embed.Author.Value.Name);
