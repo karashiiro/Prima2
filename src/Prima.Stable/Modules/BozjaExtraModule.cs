@@ -495,7 +495,7 @@ namespace Prima.Stable.Modules
         [Description("Shows the Bozja/Zadnor Lost Actions loadout guide.")]
         [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-        public Task BozjaKitAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/4Isvsra.png");
+        public Task BozjaKitAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/9aZJDkm.png");
 
         [Command("drskit", RunMode = RunMode.Async)]
         [Description("Shows the Delubrum Reginae (Savage) loadout guide.")]
