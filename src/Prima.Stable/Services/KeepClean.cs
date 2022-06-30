@@ -35,7 +35,11 @@ namespace Prima.Stable.Services
                 try
                 {
                     var cem = _client.GetGuild(SpecialGuilds.CrystalExploratoryMissions);
-                    if (cem == null) continue;
+                    if (cem == null)
+                    {
+                        await Task.Delay(new TimeSpan(0, 0, 5), token).ConfigureAwait(false);
+                        continue;
+                    }
 
                     Log.Information("Cleaning rosters...");
 
