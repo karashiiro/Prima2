@@ -37,14 +37,7 @@ namespace Prima.DiscordNet
 
         public static async Task PostImage(HttpClient http, SocketCommandContext context, string uri)
         {
-            var fileName = uri.Split('/').Last();
-            Log.Information("Fetching image from {Url}", uri);
-            await using var fileStream = await http.GetStreamAsync(new Uri(uri));
-            await using var fileStreamCopy = new MemoryStream();
-            await fileStream.CopyToAsync(fileStreamCopy);
-            fileStreamCopy.Seek(0, SeekOrigin.Begin);
-            Log.Information("Sending image {Filename}", fileName);
-            await context.Channel.SendFileAsync(fileStreamCopy, fileName);
+            await context.Channel.SendMessageAsync(uri);
         }
 
         public static async Task<IUser> GetUserFromMention(string userMention, ICommandContext context)
