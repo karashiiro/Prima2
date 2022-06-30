@@ -371,8 +371,8 @@ namespace Prima.Stable.Modules
             await member.AddRoleAsync(memberRole);
             Log.Information("Added {DiscordName} to {Role}", member.ToString(), memberRole.Name);
 
-            Log.Information("Checking Lodestone ID and home world for user {DiscordName}", member.ToString());
-            if (oldLodestoneId != dbEntry.LodestoneId || !CrystalWorlds.List.Contains(dbEntry.World))
+            Log.Information("Checking Lodestone ID for user {DiscordName}", member.ToString());
+            if (oldLodestoneId != dbEntry.LodestoneId)
             {
                 var guild = Context.Guild;
                 IEnumerable<IRole> roles = new[]
@@ -399,33 +399,27 @@ namespace Prima.Stable.Modules
             }
 
             Log.Information("Checking default content level for user {DiscordName}", member.ToString());
+
             var contentRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles[MostRecentZoneRole]));
-            if (CrystalWorlds.List.Contains(dbEntry.World))
+            var data = await Lodestone.GetCharacter(ulong.Parse(dbEntry.LodestoneId));
+            var highestCombatLevel = 0;
+            foreach (var classJob in data["ClassJobs"].ToObject<CharacterLookup.ClassJob[]>())
             {
-                var data = await Lodestone.GetCharacter(ulong.Parse(dbEntry.LodestoneId));
-                var highestCombatLevel = 0;
-                foreach (var classJob in data["ClassJobs"].ToObject<CharacterLookup.ClassJob[]>())
+                // Skip non-DoW/DoM or BLU
+                if (classJob.JobID is >= 8 and <= 18 or 36) continue;
+                if (classJob.Level > highestCombatLevel)
                 {
-                    // Skip non-DoW/DoM or BLU
-                    if (classJob.JobID is >= 8 and <= 18 or 36) continue;
-                    if (classJob.Level > highestCombatLevel)
-                    {
-                        highestCombatLevel = classJob.Level;
-                    }
+                    highestCombatLevel = classJob.Level;
                 }
-
-                if (highestCombatLevel < 80)
-                {
-                    return;
-                }
-
-                await member.AddRoleAsync(contentRole);
-                Log.Information("Added {DiscordName} to {Role}.", member.ToString(), contentRole.Name);
             }
-            else
+
+            if (highestCombatLevel < 80)
             {
-                Log.Information("Nothing to do");
+                return;
             }
+
+            await member.AddRoleAsync(contentRole);
+            Log.Information("Added {DiscordName} to {Role}.", member.ToString(), contentRole.Name);
         }
 
         [Command("unlink", RunMode = RunMode.Async)]

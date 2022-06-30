@@ -54,12 +54,6 @@ namespace Prima.Stable.Handlers
                             return;
                         }
 
-                        if (!CrystalWorlds.List.Contains(dbEntry.World))
-                        {
-                            await member.SendMessageAsync("Characters outside of Crystal (see <https://na.finalfantasyxiv.com/lodestone/worldstatus/>) may not access our scheduling tools.");
-                            return;
-                        }
-
                         var data = await lodestone.GetCharacter(ulong.Parse(dbEntry.LodestoneId));
                         var highestCombatLevel = 0;
                         foreach (var classJob in data["ClassJobs"].ToObject<CharacterLookup.ClassJob[]>())
