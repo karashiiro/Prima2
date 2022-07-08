@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Prima.Application;
 using Prima.Application.Personality;
 using Prima.Application.Scheduling;
+using Prima.Application.Scheduling.Events;
 using Prima.DiscordNet.Services;
 using Prima.Game.FFXIV;
 using Prima.Game.FFXIV.FFLogs;

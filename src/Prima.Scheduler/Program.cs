@@ -26,8 +26,6 @@ namespace Prima.Scheduler
             var calendar = services.GetRequiredService<CalendarApi>();
 
             client.MessageUpdated += (_, message, _) => AnnounceEdit.Handler(client, calendar, db, message);
-            client.ReactionAdded += (cachedMessage, _, reaction)
-                => AnnounceReact.HandlerAdd(client, db, cachedMessage, reaction);
             
             Log.Information("Prima Scheduler logged in!");
 
