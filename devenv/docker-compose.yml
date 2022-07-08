@@ -4,6 +4,8 @@ services:
     image: ghcr.io/primashouji/prima-google-apis:main
     ports:
       - "7552:7552"
+    volumes:
+      - "./prima-google-apis:/config"
   mongo:
     image: mongo:4.2.3
     ports:

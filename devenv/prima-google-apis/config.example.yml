@@ -1,0 +1,4 @@
+token: C:\keys\gapi_token.json
+credentials: C:\keys\gapi_credentials.json
+schedules:
+  drs: ffffffffffffffffffffffffff@group.calendar.google.com
