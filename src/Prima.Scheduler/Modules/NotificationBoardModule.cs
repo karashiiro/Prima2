@@ -104,7 +104,8 @@ namespace Prima.Scheduler.Modules
             await outputChannel.SendMessageAsync(Context.Message.Id.ToString(), embed: embed);
             if (announceChannel != null)
             {
-                await announceChannel.SendMessageAsync(Context.Message.Id.ToString(), embed: embed);
+                var announceMessage = await announceChannel.SendMessageAsync(Context.Message.Id.ToString(), embed: embed);
+                await announceMessage.CrosspostAsync();
             }
 
             await ReplyAsync($"Event announced! Announcement posted in <#{outputChannel.Id}>. React to the announcement in " +
