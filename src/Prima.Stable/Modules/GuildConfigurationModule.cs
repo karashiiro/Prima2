@@ -11,7 +11,7 @@ namespace Prima.Stable.Modules
     /// Includes guild configuration commands that only guild administrators should be able to execute.
     /// </summary>
     [Name("GuildConfiguration")]
-    [RequireUserPermission(GuildPermission.Administrator)]
+    [RequireUserPermission(GuildPermission.ManageGuild)]
     public class GuildConfigurationModule : ModuleBase<SocketCommandContext>
     {
         public IDbService Db { get; set; }
