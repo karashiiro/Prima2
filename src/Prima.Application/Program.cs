@@ -31,7 +31,7 @@ var host = Host.CreateDefaultBuilder()
             MessageCacheSize = 10000,
             GatewayIntents = GatewayIntents.All,
         };
-        
+
         sc.AddSingleton(_ => new DiscordSocketClient(disConfig));
         sc.AddSingleton<CommandService>();
         sc.AddSingleton<CommandHandlingService>();
@@ -40,7 +40,7 @@ var host = Host.CreateDefaultBuilder()
         sc.AddSingleton<IDbService, DbService>();
         sc.AddSingleton<RateLimitService>();
         sc.AddSingleton<ITemplateProvider, TemplateProvider>();
-        
+
         // TODO: Refactor all of the services below into more cohesive modules
 
         // Add old Prima.Stable services
@@ -51,7 +51,7 @@ var host = Host.CreateDefaultBuilder()
         sc.AddSingleton(_ => new GameData(Environment.OSVersion.Platform == PlatformID.Win32NT
                 ? @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack"
                 : Path.Combine(Environment.GetEnvironmentVariable("HOME")
-                               ?? throw new ArgumentException("No HOME variable set!"), "sqpack"), 
+                               ?? throw new ArgumentException("No HOME variable set!"), "sqpack"),
             new LuminaOptions { PanicOnSheetChecksumMismatch = false }));
         sc.AddSingleton<FFXIVWeatherLuminaService>();
         sc.AddSingleton<MuteService>();
@@ -83,7 +83,7 @@ var host = Host.CreateDefaultBuilder()
                 j => j
                     .WithIdentity("drsEventsJob")
                     .WithDescription("Scheduled DRS Events Check"));
-            
+
             q.ScheduleJob<CheckDelubrumNormalEventsJob>(
                 t => t
                     .WithIdentity("drnEventsTrigger")
@@ -92,7 +92,7 @@ var host = Host.CreateDefaultBuilder()
                 j => j
                     .WithIdentity("drnEventsJob")
                     .WithDescription("Scheduled DRN Events Check"));
-            
+
             q.ScheduleJob<CheckBozjaEventsJob>(
                 t => t
                     .WithIdentity("bozZadEventsTrigger")
@@ -101,7 +101,7 @@ var host = Host.CreateDefaultBuilder()
                 j => j
                     .WithIdentity("bozZadEventsJob")
                     .WithDescription("Scheduled Bozja/Zadnor Events Check"));
-            
+
             q.ScheduleJob<CheckCastrumEventsJob>(
                 t => t
                     .WithIdentity("castrumEventsTrigger")
@@ -110,7 +110,7 @@ var host = Host.CreateDefaultBuilder()
                 j => j
                     .WithIdentity("castrumEventsJob")
                     .WithDescription("Scheduled Castrum Events Check"));
-            
+
             q.ScheduleJob<CheckSocialEventsJob>(
                 t => t
                     .WithIdentity("socialEventsTrigger")
@@ -121,10 +121,7 @@ var host = Host.CreateDefaultBuilder()
                     .WithDescription("Scheduled Social Events Check"));
         });
 
-        sc.AddQuartzHostedService(options =>
-        {
-            options.WaitForJobsToComplete = true;
-        });
+        sc.AddQuartzHostedService(options => { options.WaitForJobsToComplete = true; });
     })
     .UseConsoleLifetime()
     .Build();
@@ -138,7 +135,7 @@ void LogDiscordMessage(LogSeverity severity, Exception exception, string source,
     {
         throw new InvalidOperationException($"{nameof(logger)} is null.");
     }
-    
+
     Action<Exception, string, object[]> logFunc = severity switch
     {
         LogSeverity.Critical => logger.LogError,
@@ -150,7 +147,7 @@ void LogDiscordMessage(LogSeverity severity, Exception exception, string source,
         _ => throw new ArgumentOutOfRangeException(nameof(severity))
     };
 
-    logFunc(exception, "{Source}: {Message}", new object[]{ source, message });
+    logFunc(exception, "{Source}: {Message}", new object[] { source, message });
 }
 
 Task LogDiscord(LogMessage message)
@@ -210,7 +207,7 @@ client.ReactionRemoved += (message, channel, reaction)
 client.ReactionAdded += (message, _, reaction)
     => VoteReactions.HandlerAdd(client, db, message, reaction);
 
-client.MessageDeleted += (message, channel) => AuditDeletion.Handler(db, client, message, channel);
+client.MessageDeleted += (message, channel) => Task.Run(() => AuditDeletion.Handler(db, client, message, channel));
 client.MessageReceived += message => ChatCleanup.Handler(db, web, templates, message);
 
 client.MessageReceived += message => MessageCache.Handler(db, message);
