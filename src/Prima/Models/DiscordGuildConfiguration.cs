@@ -38,6 +38,9 @@ namespace Prima.Models
 
         [BsonRepresentation(BsonType.String)]
         public ulong BozjaClusterScheduleOutputChannel = 0;
+        
+        [BsonRepresentation(BsonType.String)]
+        public ulong BozjaClusterScheduleAnnouncementChannel = 0;
 
         [BsonRepresentation(BsonType.String)]
         public ulong CastrumScheduleInputChannel = 0;
@@ -59,6 +62,9 @@ namespace Prima.Models
 
         [BsonRepresentation(BsonType.String)]
         public ulong DelubrumNormalScheduleOutputChannel = 0;
+        
+        [BsonRepresentation(BsonType.String)]
+        public ulong DelubrumNormalScheduleAnnouncementChannel = 0;
 
         [BsonRepresentation(BsonType.String)]
         public ulong ZadnorThingScheduleInputChannel = 0;
