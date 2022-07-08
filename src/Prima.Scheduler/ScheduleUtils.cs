@@ -30,6 +30,26 @@ namespace Prima.Scheduler
             return events;
         }
 
+        /// <summary>
+        /// Returns the announcement channel corresponding to the provided scheduling channel. This is only applicable
+        /// to DRS and BA.
+        /// </summary>
+        public static IMessageChannel? GetAnnouncementChannel(DiscordGuildConfiguration guildConfig, SocketGuild guild,
+            IMessageChannel inputChannel)
+        {
+            if (inputChannel.Id == guildConfig.ScheduleInputChannel)
+            {
+                return guild.GetTextChannel(guildConfig.ScheduleAnnouncementChannel);
+            }
+
+            if (inputChannel.Id == guildConfig.DelubrumScheduleInputChannel)
+            {
+                return guild.GetTextChannel(guildConfig.DelubrumScheduleAnnouncementChannel);
+            }
+            
+            return null;
+        }
+
         public static IMessageChannel GetOutputChannel(DiscordGuildConfiguration guildConfig, SocketGuild guild, IMessageChannel inputChannel)
         {
             ulong outputChannelId;
