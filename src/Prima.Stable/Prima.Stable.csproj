@@ -13,8 +13,10 @@
   <ItemGroup>
     <PackageReference Include="Discord.Net.Labs" Version="3.6.1" />
     <PackageReference Include="FFXIVWeather.Lumina" Version="2.1.0" />
+    <PackageReference Include="Lumina" Version="3.8.0" />
+    <PackageReference Include="Lumina.Excel" Version="6.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.1" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.2" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
     <PackageReference Include="TimeZoneNames" Version="5.0.1" />
   </ItemGroup>
 
