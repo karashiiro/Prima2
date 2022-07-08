@@ -79,7 +79,6 @@ namespace Prima.Stable
             sc
                 .AddSingleton<WebClient>()
                 .AddSingleton<CensusEventService>()
-                .AddSingleton<PresenceService>()
                 .AddSingleton<XIVAPIClient>()
                 .AddSingleton(new GameData(Environment.OSVersion.Platform == PlatformID.Win32NT
                     ? @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack"

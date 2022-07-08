@@ -7,7 +7,6 @@ using Prima.Game.FFXIV;
 using Prima.Models;
 using Prima.Resources;
 using Prima.Services;
-using Prima.Stable.Resources;
 using Serilog;
 using System;
 using System.Collections.Generic;

@@ -8,6 +8,7 @@ using Lumina;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Prima.Application.Personality;
 using Prima.Application.Scheduling;
 using Prima.DiscordNet.Services;
 using Prima.Game.FFXIV;
@@ -46,7 +47,6 @@ var host = Host.CreateDefaultBuilder()
         // Add old Prima.Stable services
         sc.AddSingleton<WebClient>();
         sc.AddSingleton<CensusEventService>();
-        sc.AddSingleton<PresenceService>();
         sc.AddSingleton<XIVAPIClient>();
         sc.AddSingleton(_ => new GameData(Environment.OSVersion.Platform == PlatformID.Win32NT
                 ? @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack"
@@ -119,6 +119,15 @@ var host = Host.CreateDefaultBuilder()
                 j => j
                     .WithIdentity("socialEventsJob")
                     .WithDescription("Scheduled Social Events Check"));
+            
+            q.ScheduleJob<UpdatePresenceJob>(
+                t => t
+                    .WithIdentity("updatePresenceTrigger")
+                    .StartNow()
+                    .WithSimpleSchedule(x => x.WithIntervalInMinutes(30).RepeatForever()),
+                j => j
+                    .WithIdentity("updatePresenceJob")
+                    .WithDescription("Update Presence"));
         });
 
         sc.AddQuartzHostedService(options => { options.WaitForJobsToComplete = true; });
