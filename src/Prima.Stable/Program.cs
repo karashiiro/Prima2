@@ -51,23 +51,11 @@ namespace Prima.Stable
             client.ReactionRemoved += (message, channel, reaction)
                 => ReactionReceived.HandlerRemove(db, message, channel, reaction);
 
-            client.ReactionAdded += (message, _, reaction)
-                => VoteReactions.HandlerAdd(client, db, message, reaction);
-
-            client.MessageDeleted += (message, channel) => AuditDeletion.Handler(db, client, message, channel);
             client.MessageReceived += message => ChatCleanup.Handler(db, web, templates, message);
 
-            client.MessageReceived += message => MessageCache.Handler(db, message);
-            client.MessageReceived += message => TriggerDispatcher.Handler(client, message);
-
-            client.UserJoined += user => WelcomeCard.Handler(client, templates, user);
-
             client.GuildMemberUpdated += censusEvents.GuildMemberUpdated;
-            client.GuildMemberUpdated += AddRelatedContentRole.Handler;
 
             client.UserVoiceStateUpdated += mute.OnVoiceJoin;
-
-            client.ButtonExecuted += component => Modmail.Handler(db, component);
 
             Log.Information("Prima.Stable logged in!");
 

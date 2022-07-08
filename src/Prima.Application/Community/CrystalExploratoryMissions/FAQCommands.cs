@@ -2,7 +2,7 @@
 using Prima.DiscordNet.Attributes;
 using Prima.Resources;
 
-namespace Prima.Application.Commands.CrystalExploratoryMissions;
+namespace Prima.Application.Community.CrystalExploratoryMissions;
 
 [Name("Crystal Exploratory Missions FAQ")]
 public class FAQCommands : ModuleBase<SocketCommandContext>

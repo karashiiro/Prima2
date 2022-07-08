@@ -9,6 +9,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Prima.Application;
+using Prima.Application.Community.CrystalExploratoryMissions;
+using Prima.Application.Moderation;
 using Prima.Application.Personality;
 using Prima.Application.Scheduling;
 using Prima.Application.Scheduling.Events;
@@ -223,7 +225,7 @@ client.MessageDeleted += (message, channel) =>
 
 client.MessageReceived += message => ChatCleanup.Handler(db, web, templates, message);
 
-client.MessageReceived += message => MessageCache.Handler(db, message);
+client.MessageReceived += message => TaskUtils.Detach(() => MessageCache.Handler(db, message));
 client.MessageReceived += message => TriggerDispatcher.Handler(client, message);
 
 client.UserJoined += user => WelcomeCard.Handler(client, templates, user);
