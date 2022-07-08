@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Prima.Scheduler.GoogleApis
+namespace Prima.GoogleApis
 {
     public class GenericResponse
     {

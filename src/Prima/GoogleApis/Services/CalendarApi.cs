@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Prima.Scheduler.GoogleApis.Calendar;
+using Prima.GoogleApis.Calendar;
 using Serilog;
 
-namespace Prima.Scheduler.GoogleApis.Services
+namespace Prima.GoogleApis.Services
 {
     public class CalendarApiException : Exception
     {

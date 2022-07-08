@@ -4,8 +4,6 @@ using Discord.WebSocket;
 using Prima.DiscordNet.Attributes;
 using Prima.Models;
 using Prima.Resources;
-using Prima.Scheduler.GoogleApis.Calendar;
-using Prima.Scheduler.GoogleApis.Services;
 using Prima.Services;
 using Serilog;
 using System;
@@ -13,6 +11,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
+using Prima.GoogleApis.Calendar;
+using Prima.GoogleApis.Services;
 using Color = Discord.Color;
 // ReSharper disable MemberCanBePrivate.Global
 

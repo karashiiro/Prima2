@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Prima.Scheduler.GoogleApis.Calendar
+namespace Prima.GoogleApis.Calendar
 {
     public class EventCreateResponse
     {

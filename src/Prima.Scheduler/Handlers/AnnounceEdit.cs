@@ -1,12 +1,12 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using Prima.Resources;
-using Prima.Scheduler.GoogleApis.Services;
 using Prima.Services;
 using Serilog;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Prima.GoogleApis.Services;
 
 namespace Prima.Scheduler.Handlers
 {
