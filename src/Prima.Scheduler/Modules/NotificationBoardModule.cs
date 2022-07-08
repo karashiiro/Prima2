@@ -35,6 +35,8 @@ namespace Prima.Scheduler.Modules
             var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, Context.Guild, Context.Channel);
             if (outputChannel == null) return;
 
+            var announceChannel = ScheduleUtils.GetAnnouncementChannel(guildConfig, Context.Guild, Context.Channel);
+
             var prefix = Db.Config.Prefix;
 
             var splitIndex = args.IndexOf("|", StringComparison.Ordinal);
@@ -87,16 +89,23 @@ namespace Prima.Scheduler.Modules
             
             var member = Context.Guild.GetUser(Context.User.Id);
             var color = RunDisplayTypes.GetColorCastrum();
-            await outputChannel.SendMessageAsync(Context.Message.Id.ToString(), embed: new EmbedBuilder()
+            var embed = new EmbedBuilder()
                 .WithAuthor(new EmbedAuthorBuilder()
                     .WithIconUrl(Context.User.GetAvatarUrl())
                     .WithName(Context.User.ToString()))
                 .WithColor(new Color(color.RGB[0], color.RGB[1], color.RGB[2]))
                 .WithTimestamp(time)
-                .WithTitle($"Event scheduled by {member?.Nickname ?? Context.User.ToString()} at <t:{time.ToUnixTimeSeconds()}:F>!")
+                .WithTitle(
+                    $"Event scheduled by {member?.Nickname ?? Context.User.ToString()} at <t:{time.ToUnixTimeSeconds()}:F>!")
                 .WithDescription(eventDescription)
                 .WithFooter(Context.Message.Id.ToString())
-                .Build());
+                .Build();
+            
+            await outputChannel.SendMessageAsync(Context.Message.Id.ToString(), embed: embed);
+            if (announceChannel != null)
+            {
+                await announceChannel.SendMessageAsync(Context.Message.Id.ToString(), embed: embed);
+            }
 
             await ReplyAsync($"Event announced! Announcement posted in <#{outputChannel.Id}>. React to the announcement in " +
                              $"<#{outputChannel.Id}> with :vibration_mode: to be notified before the event begins.");
@@ -118,6 +127,9 @@ namespace Prima.Scheduler.Modules
         [RequireContext(ContextType.Guild)]
         public async Task SetRunTimestamp(ulong outputChannelId, ulong eventId, [Remainder] string args)
         {
+            var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
+            if (guildConfig == null) return;
+            
             var outputChannel = Context.Guild.GetTextChannel(outputChannelId);
             var (embedMessage, embed) = await FindAnnouncement(outputChannel, eventId);
             if (embed == null)
@@ -125,6 +137,11 @@ namespace Prima.Scheduler.Modules
                 await ReplyAsync("No run was found matching that event ID in that channel.");
                 return;
             }
+            
+            var announceChannel = ScheduleUtils.GetAnnouncementChannel(guildConfig, Context.Guild, Context.Channel);
+            var (announceMessage, _) = announceChannel != null
+                ? await FindAnnouncement(announceChannel, eventId)
+                : (null, null);
 
             var (newRunTime, tzi) = ScheduleUtils.ParseTime(args);
             var isDST = tzi.IsDaylightSavingTime(newRunTime);
@@ -132,18 +149,29 @@ namespace Prima.Scheduler.Modules
                 newRunTime = newRunTime.AddHours(-1);
 
             var host = Context.Guild.Users.FirstOrDefault(u => u.ToString() == embed.Author?.Name);
+            var builder = embed.ToEmbedBuilder();
+            if (host != null)
+            {
+                builder = builder.WithTitle(
+                    $"Event scheduled by {host.Nickname ?? host.ToString()} at <t:{newRunTime.ToUnixTimeSeconds()}:F> (Your local time)!");
+            }
+
+            var updatedEmbed = builder
+                .WithTimestamp(newRunTime)
+                .Build();
+            
             await embedMessage.ModifyAsync(props =>
             {
-                var builder = embed.ToEmbedBuilder();
-                if (host != null)
-                {
-                    builder = builder.WithTitle(
-                        $"Event scheduled by {host.Nickname ?? host.ToString()} at <t:{newRunTime.ToUnixTimeSeconds()}:F> (Your local time)!");
-                }
-                props.Embeds = new[] { builder
-                    .WithTimestamp(newRunTime)
-                    .Build() };
+                props.Embeds = new[] { updatedEmbed };
             });
+            
+            if (announceMessage != null)
+            {
+                await announceMessage.ModifyAsync(props =>
+                {
+                    props.Embeds = new[] { updatedEmbed };
+                });
+            }
 
             await ReplyAsync("Updated.");
         }
@@ -304,6 +332,8 @@ namespace Prima.Scheduler.Modules
 
             var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, Context.Guild, Context.Channel);
             if (outputChannel == null) return;
+            
+            var announceChannel = ScheduleUtils.GetAnnouncementChannel(guildConfig, Context.Guild, Context.Channel);
 
             var username = Context.User.ToString();
             var times = args.Split('|').Select(a => a.Trim()).ToArray();
@@ -314,6 +344,7 @@ namespace Prima.Scheduler.Modules
             }
 
             IUserMessage embedMessage;
+            IUserMessage announceChannelMessage;
             IEmbed embed;
             DateTimeOffset curTime;
 
@@ -342,6 +373,7 @@ namespace Prima.Scheduler.Modules
                 }
 
                 (embedMessage, embed) = await FindAnnouncementById(outputChannel, Context.User, times[0]);
+                (announceChannelMessage, _) = await FindAnnouncementById(announceChannel, Context.User, times[0]);
 
                 curTime = embed.Timestamp.Value;
             }
@@ -362,19 +394,31 @@ namespace Prima.Scheduler.Modules
                 }
 
                 (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, curTime);
+                (announceChannelMessage, _) = await FindAnnouncement(announceChannel, Context.User, curTime);
             }
 
             if (embedMessage != null)
             {
                 var member = Context.Guild.GetUser(Context.User.Id);
+                var updatedEmbed = embed
+                    .ToEmbedBuilder()
+                    .WithTimestamp(newTime)
+                    .WithTitle(
+                        $"Event scheduled by {member?.Nickname ?? Context.User.ToString()} at <t:{newTime.ToUnixTimeSeconds()}:F>!")
+                    .Build();
+                
                 await embedMessage.ModifyAsync(props =>
                 {
-                    props.Embeds = new[] { embed
-                        .ToEmbedBuilder()
-                        .WithTimestamp(newTime)
-                        .WithTitle($"Event scheduled by {member?.Nickname ?? Context.User.ToString()} at <t:{newTime.ToUnixTimeSeconds()}:F>!")
-                        .Build() };
+                    props.Embeds = new[] { updatedEmbed };
                 });
+
+                if (announceChannelMessage != null)
+                {
+                    await announceChannelMessage.ModifyAsync(props =>
+                    {
+                        props.Embeds = new[] { updatedEmbed };
+                    });
+                }
 
 #if DEBUG
                 var @event = await FindEvent("drs", username, curTime);
@@ -425,10 +469,13 @@ namespace Prima.Scheduler.Modules
 
             var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, Context.Guild, Context.Channel);
             if (outputChannel == null) return;
+            
+            var announceChannel = ScheduleUtils.GetAnnouncementChannel(guildConfig, Context.Guild, Context.Channel);
 
             var username = Context.User.ToString();
 
             IUserMessage embedMessage;
+            IUserMessage announceChannelMessage;
             IEmbed embed;
             DateTimeOffset time;
 
@@ -450,6 +497,7 @@ namespace Prima.Scheduler.Modules
                 }
 
                 (embedMessage, embed) = await FindAnnouncementById(outputChannel, Context.User, splitArgs[0].Trim());
+                (announceChannelMessage, _) = await FindAnnouncementById(announceChannel, Context.User, splitArgs[0].Trim());
 
                 time = embed.Timestamp.Value;
             }
@@ -470,18 +518,29 @@ namespace Prima.Scheduler.Modules
                 }
 
                 (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, time);
+                (announceChannelMessage, _) = await FindAnnouncement(announceChannel, Context.User, time);
             }
 
             if (embedMessage != null)
             {
+                var updatedEmbed = new EmbedBuilder()
+                    .WithTitle(embed.Title)
+                    .WithColor(embed.Color.Value)
+                    .WithDescription("❌ Cancelled")
+                    .Build();
+                
                 await embedMessage.ModifyAsync(props =>
                 {
-                    props.Embeds = new[] { new EmbedBuilder()
-                        .WithTitle(embed.Title)
-                        .WithColor(embed.Color.Value)
-                        .WithDescription("❌ Cancelled")
-                        .Build() };
+                    props.Embeds = new[] { updatedEmbed };
                 });
+
+                if (announceChannelMessage != null)
+                {
+                    await announceChannelMessage.ModifyAsync(props =>
+                    {
+                        props.Embeds = new[] { updatedEmbed };
+                    });
+                }
 
                 async void DeleteEmbed()
                 {

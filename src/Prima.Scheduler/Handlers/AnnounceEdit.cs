@@ -12,7 +12,8 @@ namespace Prima.Scheduler.Handlers
 {
     public static class AnnounceEdit
     {
-        public static async Task Handler(DiscordSocketClient client, CalendarApi calendar, IDbService db, SocketMessage message)
+        public static async Task Handler(DiscordSocketClient client, CalendarApi calendar, IDbService db,
+            SocketMessage message)
         {
             var guildConfig = db.Guilds.FirstOrDefault(g => g.Id == SpecialGuilds.CrystalExploratoryMissions);
             if (guildConfig == null)
@@ -35,6 +36,8 @@ namespace Prima.Scheduler.Handlers
                 return;
             }
 
+            var announceChannel = ScheduleUtils.GetAnnouncementChannel(guildConfig, guild, message.Channel);
+
             var args = message.Content[(message.Content.IndexOf(' ') + 1)..];
 
             var splitIndex = args.IndexOf("|", StringComparison.Ordinal);
@@ -55,22 +58,40 @@ namespace Prima.Scheduler.Handlers
             }
 
             var (embedMessage, embed) = await FindAnnouncement(outputChannel, message.Id);
+            var (announceMessage, _) = announceChannel != null
+                ? await FindAnnouncement(announceChannel, message.Id)
+                : (null, null);
+
             var lines = embed.Description.Split('\n');
-            var messageLinkLine = lines.LastOrDefault(l => l.StartsWith("Message Link: https://discordapp.com/channels/"));
+            var messageLinkLine =
+                lines.LastOrDefault(l => l.StartsWith("Message Link: https://discordapp.com/channels/"));
             var calendarLinkLine = lines.LastOrDefault(l => l.StartsWith("[Copy to Google Calendar]"));
+
+            var updatedEmbed = embed
+                .ToEmbedBuilder()
+                .WithDescription(trimmedDescription + (calendarLinkLine != null
+                    ? $"\n\n{calendarLinkLine}"
+                    : "") + (messageLinkLine != null
+                    ? $"\n{messageLinkLine}"
+                    : ""))
+                .Build();
+            
             await embedMessage.ModifyAsync(props =>
             {
-                props.Embeds = new[] {embed
-                    .ToEmbedBuilder()
-                    .WithDescription(trimmedDescription + (calendarLinkLine != null
-                        ? $"\n\n{calendarLinkLine}"
-                        : "") + (messageLinkLine != null
-                        ? $"\n{messageLinkLine}"
-                        : ""))
-                    .Build()};
+                props.Embeds = new[] { updatedEmbed };
             });
+            
+            Log.Information("Updated schedule embed.");
 
-            Log.Information("Updated announcement embed.");
+            if (announceMessage != null)
+            {
+                await announceMessage.ModifyAsync(props =>
+                {
+                    props.Embeds = new[] { updatedEmbed };
+                });
+                
+                Log.Information("Updated announcement embed.");
+            }
         }
 
         private static async Task<(IUserMessage, IEmbed)> FindAnnouncement(IMessageChannel channel, ulong eventId)
