@@ -207,7 +207,12 @@ client.ReactionRemoved += (message, channel, reaction)
 client.ReactionAdded += (message, _, reaction)
     => VoteReactions.HandlerAdd(client, db, message, reaction);
 
-client.MessageDeleted += (message, channel) => Task.Run(() => AuditDeletion.Handler(db, client, message, channel));
+client.MessageDeleted += (message, channel) =>
+{
+    Task.Run(() => AuditDeletion.Handler(db, client, message, channel));
+    return Task.CompletedTask;
+};
+
 client.MessageReceived += message => ChatCleanup.Handler(db, web, templates, message);
 
 client.MessageReceived += message => MessageCache.Handler(db, message);
