@@ -1,20 +1,14 @@
 ﻿using Discord;
 using Discord.Commands;
-using FFXIVWeather.Lumina;
-using Lumina.Excel.GeneratedSheets;
 using Newtonsoft.Json.Linq;
 using Prima.DiscordNet.Attributes;
 using Prima.Game.FFXIV.XIVAPI;
-using Prima.Resources;
 using Prima.Services;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
-using TimeZoneNames;
 using Color = Discord.Color;
 
 namespace Prima.Stable.Modules
@@ -23,95 +17,8 @@ namespace Prima.Stable.Modules
     public class ExtraModule : ModuleBase<SocketCommandContext>
     {
         public IDbService Db { get; set; }
-        public FFXIVWeatherLuminaService Weather { get; set; }
         public HttpClient Http { get; set; }
         public XIVAPIClient Xivapi { get; set; }
-
-        private const ulong CEMSpeculation = 738899820168740984;
-        private const ulong CEMBozTheorycrafting = 593815337980526603;
-
-        [Command("weather")]
-        [Description("[FFXIV] Shows the current weather for the specified zone.")]
-        [DisableInChannelsForGuild(CEMSpeculation, CEMBozTheorycrafting, GuildId = SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task WeatherAsync([Remainder] string zone)
-        {
-            IList<(Weather, DateTime)> forecast;
-            try
-            {
-                forecast = Weather.GetForecast(zone, count: 10);
-            }
-            catch (ArgumentException)
-            {
-                await ReplyAsync("The specified zone could not be found.");
-                return;
-            }
-
-            var (currentWeather, currentWeatherStartTime) = forecast[0];
-
-            var dbUser = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id);
-            var (customTzi, _) = Util.GetLocalizedTimeForUser(dbUser, DateTime.Now);
-            var tzi = customTzi ?? TimeZoneInfo.FindSystemTimeZoneById(Util.PtIdString());
-
-            var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
-            var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
-
-            var formattedForecast = $"**Current:** {currentWeather.Name} (Began at {TimeZoneInfo.ConvertTimeFromUtc(currentWeatherStartTime, tzi).ToShortTimeString()} {tzAbbr})";
-            foreach (var (weather, startTime) in forecast.Skip(1))
-            {
-                var zonedTime = TimeZoneInfo.ConvertTimeFromUtc(startTime, tzi);
-
-                formattedForecast += $"\n{zonedTime.ToShortTimeString()}: {weather.Name}";
-            }
-
-            var embed = new EmbedBuilder()
-                .WithAuthor(new EmbedAuthorBuilder()
-                    .WithIconUrl($"https://www.garlandtools.org/files/icons/weather/{currentWeather.Name.ToString().Replace(" ", "%20")}.png")
-                    .WithName($"Current weather for {Util.JadenCase(zone)}:"))
-                .WithTitle($"Next weather starts in {Math.Truncate((forecast[1].Item2 - DateTime.UtcNow).TotalMinutes)} minutes.")
-                .WithColor(Color.LightOrange)
-                .WithDescription(formattedForecast)
-                .Build();
-
-            await ReplyAsync(embed: embed);
-        }
-
-        [Command("weatherreport")]
-        [Description("[FFXIV] Provides a text file with the next 200 weather entries for the specified zone.")]
-        [DisableInChannelsForGuild(CEMSpeculation, CEMBozTheorycrafting, GuildId = SpecialGuilds.CrystalExploratoryMissions)]
-        public async Task WeatherReportAsync([Remainder] string zone)
-        {
-            IList<(Weather, DateTime)> forecast;
-            try
-            {
-                forecast = Weather.GetForecast(zone, count: 200);
-            }
-            catch (ArgumentException)
-            {
-                await ReplyAsync("The specified zone could not be found.");
-                return;
-            }
-
-            var dbUser = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id);
-            var (customTzi, _) = Util.GetLocalizedTimeForUser(dbUser, DateTime.Now);
-            var tzi = customTzi ?? TimeZoneInfo.FindSystemTimeZoneById(Util.PtIdString());
-
-            var tzAbbrs = TZNames.GetAbbreviationsForTimeZone(tzi.Id, "en-US");
-            var tzAbbr = tzi.IsDaylightSavingTime(DateTime.Now) ? tzAbbrs.Daylight : tzAbbrs.Standard;
-
-            var outputData = forecast
-                .Aggregate($"Time\t\t\t\tWeather\n{new string('=', "7/4/2021 6:13:20 PM PDT         Dust Storms".Length)}", (agg, next) =>
-                {
-                    var (weather, startTime) = next;
-                    var zonedTime = TimeZoneInfo.ConvertTimeFromUtc(startTime, tzi);
-                    var timeText = zonedTime + " " + tzAbbr;
-                    return agg + $"\n{timeText}{(timeText.Length < 24 ? "\t" : "")}\t{weather.Name}";
-                });
-
-            await using var file = new MemoryStream(Encoding.UTF8.GetBytes(outputData));
-
-            await Context.Channel.SendFileAsync(file, "weather.txt",
-                messageReference: new MessageReference(Context.Message.Id));
-        }
 
         [Command("roll", RunMode = RunMode.Async)]
         [Description("T̵̪͖̎̈̍ḛ̷̤͑̚ș̴̔͑̾ͅͅt̸͔͜͝ ̶̡̨̪͌̉͠ỷ̵̺̕o̴̞̍ū̴͚̣̤r̵͚͎͔͘ ̴̨̬̿ḷ̷͖̀̚u̴͖̲͌́c̴̲̣͙͑̈͝k̸͍͖̿̆̓!̶̢̅̀")]
