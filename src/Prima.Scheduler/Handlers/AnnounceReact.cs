@@ -20,13 +20,13 @@ namespace Prima.Scheduler.Handlers
             {
                 var user = client.GetUser(userId);
                 await user.SendMessageAsync($"You have signed up for notifications for event {eventId}!");
-                Log.Information("User {User} has signed up for notifications for event {EventId}.", user.ToString(), eventId);
+                Log.Information("User {User} has signed up for notifications for event {EventId}", user.ToString(), eventId);
             }
             else if (await db.RemoveEventReaction(eventId.Value, userId))
             {
                 var user = client.GetUser(userId);
                 await user.SendMessageAsync($"You have been removed from the notifications list for event {eventId}.");
-                Log.Information("User {User} has been removed from notifications for event {EventId}.", user.ToString(), eventId);
+                Log.Information("User {User} has been removed from notifications for event {EventId}", user.ToString(), eventId);
             }
 
             var message = await cachedMessage.GetOrDownloadAsync();

@@ -8,6 +8,7 @@ using Lumina;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Prima.Application;
 using Prima.Application.Personality;
 using Prima.Application.Scheduling;
 using Prima.DiscordNet.Services;
@@ -119,7 +120,7 @@ var host = Host.CreateDefaultBuilder()
                 j => j
                     .WithIdentity("socialEventsJob")
                     .WithDescription("Scheduled Social Events Check"));
-            
+
             q.ScheduleJob<UpdatePresenceJob>(
                 t => t
                     .WithIdentity("updatePresenceTrigger")
@@ -153,7 +154,7 @@ void LogDiscordMessage(LogSeverity severity, Exception exception, string source,
         LogSeverity.Info => logger.LogInformation,
         LogSeverity.Verbose => logger.LogTrace,
         LogSeverity.Debug => logger.LogDebug,
-        _ => throw new ArgumentOutOfRangeException(nameof(severity))
+        _ => throw new ArgumentOutOfRangeException(nameof(severity)),
     };
 
     logFunc(exception, "{Source}: {Message}", new object[] { source, message });
@@ -217,10 +218,7 @@ client.ReactionAdded += (message, _, reaction)
     => VoteReactions.HandlerAdd(client, db, message, reaction);
 
 client.MessageDeleted += (message, channel) =>
-{
-    Task.Run(() => AuditDeletion.Handler(db, client, message, channel));
-    return Task.CompletedTask;
-};
+    TaskUtils.Detach(() => AuditDeletion.Handler(db, client, message, channel));
 
 client.MessageReceived += message => ChatCleanup.Handler(db, web, templates, message);
 
