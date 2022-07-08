@@ -34,19 +34,19 @@ namespace Prima.Stable.Modules
                     var opt = (int)Math.Floor(new Random().NextDouble() * 2598960) + 1;
                     if (opt <= 4)
                         await ReplyAsync("JACK**P**O*T!* Roya**l flush!** You __won__ [%#*(!@] credits*!*");
-                    else if (opt > 4 && opt <= 40)
+                    else if (opt is > 4 and <= 40)
                         await ReplyAsync("Straight flush! You won [TypeError: Cannot read property 'MUNZ' of undefined] credits!");
-                    else if (opt > 40 && opt <= 664)
+                    else if (opt is > 40 and <= 664)
                         await ReplyAsync("Four of a kind! You won [TypeError: Cannot read property 'thinking' of undefined] credits!");
-                    else if (opt > 664 && opt <= 4408)
+                    else if (opt is > 664 and <= 4408)
                         await ReplyAsync("Full house! You won [TypeError: Cannot read property '<:GWgoaThinken:582982105282379797>' of undefined] credits!");
-                    else if (opt > 4408 && opt <= 9516)
+                    else if (opt is > 4408 and <= 9516)
                         await ReplyAsync("Flush! You won -1 credits!");
-                    else if (opt > 9516 && opt <= 19716)
+                    else if (opt is > 9516 and <= 19716)
                         await ReplyAsync("Straight! You won -20 credits!");
-                    else if (opt > 19716 && opt <= 74628)
+                    else if (opt is > 19716 and <= 74628)
                         await ReplyAsync("Two pairs...? You won -500 credits!");
-                    else if (opt > 198180 && opt <= 1296420)
+                    else if (opt is > 198180 and <= 1296420)
                         await ReplyAsync("One pair. You won -2500 credits.");
                     else
                         await ReplyAsync("No pairs. You won -10000 credits.");
