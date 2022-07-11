@@ -46,11 +46,6 @@ namespace Prima.Stable
             ephemeralPinner.Initialize();
             await ffLogs.Initialize();
 
-            client.ReactionAdded += (message, channel, reaction)
-                => ReactionReceived.HandlerAdd(client, db, lodestone, message, channel, reaction);
-            client.ReactionRemoved += (message, channel, reaction)
-                => ReactionReceived.HandlerRemove(db, message, channel, reaction);
-
             client.MessageReceived += message => ChatCleanup.Handler(db, web, templates, message);
 
             client.GuildMemberUpdated += censusEvents.GuildMemberUpdated;

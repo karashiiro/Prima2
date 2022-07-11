@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Prima.Application;
+using Prima.Application.Community;
 using Prima.Application.Community.CrystalExploratoryMissions;
 using Prima.Application.Moderation;
 using Prima.Application.Personality;
@@ -212,10 +213,10 @@ var templates = host.Services.GetRequiredService<ITemplateProvider>();
 var censusEvents = host.Services.GetRequiredService<CensusEventService>();
 var mute = host.Services.GetRequiredService<MuteService>();
 
-client.ReactionAdded += (message, channel, reaction)
-    => ReactionReceived.HandlerAdd(client, db, lodestone, message, channel, reaction);
-client.ReactionRemoved += (message, channel, reaction)
-    => ReactionReceived.HandlerRemove(db, message, channel, reaction);
+client.ReactionAdded += (message, channel, reaction) =>
+    TaskUtils.Detach(() => ReactionReceived.HandlerAdd(client, db, lodestone, message, channel, reaction));
+client.ReactionRemoved += (message, channel, reaction) =>
+    TaskUtils.Detach(() => ReactionReceived.HandlerRemove(db, message, channel, reaction));
 
 client.ReactionAdded += (message, _, reaction)
     => VoteReactions.HandlerAdd(client, db, message, reaction);
