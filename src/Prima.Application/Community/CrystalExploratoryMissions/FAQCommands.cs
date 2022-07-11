@@ -4,7 +4,7 @@ using Prima.Resources;
 
 namespace Prima.Application.Community.CrystalExploratoryMissions;
 
-[Name("Crystal Exploratory Missions FAQ")]
+[Name("CEM FAQ")]
 public class FAQCommands : ModuleBase<SocketCommandContext>
 {
     [Command("how2lodestone", RunMode = RunMode.Async)]

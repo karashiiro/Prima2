@@ -41,7 +41,6 @@ var host = Host.CreateDefaultBuilder()
         sc.AddSingleton(_ => new DiscordSocketClient(disConfig));
         sc.AddSingleton<CommandService>();
         sc.AddSingleton<CommandHandlingService>();
-        sc.AddSingleton<DiagnosticService>();
         sc.AddSingleton<HttpClient>();
         sc.AddSingleton<IDbService, DbService>();
         sc.AddSingleton<RateLimitService>();

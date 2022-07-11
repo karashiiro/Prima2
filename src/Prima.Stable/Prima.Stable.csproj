@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Prima.DiscordNet\Modules\CommonModule.cs" Link="Modules\CommonModule.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Discord.Net.Labs" Version="3.6.1" />
     <PackageReference Include="FFXIVWeather.Lumina" Version="2.1.0" />
     <PackageReference Include="Lumina" Version="3.8.0" />

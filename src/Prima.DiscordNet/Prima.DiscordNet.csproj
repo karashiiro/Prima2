@@ -13,4 +13,8 @@
     <PackageReference Include="Discord.Net.Labs" Version="3.6.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Modules" />
+  </ItemGroup>
+
 </Project>

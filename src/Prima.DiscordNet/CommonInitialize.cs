@@ -53,7 +53,6 @@ namespace Prima.DiscordNet
                 .AddSingleton(new DiscordSocketClient(disConfig))
                 .AddSingleton<CommandService>()
                 .AddSingleton<CommandHandlingService>()
-                .AddSingleton<DiagnosticService>()
                 .AddSingleton<HttpClient>()
                 .AddSingleton<IDbService, DbService>()
                 .AddSingleton<RateLimitService>()
