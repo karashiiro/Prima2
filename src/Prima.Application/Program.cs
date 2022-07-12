@@ -20,7 +20,6 @@ using Prima.Game.FFXIV;
 using Prima.Game.FFXIV.FFLogs;
 using Prima.Game.FFXIV.XIVAPI;
 using Prima.GoogleApis.Services;
-using Prima.Queue.Services;
 using Prima.Services;
 using Prima.Stable.Handlers;
 using Prima.Stable.Services;
@@ -66,9 +65,6 @@ var host = Host.CreateDefaultBuilder()
         sc.AddSingleton<CalendarApi>();
 
         // Add old Prima.Queue services
-        sc.AddSingleton<FFXIV3RoleQueueService>();
-        sc.AddSingleton<QueueAnnouncementMonitor>();
-        sc.AddSingleton<ExpireQueuesService>();
         sc.AddSingleton<PasswordGenerator>();
 
         // Add scheduler
@@ -183,7 +179,6 @@ await client.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("PRIMA
 await client.StartAsync();
 
 var commandHandler = host.Services.GetRequiredService<CommandHandlingService>();
-await commandHandler.InitializeAsync(Assembly.GetAssembly(typeof(Prima.Queue.Program)));
 await commandHandler.InitializeAsync(Assembly.GetAssembly(typeof(Prima.Stable.Program)));
 await commandHandler.InitializeAsync();
 
@@ -237,8 +232,6 @@ var calendar = host.Services.GetRequiredService<CalendarApi>();
 client.MessageUpdated += (_, message, _) => AnnounceEdit.Handler(client, calendar, db, message);
 client.ReactionAdded += (cachedMessage, _, reaction)
     => AnnounceReact.HandlerAdd(client, db, cachedMessage, reaction);
-
-// Skip the old Prima.Queue services and callbacks since we aren't using them right now
 
 // Run the host
 await host.RunAsync();
