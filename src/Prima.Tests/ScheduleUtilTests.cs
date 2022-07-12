@@ -1,6 +1,6 @@
 ﻿using System;
 using NUnit.Framework;
-using Prima.Scheduler;
+using Prima.Application.Scheduling;
 
 namespace Prima.Tests
 {

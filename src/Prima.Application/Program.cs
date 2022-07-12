@@ -184,7 +184,6 @@ await client.StartAsync();
 
 var commandHandler = host.Services.GetRequiredService<CommandHandlingService>();
 await commandHandler.InitializeAsync(Assembly.GetAssembly(typeof(Prima.Queue.Program)));
-await commandHandler.InitializeAsync(Assembly.GetAssembly(typeof(Prima.Scheduler.Program)));
 await commandHandler.InitializeAsync(Assembly.GetAssembly(typeof(Prima.Stable.Program)));
 await commandHandler.InitializeAsync();
 

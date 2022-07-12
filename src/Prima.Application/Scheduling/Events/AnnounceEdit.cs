@@ -2,7 +2,6 @@
 using Discord.WebSocket;
 using Prima.GoogleApis.Services;
 using Prima.Resources;
-using Prima.Scheduler;
 using Prima.Services;
 using Serilog;
 
