@@ -1,8 +1,5 @@
-﻿using Discord.WebSocket;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Prima.DiscordNet;
-using Prima.Scheduler.Handlers;
-using Prima.Services;
 using Serilog;
 using System.Threading.Tasks;
 using Prima.GoogleApis.Services;
@@ -20,12 +17,6 @@ namespace Prima.Scheduler
             // Initialize the ASP.NET service provider and freeze this Task indefinitely.
             await using var services = ConfigureServices(sc);
             await CommonInitialize.ConfigureServicesAsync(services);
-
-            var client = services.GetRequiredService<DiscordSocketClient>();
-            var db = services.GetRequiredService<IDbService>();
-            var calendar = services.GetRequiredService<CalendarApi>();
-
-            client.MessageUpdated += (_, message, _) => AnnounceEdit.Handler(client, calendar, db, message);
             
             Log.Information("Prima Scheduler logged in!");
 

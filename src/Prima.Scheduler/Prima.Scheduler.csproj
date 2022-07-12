@@ -17,4 +17,8 @@
     <ProjectReference Include="..\Prima\Prima.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Handlers" />
+  </ItemGroup>
+
 </Project>

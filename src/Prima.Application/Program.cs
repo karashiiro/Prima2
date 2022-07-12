@@ -21,7 +21,6 @@ using Prima.Game.FFXIV.FFLogs;
 using Prima.Game.FFXIV.XIVAPI;
 using Prima.GoogleApis.Services;
 using Prima.Queue.Services;
-using Prima.Scheduler.Handlers;
 using Prima.Services;
 using Prima.Stable.Handlers;
 using Prima.Stable.Services;
@@ -45,8 +44,6 @@ var host = Host.CreateDefaultBuilder()
         sc.AddSingleton<IDbService, DbService>();
         sc.AddSingleton<RateLimitService>();
         sc.AddSingleton<ITemplateProvider, TemplateProvider>();
-
-        // TODO: Refactor all of the services below into more cohesive modules
 
         // Add old Prima.Stable services
         sc.AddSingleton<WebClient>();
@@ -190,8 +187,6 @@ await commandHandler.InitializeAsync(Assembly.GetAssembly(typeof(Prima.Queue.Pro
 await commandHandler.InitializeAsync(Assembly.GetAssembly(typeof(Prima.Scheduler.Program)));
 await commandHandler.InitializeAsync(Assembly.GetAssembly(typeof(Prima.Stable.Program)));
 await commandHandler.InitializeAsync();
-
-// TODO: Refactor all of the callbacks below into more cohesive modules
 
 // Initialize the old Prima.Stable services
 var keepClean = host.Services.GetRequiredService<KeepClean>();
