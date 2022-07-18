@@ -159,11 +159,23 @@ namespace Prima.Stable.Modules
             if (!await LodestoneUtils.VerifyCharacter(Lodestone, ulong.Parse(foundCharacter.LodestoneId),
                 Context.User.Id.ToString()))
             {
-                await Context.User.SendMessageAsync(
-                    "We now require that users verify ownership of their FFXIV accounts when using `~iam`. " +
-                    "Your Discord ID is:");
-                await Context.User.SendMessageAsync(Context.User.Id.ToString()); // Send this in a separate message to make things easier for mobile users
-                await Context.User.SendMessageAsync("Please paste this number somewhere into your Lodestone bio here: <https://na.finalfantasyxiv.com/lodestone/my/setting/profile/> and `~iam` again.");
+                try
+                {
+                    await Context.User.SendMessageAsync(
+                        "We now require that users verify ownership of their FFXIV accounts when using `~iam`. " +
+                        "Your Discord ID is:");
+                    await Context.User.SendMessageAsync(Context.User.Id
+                        .ToString()); // Send this in a separate message to make things easier for mobile users
+                    await Context.User.SendMessageAsync(
+                        "Please paste this number somewhere into your Lodestone bio here: <https://na.finalfantasyxiv.com/lodestone/my/setting/profile/> and `~iam` again.");
+                }
+                catch (HttpException e) when (e.DiscordCode == DiscordErrorCode.CannotSendMessageToUser)
+                {
+                    var errReply = await ReplyAsync($"{Context.User.Mention} - character verification failed. Please temporarily enable direct messages and try again for further assistance.");
+                    await Task.Delay(MessageDeleteDelay);
+                    await errReply.DeleteAsync();
+                    return;
+                } 
                 var reply = await ReplyAsync($"{Context.User.Mention}, your Discord ID could not be found in your Lodestone bio. " +
                                              "Please add the number DM'd to you here: <https://na.finalfantasyxiv.com/lodestone/my/setting/profile/>.");
                 await Task.Delay(MessageDeleteDelay);
