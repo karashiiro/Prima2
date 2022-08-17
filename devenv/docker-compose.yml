@@ -5,7 +5,7 @@ services:
     ports:
       - "7552:7552"
     volumes:
-      - "./prima-google-apis:/config"
+      - "./prima-google-apis:/prima"
   mongo:
     image: mongo:4.2.3
     ports:
