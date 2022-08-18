@@ -601,16 +601,35 @@ namespace Prima.Stable.Modules
         public Task DrnAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/y0jNEno.png");
 
         [Command("styg", RunMode = RunMode.Async)]
-        [Description("Shows Styg guide")]
+        [Description("Shows Styg guide.")]
         [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public async Task StygAsync()
         {
+            await DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/808869784195563521/813152064342589443/Fateful_Words_debuffs.png");
+            await Task.Delay(200);
             await DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/803634068092223518/1009648941408735262/unknown.png");
             await Task.Delay(200);
             await DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/803634068092223518/1009648992080113795/unknown.png");
             await Task.Delay(200);
             await DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/803634068092223518/1009649017069768744/unknown.png");
+        }
+        
+        [Command("stygtank", RunMode = RunMode.Async)]
+        [Description("Shows the Styg tank guide.")]
+        [RateLimit(TimeSeconds = 10, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public async Task StygTankAsync()
+        {
+            await ReplyAsync("styg done right! the important bits you're looking for\n" +
+                             "1) 2 ranged gcds at your start marker to establish aggro (don't use provoke, you might need it later)\n" +
+                             "2) run to your next cardinal marker for entrapment while spamming ranged (dw if you run out of range, add will catch up)\n" +
+                             "3) find trap, resolve trap (even if your ad dies, keep percepting till you see \"no more traps\" - this will save a tank later)\n" + 
+                             "4) run to the next cardinal marker at the far edge to resolve debuff (dw if you run out of range, add will catch up)\n" + 
+                             "5) you're set! just stay vigilant as you continue to ranged, unless things have gone truly cursed you should be fine.\n" + 
+                             "\n" + 
+                             "https://www.twitch.tv/videos/1111130884");
+            await DiscordUtilities.PostImage(Http, Context, "https://media.discordapp.net/attachments/803634423416356904/1009166654938284152/unknown-325.png");
         }
     }
 }
