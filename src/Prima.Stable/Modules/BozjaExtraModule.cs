@@ -599,5 +599,18 @@ namespace Prima.Stable.Modules
         [RateLimit(TimeSeconds = 10, Global = true)]
         [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
         public Task DrnAsync() => DiscordUtilities.PostImage(Http, Context, "https://i.imgur.com/y0jNEno.png");
+
+        [Command("styg", RunMode = RunMode.Async)]
+        [Description("Shows Styg guide")]
+        [RateLimit(TimeSeconds = 10, Global = true)]
+        [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
+        public async Task StygAsync()
+        {
+            await DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/803634068092223518/1009648941408735262/unknown.png");
+            await Task.Delay(200);
+            await DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/803634068092223518/1009648992080113795/unknown.png");
+            await Task.Delay(200);
+            await DiscordUtilities.PostImage(Http, Context, "https://cdn.discordapp.com/attachments/803634068092223518/1009649017069768744/unknown.png");
+        }
     }
 }
