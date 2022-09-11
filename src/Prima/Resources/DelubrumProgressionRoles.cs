@@ -16,10 +16,18 @@ namespace Prima.Resources
 
         public static readonly IDictionary<ulong, string> Roles = new Dictionary<ulong, string>
         {
+#if DEBUG
+            //section to add dev server roles IDs as needed
+            {1017563010367246407, "Trinity Seeker Progression"},
+            {1017563202378285186, "Queen's Guard Progression"},
+            {1017563257340428328, "Trinity Avowed Progression"},
+            {1017563291435941888, "The Queen Progression"},
+#else
             {807854117053136896, "Trinity Seeker Progression"},
             {807854109608378368, "Queen's Guard Progression"},
             {807854100204879902, "Trinity Avowed Progression"},
             {807854087092830259, "The Queen Progression"},
+#endif
 #if DEBUG
             {807881434110754866, "debug delub role"},
 #endif
@@ -36,13 +44,25 @@ namespace Prima.Resources
 
         public static IEnumerable<ulong> GetContingentRoles(ulong roleId)
         {
+#if DEBUG
+            var baseList = new ulong[] { 1017563291435941888, 1017563257340428328, 1017563202378285186, 1017563010367246407 };
+#else
             var baseList = new ulong[] { 807854087092830259, 807854100204879902, 807854109608378368, 807854117053136896 };
+#endif
             return roleId switch
             {
+#if DEBUG
+                1017563291435941888 => baseList,
+                1017563257340428328 => baseList[1..],
+                1017563202378285186 => baseList[2..],
+                1017563010367246407 => baseList[3..],
+#else
                 807854087092830259 => baseList,
                 807854100204879902 => baseList[1..],
                 807854109608378368 => baseList[2..],
                 807854117053136896 => baseList[3..],
+#endif
+
 #if DEBUG
                 807881434110754866 => new List<ulong> { 807881434110754866 },
 #endif

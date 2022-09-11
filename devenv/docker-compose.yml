@@ -6,7 +6,12 @@ services:
       - "7552:7552"
     volumes:
       - "./prima-google-apis:/prima"
+      - "mongodb_vol:/data/db"
   mongo:
     image: mongo:4.2.3
     ports:
       - "27017:27017"
+
+volumes:
+    mongodb_vol:
+  

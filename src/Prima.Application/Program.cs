@@ -48,11 +48,16 @@ var host = Host.CreateDefaultBuilder()
         sc.AddSingleton<WebClient>();
         sc.AddSingleton<CensusEventService>();
         sc.AddSingleton<XIVAPIClient>();
-        sc.AddSingleton(_ => new GameData(Environment.OSVersion.Platform == PlatformID.Win32NT
-                ? @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack"
-                : Path.Combine(Environment.GetEnvironmentVariable("HOME")
-                               ?? throw new ArgumentException("No HOME variable set!"), "sqpack"),
-            new LuminaOptions { PanicOnSheetChecksumMismatch = false }));
+        if (Environment.GetEnvironmentVariable("FFXIV_HOME") == null) {
+            sc.AddSingleton(_ => new GameData(Environment.OSVersion.Platform == PlatformID.Win32NT
+                    ? @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack"
+                    : Path.Combine(Environment.GetEnvironmentVariable("HOME")
+                                   ?? throw new ArgumentException("No HOME variable set!"), "sqpack"),
+                new LuminaOptions { PanicOnSheetChecksumMismatch = false }));
+        } else
+        {
+            sc.AddSingleton(_ => new GameData(Environment.GetEnvironmentVariable("FFXIV_HOME"), new LuminaOptions { PanicOnSheetChecksumMismatch = false }));
+        }
         sc.AddSingleton<FFXIVWeatherLuminaService>();
         sc.AddSingleton<MuteService>();
         sc.AddSingleton<TimedRoleManager>();
