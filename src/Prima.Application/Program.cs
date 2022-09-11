@@ -184,7 +184,7 @@ await client.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("PRIMA
 await client.StartAsync();
 
 var commandHandler = host.Services.GetRequiredService<CommandHandlingService>();
-await commandHandler.InitializeAsync(Assembly.GetAssembly(typeof(Prima.Stable.Program)));
+await commandHandler.InitializeAsync(Assembly.GetAssembly(typeof(Prima.Stable.Program))); // Add commands from the Prima.Stable library
 await commandHandler.InitializeAsync();
 
 // Initialize the old Prima.Stable services
