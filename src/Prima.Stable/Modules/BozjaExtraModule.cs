@@ -276,7 +276,7 @@ namespace Prima.Stable.Modules
             }
 
             var encounters = res.Fights
-                .Where(f => f.Kill != null && f.FriendlyPlayers != null);
+                .Where(f => f.Kill != null && f.FriendlyPlayers != null && f.Difficulty != 100);
             var originalUsers = res.MasterData.Actors
                 .Where(a => a.Server != null)
                 .ToList();
@@ -305,31 +305,74 @@ namespace Prima.Stable.Modules
             var missedUsers = new List<LogInfo.ReportDataWrapper.ReportData.Report.Master.Actor>();
 
             var addedAny = false;
-            foreach (var encounter in encounters)
+
+            var orderedKilledBosses = encounters.Where(f => f.Kill == true)
+                .OrderByDescending(f => f.Name == "The Queen")
+                .ThenByDescending(f => f.Name == "Trinity Avowed")
+                .ThenByDescending(f => f.Name == "The Queen's Guard")
+                .ThenByDescending(f => f.Name == "Trinity Seeker");
+            var orderedAttemptedBosses = encounters.Where(f => f.Kill != null)
+                .OrderByDescending(f => f.Name == "The Queen")
+                .ThenByDescending(f => f.Name == "Trinity Avowed")
+                .ThenByDescending(f => f.Name == "The Queen's Guard")
+                .ThenByDescending(f => f.Name == "Trinity Seeker");
+
+            var roleName = orderedAttemptedBosses.First().Name == "The Queen's Guard" ? "Queen's Guard Progression" : orderedAttemptedBosses.First().Name + " Progression";
+
+            var role = Context.Guild.Roles.FirstOrDefault(r => r.Name == roleName);
+            if (role == null)
             {
-                if (encounter.Difficulty == 100)
-                {
-                    Log.Error("Encounter {Encounter} does not appear to be a Savage encounter", encounter.Name);
-                    continue;
-                }
-                var roleName = encounter.Name;
-                if (roleName == "The Queen's Guard")
-                    roleName = "Queen's Guard";
-                roleName += " Progression";
-                var role = Context.Guild.Roles.FirstOrDefault(r => r.Name == roleName);
-                if (role == null)
-                {
-                    Log.Error("Role {RoleName} does not exist!", roleName);
-                    continue;
-                }
+                Log.Error("Role {RoleName} does not exist!", roleName);
+                return;
+            }
 
                 var contingentRoles = DelubrumProgressionRoles.GetContingentRoles(role.Id)
                     .Select(r => Context.Guild.GetRole(r))
                     .ToList();
 
-                var killRole = Context.Guild.GetRole(DelubrumProgressionRoles.GetKillRole(role.Name));
+            var highestRole = Context.Guild.GetRole(DelubrumProgressionRoles.GetKillRole(role.Name));
 
-                foreach (var id in encounter.FriendlyPlayers)
+            if (orderedKilledBosses.First().Name == "The Queen")
+            {
+                var highestKill = encounters.Where(f => f.Kill == true && f.Name == orderedKilledBosses.First().Name);
+                foreach (var id in highestKill.SelectMany(f => f.FriendlyPlayers).ToList().Distinct())
+                {
+                    // Continue early if user not found
+                    if (!users.ContainsKey(id))
+                    {
+                        var actor = originalUsers.Find(a => a.Id == id);
+                        if (actor != null)
+                        {
+                            missedUsers.Add(actor);
+                        }
+                        continue;
+                    }
+
+                    var user = Context.Guild.GetUser(users[id].DiscordId);
+                    addedAny = true;
+                    // Give everyone the clear role if they cleared DRS, if they already have the role nothing to do
+                    Log.Information("Checking role {RoleName} on user {User}", highestRole.Name, user);
+                    if (!user.HasRole(highestRole))
+                    {
+                        await user.AddRoleAsync(highestRole);
+                        Log.Information("Added role {RoleName} to {User}", highestRole.Name, user);
+                        // Remove all contingent roles (this is bodge and should be refactored)
+                        foreach (var progRole in contingentRoles)
+                        {
+                            Log.Information("Checking role {RoleName} on user {User}", progRole.Name, user);
+                            if (user.HasRole(progRole))
+                            {
+                                await user.RemoveRoleAsync(progRole);
+                                Log.Information("Removed role {RoleName} from user {User}", progRole.Name, user);
+                            }
+                        }
+                    }
+                }
+            } 
+            else
+            {
+                var highestAttempt = encounters.Where(f => f.Kill != null && f.Name == orderedAttemptedBosses.First().Name);
+                foreach (var id in highestAttempt.SelectMany(f => f.FriendlyPlayers).ToList().Distinct())
                 {
                     if (!users.ContainsKey(id))
                     {
@@ -342,34 +385,12 @@ namespace Prima.Stable.Modules
                     }
 
                     var user = Context.Guild.GetUser(users[id].DiscordId);
-                    if (user == null || user.HasRole(806362589134454805)) continue;
-
-                    if (killRole.Id == 806362589134454805 && encounter.Kill == true)
+                    Log.Information("Checking role {RoleName} on user {User}", highestRole.Name, user);
+                    if (!user.HasRole(highestRole))
                     {
                         addedAny = true;
-
-                        // Remove all contingent roles (this is bodge and should be refactored)
-                        foreach (var progRole in contingentRoles)
-                        {
-                            Log.Information("Checking role {RoleName} on user {User}", progRole.Name, user);
-                            if (user.HasRole(progRole))
-                            {
-                                await user.RemoveRoleAsync(progRole);
-                                Log.Information("Removed role {RoleName} from user {User}", progRole.Name, user);
-                            }
-                        }
-
-                        // Give everyone the clear role if they cleared DRS
-                        Log.Information("Checking role {RoleName} on user {User}", killRole.Name, user);
-                        if (!user.HasRole(killRole))
-                        {
-                            await user.AddRoleAsync(killRole);
-                            Log.Information("Added role {RoleName} to {User}", killRole.Name, user);
-                        }
-                    }
-                    else
-                    {
-                        // Give all contingent roles as well as the clear role for the fight
+                        await user.AddRoleAsync(highestRole);
+                        Log.Information("Added role {RoleName} to {User}", highestRole.Name, user);
                         foreach (var progRole in contingentRoles)
                         {
                             Log.Information("Checking role {RoleName} on user {User}", progRole.Name, user);
@@ -378,17 +399,6 @@ namespace Prima.Stable.Modules
                                 addedAny = true;
                                 await user.AddRoleAsync(progRole);
                                 Log.Information("Added role {RoleName} to user {User}", progRole.Name, user);
-                            }
-                        }
-
-                        if (encounter.Kill == true)
-                        {
-                            Log.Information("Checking role {RoleName} on user {User}", killRole.Name, user);
-                            if (!user.HasRole(killRole))
-                            {
-                                addedAny = true;
-                                await user.AddRoleAsync(killRole);
-                                Log.Information("Added role {RoleName} to {User}", killRole.Name, user);
                             }
                         }
                     }
