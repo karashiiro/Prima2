@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Prima.Stable.Models.FFLogs
+namespace Prima.Models.FFLogs
 {
     public class LogInfo
     {

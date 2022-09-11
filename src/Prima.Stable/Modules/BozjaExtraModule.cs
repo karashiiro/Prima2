@@ -7,13 +7,13 @@ using Prima.Game.FFXIV;
 using Prima.Game.FFXIV.FFLogs;
 using Prima.Resources;
 using Prima.Services;
-using Prima.Stable.Models.FFLogs;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Prima.Models.FFLogs;
 using Color = Discord.Color;
 // ReSharper disable MemberCanBePrivate.Global
 
