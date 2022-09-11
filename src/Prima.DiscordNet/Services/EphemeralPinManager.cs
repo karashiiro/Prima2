@@ -1,15 +1,15 @@
-﻿using Discord;
-using Discord.WebSocket;
-using Prima.Services;
-using Serilog;
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Discord;
+using Discord.WebSocket;
+using Prima.Services;
+using Serilog;
 
-namespace Prima.Stable.Services
+namespace Prima.DiscordNet.Services
 {
-    public class EphemeralPinManager : IDisposable
+    public sealed class EphemeralPinManager : IDisposable
     {
         public static double HoursUntilRemoval => 4.5;
 
@@ -73,7 +73,8 @@ namespace Prima.Stable.Services
         }
 
         private bool disposedValue;
-        protected virtual void Dispose(bool disposing)
+
+        private void Dispose(bool disposing)
         {
             if (disposedValue) return;
             if (!disposing) return;

@@ -1,12 +1,12 @@
-﻿using Discord.WebSocket;
-using Prima.Services;
-using Serilog;
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Discord.WebSocket;
+using Prima.Services;
+using Serilog;
 
-namespace Prima.Stable.Services
+namespace Prima.DiscordNet.Services
 {
     public class TimedRoleManager : IDisposable
     {

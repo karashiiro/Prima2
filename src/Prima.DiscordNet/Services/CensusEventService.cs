@@ -1,17 +1,17 @@
-﻿using Discord.Net;
-using Discord.WebSocket;
-using Prima.Game.FFXIV;
-using Prima.Models;
-using Prima.Services;
-using Serilog;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Net;
+using Discord.WebSocket;
+using Prima.Game.FFXIV;
+using Prima.Models;
 using Prima.Resources;
+using Prima.Services;
+using Serilog;
 
-namespace Prima.Stable.Services
+namespace Prima.DiscordNet.Services
 {
     public class CensusEventService
     {

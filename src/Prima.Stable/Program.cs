@@ -7,13 +7,13 @@ using Prima.Game.FFXIV;
 using Prima.Game.FFXIV.FFLogs;
 using Prima.Game.FFXIV.XIVAPI;
 using Prima.Services;
-using Prima.Stable.Handlers;
-using Prima.Stable.Services;
 using Serilog;
 using System;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
+using Prima.DiscordNet.Handlers;
+using Prima.DiscordNet.Services;
 
 namespace Prima.Stable
 {
@@ -36,7 +36,6 @@ namespace Prima.Stable
             var roleRemover = services.GetRequiredService<TimedRoleManager>();
             var ffLogs = services.GetRequiredService<FFLogsClient>();
             var web = services.GetRequiredService<WebClient>();
-            var lodestone = services.GetRequiredService<CharacterLookup>();
             var keepClean = services.GetRequiredService<KeepClean>();
             var ephemeralPinner = services.GetRequiredService<EphemeralPinManager>();
             var templates = services.GetRequiredService<ITemplateProvider>();

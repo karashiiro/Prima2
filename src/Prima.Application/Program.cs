@@ -15,14 +15,13 @@ using Prima.Application.Moderation;
 using Prima.Application.Personality;
 using Prima.Application.Scheduling;
 using Prima.Application.Scheduling.Events;
+using Prima.DiscordNet.Handlers;
 using Prima.DiscordNet.Services;
 using Prima.Game.FFXIV;
 using Prima.Game.FFXIV.FFLogs;
 using Prima.Game.FFXIV.XIVAPI;
 using Prima.GoogleApis.Services;
 using Prima.Services;
-using Prima.Stable.Handlers;
-using Prima.Stable.Services;
 using Quartz;
 
 var host = Host.CreateDefaultBuilder()

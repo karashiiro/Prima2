@@ -3,12 +3,12 @@ using Discord.Commands;
 using Prima.DiscordNet.Attributes;
 using Prima.Resources;
 using Prima.Services;
-using Prima.Stable.Services;
 using Serilog;
 using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Prima.DiscordNet.Services;
 
 namespace Prima.Stable.Modules
 {

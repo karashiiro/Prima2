@@ -1,27 +1,28 @@
-﻿using Discord;
-using Discord.Net;
-using Discord.WebSocket;
-using Prima.DiscordNet.Extensions;
-using Prima.Models;
-using Prima.Services;
-using Serilog;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Net;
+using Discord.WebSocket;
+using Prima.DiscordNet.Extensions;
+using Prima.Models;
+using Prima.Services;
+using Serilog;
 using SixLabors.ImageSharp;
 using Color = Discord.Color;
 
-namespace Prima.Stable.Handlers
+namespace Prima.DiscordNet.Handlers
 {
     public class ChatCleanup
     {
         public static string LastCaughtRegex { get; private set; }
 
-        public static async Task Handler(IDbService db, WebClient wc, ITemplateProvider templates, SocketMessage rawMessage)
+        public static async Task Handler(IDbService db, WebClient wc, ITemplateProvider templates,
+            SocketMessage rawMessage)
         {
             if (rawMessage == null)
             {
@@ -46,13 +47,16 @@ namespace Prima.Stable.Handlers
                 var prefix = guildConfig.Prefix == ' ' ? db.Config.Prefix : guildConfig.Prefix;
                 if (!guild.GetUser(rawMessage.Author.Id).GetPermissions(channel).ManageMessages)
                 {
-                    if (!rawMessage.Content.StartsWith($"{prefix}i") && !rawMessage.Content.ToLower().StartsWith("i") && !rawMessage.Content.StartsWith($"{prefix}agree") && !rawMessage.Content.StartsWith($"agree"))
+                    if (!rawMessage.Content.StartsWith($"{prefix}i") && !rawMessage.Content.ToLower().StartsWith("i") &&
+                        !rawMessage.Content.StartsWith($"{prefix}agree") && !rawMessage.Content.StartsWith($"agree"))
                     {
                         try
                         {
                             await rawMessage.DeleteAsync();
                         }
-                        catch (HttpException) { }
+                        catch (HttpException)
+                        {
+                        }
                     }
                     else
                     {
@@ -61,7 +65,9 @@ namespace Prima.Stable.Handlers
                             await Task.Delay(10000);
                             await rawMessage.DeleteAsync();
                         }
-                        catch (HttpException) { }
+                        catch (HttpException)
+                        {
+                        }
                     }
                 }
             }
@@ -78,7 +84,8 @@ namespace Prima.Stable.Handlers
         /// <summary>
         /// Check a message against the text denylist.
         /// </summary>
-        private static async Task CheckTextDenylist(SocketGuild guild, IMessage rawMessage, DiscordGuildConfiguration guildConfig, ITemplateProvider templates)
+        private static async Task CheckTextDenylist(SocketGuild guild, IMessage rawMessage,
+            DiscordGuildConfiguration guildConfig, ITemplateProvider templates)
         {
             foreach (var regexString in guildConfig.TextDenylist)
             {
@@ -88,11 +95,11 @@ namespace Prima.Stable.Handlers
                     LastCaughtRegex = regexString;
                     await rawMessage.DeleteAsync();
                     await rawMessage.Author.SendMessageAsync(embed: templates.Execute("automod/delete.md", new
-                    {
-                        ChannelName = rawMessage.Channel.Name,
-                        MessageText = rawMessage.Content,
-                        Pattern = regexString,
-                    })
+                        {
+                            ChannelName = rawMessage.Channel.Name,
+                            MessageText = rawMessage.Content,
+                            Pattern = regexString,
+                        })
                         .ToEmbedBuilder()
                         .WithColor(Color.Orange)
                         .Build());
@@ -103,7 +110,8 @@ namespace Prima.Stable.Handlers
         /// <summary>
         /// Check a message against the text greylist.
         /// </summary>
-        private static async Task CheckTextGreylist(SocketGuild guild, IMessage rawMessage, DiscordGuildConfiguration guildConfig, ITemplateProvider templates)
+        private static async Task CheckTextGreylist(SocketGuild guild, IMessage rawMessage,
+            DiscordGuildConfiguration guildConfig, ITemplateProvider templates)
         {
             if (guildConfig.TextGreylist == null)
             {
@@ -125,12 +133,12 @@ namespace Prima.Stable.Handlers
                     }
 
                     await reportChannel.SendMessageAsync(embed: templates.Execute("automod/softblock.md", new
-                    {
-                        ChannelName = rawMessage.Channel.Name,
-                        MessageText = rawMessage.Content,
-                        Pattern = regexString,
-                        JumpLink = rawMessage.GetJumpUrl(),
-                    })
+                        {
+                            ChannelName = rawMessage.Channel.Name,
+                            MessageText = rawMessage.Content,
+                            Pattern = regexString,
+                            JumpLink = rawMessage.GetJumpUrl(),
+                        })
                         .ToEmbedBuilder()
                         .WithColor(Color.Orange)
                         .Build());
@@ -160,27 +168,36 @@ namespace Prima.Stable.Handlers
         /// <summary>
         /// Convert attachments that don't render automatically to formats that do.
         /// </summary>
-        private static async Task ProcessAttachments(IDbService db, SocketMessage rawMessage, IGuildChannel guildChannel)
+        private static async Task ProcessAttachments(IDbService db, SocketMessage rawMessage,
+            IGuildChannel guildChannel)
         {
             if (!rawMessage.Attachments.Any()) return;
 
             foreach (var attachment in rawMessage.Attachments)
             {
-                var justFileName = attachment.Filename[..attachment.Filename.LastIndexOf(".", StringComparison.InvariantCulture)];
+                var justFileName =
+                    attachment.Filename[..attachment.Filename.LastIndexOf(".", StringComparison.InvariantCulture)];
                 if (attachment.Filename.ToLower().EndsWith(".bmp") || attachment.Filename.ToLower().EndsWith(".dib"))
                 {
                     try
                     {
                         var timer = new Stopwatch();
-                        using var bitmap = await SixLabors.ImageSharp.Image.LoadAsync(Path.Combine(db.Config.TempDir, attachment.Filename));
+                        using var bitmap =
+                            await SixLabors.ImageSharp.Image.LoadAsync(Path.Combine(db.Config.TempDir,
+                                attachment.Filename));
                         await bitmap.SaveAsPngAsync(Path.Combine(db.Config.TempDir, justFileName + ".png"));
                         timer.Stop();
-                        Log.Information("Processed BMP from {DiscordName}, ({Time}ms)!", $"{rawMessage.Author.Username}#{rawMessage.Author.Discriminator}", timer.ElapsedMilliseconds);
-                        await (guildChannel as ITextChannel).SendFileAsync(Path.Combine(db.Config.TempDir, justFileName + ".png"), $"{rawMessage.Author.Mention}: Your file has been automatically converted from BMP/DIB to PNG (BMP files don't render automatically).");
+                        Log.Information("Processed BMP from {DiscordName}, ({Time}ms)!",
+                            $"{rawMessage.Author.Username}#{rawMessage.Author.Discriminator}",
+                            timer.ElapsedMilliseconds);
+                        await (guildChannel as ITextChannel).SendFileAsync(
+                            Path.Combine(db.Config.TempDir, justFileName + ".png"),
+                            $"{rawMessage.Author.Mention}: Your file has been automatically converted from BMP/DIB to PNG (BMP files don't render automatically).");
                     }
                     catch (FileNotFoundException)
                     {
-                        Log.Error("Could not find file {Filename}", Path.Combine(db.Config.TempDir, attachment.Filename));
+                        Log.Error("Could not find file {Filename}",
+                            Path.Combine(db.Config.TempDir, attachment.Filename));
                     }
                 }
             }

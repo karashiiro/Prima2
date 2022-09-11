@@ -7,7 +7,7 @@ using Discord.WebSocket;
 using Prima.Resources;
 using Serilog;
 
-namespace Prima.Stable.Services
+namespace Prima.DiscordNet.Services
 {
     public class KeepClean : IDisposable
     {
