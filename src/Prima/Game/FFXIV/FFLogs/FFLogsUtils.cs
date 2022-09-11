@@ -20,6 +20,7 @@ namespace Prima.Game.FFXIV.FFLogs
                 kill
                 name
                 friendlyPlayers
+                difficulty
             }}
             masterData {{
                 actors {{

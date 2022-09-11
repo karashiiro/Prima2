@@ -35,6 +35,9 @@ namespace Prima.Stable.Models.FFLogs
 
                         [JsonProperty("friendlyPlayers")]
                         public int[] FriendlyPlayers { get; set; }
+
+                        [JsonProperty("difficulty")]
+                        public int? Difficulty { get; set; }
                     }
 
                     public class Master
