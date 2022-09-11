@@ -32,11 +32,11 @@ public class HelpCommands : ModuleBase<SocketCommandContext>
         var fields = new List<EmbedFieldBuilder>();
         foreach (var command in commands)
         {
-            var restrictedToAttr = (RestrictToGuildsAttribute)command.Attributes.FirstOrDefault(attr => attr is RestrictToGuildsAttribute);
+            var restrictedToAttr = (RestrictToGuildsAttribute?)command.Attributes.FirstOrDefault(attr => attr is RestrictToGuildsAttribute);
             if (restrictedToAttr != null && (Context.Guild == null || !restrictedToAttr.GuildIds.Contains(Context.Guild.Id)))
                 continue;
 
-            var restrictedFromAttr = (RestrictFromGuildsAttribute)command.Attributes.FirstOrDefault(attr => attr is RestrictFromGuildsAttribute);
+            var restrictedFromAttr = (RestrictFromGuildsAttribute?)command.Attributes.FirstOrDefault(attr => attr is RestrictFromGuildsAttribute);
             if (restrictedFromAttr != null && (Context.Guild != null && restrictedFromAttr.GuildIds.Contains(Context.Guild.Id)))
                 continue;
 
@@ -45,7 +45,7 @@ public class HelpCommands : ModuleBase<SocketCommandContext>
             var fieldBuilder = new EmbedFieldBuilder()
                 .WithIsInline(true)
                 .WithName(command.Name)
-                .WithValue((restrictedToAttr != null ? $"({Context.Guild.Name}) " : "") + descAttr.Description);
+                .WithValue((restrictedToAttr != null ? $"({Context.Guild?.Name}) " : "") + descAttr.Description);
             fields.Add(fieldBuilder);
         }
 
