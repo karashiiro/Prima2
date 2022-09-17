@@ -21,4 +21,8 @@
     <ProjectReference Include="..\Prima\Prima.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Modules\BozjaExtraModule.cs" />
+  </ItemGroup>
+
 </Project>

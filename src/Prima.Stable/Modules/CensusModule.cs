@@ -183,7 +183,7 @@ namespace Prima.Stable.Modules
                 return;
             }
 
-            Log.Information("Verified user {0}", Context.User.Id);
+            Log.Information("Verified user {UserId}", Context.User.Id);
 
             // Get the existing database entry, if it exists.
             var existingLodestoneId = Db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id)?.LodestoneId;
