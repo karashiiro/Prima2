@@ -15,7 +15,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Prima.Application\Prima.Application.csproj" />
-    <ProjectReference Include="..\Prima.Stable\Prima.Stable.csproj" />
     <ProjectReference Include="..\Prima\Prima.csproj" />
   </ItemGroup>
 

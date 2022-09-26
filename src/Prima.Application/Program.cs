@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Reflection;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -183,7 +182,6 @@ await client.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("PRIMA
 await client.StartAsync();
 
 var commandHandler = host.Services.GetRequiredService<CommandHandlingService>();
-await commandHandler.InitializeAsync(Assembly.GetAssembly(typeof(Prima.Stable.Program))); // Add commands from the Prima.Stable library
 await commandHandler.InitializeAsync();
 
 // Initialize the old Prima.Stable services
