@@ -19,7 +19,7 @@ public class AuditDeletion
 
         var config = db.Guilds.Single(g => g.Id == guild.Id);
 
-        CachedMessage cachedMessage;
+        CachedMessage? cachedMessage;
         var imessage = await cmessage.GetOrDownloadAsync();
         if (imessage == null)
         {

@@ -14,7 +14,7 @@ namespace Prima.DiscordNet.Attributes
             var db = services.GetRequiredService<IDbService>();
             try
             {
-                var user = db.Users
+                _ = db.Users
                     .Single(user => user.DiscordId == context.User.Id);
                 return Task.FromResult(PreconditionResult.FromSuccess());
             }

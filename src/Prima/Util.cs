@@ -1,5 +1,4 @@
 ﻿using Prima.Game.FFXIV;
-using Prima.Resources;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -50,12 +49,13 @@ namespace Prima
         /// Gets the absolute path of a file from its path relative to the entry assembly.
         /// </summary>
         public static string GetAbsolutePath(string relativePath)
-            => Path.Combine(Assembly.GetEntryAssembly().Location, "..", relativePath);
+            => Path.Combine(Assembly.GetEntryAssembly()!.Location, "..", relativePath);
 
         public static string GetClosestString(string input, IEnumerable<string> options)
         {
-            var output = options.First();
-            foreach (var option in options)
+            var enumerable = options.ToList();
+            var output = enumerable.First();
+            foreach (var option in enumerable)
                 if (Levenshtein(input, output) > Levenshtein(input, option))
                     output = option;
             return output;
@@ -72,7 +72,6 @@ namespace Prima
                 return b;
             if (b == 0)
                 return a;
-            var costBonus = Math.Abs(a - b); // If there's a difference between the strings, that means an insert for every extra character.
             a = Math.Min(a, b); // These then can be equal since we've pulled out the difference already.
             b = a;
             var matrix = new int[a, b];
@@ -81,6 +80,7 @@ namespace Prima
                 matrix[0, k] = k;
                 matrix[k, 0] = k;
             }
+
             for (var i = 1; i < a; i++)
             {
                 for (var j = 1; j < b; j++)
@@ -91,6 +91,7 @@ namespace Prima
                         matrix[i, j] = Math.Min(matrix[i - 1, j - 1], Math.Min(matrix[i, j - 1], matrix[i - 1, j])) + 1;
                 }
             }
+
             return matrix[a - 1, b - 1];
         }
 
@@ -105,11 +106,18 @@ namespace Prima
                 try
                 {
                     tzi = TimeZoneInfo.FindSystemTimeZoneById(user.Timezone);
-                    outTime = TimeZoneInfo.ConvertTime(time, time.Kind == DateTimeKind.Utc ? TimeZoneInfo.Utc : TimeZoneInfo.Local, tzi);
+                    outTime = TimeZoneInfo.ConvertTime(time,
+                        time.Kind == DateTimeKind.Utc ? TimeZoneInfo.Utc : TimeZoneInfo.Local, tzi);
                 }
-                catch (ArgumentNullException) { }
-                catch (TimeZoneNotFoundException) { }
-                catch (InvalidTimeZoneException) { }
+                catch (ArgumentNullException)
+                {
+                }
+                catch (TimeZoneNotFoundException)
+                {
+                }
+                catch (InvalidTimeZoneException)
+                {
+                }
             }
 
             return (tzi, outTime);
@@ -152,10 +160,12 @@ namespace Prima
             => char.ToUpperInvariant(input[0]) + input[1..].ToLowerInvariant();
 
         public static string JadenCase(string input)
-            => input.Split(" ").Select(Capitalize).Aggregate((workingSentence, nextWord) => workingSentence + " " + nextWord);
+            => input.Split(" ").Select(Capitalize)
+                .Aggregate((workingSentence, nextWord) => workingSentence + " " + nextWord);
 
         public static string ToAbbreviation(string input)
-            => input.Split(" ").Select(word => char.ToUpperInvariant(word[0]).ToString()).Aggregate((str, c) => str + c);
+            => input.Split(" ").Select(word => char.ToUpperInvariant(word[0]).ToString())
+                .Aggregate((str, c) => str + c);
 
         public static string CleanDiscordMention(string user)
         {
@@ -178,19 +188,21 @@ namespace Prima
         /// Get the value of an object property by its string name.
         /// </summary>
         public static object GetPropertyValue(this object? obj, string propName)
-            => obj?.GetType().GetProperty(propName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance)?.GetValue(obj, null);
+            => obj?.GetType().GetProperty(propName,
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance)
+                ?.GetValue(obj, null);
 
         /// <summary>
         /// Returns true if the object has the specified property.
         /// </summary>
         public static bool HasProperty(this object? obj, string propName)
-            => obj.GetType().GetProperties().Where(pi => pi.Name == propName).Any();
+            => obj?.GetType().GetProperties().Any(pi => pi.Name == propName) ?? false;
 
         /// <summary>
         /// Returns true if the object has the specified field.
         /// </summary>
         public static bool HasField(this object? obj, string fieldName)
-            => obj.GetType().GetFields().Where(pi => pi.Name == fieldName).Any();
+            => obj?.GetType().GetFields().Any(pi => pi.Name == fieldName) ?? false;
 
         /// <summary>
         /// Returns true if the object has the specified field or property.

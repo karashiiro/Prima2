@@ -48,9 +48,24 @@ public class MarketCommands : ModuleBase<SocketCommandContext>
         itemName = item.Name;
 
         var uniResponse = await _http.GetAsync(new Uri($"https://universalis.app/api/{worldName}/{itemId}"));
-        var dataObject = await uniResponse.Content.ReadAsStringAsync();
-        var listings = JObject.Parse(dataObject)["Results"].ToObject<IList<UniversalisListing>>();
-        var trimmedListings = listings.Take(Math.Min(10, listings.Count())).ToList();
+        var dataObjectRaw = await uniResponse.Content.ReadAsStringAsync();
+        var dataObject = JObject.Parse(dataObjectRaw);
+
+        var results = dataObject["listings"];
+        if (results == null)
+        {
+            await ReplyAsync("Failed to fetch data from Universalis.");
+            return;
+        }
+
+        var listings = results.ToObject<IList<UniversalisListing>>();
+        if (listings == null)
+        {
+            await ReplyAsync("Failed to get listings from Universalis.");
+            return;
+        }
+
+        var trimmedListings = listings.Take(Math.Min(10, listings.Count)).ToList();
 
         await ReplyAsync($"__{listings.Count} results for {worldName} (Showing up to 10):__\n" +
                          trimmedListings.Select(listing => listing.Quantity + " **" + itemName + "** for " +
@@ -68,8 +83,8 @@ public class MarketCommands : ModuleBase<SocketCommandContext>
         public bool Hq { get; set; }
         public int PricePerUnit { get; set; }
         public int Quantity { get; set; }
-        public string RetainerName { get; set; }
+        public string? RetainerName { get; set; }
         public int Total { get; set; }
-        public string WorldName { get; set; }
+        public string? WorldName { get; set; }
     }
 }

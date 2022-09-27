@@ -24,7 +24,7 @@ public static class TriggerDispatcher
     {
         if (message.Author.Id == client.CurrentUser.Id) return;
 
-        SocketGuild guild = null;
+        SocketGuild? guild = null;
         if (message.Channel is SocketGuildChannel guildChannel)
         {
             guild = guildChannel.Guild;

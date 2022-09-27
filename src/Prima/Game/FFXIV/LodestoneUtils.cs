@@ -23,7 +23,7 @@ namespace Prima.Game.FFXIV
             var bio = character["Bio"]?.ToObject<string>();
             if (bio == null)
             {
-                Log.Error("Character bio is null.");
+                Log.Error("Character bio is null (id={LodestoneId})", lodestoneId);
                 return false;
             }
 

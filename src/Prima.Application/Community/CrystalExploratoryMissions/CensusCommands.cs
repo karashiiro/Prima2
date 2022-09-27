@@ -85,16 +85,17 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             }
         }
 
-        new Task(async () =>
+        Task.Run(async () =>
         {
             await Task.Delay(MessageDeleteDelay);
             try
             {
                 await Context.Message.DeleteAsync();
             }
-            catch (Exception)
+            catch (Exception e)
             {
-            } // Message was already deleted.
+                Log.Warning(e, "Message was already deleted");
+            }
         }).Start();
 
         var world = "";
@@ -271,7 +272,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         var guildConfig = _db.Guilds.Single(g => g.Id == Context.Guild.Id);
         var prefix = guildConfig.Prefix == ' ' ? _db.Config.Prefix : guildConfig.Prefix;
 
-        if (userMentionStr == null || parameters.Length < 3)
+        if (parameters.Length < 3)
         {
             await ReplyAsync(
                 $"{Context.User.Mention}, please enter that command in the format `{prefix}theyare Mention World Name Surname`.");
@@ -344,7 +345,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
                 return;
             }
 
-            Log.Information("Lodestone character forced off of {UserId}.", existingDiscordUser.DiscordId);
+            Log.Information("Lodestone character forced off of {UserId}", existingDiscordUser.DiscordId);
             var memberRole = guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
             var existingMember = guild.GetUser(existingDiscordUser.DiscordId);
             await existingMember.RemoveRoleAsync(memberRole);
@@ -396,7 +397,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
     private const ulong EurekaRole = 588913087818498070;
     private const ulong DiademRole = 588913444712087564;
 
-    private async Task ActivateUser(IGuildUser member, string oldLodestoneId, DiscordXIVUser dbEntry,
+    private async Task ActivateUser(IGuildUser member, string? oldLodestoneId, DiscordXIVUser dbEntry,
         DiscordGuildConfiguration guildConfig)
     {
         var memberRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
@@ -432,10 +433,31 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
         Log.Information("Checking default content level for user {DiscordName}", member.ToString());
 
+        var lodestoneId = ulong.Parse(dbEntry.LodestoneId);
         var contentRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles[MostRecentZoneRole]));
-        var data = await _lodestone.GetCharacter(ulong.Parse(dbEntry.LodestoneId));
+        var data = await _lodestone.GetCharacter(lodestoneId);
+        if (data == null)
+        {
+            Log.Error("Failed to get Lodestone character (id={LodestoneId})", lodestoneId);
+            return;
+        }
+
+        var classJobs = data["ClassJobs"];
+        if (classJobs == null)
+        {
+            Log.Error("Failed to get ClassJobs from Lodestone character (id={LodestoneId})", lodestoneId);
+            return;
+        }
+
+        var classJobsObj = classJobs.ToObject<CharacterLookup.ClassJob[]>();
+        if (classJobsObj == null)
+        {
+            Log.Error("Failed to unmarshal ClassJobs from Lodestone character (id={LodestoneId})", lodestoneId);
+            return;
+        }
+
         var highestCombatLevel = 0;
-        foreach (var classJob in data["ClassJobs"].ToObject<CharacterLookup.ClassJob[]>())
+        foreach (var classJob in classJobsObj)
         {
             // Skip non-DoW/DoM or BLU
             if (classJob.JobID is >= 8 and <= 18 or 36) continue;
@@ -451,7 +473,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         }
 
         await member.AddRoleAsync(contentRole);
-        Log.Information("Added {DiscordName} to {Role}.", member.ToString(), contentRole.Name);
+        Log.Information("Added {DiscordName} to {Role}", member.ToString(), contentRole.Name);
     }
 
     [Command("unlink", RunMode = RunMode.Async)]
@@ -540,8 +562,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             return;
         }
 
-        var lodestoneId = ulong.Parse(user?.LodestoneId ?? args[0]);
-
+        var lodestoneId = ulong.Parse(user.LodestoneId ?? args[0]);
         AchievementInfo[] achievements;
         try
         {
@@ -549,7 +570,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         }
         catch (Exception e)
         {
-            Log.Error(e, "Failed to fetch user achievements.");
+            Log.Error(e, "Failed to fetch Lodestone character achievements (id={LodestoneId})", lodestoneId);
             await ReplyAsync("You don't seem to have your achievements public. " +
                              "Please temporarily make them public at <https://na.finalfantasyxiv.com/lodestone/my/setting/account/>.");
             return;
@@ -566,8 +587,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
         if (!user.Verified)
         {
-            if (!await LodestoneUtils.VerifyCharacter(_lodestone, ulong.Parse(user.LodestoneId),
-                    Context.User.Id.ToString()))
+            if (!await LodestoneUtils.VerifyCharacter(_lodestone, lodestoneId, Context.User.Id.ToString()))
             {
                 await ReplyAsync(Properties.Resources.LodestoneDiscordIdNotFoundError);
                 return;
@@ -579,7 +599,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
         if (achievements.Any(achievement => achievement.ID == 2227)) // We're On Your Side I
         {
-            Log.Information("Added role " + cleared.Name);
+            Log.Information("Added role {RoleName} to user {DiscordName}", cleared.Name, member.ToString());
             await member.AddRoleAsync(cleared);
             await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, cleared.Name));
             hasMount = true;
@@ -587,7 +607,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
         if (achievements.Any(achievement => achievement.ID == 2229)) // We're On Your Side III
         {
-            Log.Information("Added role " + arsenalMaster.Name);
+            Log.Information("Added role {RoleName} to user {DiscordName}", arsenalMaster.Name, member.ToString());
             await member.AddRoleAsync(arsenalMaster);
             await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, arsenalMaster.Name));
             hasAchievement = true;
@@ -595,7 +615,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
         if (achievements.Any(achievement => achievement.ID == 2765)) // Operation: Savage Queen of Swords I
         {
-            Log.Information("Added role " + clearedDRS.Name);
+            Log.Information("Added role {RoleName} to user {DiscordName}", clearedDRS.Name, member.ToString());
             await member.AddRoleAsync(clearedDRS);
             await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, clearedDRS.Name));
 
@@ -606,7 +626,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
                 var cr = guild.GetRole(crId);
                 if (!member.HasRole(cr)) continue;
                 await member.RemoveRoleAsync(cr);
-                Log.Information("Role {RoleName} removed from {User}.", cr.Name, member.ToString());
+                Log.Information("Role {RoleName} removed from {DiscordName}", cr.Name, member.ToString());
             }
 
             hasDRSAchievement1 = true;
@@ -614,7 +634,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
         if (achievements.Any(achievement => achievement.ID == 2767)) // Operation: Savage Queen of Swords III
         {
-            Log.Information("Added role " + savageQueen.Name);
+            Log.Information("Added role {RoleName} to user {DiscordName}", savageQueen.Name, member.ToString());
             await member.AddRoleAsync(savageQueen);
             await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, savageQueen.Name));
             hasDRSAchievement2 = true;
@@ -670,7 +690,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             .WithDescription($"Verified: {(found.Verified ? "✅" : "❌")}")
             .Build();
 
-        Log.Information("Answered whoami from ({World}) {Name}.", found.World, found.Name);
+        Log.Information("Answered whoami from ({World}) {Name}", found.World, found.Name);
 
         await ReplyAsync(embed: responseEmbed);
     }
@@ -735,6 +755,6 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
     {
         await ReplyAsync(Properties.Resources.DBUserCountInProgress);
         await ReplyAsync($"There are {_db.Users.Count()} users in the database.");
-        Log.Information("There are {DBEntryCount} users in the database.", _db.Users.Count());
+        Log.Information("There are {DBEntryCount} users in the database", _db.Users.Count());
     }
 }

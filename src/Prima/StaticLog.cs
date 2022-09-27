@@ -16,6 +16,7 @@ namespace Prima
 
         public static void Write(LogEventLevel level, Exception e, string messageTemplate, params object[] args)
         {
+            // ReSharper disable once TemplateIsNotCompileTimeConstantProblem
             Log.Write(level, e, messageTemplate, args);
         }
     }

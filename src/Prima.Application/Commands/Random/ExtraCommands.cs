@@ -1,17 +1,11 @@
 ﻿using Discord.Commands;
 using Prima.DiscordNet.Attributes;
-using Prima.Game.FFXIV.XIVAPI;
-using Prima.Services;
 
 namespace Prima.Application.Commands.Random;
 
 [Name("Extra")]
 public class ExtraCommands : ModuleBase<SocketCommandContext>
 {
-    public IDbService Db { get; set; }
-    public HttpClient Http { get; set; }
-    public XIVAPIClient Xivapi { get; set; }
-
     [Command("roll", RunMode = RunMode.Async)]
     [Description("T̵̪͖̎̈̍ḛ̷̤͑̚ș̴̔͑̾ͅͅt̸͔͜͝ ̶̡̨̪͌̉͠ỷ̵̺̕o̴̞̍ū̴͚̣̤r̵͚͎͔͘ ̴̨̬̿ḷ̷͖̀̚u̴͖̲͌́c̴̲̣͙͑̈͝k̸͍͖̿̆̓!̶̢̅̀")]
     public async Task RollAsync([Remainder] string args = "")

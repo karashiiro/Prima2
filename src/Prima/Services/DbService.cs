@@ -52,34 +52,34 @@ namespace Prima.Services
             var database = client.GetDatabase(DbName);
 
             _config = database.GetCollection<GlobalConfiguration>("GlobalConfiguration");
-            Log.Information("Global configuration status: {DbStatus} documents found.", _config.EstimatedDocumentCount());
+            Log.Information("Global configuration status: {DbStatus} documents found", _config.EstimatedDocumentCount());
 
             _guildConfig = database.GetCollection<DiscordGuildConfiguration>("GuildConfiguration");
-            Log.Information("Guild configuration collection status: {DbStatus} documents found.", _guildConfig.EstimatedDocumentCount());
+            Log.Information("Guild configuration collection status: {DbStatus} documents found", _guildConfig.EstimatedDocumentCount());
 
             _users = database.GetCollection<DiscordXIVUser>("Users");
-            Log.Information("User collection status: {DbStatus} documents found.", _users.EstimatedDocumentCount());
+            Log.Information("User collection status: {DbStatus} documents found", _users.EstimatedDocumentCount());
 
             _messageCache = database.GetCollection<CachedMessage>("CachedMessages");
-            Log.Information("Message cache collection status: {DbStatus} documents found.", _messageCache.EstimatedDocumentCount());
+            Log.Information("Message cache collection status: {DbStatus} documents found", _messageCache.EstimatedDocumentCount());
 
             _channelDescriptions = database.GetCollection<ChannelDescription>("ChannelDescriptions");
-            Log.Information("Channel description collection status: {DbStatus} documents found.", _channelDescriptions.EstimatedDocumentCount());
+            Log.Information("Channel description collection status: {DbStatus} documents found", _channelDescriptions.EstimatedDocumentCount());
 
             _eventReactions = database.GetCollection<EventReaction>("EventReactions");
-            Log.Information("Event reaction collection status: {DbStatus} documents found.", _eventReactions.EstimatedDocumentCount());
+            Log.Information("Event reaction collection status: {DbStatus} documents found", _eventReactions.EstimatedDocumentCount());
 
             _timedRoles = database.GetCollection<TimedRole>("TimedRoles");
-            Log.Information("Timed role collection status: {DbStatus} documents found.", _timedRoles.EstimatedDocumentCount());
+            Log.Information("Timed role collection status: {DbStatus} documents found", _timedRoles.EstimatedDocumentCount());
 
             _votes = database.GetCollection<Vote>("Votes");
-            Log.Information("Vote collection status: {DbStatus} documents found.", _votes.EstimatedDocumentCount());
+            Log.Information("Vote collection status: {DbStatus} documents found", _votes.EstimatedDocumentCount());
 
             _voteHosts = database.GetCollection<VoteHost>("VoteHosts");
-            Log.Information("Vote host collection status: {DbStatus} documents found.", _voteHosts.EstimatedDocumentCount());
+            Log.Information("Vote host collection status: {DbStatus} documents found", _voteHosts.EstimatedDocumentCount());
 
             _ephemeralPins = database.GetCollection<EphemeralPin>("EphemeralPins");
-            Log.Information("Ephemeral pin collection status: {DbStatus} documents found.", _ephemeralPins.EstimatedDocumentCount());
+            Log.Information("Ephemeral pin collection status: {DbStatus} documents found", _ephemeralPins.EstimatedDocumentCount());
         }
 
         public async Task SetGlobalConfigurationProperty(string key, string value)

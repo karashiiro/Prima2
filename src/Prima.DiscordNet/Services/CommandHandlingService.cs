@@ -87,7 +87,7 @@ namespace Prima.DiscordNet.Services
             if (result != null && result.IsSuccess)
                 return Task.CompletedTask;
 
-            Log.Error($"error: {result}");
+            Log.Error("Error: {ErrorMessage}", result);
 
             return Task.CompletedTask;
         }

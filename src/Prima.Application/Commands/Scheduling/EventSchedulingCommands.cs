@@ -115,7 +115,7 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
         await SortEmbeds(guildConfig, Context.Guild, outputChannel);
     }
 
-    private async Task<MiniEvent> FindEvent(string calendarClass, string title, DateTimeOffset startTime)
+    private async Task<MiniEvent?> FindEvent(string calendarClass, string title, DateTimeOffset startTime)
     {
         var events = await _calendar.GetEvents(calendarClass);
         return events.FirstOrDefault(e =>
@@ -135,7 +135,7 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
             
         var outputChannel = Context.Guild.GetTextChannel(outputChannelId);
         var (embedMessage, embed) = await FindAnnouncement(outputChannel, eventId);
-        if (embed == null)
+        if (embedMessage == null || embed == null)
         {
             await ReplyAsync("No run was found matching that event ID in that channel.");
             return;
@@ -216,12 +216,30 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
         }
 
         // ReSharper disable PossibleInvalidOperationException
-        embeds.Sort((a, b) => (int)(b.Timestamp.Value.ToUnixTimeSeconds() - a.Timestamp.Value.ToUnixTimeSeconds()));
+        embeds.Sort((a, b) => (int)(b.Timestamp!.Value.ToUnixTimeSeconds() - a.Timestamp!.Value.ToUnixTimeSeconds()));
         // ReSharper enable PossibleInvalidOperationException
 
         var dps = guild.Emotes.FirstOrDefault(e => e.Name.ToLowerInvariant() == "dps");
+        if (dps == null)
+        {
+            Log.Error("Failed to get DPS emote from guild {GuildName}", guild.Name);
+            return;
+        }
+        
         var healer = guild.Emotes.FirstOrDefault(e => e.Name.ToLowerInvariant() == "healer");
+        if (healer == null)
+        {
+            Log.Error("Failed to get healer emote from guild {GuildName}", guild.Name);
+            return;
+        }
+        
         var tank = guild.Emotes.FirstOrDefault(e => e.Name.ToLowerInvariant() == "tank");
+        if (tank == null)
+        {
+            Log.Error("Failed to get tank emote from guild {GuildName}", guild.Name);
+            return;
+        }
+        
         foreach (var embed in embeds)
         {
             try
@@ -346,9 +364,9 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
             return;
         }
 
-        IUserMessage embedMessage;
-        IUserMessage announceChannelMessage;
-        IEmbed embed;
+        IUserMessage? embedMessage;
+        IUserMessage? announceChannelMessage;
+        IEmbed? embed;
         DateTimeOffset curTime;
 
         // Read the second time
@@ -378,7 +396,13 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
             (embedMessage, embed) = await FindAnnouncementById(outputChannel, Context.User, times[0]);
             (announceChannelMessage, _) = await FindAnnouncementById(announceChannel, Context.User, times[0]);
 
-            curTime = embed.Timestamp.Value;
+            if (embed == null)
+            {
+                await ReplyAsync("The message with that ID does not exist in this channel!");
+                return;
+            }
+
+            curTime = embed.Timestamp!.Value;
         }
         else
         {
@@ -433,7 +457,7 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
                 }
                 else
                 {
-                    Log.Warning("Failed to find calendar entry for event.");
+                    Log.Warning("Failed to find calendar entry for event (time={EventTime})", curTime);
                 }
 #else
             var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), username, curTime);
@@ -477,9 +501,9 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
 
         var username = Context.User.ToString();
 
-        IUserMessage embedMessage;
-        IUserMessage announceChannelMessage;
-        IEmbed embed;
+        IUserMessage? embedMessage;
+        IUserMessage? announceChannelMessage;
+        IEmbed? embed;
         DateTimeOffset time;
 
         // Check if the user entered a message ID instead of a time
@@ -501,8 +525,14 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
 
             (embedMessage, embed) = await FindAnnouncementById(outputChannel, Context.User, splitArgs[0].Trim());
             (announceChannelMessage, _) = await FindAnnouncementById(announceChannel, Context.User, splitArgs[0].Trim());
+            
+            if (embed == null)
+            {
+                await ReplyAsync("The message with that ID does not exist in this channel!");
+                return;
+            }
 
-            time = embed.Timestamp.Value;
+            time = embed.Timestamp!.Value;
         }
         else
         {
@@ -524,11 +554,11 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
             (announceChannelMessage, _) = await FindAnnouncement(announceChannel, Context.User, time);
         }
 
-        if (embedMessage != null)
+        if (embedMessage != null && embed != null)
         {
             var updatedEmbed = new EmbedBuilder()
                 .WithTitle(embed.Title)
-                .WithColor(embed.Color.Value)
+                .WithColor(embed.Color!.Value)
                 .WithDescription("❌ Cancelled")
                 .Build();
                 
@@ -575,12 +605,12 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
             }
             else
             {
-                Log.Warning("Failed to find calendar entry for event.");
+                Log.Warning("Failed to find calendar entry for event");
             }
 
-            if (embed?.Footer != null)
+            if (embed.Footer.HasValue)
             {
-                await _db.RemoveAllEventReactions(ulong.Parse(embed.Footer?.Text));
+                await _db.RemoveAllEventReactions(ulong.Parse(embed.Footer.Value.Text));
             }
 
             await ReplyAsync("Event cancelled.");
@@ -595,7 +625,7 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
     [Description("Lists the estimated number of runs of each type for Delubrum Reginae (Savage) right now.")]
     public async Task ListDRSRunCountsByType([Remainder] string args = "")
     {
-        Log.Information(args);
+        Log.Information("drsruns arguments: {CommandArguments}", args);
 
         var guildConfig = _db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
         if (guildConfig == null) return;
@@ -605,7 +635,8 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
 
         var eventCounts = events
             .Select(@event => @event.Item2)
-            .Select(embed => embed.Description)
+            .Where(embed => embed != null)
+            .Select(embed => embed!.Description)
             .GroupBy(description =>
             {
                 foreach (var (role, roleName) in DelubrumProgressionRoles.LFGRoles)
@@ -636,8 +667,13 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
                          "\n```");
     }
 
-    private async Task<(IUserMessage?, IEmbed?)> FindAnnouncementById(IMessageChannel channel, IPresence user, string id)
+    private async Task<(IUserMessage?, IEmbed?)> FindAnnouncementById(IMessageChannel? channel, IPresence user, string id)
     {
+        if (channel == null)
+        {
+            return (null, null);
+        }
+        
         using var typing = Context.Channel.EnterTypingState();
         await foreach (var page in channel.GetMessagesAsync())
         {
@@ -660,12 +696,15 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
         return (null, null);
     }
 
-    private async Task<(IUserMessage?, IEmbed?)> FindAnnouncement(IMessageChannel channel, IPresence user, DateTimeOffset time)
+    private async Task<(IUserMessage?, IEmbed?)> FindAnnouncement(IMessageChannel? channel, IPresence user, DateTimeOffset time)
     {
+        if (channel == null)
+        {
+            return (null, null);
+        }
+        
         using var typing = Context.Channel.EnterTypingState();
-
         var announcements = new List<(IUserMessage, IEmbed)>();
-
         await foreach (var page in channel.GetMessagesAsync())
         {
             foreach (var message in page)

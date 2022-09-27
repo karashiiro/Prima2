@@ -26,7 +26,7 @@ public static class Modmail
         var requestMessage = await userThread.SendMessageAsync("Please enter the contents of your modmail here.");
         await userThread.AddUserAsync(member);
 
-        Log.Information("Created thread \"{ThreadName}\" for user \"{User}\".", threadName, member.ToString());
+        Log.Information("Created thread {ThreadName} for user {User}", threadName, member.ToString());
 
         // Create the mod thread
         if (await channel.Guild.GetTextChannelAsync(guildConfig.ReportChannel) is not SocketTextChannel reportsChannel)

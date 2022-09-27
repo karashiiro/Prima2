@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using Discord.WebSocket;
+﻿using Discord.WebSocket;
 
 namespace Prima.Application.Triggers;
 
@@ -39,7 +37,7 @@ public abstract class BaseTrigger
     /// <summary>
     /// Returns true if the provided guild is supported by this trigger.
     /// </summary>
-    public bool IsGuildApplicable(SocketGuild guild)
+    public bool IsGuildApplicable(SocketGuild? guild)
     {
         return _guildId == 0 || _guildId == guild?.Id;
     }

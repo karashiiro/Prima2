@@ -24,7 +24,7 @@ namespace Prima.Services
             }
             catch (HttpRequestException e)
             {
-                Log.Error(e, "Password generator offline.");
+                Log.Error(e, "Password generator offline");
                 return "0000";
             }
         }

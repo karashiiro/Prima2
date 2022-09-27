@@ -29,6 +29,12 @@ public class AdminCommands : ModuleBase<SocketCommandContext>
         var embedMessage = await channel.GetMessageAsync(messageId) as IUserMessage;
         var embed = embedMessage?.Embeds.FirstOrDefault();
 
+        if (embedMessage == null)
+        {
+            await ReplyAsync("Failed to retrieve embed message.");
+            return;
+        }
+
         if (embed == null)
         {
             await ReplyAsync("Embed message not found.");

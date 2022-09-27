@@ -51,7 +51,7 @@ namespace Prima.DiscordNet.Services
                         }
 
                         var message = await channel.GetMessageAsync(e.MessageId) as IUserMessage;
-                        Log.Information("Removing pinned message {MessageId}.", e.MessageId);
+                        Log.Information("Removing pinned message {MessageId}", e.MessageId);
                         try
                         {
                             if (message?.IsPinned ?? false)
@@ -87,9 +87,7 @@ namespace Prima.DiscordNet.Services
 
         public void Dispose()
         {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }

@@ -56,7 +56,7 @@ public static class ScheduleUtils
         return null;
     }
 
-    public static SocketTextChannel GetOutputChannel(DiscordGuildConfiguration guildConfig, SocketGuild guild, IMessageChannel inputChannel)
+    public static SocketTextChannel? GetOutputChannel(DiscordGuildConfiguration guildConfig, SocketGuild guild, IMessageChannel inputChannel)
     {
         ulong outputChannelId;
         if (inputChannel.Id == guildConfig.ScheduleInputChannel)

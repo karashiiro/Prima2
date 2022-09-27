@@ -52,7 +52,7 @@ namespace Prima.DiscordNet.Services
                             continue;
                         }
 
-                        Log.Information("Removing role {Role} from {User}.", role.Name, member.ToString());
+                        Log.Information("Removing role {Role} from {DiscordName}", role.Name, member.ToString());
                         try
                         {
                             await member.RemoveRoleAsync(role);
@@ -63,7 +63,7 @@ namespace Prima.DiscordNet.Services
 
                     if (failCount != 0)
                     {
-                        Log.Information("Failed to remove {FailCount} roles.", failCount);
+                        Log.Information("Failed to remove {FailCount} roles", failCount);
                     }
                 }
 

@@ -25,6 +25,7 @@ namespace Prima.Tests.Mocks
 
         private readonly IList<DiscordGuildConfiguration> _guilds;
         private readonly IList<DiscordXIVUser> _users;
+        // ReSharper disable CollectionNeverUpdated.Local
         private readonly IList<CachedMessage> _cachedMessages;
         private readonly IList<ChannelDescription> _channelDescriptions;
         private readonly IList<EventReaction> _eventReactions;
@@ -32,6 +33,7 @@ namespace Prima.Tests.Mocks
         private readonly IList<Vote> _votes;
         private readonly IList<VoteHost> _voteHosts;
         private readonly IList<EphemeralPin> _ephemeralPins;
+        // ReSharper restore CollectionNeverUpdated.Local
 
         public MemoryDb()
         {

@@ -57,7 +57,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
         }
         catch (HttpException e) when (e.DiscordCode == DiscordErrorCode.CannotSendMessageToUser)
         {
-            Log.Warning("Can't send direct message to user {User}.", member.ToString());
+            Log.Warning("Can't send direct message to user {DiscordName}", member.ToString());
         }
     }
 
@@ -92,7 +92,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
     public async Task AddDelubrumProgRoleAsync([Remainder] string args)
     {
         var isFFLogs = FFLogsUtils.IsLogLink(args);
-        Log.Information($"FFLogs link provided: {isFFLogs}");
+        Log.Information("FFLogs link provided: {IsFFLogsLinkProvided}", isFFLogs);
 
         if (isFFLogs)
         {
@@ -105,7 +105,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
             && !executor.HasRole(579916868035411968, Context) // or Mentor
             && !executor.GuildPermissions.KickMembers) // or can kick users
         {
-            Log.Information("User does not have roler role.");
+            Log.Information("User does not have roler role");
             var res = await ReplyAsync($"{Context.User.Mention}, you don't have the roler role!");
             await Task.Delay(5000);
             await res.DeleteAsync();
@@ -131,7 +131,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
                 StringComparison.InvariantCultureIgnoreCase));
         if (role == null)
         {
-            Log.Information("Role name invalid.");
+            Log.Information("Role name {RoleName} is invalid", roleName);
             var res = await ReplyAsync(
                 $"{Context.User.Mention}, no role by that name exists! Make sure you spelled it correctly.");
             await Task.Delay(5000);
@@ -141,7 +141,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
 
         if (!DelubrumProgressionRoles.Roles.Keys.Contains(role.Id))
         {
-            Log.Information("Role key invalid.");
+            Log.Information("Role key {RoleKey} is invalid", role.Id);
             return;
         }
 
@@ -158,7 +158,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
                 }
                 catch (Exception e)
                 {
-                    Log.Error(e, "Failed to add roles to user {User}.", m.ToString());
+                    Log.Error(e, "Failed to add roles to user {DiscordName}", m.ToString());
                     return Task.CompletedTask;
                 }
             }));
@@ -209,7 +209,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
                 }
                 catch (Exception e)
                 {
-                    Log.Error(e, "Failed to remove role from user {User}.", m.ToString());
+                    Log.Error(e, "Failed to remove role from user {DiscordName}", m.ToString());
                     return Task.CompletedTask;
                 }
             }));
@@ -219,9 +219,9 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
 
     private class PotentialDbUser
     {
-        public string Name { get; set; }
-        public string World { get; set; }
-        public DiscordXIVUser User { get; set; }
+        public string? Name { get; set; }
+        public string? World { get; set; }
+        public DiscordXIVUser? User { get; set; }
     }
 
     private async Task RegisterUser(IEnumerable<IGuildUser> members, PotentialDbUser potentialUser)
@@ -278,7 +278,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
             {
                 var (id, potentialUser) = kvp;
                 await RegisterUser(members, potentialUser);
-                return new KeyValuePair<int, DiscordXIVUser>(id, potentialUser.User);
+                return new KeyValuePair<int, DiscordXIVUser?>(id, potentialUser.User);
             })
             .ToList();
         // We can't cleanly go from a KeyValuePair<int, Task<DiscordXIVUser>>
@@ -287,7 +287,6 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
         var users = (await Task.WhenAll(potentialUsers))
             .Where(kvp => kvp.Value != null)
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        ;
         var missedUsers = new List<LogInfo.ReportDataWrapper.ReportData.Report.Master.Actor>();
 
         var addedAny = false;
@@ -329,7 +328,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
                     continue;
                 }
 
-                var user = Context.Guild.GetUser(users[id].DiscordId);
+                var user = Context.Guild.GetUser(users[id]!.DiscordId);
                 if (user == null || user.HasRole(806362589134454805)) continue;
 
                 if (killRole.Id == 806362589134454805 && encounter.Kill == true)
@@ -339,20 +338,20 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
                     // Remove all contingent roles (this is bodge and should be refactored)
                     foreach (var progRole in contingentRoles)
                     {
-                        Log.Information("Checking role {RoleName} on user {User}", progRole.Name, user);
+                        Log.Information("Checking role {RoleName} on user {DiscordName}", progRole.Name, user.ToString());
                         if (user.HasRole(progRole))
                         {
                             await user.RemoveRoleAsync(progRole);
-                            Log.Information("Removed role {RoleName} from user {User}", progRole.Name, user);
+                            Log.Information("Removed role {RoleName} from user {DiscordName}", progRole.Name, user.ToString());
                         }
                     }
 
                     // Give everyone the clear role if they cleared DRS
-                    Log.Information("Checking role {RoleName} on user {User}", killRole.Name, user);
+                    Log.Information("Checking role {RoleName} on user {DiscordName}", killRole.Name, user.ToString());
                     if (!user.HasRole(killRole))
                     {
                         await user.AddRoleAsync(killRole);
-                        Log.Information("Added role {RoleName} to {User}", killRole.Name, user);
+                        Log.Information("Added role {RoleName} to {DiscordName}", killRole.Name, user.ToString());
                     }
                 }
                 else
@@ -360,23 +359,23 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
                     // Give all contingent roles as well as the clear role for the fight
                     foreach (var progRole in contingentRoles)
                     {
-                        Log.Information("Checking role {RoleName} on user {User}", progRole.Name, user);
+                        Log.Information("Checking role {RoleName} on user {DiscordName}", progRole.Name, user.ToString());
                         if (!user.HasRole(progRole))
                         {
                             addedAny = true;
                             await user.AddRoleAsync(progRole);
-                            Log.Information("Added role {RoleName} to user {User}", progRole.Name, user);
+                            Log.Information("Added role {RoleName} to user {DiscordName}", progRole.Name, user.ToString());
                         }
                     }
 
                     if (encounter.Kill == true)
                     {
-                        Log.Information("Checking role {RoleName} on user {User}", killRole.Name, user);
+                        Log.Information("Checking role {RoleName} on user {DiscordName}", killRole.Name, user.ToString());
                         if (!user.HasRole(killRole))
                         {
                             addedAny = true;
                             await user.AddRoleAsync(killRole);
-                            Log.Information("Added role {RoleName} to {User}", killRole.Name, user);
+                            Log.Information("Added role {RoleName} to {DiscordName}", killRole.Name, user.ToString());
                         }
                     }
                 }

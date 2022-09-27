@@ -72,19 +72,19 @@ namespace Prima.DiscordNet.Handlers
                 }
             }
 
-            if (!rawMessage.Content.StartsWith("~report"))
+            if (!rawMessage.Content.StartsWith("~report") && channel is IMessageChannel messageChanel)
             {
-                await ProcessAttachments(db, rawMessage, channel);
+                await ProcessAttachments(db, rawMessage, messageChanel);
             }
 
-            await CheckTextDenylist(guild, rawMessage, guildConfig, templates);
+            await CheckTextDenylist(rawMessage, guildConfig, templates);
             await CheckTextGreylist(guild, rawMessage, guildConfig, templates);
         }
 
         /// <summary>
         /// Check a message against the text denylist.
         /// </summary>
-        private static async Task CheckTextDenylist(SocketGuild guild, IMessage rawMessage,
+        private static async Task CheckTextDenylist(IMessage rawMessage,
             DiscordGuildConfiguration guildConfig, ITemplateProvider templates)
         {
             foreach (var regexString in guildConfig.TextDenylist)
@@ -115,7 +115,7 @@ namespace Prima.DiscordNet.Handlers
         {
             if (guildConfig.TextGreylist == null)
             {
-                Log.Warning("{List} is null.", nameof(guildConfig.TextGreylist));
+                Log.Warning("{List} is null", nameof(guildConfig.TextGreylist));
                 return;
             }
 
@@ -169,7 +169,7 @@ namespace Prima.DiscordNet.Handlers
         /// Convert attachments that don't render automatically to formats that do.
         /// </summary>
         private static async Task ProcessAttachments(IDbService db, SocketMessage rawMessage,
-            IGuildChannel guildChannel)
+            IMessageChannel guildChannel)
         {
             if (!rawMessage.Attachments.Any()) return;
 
@@ -190,7 +190,7 @@ namespace Prima.DiscordNet.Handlers
                         Log.Information("Processed BMP from {DiscordName}, ({Time}ms)!",
                             $"{rawMessage.Author.Username}#{rawMessage.Author.Discriminator}",
                             timer.ElapsedMilliseconds);
-                        await (guildChannel as ITextChannel).SendFileAsync(
+                        await guildChannel.SendFileAsync(
                             Path.Combine(db.Config.TempDir, justFileName + ".png"),
                             $"{rawMessage.Author.Mention}: Your file has been automatically converted from BMP/DIB to PNG (BMP files don't render automatically).");
                     }
