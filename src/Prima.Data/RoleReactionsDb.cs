@@ -38,7 +38,7 @@ public class RoleReactionsDb : IRoleReactionsDb
         await coll.InsertOneAsync(rrInfo);
     }
 
-    public async Task RemoveRoleReaction(RoleReactionInfo rrInfo)
+    public async Task<bool> RemoveRoleReaction(RoleReactionInfo rrInfo)
     {
         EnsureParameters(rrInfo);
         var db = _client.GetDatabase(DbName);
@@ -47,10 +47,11 @@ public class RoleReactionsDb : IRoleReactionsDb
         var filter2 = Builders<RoleReactionInfo>.Filter.Eq(o => o.ChannelId, rrInfo.ChannelId);
         var filter3 = Builders<RoleReactionInfo>.Filter.Eq(o => o.RoleId, rrInfo.RoleId);
         var filter = Builders<RoleReactionInfo>.Filter.And(filter1, filter2, filter3);
-        await coll.DeleteManyAsync(filter);
+        var result = await coll.DeleteManyAsync(filter);
+        return result.DeletedCount >= 1;
     }
 
-    public async Task UpdateRoleReaction(RoleReactionInfo rrInfo)
+    public async Task<RoleReactionInfo?> UpdateRoleReaction(RoleReactionInfo rrInfo)
     {
         EnsureParameters(rrInfo);
         var db = _client.GetDatabase(DbName);
@@ -66,7 +67,8 @@ public class RoleReactionsDb : IRoleReactionsDb
         var update3 = Builders<RoleReactionInfo>.Update.Set(o => o.EmojiId, rrInfo.EmojiId);
         var update = Builders<RoleReactionInfo>.Update.Combine(update1, update2, update3);
 
-        await coll.FindOneAndUpdateAsync(filter, update);
+        var result = await coll.FindOneAndUpdateAsync(filter, update);
+        return result;
     }
 
     private static void EnsureParameters(RoleReactionInfo rrInfo)

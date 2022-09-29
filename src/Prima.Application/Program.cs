@@ -1,12 +1,15 @@
 ﻿using System.Net;
+using System.Reflection;
 using Discord;
 using Discord.Commands;
+using Discord.Interactions;
 using Discord.WebSocket;
 using FFXIVWeather.Lumina;
 using Lumina;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using MongoDB.Driver;
 using Prima.Application;
 using Prima.Application.Community;
 using Prima.Application.Community.CrystalExploratoryMissions;
@@ -14,7 +17,9 @@ using Prima.Application.Moderation;
 using Prima.Application.Personality;
 using Prima.Application.Scheduling;
 using Prima.Application.Scheduling.Events;
+using Prima.Data;
 using Prima.DiscordNet.Handlers;
+using Prima.DiscordNet.Logging;
 using Prima.DiscordNet.Services;
 using Prima.Game.FFXIV;
 using Prima.Game.FFXIV.FFLogs;
@@ -31,13 +36,19 @@ var host = Host.CreateDefaultBuilder()
             AlwaysDownloadUsers = true,
             LargeThreshold = 250,
             MessageCacheSize = 10000,
-            GatewayIntents = GatewayIntents.All,
+            GatewayIntents = GatewayIntents.All ^ GatewayIntents.GuildPresences ^ GatewayIntents.GuildScheduledEvents ^
+                             GatewayIntents.GuildInvites,
         };
 
         sc.AddSingleton(_ => new DiscordSocketClient(disConfig));
         sc.AddSingleton<CommandService>();
         sc.AddSingleton<CommandHandlingService>();
+        sc.AddSingleton<InteractionService>();
+        sc.AddSingleton<InteractionHandlingService>();
+
         sc.AddSingleton<HttpClient>();
+        sc.AddSingleton<IMongoClient, MongoClient>(_ => new MongoClient("mongodb://localhost:27017"));
+        sc.AddSingleton<IRoleReactionsDb, RoleReactionsDb>();
         sc.AddSingleton<IDbService, DbService>();
         sc.AddSingleton<RateLimitService>();
         sc.AddSingleton<ITemplateProvider, TemplateProvider>();
@@ -141,66 +152,18 @@ var host = Host.CreateDefaultBuilder()
     .Build();
 
 // Fit our logger onto Discord.NET's logging interface
-var logger = host.Services.GetRequiredService<ILogger<DiscordSocketClient>>();
-
-void LogDiscordMessage(LogSeverity severity, Exception exception, string source, string message)
+Task LogDiscord<TService>(LogMessage message)
 {
-    if (logger is null)
-    {
-        throw new InvalidOperationException($"{nameof(logger)} is null.");
-    }
-
-    Action<Exception, string, object[]> logFunc = severity switch
-    {
-        LogSeverity.Critical => logger.LogError,
-        LogSeverity.Error => logger.LogError,
-        LogSeverity.Warning => logger.LogWarning,
-        LogSeverity.Info => logger.LogInformation,
-        LogSeverity.Verbose => logger.LogTrace,
-        LogSeverity.Debug => logger.LogDebug,
-        _ => throw new ArgumentOutOfRangeException(nameof(severity)),
-    };
-
-    logFunc(exception, "{Source}: {Message}", new object[] { source, message });
-}
-
-Task LogDiscord(LogMessage message)
-{
-    LogDiscordMessage(message.Severity, message.Exception, message.Source, message.Message);
+    var logger = host.Services.GetRequiredService<ILogger<TService>>();
+    DiscordLogAdapter.Handler(logger, message.Severity, message.Exception, message.Source, message.Message);
     return Task.CompletedTask;
 }
 
 var client = host.Services.GetRequiredService<DiscordSocketClient>();
+client.Log += LogDiscord<DiscordSocketClient>;
 
-client.Log += LogDiscord;
-host.Services.GetRequiredService<CommandService>().Log += LogDiscord;
+host.Services.GetRequiredService<CommandService>().Log += LogDiscord<CommandService>;
 
-// Ensure that we have a bot token
-var token = Environment.GetEnvironmentVariable("PRIMA_BOT_TOKEN");
-if (string.IsNullOrEmpty(token))
-{
-    throw new ArgumentException("No bot token provided!");
-}
-
-// Start the bot
-await client.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("PRIMA_BOT_TOKEN"));
-await client.StartAsync();
-
-var commandHandler = host.Services.GetRequiredService<CommandHandlingService>();
-await commandHandler.InitializeAsync();
-
-// Initialize the old Prima.Stable services
-var keepClean = host.Services.GetRequiredService<KeepClean>();
-var roleRemover = host.Services.GetRequiredService<TimedRoleManager>();
-var ephemeralPinner = host.Services.GetRequiredService<EphemeralPinManager>();
-var ffLogs = host.Services.GetRequiredService<FFLogsClient>();
-
-keepClean.Initialize();
-roleRemover.Initialize();
-ephemeralPinner.Initialize();
-await ffLogs.Initialize();
-
-// Add the old Prima.Stable callbacks
 var db = host.Services.GetRequiredService<IDbService>();
 var web = host.Services.GetRequiredService<WebClient>();
 var lodestone = host.Services.GetRequiredService<CharacterLookup>();
@@ -233,12 +196,59 @@ client.UserVoiceStateUpdated += mute.OnVoiceJoin;
 
 client.ButtonExecuted += component => Modmail.Handler(db, component);
 
-// Add the old Prima.Scheduler callbacks
 var calendar = host.Services.GetRequiredService<CalendarApi>();
 
 client.MessageUpdated += (_, message, _) => AnnounceEdit.Handler(client, calendar, db, message);
 client.ReactionAdded += (cachedMessage, _, reaction)
     => AnnounceReact.HandlerAdd(client, db, cachedMessage, reaction);
+
+// Set up actions that need to run after the bot starts
+client.Ready += () =>
+    TaskUtils.Detach(async () =>
+    {
+        var logger = host.Services.GetRequiredService<ILogger<Program>>();
+        logger.LogInformation("Client ready; initializing additional services");
+
+        // Add interactions
+        var interactionService = host.Services.GetRequiredService<InteractionService>();
+        interactionService.Log += LogDiscord<InteractionService>;
+
+        var interactionHandler = host.Services.GetRequiredService<InteractionHandlingService>();
+        await interactionHandler.InitializeAsync();
+
+        await interactionService.RegisterCommandsToGuildAsync(550910482194890781);
+
+        logger.LogInformation("Interaction service initialized with {SlashCommandCount} slash command(s)",
+            interactionService.SlashCommands.Count);
+
+        // Add text commands
+        var commandHandler = host.Services.GetRequiredService<CommandHandlingService>();
+        await commandHandler.InitializeAsync();
+
+        // Set up other services
+        var keepClean = host.Services.GetRequiredService<KeepClean>();
+        var roleRemover = host.Services.GetRequiredService<TimedRoleManager>();
+        var ephemeralPinner = host.Services.GetRequiredService<EphemeralPinManager>();
+        var ffLogs = host.Services.GetRequiredService<FFLogsClient>();
+
+        keepClean.Initialize();
+        roleRemover.Initialize();
+        ephemeralPinner.Initialize();
+        await ffLogs.Initialize();
+
+        logger.LogInformation("Initialization complete - all systems ready!");
+    });
+
+// Ensure that we have a bot token
+var token = Environment.GetEnvironmentVariable("PRIMA_BOT_TOKEN");
+if (string.IsNullOrEmpty(token))
+{
+    throw new ArgumentException("No bot token provided!");
+}
+
+// Start the bot
+await client.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("PRIMA_BOT_TOKEN"));
+await client.StartAsync();
 
 // Run the host
 await host.RunAsync();

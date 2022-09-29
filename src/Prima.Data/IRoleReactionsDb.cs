@@ -8,7 +8,7 @@ public interface IRoleReactionsDb
 
     Task CreateRoleReaction(RoleReactionInfo rrInfo);
 
-    Task RemoveRoleReaction(RoleReactionInfo rrInfo);
+    Task<bool> RemoveRoleReaction(RoleReactionInfo rrInfo);
 
-    Task UpdateRoleReaction(RoleReactionInfo rrInfo);
+    Task<RoleReactionInfo?> UpdateRoleReaction(RoleReactionInfo rrInfo);
 }

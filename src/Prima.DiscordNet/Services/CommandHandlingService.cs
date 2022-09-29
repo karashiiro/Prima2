@@ -24,13 +24,13 @@ namespace Prima.DiscordNet.Services
             _db = services.GetRequiredService<IDbService>();
             _discord = services.GetRequiredService<DiscordSocketClient>();
             _services = services;
-
-            _commands.CommandExecuted += CommandExecutedAsync;
-            _discord.MessageReceived += MessageReceivedAsync;
         }
 
         public Task InitializeAsync(Assembly assembly = null)
         {
+            _commands.CommandExecuted += CommandExecutedAsync;
+            _discord.MessageReceived += MessageReceivedAsync;
+
             return _commands.AddModulesAsync(assembly ?? Assembly.GetEntryAssembly(), _services);
         }
 
@@ -54,7 +54,8 @@ namespace Prima.DiscordNet.Services
             }
             catch (InvalidOperationException)
             {
-                Log.Warning("Message received in {GuildName}, but no configuration exists! Message: {MessageContent}", ((SocketGuildChannel)rawMessage.Channel).Name, rawMessage.Content);
+                Log.Warning("Message received in {GuildName}, but no configuration exists! Message: {MessageContent}",
+                    ((SocketGuildChannel)rawMessage.Channel).Name, rawMessage.Content);
             }
 
             if (!message.HasCharPrefix(prefix, ref argPos))
@@ -74,7 +75,8 @@ namespace Prima.DiscordNet.Services
                 else return;
             }
 
-            Log.Information("({DiscordID}) {DiscordName}: {MessageContent}", rawMessage.Author.Id, rawMessage.Author.Username + "#" + rawMessage.Author.Discriminator, rawMessage.Content);
+            Log.Information("({DiscordID}) {DiscordName}: {MessageContent}", rawMessage.Author.Id,
+                rawMessage.Author.Username + "#" + rawMessage.Author.Discriminator, rawMessage.Content);
 
             await _commands.ExecuteAsync(context, argPos, _services);
         }

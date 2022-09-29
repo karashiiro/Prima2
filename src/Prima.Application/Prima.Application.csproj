@@ -9,6 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Prima.Data\Prima.Data.csproj" />
       <ProjectReference Include="..\Prima.DiscordNet\Prima.DiscordNet.csproj" />
       <ProjectReference Include="..\Prima\Prima.csproj" />
     </ItemGroup>
