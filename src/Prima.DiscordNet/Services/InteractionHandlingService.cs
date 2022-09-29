@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
+using Prima.DiscordNet.Attributes;
 
 namespace Prima.DiscordNet.Services
 {
@@ -27,7 +29,27 @@ namespace Prima.DiscordNet.Services
         public async Task InitializeAsync(Assembly assembly = null)
         {
             _client.InteractionCreated += HandleInteraction;
-            await _handler.AddModulesAsync(assembly ?? Assembly.GetEntryAssembly(), _services);
+            var modules = await _handler.AddModulesAsync(assembly ?? Assembly.GetEntryAssembly(), _services);
+            var scopedModules = modules
+                .Select(m => new
+                {
+                    Module = m,
+                    Scope = m.Attributes.OfType<ModuleScopeAttribute>().FirstOrDefault(),
+                })
+                .ToList();
+
+            var guildModules = scopedModules
+                .Where(pair => pair.Scope?.Scope == ModuleScopeAttribute.ModuleScoping.Guild)
+                .GroupBy(pair => pair.Scope.GuildId)
+                .ToDictionary(group => group.Key, group => group.ToArray());
+            foreach (var (guildId, moduleGroup) in guildModules)
+            {
+                await _handler.AddModulesToGuildAsync(guildId, true, moduleGroup.Select(pair => pair.Module).ToArray());
+            }
+
+            var globalModules = scopedModules
+                .Where(pair => pair.Scope?.Scope != ModuleScopeAttribute.ModuleScoping.Guild);
+            await _handler.AddModulesGloballyAsync(true, globalModules.Select(pair => pair.Module).ToArray());
         }
 
         private async Task HandleInteraction(SocketInteraction interaction)

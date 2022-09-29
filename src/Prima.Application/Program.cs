@@ -216,8 +216,6 @@ client.Ready += () =>
         var interactionHandler = host.Services.GetRequiredService<InteractionHandlingService>();
         await interactionHandler.InitializeAsync();
 
-        await interactionService.RegisterCommandsToGuildAsync(550910482194890781);
-
         logger.LogInformation("Interaction service initialized with {SlashCommandCount} slash command(s)",
             interactionService.SlashCommands.Count);
 

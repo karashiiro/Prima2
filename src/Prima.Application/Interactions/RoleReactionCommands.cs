@@ -2,10 +2,12 @@
 using Discord.Interactions;
 using Microsoft.Extensions.Logging;
 using Prima.Data;
+using Prima.DiscordNet.Attributes;
 
 namespace Prima.Application.Interactions;
 
 [Group("role-reactions", "Manage role reactions for this guild.")]
+[ModuleScope(ModuleScopeAttribute.ModuleScoping.Global)]
 public class RoleReactionCommands : InteractionModuleBase<SocketInteractionContext>
 {
     private readonly IRoleReactionsDb _db;
