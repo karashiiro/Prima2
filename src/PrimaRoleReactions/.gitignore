@@ -1,9 +1,0 @@
-# IDE directories and folders
-.vscode/
-.idea/
-
-# Target directory
-target/
-
-# Lockfile
-Cargo.lock
