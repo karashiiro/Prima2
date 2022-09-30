@@ -76,7 +76,7 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
 
         var eventLink =
 #if DEBUG
-            await _calendar.CreateEvent(_config.CalendarEntries["drs"], Context.User.ToString(), description, time.DateTime,
+            await _calendar.CreateEvent(_config.Calendars["drs"], Context.User.ToString(), description, time.DateTime,
                 time.DateTime.AddHours(3));
 #else
             await _calendar.CreateEvent(
@@ -117,7 +117,7 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
 
     private async Task<Event?> FindEvent(string calendarClass, string title, DateTimeOffset startTime)
     {
-        var events = await _calendar.ListEvents(_config.CalendarEntries[calendarClass], DateTime.Now);
+        var events = await _calendar.ListEvents(_config.Calendars[calendarClass], DateTime.Now);
         return events.FirstOrDefault(e => e.Summary == title && e.Start.DateTime == startTime);
     }
 
@@ -432,7 +432,7 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
             var @event = await FindEvent("drs", username, curTime);
             if (@event != null)
             {
-                await _calendar.UpdateEvent(_config.CalendarEntries["drs"], @event.Id, null, null, newTime.DateTime,
+                await _calendar.UpdateEvent(_config.Calendars["drs"], @event.Id, null, null, newTime.DateTime,
                     newTime.AddHours(3).DateTime);
             }
             else
@@ -574,7 +574,7 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
             if (@event != null)
             {
 #if DEBUG
-                await _calendar.DeleteEvent(_config.CalendarEntries["drs"], @event.Id);
+                await _calendar.DeleteEvent(_config.Calendars["drs"], @event.Id);
 #else
                 await _calendar.DeleteEvent(
                     _config.CalendarEntries[
