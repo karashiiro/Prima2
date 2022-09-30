@@ -1,23 +1,25 @@
 ﻿using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+// ReSharper disable CollectionNeverUpdated.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace Prima.Application.Scheduling.Calendar;
 
 public class CalendarConfig
 {
-    // ReSharper disable once CollectionNeverUpdated.Global
-    [YamlMember(Alias = "calendars")] public IDictionary<string, string> CalendarEntries { get; }
+    public IDictionary<string, string> Calendars { get; set; }
 
     public CalendarConfig()
     {
-        CalendarEntries = new Dictionary<string, string>();
+        Calendars = new Dictionary<string, string>();
     }
 
     public static CalendarConfig FromStream(Stream data)
     {
         using var reader = new StreamReader(data);
         var deserializer = new DeserializerBuilder()
-            .WithNamingConvention(NullNamingConvention.Instance)
+            .IgnoreUnmatchedProperties()
+            .WithNamingConvention(UnderscoredNamingConvention.Instance)
             .Build();
         var config = deserializer.Deserialize<CalendarConfig>(reader);
         return config;
