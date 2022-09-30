@@ -1,13 +1,13 @@
 ﻿using Discord;
 using Discord.Commands;
 using Google.Apis.Calendar.v3.Data;
+using Microsoft.Extensions.Logging;
 using Prima.Application.Scheduling;
 using Prima.Application.Scheduling.Calendar;
 using Prima.DiscordNet.Attributes;
 using Prima.Models;
 using Prima.Resources;
 using Prima.Services;
-using Serilog;
 using Color = Discord.Color;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -18,12 +18,15 @@ namespace Prima.Application.Commands.Scheduling;
 [RequireContext(ContextType.Guild)]
 public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
 {
+    private readonly ILogger<EventSchedulingCommands> _logger;
     private readonly GoogleCalendarClient _calendar;
     private readonly CalendarConfig _config;
     private readonly IDbService _db;
 
-    public EventSchedulingCommands(GoogleCalendarClient calendar, CalendarConfig config, IDbService db)
+    public EventSchedulingCommands(ILogger<EventSchedulingCommands> logger, GoogleCalendarClient calendar,
+        CalendarConfig config, IDbService db)
     {
+        _logger = logger;
         _calendar = calendar;
         _config = config;
         _db = db;
@@ -212,21 +215,21 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
         var dps = guild.Emotes.FirstOrDefault(e => e.Name.ToLowerInvariant() == "dps");
         if (dps == null)
         {
-            Log.Error("Failed to get DPS emote from guild {GuildName}", guild.Name);
+            _logger.LogError("Failed to get DPS emote from guild {GuildName}", guild.Name);
             return;
         }
 
         var healer = guild.Emotes.FirstOrDefault(e => e.Name.ToLowerInvariant() == "healer");
         if (healer == null)
         {
-            Log.Error("Failed to get healer emote from guild {GuildName}", guild.Name);
+            _logger.LogError("Failed to get healer emote from guild {GuildName}", guild.Name);
             return;
         }
 
         var tank = guild.Emotes.FirstOrDefault(e => e.Name.ToLowerInvariant() == "tank");
         if (tank == null)
         {
-            Log.Error("Failed to get tank emote from guild {GuildName}", guild.Name);
+            _logger.LogError("Failed to get tank emote from guild {GuildName}", guild.Name);
             return;
         }
 
@@ -286,12 +289,12 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
                 }
                 catch (Exception e)
                 {
-                    Log.Error(e, "Failed to add reactions!");
+                    _logger.LogError(e, "Failed to add reactions");
                 }
             }
             catch (Exception e)
             {
-                Log.Error(e, "Error in sorting procedure!");
+                _logger.LogError(e, "Error in sorting procedure");
             }
         }
 
@@ -437,7 +440,7 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
             }
             else
             {
-                Log.Warning("Failed to find calendar entry for event (time={EventTime})", curTime);
+                _logger.LogWarning("Failed to find calendar entry for event (time={EventTime})", curTime);
             }
 #else
             var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id),
@@ -458,7 +461,7 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
 
             await SortEmbeds(guildConfig, Context.Guild, outputChannel);
 
-            Log.Information("Rescheduled announcement from {OldTime} to {NewTime}",
+            _logger.LogInformation("Rescheduled announcement from {OldTime} to {NewTime}",
                 curTime.UtcDateTime.ToShortTimeString(),
                 newTime.UtcDateTime.ToShortTimeString());
             await ReplyAsync("Announcement rescheduled!");
@@ -559,7 +562,7 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
                 }
                 catch (Exception e)
                 {
-                    Log.Error(e, "Failed to delete embed message. It may have already been deleted!");
+                    _logger.LogError(e, "Failed to delete embed message");
                 }
             }
 
@@ -583,7 +586,7 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
             }
             else
             {
-                Log.Warning("Failed to find calendar entry for event");
+                _logger.LogWarning("Failed to find calendar entry for event");
             }
 
             if (embed.Footer.HasValue)
@@ -603,8 +606,6 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
     [Description("Lists the estimated number of runs of each type for Delubrum Reginae (Savage) right now.")]
     public async Task ListDRSRunCountsByType([Remainder] string args = "")
     {
-        Log.Information("drsruns arguments: {CommandArguments}", args);
-
         var guildConfig = _db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
         if (guildConfig == null) return;
 
