@@ -1,10 +1,10 @@
 ﻿using System.Net;
-using System.Reflection;
 using Discord;
 using Discord.Commands;
 using Discord.Interactions;
 using Discord.WebSocket;
 using FFXIVWeather.Lumina;
+using Google.Apis.Http;
 using Lumina;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -16,6 +16,7 @@ using Prima.Application.Community.CrystalExploratoryMissions;
 using Prima.Application.Moderation;
 using Prima.Application.Personality;
 using Prima.Application.Scheduling;
+using Prima.Application.Scheduling.Calendar;
 using Prima.Application.Scheduling.Events;
 using Prima.Data;
 using Prima.DiscordNet.Handlers;
@@ -24,9 +25,18 @@ using Prima.DiscordNet.Services;
 using Prima.Game.FFXIV;
 using Prima.Game.FFXIV.FFLogs;
 using Prima.Game.FFXIV.XIVAPI;
-using Prima.GoogleApis.Services;
 using Prima.Services;
 using Quartz;
+
+var googleApiSecretPath = Environment.GetEnvironmentVariable("PRIMA_GOOGLE_SECRET") ??
+                          throw new ArgumentException("No PRIMA_GOOGLE_SECRET variable set!");
+var googleApiTokenDirectory = Environment.GetEnvironmentVariable("PRIMA_SESSION_STORE") ??
+                              throw new ArgumentException("No PRIMA_SESSION_STORE variable set!");
+var (googleApiCredential, googleApiCredentialException) =
+    await GoogleApiAuth.AuthorizeSafely(googleApiSecretPath, googleApiTokenDirectory);
+var (calendarConfig, calendarConfigException) = await CalendarConfig.FromFileSafely(
+    Environment.GetEnvironmentVariable("PRIMA_CALENDAR_CONFIG") ??
+    throw new ArgumentException("No PRIMA_CALENDAR_CONFIG variable set!"));
 
 var host = Host.CreateDefaultBuilder()
     .ConfigureServices((_, sc) =>
@@ -53,7 +63,10 @@ var host = Host.CreateDefaultBuilder()
         sc.AddSingleton<RateLimitService>();
         sc.AddSingleton<ITemplateProvider, TemplateProvider>();
 
-        // Add old Prima.Stable services
+        sc.AddSingleton(calendarConfig ?? new CalendarConfig());
+        sc.AddSingleton((IConfigurableHttpClientInitializer?)googleApiCredential ?? new DummyCredential());
+        sc.AddSingleton<GoogleCalendarClient>();
+
         sc.AddSingleton<WebClient>();
         sc.AddSingleton<CensusEventService>();
         sc.AddSingleton<XIVAPIClient>();
@@ -80,10 +93,6 @@ var host = Host.CreateDefaultBuilder()
         sc.AddSingleton<KeepClean>();
         sc.AddSingleton<EphemeralPinManager>();
 
-        // Add old Prima.Scheduler services
-        sc.AddSingleton<CalendarApi>();
-
-        // Add old Prima.Queue services
         sc.AddSingleton<PasswordGenerator>();
 
         // Add scheduler
@@ -196,9 +205,7 @@ client.UserVoiceStateUpdated += mute.OnVoiceJoin;
 
 client.ButtonExecuted += component => Modmail.Handler(db, component);
 
-var calendar = host.Services.GetRequiredService<CalendarApi>();
-
-client.MessageUpdated += (_, message, _) => AnnounceEdit.Handler(client, calendar, db, message);
+client.MessageUpdated += (_, message, _) => AnnounceEdit.Handler(client, db, message);
 client.ReactionAdded += (cachedMessage, _, reaction)
     => AnnounceReact.HandlerAdd(client, db, cachedMessage, reaction);
 
@@ -207,6 +214,17 @@ client.Ready += () =>
     TaskUtils.Detach(async () =>
     {
         var logger = host.Services.GetRequiredService<ILogger<Program>>();
+
+        if (googleApiCredentialException != null)
+        {
+            logger.LogError(googleApiCredentialException, "Failed to exchange Google API credentials");
+        }
+
+        if (calendarConfigException != null)
+        {
+            logger.LogError(calendarConfigException, "Failed to load calendar configuration");
+        }
+
         logger.LogInformation("Client ready; initializing additional services");
 
         // Add interactions

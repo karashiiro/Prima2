@@ -42,21 +42,22 @@ public static class ScheduleUtils
         {
             return guild.GetTextChannel(guildConfig.DelubrumScheduleAnnouncementChannel);
         }
-            
+
         if (inputChannel.Id == guildConfig.DelubrumNormalScheduleInputChannel)
         {
             return guild.GetTextChannel(guildConfig.DelubrumNormalScheduleAnnouncementChannel);
         }
-            
+
         if (inputChannel.Id == guildConfig.BozjaClusterScheduleInputChannel)
         {
             return guild.GetTextChannel(guildConfig.BozjaClusterScheduleAnnouncementChannel);
         }
-            
+
         return null;
     }
 
-    public static SocketTextChannel? GetOutputChannel(DiscordGuildConfiguration guildConfig, SocketGuild guild, IMessageChannel inputChannel)
+    public static SocketTextChannel GetOutputChannel(DiscordGuildConfiguration guildConfig, SocketGuild guild,
+        IMessageChannel inputChannel)
     {
         ulong outputChannelId;
         if (inputChannel.Id == guildConfig.ScheduleInputChannel)
@@ -74,12 +75,14 @@ public static class ScheduleUtils
         else // inputChannel.Id == guildConfig.DelubrumNormalScheduleInputChannel
             outputChannelId = guildConfig.DelubrumNormalScheduleOutputChannel;
 
-        return guild.GetTextChannel(outputChannelId);
+        return guild.GetTextChannel(outputChannelId) ??
+               throw new InvalidOperationException(
+                   $"Failed to fetch guild text channel (guild_id={guild.Id} channel_id={outputChannelId})");
     }
 
-    public static string? GetCalendarCodeForOutputChannel(DiscordGuildConfiguration? guildConfig, ulong channelId)
+    public static string GetCalendarCodeForOutputChannel(DiscordGuildConfiguration? guildConfig, ulong channelId)
     {
-        if (guildConfig == null) return null;
+        if (guildConfig == null) throw new ArgumentNullException(nameof(guildConfig));
 
         if (channelId == guildConfig.CastrumScheduleOutputChannel)
             return "cll";
@@ -93,7 +96,9 @@ public static class ScheduleUtils
             return "zad";
         if (channelId == guildConfig.ScheduleOutputChannel)
             return "ba";
-        return channelId == guildConfig.SocialScheduleOutputChannel ? "social" : null;
+        return channelId == guildConfig.SocialScheduleOutputChannel
+            ? "social"
+            : throw new ArgumentOutOfRangeException(nameof(channelId));
     }
 
     private static bool MightBeTimeZone(string x)
@@ -177,7 +182,10 @@ public static class ScheduleUtils
                 {
                     timeZone = TimeZoneFromAbbr(keyword);
                 }
-                catch (ArgumentException) { /* ignore */ }
+                catch (ArgumentException)
+                {
+                    /* ignore */
+                }
             }
 
             // Check to see if it matches a recognized date format
@@ -192,6 +200,7 @@ public static class ScheduleUtils
                 {
                     year = mmddyyyy[2];
                 }
+
                 continue;
             }
 

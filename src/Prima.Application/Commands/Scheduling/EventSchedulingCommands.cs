@@ -1,15 +1,15 @@
-﻿using System.Xml;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
+using Google.Apis.Calendar.v3.Data;
 using Prima.Application.Scheduling;
+using Prima.Application.Scheduling.Calendar;
 using Prima.DiscordNet.Attributes;
-using Prima.GoogleApis.Calendar;
-using Prima.GoogleApis.Services;
 using Prima.Models;
 using Prima.Resources;
 using Prima.Services;
 using Serilog;
 using Color = Discord.Color;
+
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace Prima.Application.Commands.Scheduling;
@@ -18,12 +18,14 @@ namespace Prima.Application.Commands.Scheduling;
 [RequireContext(ContextType.Guild)]
 public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
 {
-    private readonly CalendarApi _calendar;
+    private readonly GoogleCalendarClient _calendar;
+    private readonly CalendarConfig _config;
     private readonly IDbService _db;
 
-    public EventSchedulingCommands(CalendarApi calendar, IDbService db)
+    public EventSchedulingCommands(GoogleCalendarClient calendar, CalendarConfig config, IDbService db)
     {
         _calendar = calendar;
+        _config = config;
         _db = db;
     }
 
@@ -35,8 +37,6 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
         if (guildConfig == null) return;
 
         var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, Context.Guild, Context.Channel);
-        if (outputChannel == null) return;
-
         var announceChannel = ScheduleUtils.GetAnnouncementChannel(guildConfig, Context.Guild, Context.Channel);
 
         var prefix = _db.Config.Prefix;
@@ -58,7 +58,7 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
             trimmedDescription += "...";
         }
 
-        if (!parameters.Contains(":"))
+        if (!parameters.Contains(':'))
         {
             await ReplyAsync($"{Context.User.Mention}, please specify a time for your run in your command!");
             return;
@@ -76,19 +76,18 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
 
         var eventLink =
 #if DEBUG
-            await _calendar.PostEvent("drs", new MiniEvent
+            await _calendar.CreateEvent(_config.CalendarEntries["drs"], Context.User.ToString(), description, time.DateTime,
+                time.DateTime.AddHours(3));
 #else
-            await _calendar.PostEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), new MiniEvent
+            await _calendar.CreateEvent(
+                _config.CalendarEntries[ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id)],
+                Context.User.ToString(), description, time.DateTime,
+                time.DateTime.AddHours(3));
 #endif
-            {
-                Title = Context.User.ToString(),
-                Description = description,
-                StartTime = XmlConvert.ToString(time.UtcDateTime, XmlDateTimeSerializationMode.Utc),
-            });
 
         var eventDescription = trimmedDescription +
                                $"\n\n[Copy to Google Calendar]({eventLink})\nMessage Link: {Context.Message.GetJumpUrl()}";
-            
+
         var member = Context.Guild.GetUser(Context.User.Id);
         var color = RunDisplayTypes.GetColorCastrum();
         var embed = new EmbedBuilder()
@@ -102,7 +101,7 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
             .WithDescription(eventDescription)
             .WithFooter(Context.Message.Id.ToString())
             .Build();
-            
+
         await outputChannel.SendMessageAsync(Context.Message.Id.ToString(), embed: embed);
         if (announceChannel != null)
         {
@@ -110,19 +109,16 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
             await announceMessage.CrosspostAsync();
         }
 
-        await ReplyAsync($"Event announced! Announcement posted in <#{outputChannel.Id}>. React to the announcement in " +
-                         $"<#{outputChannel.Id}> with :vibration_mode: to be notified before the event begins.");
+        await ReplyAsync(
+            $"Event announced! Announcement posted in <#{outputChannel.Id}>. React to the announcement in " +
+            $"<#{outputChannel.Id}> with :vibration_mode: to be notified before the event begins.");
         await SortEmbeds(guildConfig, Context.Guild, outputChannel);
     }
 
-    private async Task<MiniEvent?> FindEvent(string calendarClass, string title, DateTimeOffset startTime)
+    private async Task<Event?> FindEvent(string calendarClass, string title, DateTimeOffset startTime)
     {
-        var events = await _calendar.GetEvents(calendarClass);
-        return events.FirstOrDefault(e =>
-        {
-            var eventStartTime = XmlConvert.ToDateTimeOffset(e.StartTime);
-            return e.Title == title && eventStartTime == startTime;
-        });
+        var events = await _calendar.ListEvents(_config.CalendarEntries[calendarClass], DateTime.Now);
+        return events.FirstOrDefault(e => e.Summary == title && e.Start.DateTime == startTime);
     }
 
     [Command("setruntime")]
@@ -132,7 +128,7 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
     {
         var guildConfig = _db.Guilds.FirstOrDefault(g => g.Id == Context.Guild.Id);
         if (guildConfig == null) return;
-            
+
         var outputChannel = Context.Guild.GetTextChannel(outputChannelId);
         var (embedMessage, embed) = await FindAnnouncement(outputChannel, eventId);
         if (embedMessage == null || embed == null)
@@ -140,7 +136,7 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
             await ReplyAsync("No run was found matching that event ID in that channel.");
             return;
         }
-            
+
         var announceChannel = ScheduleUtils.GetAnnouncementChannel(guildConfig, Context.Guild, Context.Channel);
         var (announceMessage, _) = announceChannel != null
             ? await FindAnnouncement(announceChannel, eventId)
@@ -162,18 +158,12 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
         var updatedEmbed = builder
             .WithTimestamp(newRunTime)
             .Build();
-            
-        await embedMessage.ModifyAsync(props =>
-        {
-            props.Embeds = new[] { updatedEmbed };
-        });
-            
+
+        await embedMessage.ModifyAsync(props => { props.Embeds = new[] { updatedEmbed }; });
+
         if (announceMessage != null)
         {
-            await announceMessage.ModifyAsync(props =>
-            {
-                props.Embeds = new[] { updatedEmbed };
-            });
+            await announceMessage.ModifyAsync(props => { props.Embeds = new[] { updatedEmbed }; });
         }
 
         await ReplyAsync("Updated.");
@@ -225,21 +215,21 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
             Log.Error("Failed to get DPS emote from guild {GuildName}", guild.Name);
             return;
         }
-        
+
         var healer = guild.Emotes.FirstOrDefault(e => e.Name.ToLowerInvariant() == "healer");
         if (healer == null)
         {
             Log.Error("Failed to get healer emote from guild {GuildName}", guild.Name);
             return;
         }
-        
+
         var tank = guild.Emotes.FirstOrDefault(e => e.Name.ToLowerInvariant() == "tank");
         if (tank == null)
         {
             Log.Error("Failed to get tank emote from guild {GuildName}", guild.Name);
             return;
         }
-        
+
         foreach (var embed in embeds)
         {
             try
@@ -326,12 +316,11 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
         if (guildConfig == null) return;
 
         var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, Context.Guild, Context.Channel);
-        if (outputChannel == null) return;
-
         var (time, _) = ScheduleUtils.ParseTime(args);
 
         var (embedMessage, embed) = await FindAnnouncement(outputChannel, Context.User, time);
-        if (embedMessage != null && embed?.Footer != null && ulong.TryParse(embed.Footer?.Text, out var originalMessageId))
+        if (embedMessage != null && embed?.Footer != null &&
+            ulong.TryParse(embed.Footer?.Text, out var originalMessageId))
         {
             var count = await _db.EventReactions
                 .Where(er => er.EventId == originalMessageId)
@@ -352,8 +341,6 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
         if (guildConfig == null) return;
 
         var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, Context.Guild, Context.Channel);
-        if (outputChannel == null) return;
-            
         var announceChannel = ScheduleUtils.GetAnnouncementChannel(guildConfig, Context.Guild, Context.Channel);
 
         var username = Context.User.ToString();
@@ -433,44 +420,39 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
                 .WithTitle(
                     $"Event scheduled by {member?.Nickname ?? Context.User.ToString()} at <t:{newTime.ToUnixTimeSeconds()}:F>!")
                 .Build();
-                
-            await embedMessage.ModifyAsync(props =>
-            {
-                props.Embeds = new[] { updatedEmbed };
-            });
+
+            await embedMessage.ModifyAsync(props => { props.Embeds = new[] { updatedEmbed }; });
 
             if (announceChannelMessage != null)
             {
-                await announceChannelMessage.ModifyAsync(props =>
-                {
-                    props.Embeds = new[] { updatedEmbed };
-                });
+                await announceChannelMessage.ModifyAsync(props => { props.Embeds = new[] { updatedEmbed }; });
             }
 
 #if DEBUG
-                var @event = await FindEvent("drs", username, curTime);
-                if (@event != null)
-                {
-                    @event.StartTime = XmlConvert.ToString(newTime.UtcDateTime,
-                        XmlDateTimeSerializationMode.Utc);
-                    await _calendar.UpdateEvent("drs", @event);
-                }
-                else
-                {
-                    Log.Warning("Failed to find calendar entry for event (time={EventTime})", curTime);
-                }
-#else
-            var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), username, curTime);
+            var @event = await FindEvent("drs", username, curTime);
             if (@event != null)
             {
-                @event.StartTime = XmlConvert.ToString(newTime.UtcDateTime,
-                    XmlDateTimeSerializationMode.Utc);
-                await _calendar.UpdateEvent(
-                    ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), @event);
+                await _calendar.UpdateEvent(_config.CalendarEntries["drs"], @event.Id, null, null, newTime.DateTime,
+                    newTime.AddHours(3).DateTime);
             }
             else
             {
-                Log.Warning("Failed to find calendar entry for event.");
+                Log.Warning("Failed to find calendar entry for event (time={EventTime})", curTime);
+            }
+#else
+            var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id),
+                username, curTime);
+            if (@event != null)
+            {
+                await _calendar.UpdateEvent(
+                    _config.CalendarEntries[
+                        ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id)], @event.Id, null,
+                    null,
+                    newTime.DateTime, newTime.AddHours(3).DateTime);
+            }
+            else
+            {
+                Log.Warning("Failed to find calendar entry for event (time={EventTime})", curTime);
             }
 #endif
 
@@ -495,8 +477,6 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
         if (guildConfig == null) return;
 
         var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, Context.Guild, Context.Channel);
-        if (outputChannel == null) return;
-            
         var announceChannel = ScheduleUtils.GetAnnouncementChannel(guildConfig, Context.Guild, Context.Channel);
 
         var username = Context.User.ToString();
@@ -524,8 +504,9 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
             }
 
             (embedMessage, embed) = await FindAnnouncementById(outputChannel, Context.User, splitArgs[0].Trim());
-            (announceChannelMessage, _) = await FindAnnouncementById(announceChannel, Context.User, splitArgs[0].Trim());
-            
+            (announceChannelMessage, _) =
+                await FindAnnouncementById(announceChannel, Context.User, splitArgs[0].Trim());
+
             if (embed == null)
             {
                 await ReplyAsync("The message with that ID does not exist in this channel!");
@@ -561,18 +542,12 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
                 .WithColor(embed.Color!.Value)
                 .WithDescription("❌ Cancelled")
                 .Build();
-                
-            await embedMessage.ModifyAsync(props =>
-            {
-                props.Embeds = new[] { updatedEmbed };
-            });
+
+            await embedMessage.ModifyAsync(props => { props.Embeds = new[] { updatedEmbed }; });
 
             if (announceChannelMessage != null)
             {
-                await announceChannelMessage.ModifyAsync(props =>
-                {
-                    props.Embeds = new[] { updatedEmbed };
-                });
+                await announceChannelMessage.ModifyAsync(props => { props.Embeds = new[] { updatedEmbed }; });
             }
 
             async void DeleteEmbed()
@@ -591,16 +566,19 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
             new Task(DeleteEmbed).Start();
 
 #if DEBUG
-                var @event = await FindEvent("drs", username, time);
+            var @event = await FindEvent("drs", username, time);
 #else
-            var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), username, time);
+            var @event = await FindEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id),
+                username, time);
 #endif
             if (@event != null)
             {
 #if DEBUG
-                    await _calendar.DeleteEvent("drs", @event.ID);
+                await _calendar.DeleteEvent(_config.CalendarEntries["drs"], @event.Id);
 #else
-                await _calendar.DeleteEvent(ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id), @event.ID);
+                await _calendar.DeleteEvent(
+                    _config.CalendarEntries[
+                        ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id)], @event.Id);
 #endif
             }
             else
@@ -663,17 +641,19 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
         };
 
         await ReplyAsync(typeOrder.Aggregate("Estimated run counts by type:\n```",
-                             (agg, type) => agg + $"\n{type}: {(eventCounts.ContainsKey(type) ? eventCounts[type] : 0)}") +
+                             (agg, type) =>
+                                 agg + $"\n{type}: {(eventCounts.ContainsKey(type) ? eventCounts[type] : 0)}") +
                          "\n```");
     }
 
-    private async Task<(IUserMessage?, IEmbed?)> FindAnnouncementById(IMessageChannel? channel, IPresence user, string id)
+    private async Task<(IUserMessage?, IEmbed?)> FindAnnouncementById(IMessageChannel? channel, IPresence user,
+        string id)
     {
         if (channel == null)
         {
             return (null, null);
         }
-        
+
         using var typing = Context.Channel.EnterTypingState();
         await foreach (var page in channel.GetMessagesAsync())
         {
@@ -696,13 +676,14 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
         return (null, null);
     }
 
-    private async Task<(IUserMessage?, IEmbed?)> FindAnnouncement(IMessageChannel? channel, IPresence user, DateTimeOffset time)
+    private async Task<(IUserMessage?, IEmbed?)> FindAnnouncement(IMessageChannel? channel, IPresence user,
+        DateTimeOffset time)
     {
         if (channel == null)
         {
             return (null, null);
         }
-        
+
         using var typing = Context.Channel.EnterTypingState();
         var announcements = new List<(IUserMessage, IEmbed)>();
         await foreach (var page in channel.GetMessagesAsync())
@@ -736,6 +717,7 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
                 {
                     query += $"\n{i + 1}) {announcements[i].Item1.GetJumpUrl()}";
                 }
+
                 await ReplyAsync(query);
 
                 var j = -1;
@@ -748,6 +730,7 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
                     {
                         break;
                     }
+
                     await Task.Delay(stopPollingDelayMs);
                 }
 

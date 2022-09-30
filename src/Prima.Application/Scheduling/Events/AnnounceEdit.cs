@@ -1,6 +1,5 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using Prima.GoogleApis.Services;
 using Prima.Resources;
 using Prima.Services;
 using Serilog;
@@ -9,8 +8,7 @@ namespace Prima.Application.Scheduling.Events;
 
 public static class AnnounceEdit
 {
-    public static async Task Handler(DiscordSocketClient client, CalendarApi calendar, IDbService db,
-        SocketMessage message)
+    public static async Task Handler(DiscordSocketClient client, IDbService db, SocketMessage message)
     {
         var guildConfig = db.Guilds.FirstOrDefault(g => g.Id == SpecialGuilds.CrystalExploratoryMissions);
         if (guildConfig == null)
@@ -27,12 +25,6 @@ public static class AnnounceEdit
         Log.Information("Announcement message being edited");
 
         var outputChannel = ScheduleUtils.GetOutputChannel(guildConfig, guild, message.Channel);
-        if (outputChannel == null)
-        {
-            Log.Information("Could not get output channel; aborting");
-            return;
-        }
-
         var announceChannel = ScheduleUtils.GetAnnouncementChannel(guildConfig, guild, message.Channel);
 
         var args = message.Content[(message.Content.IndexOf(' ') + 1)..];
