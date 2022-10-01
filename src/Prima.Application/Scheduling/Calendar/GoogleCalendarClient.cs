@@ -36,8 +36,8 @@ public class GoogleCalendarClient
         {
             Summary = title,
             Description = description,
-            Start = new EventDateTime { DateTime = startTime, TimeZone = "America/Los_Angeles" },
-            End = new EventDateTime { DateTime = endTime, TimeZone = "America/Los_Angeles" },
+            Start = new EventDateTime { DateTime = startTime, TimeZone = "Africa/Accra" },
+            End = new EventDateTime { DateTime = endTime, TimeZone = "Africa/Accra" },
         };
         var createRequest = _service.Events.Insert(@event, calendarId);
         return await createRequest.ExecuteAsync();
@@ -50,8 +50,8 @@ public class GoogleCalendarClient
         {
             Summary = title,
             Description = description,
-            Start = new EventDateTime { DateTime = startTime, TimeZone = "America/Los_Angeles" },
-            End = new EventDateTime { DateTime = endTime, TimeZone = "America/Los_Angeles" },
+            Start = new EventDateTime { DateTime = startTime, TimeZone = "Africa/Accra" },
+            End = new EventDateTime { DateTime = endTime, TimeZone = "Africa/Accra" },
         };
         var updateRequest = _service.Events.Update(@event, calendarId, eventId);
         return await updateRequest.ExecuteAsync();
