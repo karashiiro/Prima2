@@ -79,13 +79,14 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
 
         var eventLink =
 #if DEBUG
-            await _calendar.CreateEvent(_config.Calendars["drs"], Context.User.ToString(), description, time.DateTime,
-                time.DateTime.AddHours(3));
+            await _calendar.CreateEvent(_config.Calendars["drs"], Context.User.ToString(), description,
+                time.UtcDateTime,
+                time.UtcDateTime.AddHours(3));
 #else
             await _calendar.CreateEvent(
-                _config.CalendarEntries[ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id)],
-                Context.User.ToString(), description, time.DateTime,
-                time.DateTime.AddHours(3));
+                _config.Calendars[ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id)],
+                Context.User.ToString(), description, time.UtcDateTime,
+                time.UtcDateTime.AddHours(3));
 #endif
 
         var eventDescription = trimmedDescription +
@@ -106,9 +107,9 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
             .Build();
 
         await outputChannel.SendMessageAsync(Context.Message.Id.ToString(), embed: embed);
-        if (announceChannel != null)
+        if (announceChannel is INewsChannel newsChannel)
         {
-            var announceMessage = await announceChannel.SendMessageAsync(Context.Message.Id.ToString(), embed: embed);
+            var announceMessage = await newsChannel.SendMessageAsync(Context.Message.Id.ToString(), embed: embed);
             await announceMessage.CrosspostAsync();
         }
 
@@ -360,7 +361,9 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
         DateTimeOffset curTime;
 
         // Read the second time
-        var (newTime, _) = ScheduleUtils.ParseTime(times[1]);
+        var (newTime, newTzi) = ScheduleUtils.ParseTime(times[1]);
+        if (newTzi.IsDaylightSavingTime(newTime))
+            newTime = newTime.AddHours(-1);
         if (newTime < DateTimeOffset.Now)
         {
             await ReplyAsync("The second time is in the past!");
@@ -399,9 +402,7 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
             // Read the first time
             var (tempTime, tzi) = ScheduleUtils.ParseTime(times[0]);
             curTime = tempTime;
-
-            var isDST = tzi.IsDaylightSavingTime(curTime);
-            if (isDST)
+            if (tzi.IsDaylightSavingTime(curTime))
                 curTime = curTime.AddHours(-1);
 
             if (curTime < DateTimeOffset.Now)
@@ -435,8 +436,8 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
             var @event = await FindEvent("drs", username, curTime);
             if (@event != null)
             {
-                await _calendar.UpdateEvent(_config.Calendars["drs"], @event.Id, null, null, newTime.DateTime,
-                    newTime.AddHours(3).DateTime);
+                await _calendar.UpdateEvent(_config.Calendars["drs"], @event.Id, @event.Summary, @event.Description,
+                    newTime.UtcDateTime, newTime.AddHours(3).UtcDateTime);
             }
             else
             {
@@ -448,14 +449,14 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
             if (@event != null)
             {
                 await _calendar.UpdateEvent(
-                    _config.CalendarEntries[
-                        ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id)], @event.Id, null,
-                    null,
-                    newTime.DateTime, newTime.AddHours(3).DateTime);
+                    _config.Calendars[
+                        ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id)], @event.Id,
+                    @event.Summary, @event.Description,
+                    newTime.UtcDateTime, newTime.AddHours(3).UtcDateTime);
             }
             else
             {
-                Log.Warning("Failed to find calendar entry for event (time={EventTime})", curTime);
+                _logger.LogWarning("Failed to find calendar entry for event (time={EventTime})", curTime);
             }
 #endif
 
@@ -580,7 +581,7 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
                 await _calendar.DeleteEvent(_config.Calendars["drs"], @event.Id);
 #else
                 await _calendar.DeleteEvent(
-                    _config.CalendarEntries[
+                    _config.Calendars[
                         ScheduleUtils.GetCalendarCodeForOutputChannel(guildConfig, outputChannel.Id)], @event.Id);
 #endif
             }
