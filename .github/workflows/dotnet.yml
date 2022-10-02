@@ -1,24 +1,10 @@
-name: Prima Core
+name: .NET Build/Test
 
 on:
   push:
     branches: [ main ]
-    paths:
-    - "src/Prima.DiscordNet/**"
-    - "src/Prima.Queue/**"
-    - "src/Prima.Scheduler/**"
-    - "src/Prima.Stable/**"
-    - "src/Prima.Tests/**"
-    - "src/Prima/**"
   pull_request:
     branches: [ main ]
-    paths:
-    - "src/Prima.DiscordNet/**"
-    - "src/Prima.Queue/**"
-    - "src/Prima.Scheduler/**"
-    - "src/Prima.Stable/**"
-    - "src/Prima.Tests/**"
-    - "src/Prima/**"
 
 jobs:
   dotnet_build:
@@ -26,7 +12,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2.4.2
+      with:
+        submodules: true
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
