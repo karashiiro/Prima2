@@ -10,6 +10,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
+using NetStone;
+using NetStone.GameData.Lumina;
 using Prima.Application;
 using Prima.Application.Community;
 using Prima.Application.Community.CrystalExploratoryMissions;
@@ -37,6 +39,12 @@ var (googleApiCredential, googleApiCredentialException) =
 var (calendarConfig, calendarConfigException) = await CalendarConfig.FromFileSafely(
     Environment.GetEnvironmentVariable("PRIMA_CALENDAR_CONFIG") ??
     throw new ArgumentException("No PRIMA_CALENDAR_CONFIG variable set!"));
+
+var gameDataPath = LuminaLoader.GetGameDataPath();
+var gameData = LuminaLoader.Load(gameDataPath);
+var gameDataDir = new DirectoryInfo(gameDataPath);
+var gameDataProvider = new LuminaGameDataProvider(gameDataDir);
+var lodestone = await LodestoneClient.GetClientAsync(gameDataProvider);
 
 var host = Host.CreateDefaultBuilder()
     .ConfigureServices((_, sc) =>
@@ -70,26 +78,13 @@ var host = Host.CreateDefaultBuilder()
         sc.AddSingleton<WebClient>();
         sc.AddSingleton<CensusEventService>();
         sc.AddSingleton<XIVAPIClient>();
-        if (Environment.GetEnvironmentVariable("FFXIV_HOME") == null)
-        {
-            sc.AddSingleton(_ => new GameData(Environment.OSVersion.Platform == PlatformID.Win32NT
-                    ? @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack"
-                    : Path.Combine(Environment.GetEnvironmentVariable("HOME")
-                                   ?? throw new ArgumentException("No HOME variable set!"), "sqpack"),
-                new LuminaOptions { PanicOnSheetChecksumMismatch = false }));
-        }
-        else
-        {
-            var home = Environment.GetEnvironmentVariable("FFXIV_HOME") ??
-                       throw new ArgumentException("No FFXIV_HOME variable set!");
-            sc.AddSingleton(_ => new GameData(home, new LuminaOptions { PanicOnSheetChecksumMismatch = false }));
-        }
+        sc.AddSingleton(gameData);
+        sc.AddSingleton(lodestone);
 
         sc.AddSingleton<FFXIVWeatherLuminaService>();
         sc.AddSingleton<MuteService>();
         sc.AddSingleton<TimedRoleManager>();
         sc.AddSingleton<FFLogsClient>();
-        sc.AddSingleton<CharacterLookup>();
         sc.AddSingleton<KeepClean>();
         sc.AddSingleton<EphemeralPinManager>();
 
@@ -175,7 +170,6 @@ host.Services.GetRequiredService<CommandService>().Log += LogDiscord<CommandServ
 
 var db = host.Services.GetRequiredService<IDbService>();
 var web = host.Services.GetRequiredService<WebClient>();
-var lodestone = host.Services.GetRequiredService<CharacterLookup>();
 var templates = host.Services.GetRequiredService<ITemplateProvider>();
 var censusEvents = host.Services.GetRequiredService<CensusEventService>();
 var mute = host.Services.GetRequiredService<MuteService>();

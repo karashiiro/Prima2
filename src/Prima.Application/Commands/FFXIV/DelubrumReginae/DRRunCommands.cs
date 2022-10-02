@@ -1,6 +1,9 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.Net;
+using NetStone;
+using NetStone.Model.Parseables.Character;
+using NetStone.Search.Character;
 using Prima.DiscordNet;
 using Prima.DiscordNet.Attributes;
 using Prima.Game.FFXIV;
@@ -17,9 +20,9 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
 {
     private readonly IDbService _db;
     private readonly FFLogsClient _ffLogs;
-    private readonly CharacterLookup _lodestone;
+    private readonly LodestoneClient _lodestone;
 
-    public DRRunCommands(IDbService db, FFLogsClient ffLogs, CharacterLookup lodestone)
+    public DRRunCommands(IDbService db, FFLogsClient ffLogs, LodestoneClient lodestone)
     {
         _db = db;
         _ffLogs = ffLogs;
@@ -219,24 +222,27 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
 
     private class PotentialDbUser
     {
-        public string? Name { get; set; }
-        public string? World { get; set; }
+        public string Name { get; }
+        public string World { get; }
         public DiscordXIVUser? User { get; set; }
+
+        public PotentialDbUser(string name, string world, DiscordXIVUser? user = null)
+        {
+            Name = name;
+            World = world;
+            User = user;
+        }
     }
 
     private async Task RegisterUser(IEnumerable<IGuildUser> members, PotentialDbUser potentialUser)
     {
-        if (potentialUser.User != null)
-            return;
         var member = members.FirstOrDefault(m => m.Nickname == $"({potentialUser.World}) {potentialUser.Name}");
         if (member == null) return;
-        var userInfo = await _lodestone.GetDiscordXIVUser(potentialUser.World, potentialUser.Name, 0);
-        if (userInfo != null)
-        {
-            userInfo.DiscordId = member.Id;
-            await _db.AddUser(userInfo);
-            potentialUser.User = userInfo;
-        }
+
+        var (userInfo, _) =
+            await DiscordXIVUser.CreateFromLodestoneSearch(_lodestone, potentialUser.Name, potentialUser.World, member.Id);
+        await _db.AddUser(userInfo);
+        potentialUser.User = userInfo;
     }
 
     private async Task ReadLog(string logLink)
@@ -266,14 +272,10 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
             .ToList();
         var members = Context.Guild.Users;
         var potentialUsers = originalUsers.ToDictionary(a => a.Id, a => a)
-            .Select(kvp => new KeyValuePair<int, PotentialDbUser>(kvp.Key, new PotentialDbUser
-            {
-                Name = kvp.Value.Name,
-                World = kvp.Value.Server,
-                User = _db.Users.FirstOrDefault(u =>
+            .Select(kvp => new KeyValuePair<int, PotentialDbUser>(kvp.Key, new PotentialDbUser(kvp.Value.Name,
+                kvp.Value.Server, _db.Users.FirstOrDefault(u =>
                     string.Equals(u.Name, kvp.Value.Name, StringComparison.InvariantCultureIgnoreCase)
-                    && string.Equals(u.World, kvp.Value.Server, StringComparison.InvariantCultureIgnoreCase)),
-            }))
+                    && string.Equals(u.World, kvp.Value.Server, StringComparison.InvariantCultureIgnoreCase)))))
             .Select(async kvp =>
             {
                 var (id, potentialUser) = kvp;
@@ -338,11 +340,13 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
                     // Remove all contingent roles (this is bodge and should be refactored)
                     foreach (var progRole in contingentRoles)
                     {
-                        Log.Information("Checking role {RoleName} on user {DiscordName}", progRole.Name, user.ToString());
+                        Log.Information("Checking role {RoleName} on user {DiscordName}", progRole.Name,
+                            user.ToString());
                         if (user.HasRole(progRole))
                         {
                             await user.RemoveRoleAsync(progRole);
-                            Log.Information("Removed role {RoleName} from user {DiscordName}", progRole.Name, user.ToString());
+                            Log.Information("Removed role {RoleName} from user {DiscordName}", progRole.Name,
+                                user.ToString());
                         }
                     }
 
@@ -359,18 +363,21 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
                     // Give all contingent roles as well as the clear role for the fight
                     foreach (var progRole in contingentRoles)
                     {
-                        Log.Information("Checking role {RoleName} on user {DiscordName}", progRole.Name, user.ToString());
+                        Log.Information("Checking role {RoleName} on user {DiscordName}", progRole.Name,
+                            user.ToString());
                         if (!user.HasRole(progRole))
                         {
                             addedAny = true;
                             await user.AddRoleAsync(progRole);
-                            Log.Information("Added role {RoleName} to user {DiscordName}", progRole.Name, user.ToString());
+                            Log.Information("Added role {RoleName} to user {DiscordName}", progRole.Name,
+                                user.ToString());
                         }
                     }
 
                     if (encounter.Kill == true)
                     {
-                        Log.Information("Checking role {RoleName} on user {DiscordName}", killRole.Name, user.ToString());
+                        Log.Information("Checking role {RoleName} on user {DiscordName}", killRole.Name,
+                            user.ToString());
                         if (!user.HasRole(killRole))
                         {
                             addedAny = true;

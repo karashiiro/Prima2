@@ -1,5 +1,6 @@
 ﻿using Serilog;
 using System.Threading.Tasks;
+using NetStone;
 
 namespace Prima.Game.FFXIV
 {
@@ -16,19 +17,17 @@ namespace Prima.Game.FFXIV
         /// <param name="lodestoneId">The Lodestone ID of the character to check.</param>
         /// <param name="token">The token to search for in the character's bio.</param>
         /// <returns></returns>
-        public static async Task<bool> VerifyCharacter(CharacterLookup lookupService, ulong lodestoneId, string token)
+        public static async Task<bool> VerifyCharacter(LodestoneClient lookupService, ulong lodestoneId, string token)
         {
-            var character = await lookupService.GetCharacter(lodestoneId);
-
-            var bio = character["Bio"]?.ToObject<string>();
-            if (bio == null)
+            var character = await lookupService.GetCharacter(lodestoneId.ToString());
+            if (character == null)
             {
-                Log.Error("Character bio is null (id={LodestoneId})", lodestoneId);
+                Log.Error("Character is null (id={LodestoneId})", lodestoneId);
                 return false;
             }
 
-            Log.Information("{Bio}, {Token}", bio, token);
-            return bio.Contains(token);
+            Log.Information("{Bio}, {Token}", character.Bio, token);
+            return character.Bio.Contains(token);
         }
     }
 }

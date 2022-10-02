@@ -9,6 +9,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\lib\NetStone\NetStone.GameData.Lumina\NetStone.GameData.Lumina.csproj" />
+      <ProjectReference Include="..\..\lib\NetStone\NetStone\NetStone.csproj" />
       <ProjectReference Include="..\Prima.Data\Prima.Data.csproj" />
       <ProjectReference Include="..\Prima.DiscordNet\Prima.DiscordNet.csproj" />
       <ProjectReference Include="..\Prima\Prima.csproj" />

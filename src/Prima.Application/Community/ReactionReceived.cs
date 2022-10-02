@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using NetStone;
 using Prima.Game.FFXIV;
 using Prima.Models;
 using Prima.Services;
@@ -15,7 +16,7 @@ public static class ReactionReceived
     private const ulong BozjaRole = 588913532410527754;
     private const ulong EurekaRole = 588913087818498070;
 
-    public static async Task HandlerAdd(DiscordSocketClient client, IDbService db, CharacterLookup lodestone,
+    public static async Task HandlerAdd(DiscordSocketClient client, IDbService db, LodestoneClient lodestone,
         Cacheable<IUserMessage, ulong> message, Cacheable<IMessageChannel, ulong> cchannel, SocketReaction reaction)
     {
         var ichannel = await cchannel.GetOrDownloadAsync();
@@ -51,36 +52,28 @@ public static class ReactionReceived
                     }
 
                     var lodestoneId = ulong.Parse(dbEntry.LodestoneId);
-                    var data = await lodestone.GetCharacter(lodestoneId);
+                    var data = await lodestone.GetCharacter(dbEntry.LodestoneId);
                     if (data == null)
                     {
                         Log.Error("Failed to get Lodestone character (id={LodestoneId})", lodestoneId);
                         return;
                     }
 
-                    var classJobs = data["ClassJobs"];
+                    var classJobs = await data.GetClassJobInfo();
                     if (classJobs == null)
                     {
                         Log.Error("Failed to get ClassJobs from Lodestone character (id={LodestoneId})", lodestoneId);
                         return;
                     }
 
-                    var classJobsObj = classJobs.ToObject<CharacterLookup.ClassJob[]>();
-                    if (classJobsObj == null)
-                    {
-                        Log.Error("Failed to unmarshal ClassJobs from Lodestone character (id={LodestoneId})",
-                            lodestoneId);
-                        return;
-                    }
-
                     var highestCombatLevel = 0;
-                    foreach (var classJob in classJobsObj)
+                    foreach (var (classJob, classJobEntry) in classJobs.ClassJobDict)
                     {
                         // Skip non-DoW/DoM or BLU
-                        if (classJob.JobID is >= 8 and <= 18 or 36) continue;
-                        if (classJob.Level > highestCombatLevel)
+                        if ((int)classJob is >= 8 and <= 18 or 36) continue;
+                        if (classJobEntry.Level > highestCombatLevel)
                         {
-                            highestCombatLevel = classJob.Level;
+                            highestCombatLevel = classJobEntry.Level;
                         }
                     }
 

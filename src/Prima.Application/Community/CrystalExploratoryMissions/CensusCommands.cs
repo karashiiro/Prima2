@@ -1,6 +1,9 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.Net;
+using NetStone;
+using NetStone.Model.Parseables.Character;
+using NetStone.Model.Parseables.Character.Achievement;
 using Prima.DiscordNet;
 using Prima.DiscordNet.Attributes;
 using Prima.Game.FFXIV;
@@ -16,9 +19,9 @@ namespace Prima.Application.Community.CrystalExploratoryMissions;
 public class CensusCommands : ModuleBase<SocketCommandContext>
 {
     private readonly IDbService _db;
-    private readonly CharacterLookup _lodestone;
+    private readonly LodestoneClient _lodestone;
 
-    public CensusCommands(IDbService db, CharacterLookup lodestone)
+    public CensusCommands(IDbService db, LodestoneClient lodestone)
     {
         _db = db;
         _lodestone = lodestone;
@@ -35,25 +38,25 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
     public async Task IAmAsync(params string[] parameters)
     {
 #if !DEBUG
-            if (Context.Guild != null && Context.Guild.Id == SpecialGuilds.CrystalExploratoryMissions)
+        if (Context.Guild != null && Context.Guild.Id == SpecialGuilds.CrystalExploratoryMissions)
+        {
+            const ulong welcome = 573350095903260673;
+            const ulong botSpam = 551586630478331904;
+            const ulong timeOut = 651966972132851712;
+            if (Context.Channel.Id != welcome && Context.Channel.Id != botSpam && Context.Channel.Id != timeOut)
             {
-                const ulong welcome = 573350095903260673;
-                const ulong botSpam = 551586630478331904;
-                const ulong timeOut = 651966972132851712;
-                if (Context.Channel.Id != welcome && Context.Channel.Id != botSpam && Context.Channel.Id != timeOut)
-                {
-                    await Context.Message.DeleteAsync();
-                    var reply = await ReplyAsync("That command is disabled in this channel.");
-                    await Task.Delay(10000);
-                    await reply.DeleteAsync();
-                    return;
-                }
+                await Context.Message.DeleteAsync();
+                var reply = await ReplyAsync("That command is disabled in this channel.");
+                await Task.Delay(10000);
+                await reply.DeleteAsync();
+                return;
             }
+        }
 #endif
 
         var guild = Context.Guild ?? Context.Client.Guilds
 #if !DEBUG
-                .Where(g => g.Id != SpecialGuilds.PrimaShouji && g.Id != SpecialGuilds.EmoteStorage1)
+            .Where(g => g.Id != SpecialGuilds.PrimaShouji && g.Id != SpecialGuilds.EmoteStorage1)
 #endif
             .First(g => Context.Client.Rest.GetGuildUserAsync(g.Id, Context.User.Id).GetAwaiter().GetResult() != null);
         Log.Information("Mutual guild ID: {GuildId}", guild.Id);
@@ -124,20 +127,32 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
         using var typing = Context.Channel.EnterTypingState();
 
-        DiscordXIVUser foundCharacter;
+        DiscordXIVUser? foundCharacter;
+        LodestoneCharacter? lodestoneCharacter;
         try
         {
             if (parameters.Length == 3)
             {
-                foundCharacter = await _lodestone.GetDiscordXIVUser(world, name, guildConfig.MinimumLevel);
+                (foundCharacter, lodestoneCharacter) =
+                    await DiscordXIVUser.CreateFromLodestoneSearch(_lodestone, world, name, member.Id);
             }
             else
             {
-                foundCharacter = await _lodestone.GetDiscordXIVUser(lodestoneId, guildConfig.MinimumLevel);
-                world = foundCharacter.World;
+                (foundCharacter, lodestoneCharacter) =
+                    await DiscordXIVUser.CreateFromLodestoneId(_lodestone, lodestoneId, member.Id);
+                world = foundCharacter?.World ?? "";
             }
         }
-        catch (CharacterNotFound)
+        catch (Exception e)
+        {
+            Log.Error(e, "Failed to find Lodestone character");
+            var reply = await ReplyAsync($"{Context.User.Mention}, failed to search for character.");
+            await Task.Delay(MessageDeleteDelay);
+            await reply.DeleteAsync();
+            return;
+        }
+
+        if (lodestoneCharacter == null || foundCharacter == null)
         {
             var reply = await ReplyAsync(
                 $"{Context.User.Mention}, no character matching that name and world was found. Are you sure you typed your world name correctly?");
@@ -145,23 +160,33 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             await reply.DeleteAsync();
             return;
         }
-        catch (NotMatchingFilter)
+
+        var highestCombatLevel = 0;
+        var classJobInfo = await lodestoneCharacter.GetClassJobInfo();
+        if (classJobInfo == null)
+        {
+            var reply = await ReplyAsync($"{Context.User.Mention}, failed to get character information.");
+            await Task.Delay(MessageDeleteDelay);
+            await reply.DeleteAsync();
+            return;
+        }
+
+        foreach (var (classJob, classJobEntry) in classJobInfo.ClassJobDict)
+        {
+            // Skip non-DoW/DoM or BLU
+            if ((int)classJob is >= 8 and <= 18 or 36) continue;
+            if (classJobEntry.Level > highestCombatLevel)
+            {
+                highestCombatLevel = classJobEntry.Level;
+            }
+        }
+
+        if (highestCombatLevel < guildConfig.MinimumLevel)
         {
             var reply = await ReplyAsync(
                 $"{Context.User.Mention}, that character does not have any combat jobs at Level {guildConfig.MinimumLevel}.");
             await Task.Delay(MessageDeleteDelay);
             await reply.DeleteAsync();
-            return;
-        }
-        catch (CharacterLookupError)
-        {
-            var reply = await ReplyAsync($"{Context.User.Mention}, failed to search for character.");
-            await Task.Delay(MessageDeleteDelay);
-            await reply.DeleteAsync();
-            return;
-        }
-        catch (ArgumentNullException)
-        {
             return;
         }
 
@@ -301,7 +326,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
         var guild = Context.Guild ?? Context.Client.Guilds
 #if !DEBUG
-                .Where(g => g.Id != SpecialGuilds.PrimaShouji && g.Id != SpecialGuilds.EmoteStorage1)
+            .Where(g => g.Id != SpecialGuilds.PrimaShouji && g.Id != SpecialGuilds.EmoteStorage1)
 #endif
             .First(g => Context.Client.Rest.GetGuildUserAsync(g.Id, userMention.Id).GetAwaiter().GetResult() != null);
 
@@ -311,12 +336,22 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         // Fetch the character.
         using var typing = Context.Channel.EnterTypingState();
 
-        DiscordXIVUser foundCharacter;
+        DiscordXIVUser? foundCharacter;
+        LodestoneCharacter? character;
         try
         {
-            foundCharacter = await _lodestone.GetDiscordXIVUser(world, name, 0);
+            (foundCharacter, character) =
+                await DiscordXIVUser.CreateFromLodestoneSearch(_lodestone, world, name, member.Id);
         }
-        catch (CharacterNotFound)
+        catch (Exception e)
+        {
+            Log.Error(e, "Failed to find Lodestone character");
+            await ReplyAsync(
+                $"{Context.User.Mention}, no character matching that name and world was found. Are you sure you typed their world name correctly?");
+            return;
+        }
+
+        if (foundCharacter == null || character == null)
         {
             await ReplyAsync(
                 $"{Context.User.Mention}, no character matching that name and world was found. Are you sure you typed their world name correctly?");
@@ -435,35 +470,28 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
         var lodestoneId = ulong.Parse(dbEntry.LodestoneId);
         var contentRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles[MostRecentZoneRole]));
-        var data = await _lodestone.GetCharacter(lodestoneId);
+        var data = await _lodestone.GetCharacter(dbEntry.LodestoneId);
         if (data == null)
         {
             Log.Error("Failed to get Lodestone character (id={LodestoneId})", lodestoneId);
             return;
         }
 
-        var classJobs = data["ClassJobs"];
+        var classJobs = await data.GetClassJobInfo();
         if (classJobs == null)
         {
             Log.Error("Failed to get ClassJobs from Lodestone character (id={LodestoneId})", lodestoneId);
             return;
         }
 
-        var classJobsObj = classJobs.ToObject<CharacterLookup.ClassJob[]>();
-        if (classJobsObj == null)
-        {
-            Log.Error("Failed to unmarshal ClassJobs from Lodestone character (id={LodestoneId})", lodestoneId);
-            return;
-        }
-
         var highestCombatLevel = 0;
-        foreach (var classJob in classJobsObj)
+        foreach (var (classJob, classJobEntry) in classJobs.ClassJobDict)
         {
             // Skip non-DoW/DoM or BLU
-            if (classJob.JobID is >= 8 and <= 18 or 36) continue;
-            if (classJob.Level > highestCombatLevel)
+            if ((int)classJob is >= 8 and <= 18 or 36) continue;
+            if (classJobEntry.Level > highestCombatLevel)
             {
-                highestCombatLevel = classJob.Level;
+                highestCombatLevel = classJobEntry.Level;
             }
         }
 
@@ -521,24 +549,24 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
     public async Task VerifyAsync(params string[] args)
     {
 #if !DEBUG
-            if (Context.Guild != null && Context.Guild.Id == SpecialGuilds.CrystalExploratoryMissions)
+        if (Context.Guild != null && Context.Guild.Id == SpecialGuilds.CrystalExploratoryMissions)
+        {
+            const ulong welcome = 573350095903260673;
+            const ulong botSpam = 551586630478331904;
+            if (Context.Channel.Id == welcome || Context.Channel.Id != botSpam)
             {
-                const ulong welcome = 573350095903260673;
-                const ulong botSpam = 551586630478331904;
-                if (Context.Channel.Id == welcome || Context.Channel.Id != botSpam)
-                {
-                    await Context.Message.DeleteAsync();
-                    var reply = await ReplyAsync("That command is disabled in this channel.");
-                    await Task.Delay(10000);
-                    await reply.DeleteAsync();
-                    return;
-                }
+                await Context.Message.DeleteAsync();
+                var reply = await ReplyAsync("That command is disabled in this channel.");
+                await Task.Delay(10000);
+                await reply.DeleteAsync();
+                return;
             }
+        }
 #endif
 
         var guild = Context.Guild ?? Context.Client.Guilds
 #if !DEBUG
-                .Where(g => g.Id != SpecialGuilds.PrimaShouji && g.Id != SpecialGuilds.EmoteStorage1)
+            .Where(g => g.Id != SpecialGuilds.PrimaShouji && g.Id != SpecialGuilds.EmoteStorage1)
 #endif
             .First(g => Context.Client.Rest.GetGuildUserAsync(g.Id, Context.User.Id).GetAwaiter().GetResult() != null);
         Log.Information("Mutual guild ID: {GuildId}", guild.Id);
@@ -563,10 +591,19 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         }
 
         var lodestoneId = ulong.Parse(user.LodestoneId ?? args[0]);
-        AchievementInfo[] achievements;
+        var achievements = new List<CharacterAchievementEntry>();
         try
         {
-            achievements = await _lodestone.GetCharacterAchievements(lodestoneId);
+            var pageNumber = 1;
+            int numPages;
+            do
+            {
+                var page = await _lodestone.GetCharacterAchievement(lodestoneId.ToString(), pageNumber);
+                if (page == null) throw new InvalidOperationException("Failed to get achievements page");
+                achievements.AddRange(page.Achievements);
+                numPages = page.NumPages;
+                pageNumber++;
+            } while (pageNumber != numPages);
         }
         catch (Exception e)
         {
@@ -597,7 +634,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             await _db.UpdateUser(user);
         }
 
-        if (achievements.Any(achievement => achievement.ID == 2227)) // We're On Your Side I
+        if (achievements.Any(achievement => achievement.Id == 2227)) // We're On Your Side I
         {
             Log.Information("Added role {RoleName} to user {DiscordName}", cleared.Name, member.ToString());
             await member.AddRoleAsync(cleared);
@@ -605,7 +642,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             hasMount = true;
         }
 
-        if (achievements.Any(achievement => achievement.ID == 2229)) // We're On Your Side III
+        if (achievements.Any(achievement => achievement.Id == 2229)) // We're On Your Side III
         {
             Log.Information("Added role {RoleName} to user {DiscordName}", arsenalMaster.Name, member.ToString());
             await member.AddRoleAsync(arsenalMaster);
@@ -613,7 +650,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             hasAchievement = true;
         }
 
-        if (achievements.Any(achievement => achievement.ID == 2765)) // Operation: Savage Queen of Swords I
+        if (achievements.Any(achievement => achievement.Id == 2765)) // Operation: Savage Queen of Swords I
         {
             Log.Information("Added role {RoleName} to user {DiscordName}", clearedDRS.Name, member.ToString());
             await member.AddRoleAsync(clearedDRS);
@@ -632,7 +669,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             hasDRSAchievement1 = true;
         }
 
-        if (achievements.Any(achievement => achievement.ID == 2767)) // Operation: Savage Queen of Swords III
+        if (achievements.Any(achievement => achievement.Id == 2767)) // Operation: Savage Queen of Swords III
         {
             Log.Information("Added role {RoleName} to user {DiscordName}", savageQueen.Name, member.ToString());
             await member.AddRoleAsync(savageQueen);
