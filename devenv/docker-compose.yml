@@ -1,17 +1,11 @@
-version: "2.4"
+version: "3"
 services:
-  prima_google_apis:
-    image: ghcr.io/primashouji/prima-google-apis:main
-    ports:
-      - "7552:7552"
-    volumes:
-      - "./prima-google-apis:/prima"
-      - "mongodb_vol:/data/db"
   mongo:
     image: mongo:4.2.3
     ports:
       - "27017:27017"
-
+    volumes:
+      - "mongodb_vol:/data/db"
 volumes:
     mongodb_vol:
   
