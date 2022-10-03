@@ -69,6 +69,9 @@ public static class ReactionReceived
                     var highestCombatLevel = 0;
                     foreach (var (classJob, classJobEntry) in classJobs.ClassJobDict)
                     {
+                        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+                        if (classJobEntry == null) continue;
+
                         // Skip non-DoW/DoM or BLU
                         if ((int)classJob is >= 8 and <= 18 or 36) continue;
                         if (classJobEntry.Level > highestCombatLevel)

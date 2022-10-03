@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using NetStone;
@@ -73,10 +72,12 @@ namespace Prima.Game.FFXIV
 
                 foreach (var c in page.Results)
                 {
+                    if (!string.Equals(c.Name, name, StringComparison.InvariantCultureIgnoreCase)) continue;
+
                     lodestoneId = c.Id;
                     character = await c.GetCharacter();
                     if (character == null) continue;
-                    if (character.Name == name) break;
+                    if (string.Equals(character.Name, name, StringComparison.InvariantCultureIgnoreCase)) break;
                 }
 
                 pageNumber++;

@@ -88,7 +88,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             }
         }
 
-        Task.Run(async () =>
+        _ = Task.Run(async () =>
         {
             await Task.Delay(MessageDeleteDelay);
             try
@@ -99,7 +99,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             {
                 Log.Warning(e, "Message was already deleted");
             }
-        }).Start();
+        });
 
         var world = "";
         var name = "";
@@ -112,7 +112,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             name = RegexSearches.UnicodeApostrophe.Replace(name, "'");
             world = world.ToLower();
             world = ("" + world[0]).ToUpper() + world[1..];
-            if (world == "Courel" || world == "Couerl")
+            if (world is "Courel" or "Couerl")
             {
                 world = "Coeurl";
             }
@@ -134,7 +134,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             if (parameters.Length == 3)
             {
                 (foundCharacter, lodestoneCharacter) =
-                    await DiscordXIVUser.CreateFromLodestoneSearch(_lodestone, world, name, member.Id);
+                    await DiscordXIVUser.CreateFromLodestoneSearch(_lodestone, name, world, member.Id);
             }
             else
             {
@@ -173,6 +173,9 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
         foreach (var (classJob, classJobEntry) in classJobInfo.ClassJobDict)
         {
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            if (classJobEntry == null) continue;
+
             // Skip non-DoW/DoM or BLU
             if ((int)classJob is >= 8 and <= 18 or 36) continue;
             if (classJobEntry.Level > highestCombatLevel)
@@ -341,7 +344,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         try
         {
             (foundCharacter, character) =
-                await DiscordXIVUser.CreateFromLodestoneSearch(_lodestone, world, name, member.Id);
+                await DiscordXIVUser.CreateFromLodestoneSearch(_lodestone, name, world, member.Id);
         }
         catch (Exception e)
         {
@@ -381,7 +384,14 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             }
 
             Log.Information("Lodestone character forced off of {UserId}", existingDiscordUser.DiscordId);
-            var memberRole = guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
+
+            var memberRole = GetConfiguredRole(guildConfig, "Member");
+            if (memberRole == null)
+            {
+                await ReplyAsync("No member role is configured!");
+                return;
+            }
+
             var existingMember = guild.GetUser(existingDiscordUser.DiscordId);
             await existingMember.RemoveRoleAsync(memberRole);
         }
@@ -435,7 +445,13 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
     private async Task ActivateUser(IGuildUser member, string? oldLodestoneId, DiscordXIVUser dbEntry,
         DiscordGuildConfiguration guildConfig)
     {
-        var memberRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles["Member"]));
+        var memberRole = GetConfiguredRole(guildConfig, "Member");
+        if (memberRole == null)
+        {
+            await ReplyAsync("No member role is configured!");
+            return;
+        }
+
         await member.AddRoleAsync(memberRole);
         Log.Information("Added {DiscordName} to {Role}", member.ToString(), memberRole.Name);
 
@@ -443,7 +459,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         if (oldLodestoneId != dbEntry.LodestoneId)
         {
             var guild = Context.Guild;
-            IEnumerable<IRole> roles = new[]
+            var roles = new[]
                 {
                     guild.GetRole(DiademRole),
                     guild.GetRole(EurekaRole),
@@ -451,10 +467,10 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
                 }
                 .Concat(new[]
                 {
-                    guild.GetRole(ulong.Parse(guildConfig.Roles["Arsenal Master"])),
-                    guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared"])),
-                    guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Delubrum Savage"])),
-                    guild.GetRole(ulong.Parse(guildConfig.Roles["Savage Queen"])),
+                    GetConfiguredRole(guildConfig, "Arsenal Master"),
+                    GetConfiguredRole(guildConfig, "Cleared"),
+                    GetConfiguredRole(guildConfig, "Cleared Delubrum Savage"),
+                    GetConfiguredRole(guildConfig, "Savage Queen"),
                 })
                 .Where(r => r != null);
 
@@ -469,7 +485,6 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         Log.Information("Checking default content level for user {DiscordName}", member.ToString());
 
         var lodestoneId = ulong.Parse(dbEntry.LodestoneId);
-        var contentRole = member.Guild.GetRole(ulong.Parse(guildConfig.Roles[MostRecentZoneRole]));
         var data = await _lodestone.GetCharacter(dbEntry.LodestoneId);
         if (data == null)
         {
@@ -487,6 +502,9 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         var highestCombatLevel = 0;
         foreach (var (classJob, classJobEntry) in classJobs.ClassJobDict)
         {
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            if (classJobEntry == null) continue;
+
             // Skip non-DoW/DoM or BLU
             if ((int)classJob is >= 8 and <= 18 or 36) continue;
             if (classJobEntry.Level > highestCombatLevel)
@@ -500,8 +518,16 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             return;
         }
 
-        await member.AddRoleAsync(contentRole);
-        Log.Information("Added {DiscordName} to {Role}", member.ToString(), contentRole.Name);
+        var contentRole = GetConfiguredRole(guildConfig, MostRecentZoneRole);
+        if (contentRole != null)
+        {
+            await member.AddRoleAsync(contentRole);
+            Log.Information("Added {DiscordName} to {Role}", member.ToString(), contentRole.Name);
+        }
+        else
+        {
+            Log.Warning("Failed to get content role {RoleName}", MostRecentZoneRole);
+        }
     }
 
     [Command("unlink", RunMode = RunMode.Async)]
@@ -575,10 +601,10 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         var prefix = guildConfig.Prefix == ' ' ? _db.Config.Prefix : guildConfig.Prefix;
 
         var member = await Context.Client.Rest.GetGuildUserAsync(guild.Id, Context.User.Id);
-        var arsenalMaster = guild.GetRole(ulong.Parse(guildConfig.Roles["Arsenal Master"]));
-        var cleared = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared"]));
-        var clearedDRS = guild.GetRole(ulong.Parse(guildConfig.Roles["Cleared Delubrum Savage"]));
-        var savageQueen = guild.GetRole(ulong.Parse(guildConfig.Roles["Savage Queen"]));
+        var arsenalMaster = GetConfiguredRole(guildConfig, "Arsenal Master");
+        var cleared = GetConfiguredRole(guildConfig, "Cleared");
+        var clearedDRS = GetConfiguredRole(guildConfig, "Cleared Delubrum Savage");
+        var savageQueen = GetConfiguredRole(guildConfig, "Savage Queen");
 
         using var typing = Context.Channel.EnterTypingState();
 
@@ -634,7 +660,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             await _db.UpdateUser(user);
         }
 
-        if (achievements.Any(achievement => achievement.Id == 2227)) // We're On Your Side I
+        if (cleared != null && achievements.Any(achievement => achievement.Id == 2227)) // We're On Your Side I
         {
             Log.Information("Added role {RoleName} to user {DiscordName}", cleared.Name, member.ToString());
             await member.AddRoleAsync(cleared);
@@ -642,7 +668,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             hasMount = true;
         }
 
-        if (achievements.Any(achievement => achievement.Id == 2229)) // We're On Your Side III
+        if (arsenalMaster != null && achievements.Any(achievement => achievement.Id == 2229)) // We're On Your Side III
         {
             Log.Information("Added role {RoleName} to user {DiscordName}", arsenalMaster.Name, member.ToString());
             await member.AddRoleAsync(arsenalMaster);
@@ -650,7 +676,8 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             hasAchievement = true;
         }
 
-        if (achievements.Any(achievement => achievement.Id == 2765)) // Operation: Savage Queen of Swords I
+        if (clearedDRS != null &&
+            achievements.Any(achievement => achievement.Id == 2765)) // Operation: Savage Queen of Swords I
         {
             Log.Information("Added role {RoleName} to user {DiscordName}", clearedDRS.Name, member.ToString());
             await member.AddRoleAsync(clearedDRS);
@@ -669,7 +696,8 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             hasDRSAchievement1 = true;
         }
 
-        if (achievements.Any(achievement => achievement.Id == 2767)) // Operation: Savage Queen of Swords III
+        if (savageQueen != null &&
+            achievements.Any(achievement => achievement.Id == 2767)) // Operation: Savage Queen of Swords III
         {
             Log.Information("Added role {RoleName} to user {DiscordName}", savageQueen.Name, member.ToString());
             await member.AddRoleAsync(savageQueen);
@@ -793,5 +821,12 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         await ReplyAsync(Properties.Resources.DBUserCountInProgress);
         await ReplyAsync($"There are {_db.Users.Count()} users in the database.");
         Log.Information("There are {DBEntryCount} users in the database", _db.Users.Count());
+    }
+
+    private IRole? GetConfiguredRole(DiscordGuildConfiguration guildConfig, string roleName)
+    {
+        return guildConfig.Roles.ContainsKey(roleName)
+            ? Context.Guild.GetRole(ulong.Parse(guildConfig.Roles[roleName]))
+            : null;
     }
 }
