@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.Net;
+using Microsoft.Extensions.Logging;
 using NetStone;
 using NetStone.Model.Parseables.Character;
 using NetStone.Model.Parseables.Character.Achievement;
@@ -10,7 +11,6 @@ using Prima.Game.FFXIV;
 using Prima.Models;
 using Prima.Resources;
 using Prima.Services;
-using Serilog;
 using Color = Discord.Color;
 
 namespace Prima.Application.Community.CrystalExploratoryMissions;
@@ -20,9 +20,11 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 {
     private readonly IDbService _db;
     private readonly LodestoneClient _lodestone;
+    private readonly ILogger<CensusCommands> _logger;
 
-    public CensusCommands(IDbService db, LodestoneClient lodestone)
+    public CensusCommands(ILogger<CensusCommands> logger, IDbService db, LodestoneClient lodestone)
     {
+        _logger = logger;
         _db = db;
         _lodestone = lodestone;
     }
@@ -59,7 +61,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             .Where(g => g.Id != SpecialGuilds.PrimaShouji && g.Id != SpecialGuilds.EmoteStorage1)
 #endif
             .First(g => Context.Client.Rest.GetGuildUserAsync(g.Id, Context.User.Id).GetAwaiter().GetResult() != null);
-        Log.Information("Mutual guild ID: {GuildId}", guild.Id);
+        _logger.LogInformation("Mutual guild ID: {GuildId}", guild.Id);
 
         var guildConfig = _db.Guilds.Single(g => g.Id == guild.Id);
         var prefix = guildConfig.Prefix == ' ' ? _db.Config.Prefix : guildConfig.Prefix;
@@ -97,7 +99,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             }
             catch (Exception e)
             {
-                Log.Warning(e, "Message was already deleted");
+                _logger.LogWarning(e, "Message was already deleted");
             }
         });
 
@@ -145,7 +147,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         }
         catch (Exception e)
         {
-            Log.Error(e, "Failed to find Lodestone character");
+            _logger.LogError(e, "Failed to find Lodestone character");
             var reply = await ReplyAsync($"{Context.User.Mention}, failed to search for character.");
             await Task.Delay(MessageDeleteDelay);
             await reply.DeleteAsync();
@@ -224,13 +226,13 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             return;
         }
 
-        Log.Information("Verified user {UserId}", Context.User.Id);
+        _logger.LogInformation("Verified user {UserId}", Context.User.Id);
 
         // Get the existing database entry, if it exists.
         var existingLodestoneId = _db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id)?.LodestoneId;
         var existingDiscordUser = _db.Users.FirstOrDefault(u => u.LodestoneId == foundCharacter.LodestoneId);
 
-        Log.Information("Fetched database entry for user {UserId}. null: {DbEntryIsNull}", Context.User.Id,
+        _logger.LogInformation("Fetched database entry for user {UserId}. null: {DbEntryIsNull}", Context.User.Id,
             existingDiscordUser == null);
 
         // Disallow duplicate characters (CEM policy).
@@ -253,7 +255,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         foundCharacter.DiscordId = Context.User.Id;
         await _db.AddUser(user);
 
-        Log.Information("Added user {UserId} to the database", Context.User.Id);
+        _logger.LogInformation("Added user {UserId} to the database", Context.User.Id);
 
         // We use the user-provided parameter because the Lodestone format includes the data center.
         var outputName = $"({world}) {foundCharacter.Name}";
@@ -279,7 +281,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         {
         }
 
-        Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
+        _logger.LogInformation("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
 
         var finalReply = await Context.Channel.SendMessageAsync(embed: responseEmbed);
         if (!member.MemberHasRole(573340288815333386, Context))
@@ -348,7 +350,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         }
         catch (Exception e)
         {
-            Log.Error(e, "Failed to find Lodestone character");
+            _logger.LogError(e, "Failed to find Lodestone character");
             await ReplyAsync(
                 $"{Context.User.Mention}, no character matching that name and world was found. Are you sure you typed their world name correctly?");
             return;
@@ -383,7 +385,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
                 return;
             }
 
-            Log.Information("Lodestone character forced off of {UserId}", existingDiscordUser.DiscordId);
+            _logger.LogInformation("Lodestone character forced off of {UserId}", existingDiscordUser.DiscordId);
 
             var memberRole = GetConfiguredRole(guildConfig, "Member");
             if (memberRole == null)
@@ -431,7 +433,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         {
         }
 
-        Log.Information("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
+        _logger.LogInformation("Registered character ({World}) {CharaName}", world, foundCharacter.Name);
 
         await ActivateUser(member, existingLodestoneId, foundCharacter, guildConfig);
 
@@ -442,20 +444,29 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
     private const ulong EurekaRole = 588913087818498070;
     private const ulong DiademRole = 588913444712087564;
 
-    private async Task ActivateUser(IGuildUser member, string? oldLodestoneId, DiscordXIVUser dbEntry,
+    private async Task ActivateUser(IGuildUser? member, string? oldLodestoneId, DiscordXIVUser dbEntry,
         DiscordGuildConfiguration guildConfig)
     {
+        member ??= await Context.Client.Rest.GetGuildUserAsync(guildConfig.Id, dbEntry.DiscordId);
+        if (member == null)
+        {
+            _logger.LogWarning("Failed to get guild user {UserId}", dbEntry.DiscordId);
+            await ReplyAsync("Failed to get guild user!");
+            return;
+        }
+        
         var memberRole = GetConfiguredRole(guildConfig, "Member");
         if (memberRole == null)
         {
+            _logger.LogWarning("No member role configured for guild {GuildName}", Context.Guild.Name);
             await ReplyAsync("No member role is configured!");
             return;
         }
 
         await member.AddRoleAsync(memberRole);
-        Log.Information("Added {DiscordName} to {Role}", member.ToString(), memberRole.Name);
+        _logger.LogInformation("Added {DiscordName} to {Role}", member.ToString(), memberRole.Name);
 
-        Log.Information("Checking Lodestone ID for user {DiscordName}", member.ToString());
+        _logger.LogInformation("Checking Lodestone ID for user {DiscordName}", member.ToString());
         if (oldLodestoneId != dbEntry.LodestoneId)
         {
             var guild = Context.Guild;
@@ -475,27 +486,29 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
                 .Where(r => r != null);
 
             await member.RemoveRolesAsync(roles);
-            Log.Information("Removed achievement roles from {DiscordName}", member.ToString());
+            _logger.LogInformation("Removed achievement roles from {DiscordName}", member.ToString());
         }
         else
         {
-            Log.Information("Nothing to do");
+            _logger.LogInformation("Nothing to do");
         }
 
-        Log.Information("Checking default content level for user {DiscordName}", member.ToString());
+        _logger.LogInformation("Checking default content level for user {DiscordName}", member.ToString());
 
         var lodestoneId = ulong.Parse(dbEntry.LodestoneId);
         var data = await _lodestone.GetCharacter(dbEntry.LodestoneId);
         if (data == null)
         {
-            Log.Error("Failed to get Lodestone character (id={LodestoneId})", lodestoneId);
+            _logger.LogError("Failed to get Lodestone character (id={LodestoneId})", lodestoneId);
+            await ReplyAsync("Failed to get your Lodestone character!");
             return;
         }
 
         var classJobs = await data.GetClassJobInfo();
         if (classJobs == null)
         {
-            Log.Error("Failed to get ClassJobs from Lodestone character (id={LodestoneId})", lodestoneId);
+            _logger.LogError("Failed to get ClassJobs from Lodestone character (id={LodestoneId})", lodestoneId);
+            await ReplyAsync("Failed to get info from your Lodestone character!");
             return;
         }
 
@@ -522,11 +535,11 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         if (contentRole != null)
         {
             await member.AddRoleAsync(contentRole);
-            Log.Information("Added {DiscordName} to {Role}", member.ToString(), contentRole.Name);
+            _logger.LogInformation("Added {DiscordName} to {Role}", member.ToString(), contentRole.Name);
         }
         else
         {
-            Log.Warning("Failed to get content role {RoleName}", MostRecentZoneRole);
+            _logger.LogWarning("Failed to get content role {RoleName}", MostRecentZoneRole);
         }
     }
 
@@ -595,7 +608,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             .Where(g => g.Id != SpecialGuilds.PrimaShouji && g.Id != SpecialGuilds.EmoteStorage1)
 #endif
             .First(g => Context.Client.Rest.GetGuildUserAsync(g.Id, Context.User.Id).GetAwaiter().GetResult() != null);
-        Log.Information("Mutual guild ID: {GuildId}", guild.Id);
+        _logger.LogInformation("Mutual guild ID: {GuildId}", guild.Id);
 
         var guildConfig = _db.Guilds.First(g => g.Id == guild.Id);
         var prefix = guildConfig.Prefix == ' ' ? _db.Config.Prefix : guildConfig.Prefix;
@@ -633,7 +646,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         }
         catch (Exception e)
         {
-            Log.Error(e, "Failed to fetch Lodestone character achievements (id={LodestoneId})", lodestoneId);
+            _logger.LogError(e, "Failed to fetch Lodestone character achievements (id={LodestoneId})", lodestoneId);
             await ReplyAsync("You don't seem to have your achievements public. " +
                              "Please temporarily make them public at <https://na.finalfantasyxiv.com/lodestone/my/setting/account/>.");
             return;
@@ -662,7 +675,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
         if (cleared != null && achievements.Any(achievement => achievement.Id == 2227)) // We're On Your Side I
         {
-            Log.Information("Added role {RoleName} to user {DiscordName}", cleared.Name, member.ToString());
+            _logger.LogInformation("Added role {RoleName} to user {DiscordName}", cleared.Name, member.ToString());
             await member.AddRoleAsync(cleared);
             await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, cleared.Name));
             hasMount = true;
@@ -670,7 +683,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
         if (arsenalMaster != null && achievements.Any(achievement => achievement.Id == 2229)) // We're On Your Side III
         {
-            Log.Information("Added role {RoleName} to user {DiscordName}", arsenalMaster.Name, member.ToString());
+            _logger.LogInformation("Added role {RoleName} to user {DiscordName}", arsenalMaster.Name, member.ToString());
             await member.AddRoleAsync(arsenalMaster);
             await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, arsenalMaster.Name));
             hasAchievement = true;
@@ -679,7 +692,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         if (clearedDRS != null &&
             achievements.Any(achievement => achievement.Id == 2765)) // Operation: Savage Queen of Swords I
         {
-            Log.Information("Added role {RoleName} to user {DiscordName}", clearedDRS.Name, member.ToString());
+            _logger.LogInformation("Added role {RoleName} to user {DiscordName}", clearedDRS.Name, member.ToString());
             await member.AddRoleAsync(clearedDRS);
             await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, clearedDRS.Name));
 
@@ -690,7 +703,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
                 var cr = guild.GetRole(crId);
                 if (!member.HasRole(cr)) continue;
                 await member.RemoveRoleAsync(cr);
-                Log.Information("Role {RoleName} removed from {DiscordName}", cr.Name, member.ToString());
+                _logger.LogInformation("Role {RoleName} removed from {DiscordName}", cr.Name, member.ToString());
             }
 
             hasDRSAchievement1 = true;
@@ -699,7 +712,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         if (savageQueen != null &&
             achievements.Any(achievement => achievement.Id == 2767)) // Operation: Savage Queen of Swords III
         {
-            Log.Information("Added role {RoleName} to user {DiscordName}", savageQueen.Name, member.ToString());
+            _logger.LogInformation("Added role {RoleName} to user {DiscordName}", savageQueen.Name, member.ToString());
             await member.AddRoleAsync(savageQueen);
             await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, savageQueen.Name));
             hasDRSAchievement2 = true;
@@ -755,7 +768,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             .WithDescription($"Verified: {(found.Verified ? "✅" : "❌")}")
             .Build();
 
-        Log.Information("Answered whoami from ({World}) {Name}", found.World, found.Name);
+        _logger.LogInformation("Answered whoami from ({World}) {Name}", found.World, found.Name);
 
         await ReplyAsync(embed: responseEmbed);
     }
@@ -820,7 +833,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
     {
         await ReplyAsync(Properties.Resources.DBUserCountInProgress);
         await ReplyAsync($"There are {_db.Users.Count()} users in the database.");
-        Log.Information("There are {DBEntryCount} users in the database", _db.Users.Count());
+        _logger.LogInformation("There are {DBEntryCount} users in the database", _db.Users.Count());
     }
 
     private IRole? GetConfiguredRole(DiscordGuildConfiguration guildConfig, string roleName)
