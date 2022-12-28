@@ -83,7 +83,6 @@ namespace Prima.DiscordNet.Services
             if (statusChannel == null)
             {
                 _logger.LogWarning("Failed to get status channel for guild {GuildName}", newMember.Guild.Name);
-                return;
             }
 
             if (oldMember?.Nickname == newMember.Nickname)
@@ -135,8 +134,11 @@ namespace Prima.DiscordNet.Services
 
                 await newMember.ModifyAsync(properties => { properties.Nickname = nickname; });
 
-                await statusChannel.SendMessageAsync(
-                    $"User {oldMember?.Nickname ?? "(No nickname)"} changed their nickname to {newMember.Nickname}.");
+                if (statusChannel != null)
+                {
+                    await statusChannel.SendMessageAsync(
+                        $"User {oldMember?.Nickname ?? "(No nickname)"} changed their nickname to {newMember.Nickname}.");
+                }
             }
             catch (InvalidOperationException)
             {
