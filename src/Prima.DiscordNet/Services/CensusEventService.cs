@@ -4,21 +4,23 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Net;
 using Discord.WebSocket;
+using Microsoft.Extensions.Logging;
 using Prima.Game.FFXIV;
 using Prima.Models;
 using Prima.Resources;
 using Prima.Services;
-using Serilog;
 
 namespace Prima.DiscordNet.Services
 {
     public class CensusEventService
     {
+        private readonly ILogger<CensusEventService> _logger;
         private readonly DiscordSocketClient _client;
         private readonly IDbService _db;
 
-        public CensusEventService(DiscordSocketClient client, IDbService db)
+        public CensusEventService(ILogger<CensusEventService> logger, DiscordSocketClient client, IDbService db)
         {
+            _logger = logger;
             _client = client;
             _db = db;
         }
@@ -30,7 +32,7 @@ namespace Prima.DiscordNet.Services
             var oldMember = await cacheableOldMember.GetOrDownloadAsync();
             if (oldMember == null)
             {
-                Log.Warning("Tried to respond to a guild member update for user {UserId}, but they were null!",
+                _logger.LogWarning("Tried to respond to a guild member update for user {UserId}, but they were null!",
                     cacheableOldMember.Id);
                 return;
             }
@@ -80,14 +82,14 @@ namespace Prima.DiscordNet.Services
             var statusChannel = await newMember.Guild.GetChannelAsync(guildConfig.StatusChannel) as SocketTextChannel;
             if (statusChannel == null)
             {
-                Log.Warning("Failed to get status channel for guild {GuildName}", newMember.Guild.Name);
+                _logger.LogWarning("Failed to get status channel for guild {GuildName}", newMember.Guild.Name);
                 return;
             }
 
             if (oldMember?.Nickname == newMember.Nickname)
                 return; // They might just be editing their avatar or something.
 
-            Log.Information("Checking nickname for user {UserId}", oldMember?.Id ?? 0);
+            _logger.LogInformation("Checking nickname for user {UserId}", oldMember?.Id ?? 0);
             try
             {
                 var user = _db.Users.Single(u => u.DiscordId == newMember.Id);
