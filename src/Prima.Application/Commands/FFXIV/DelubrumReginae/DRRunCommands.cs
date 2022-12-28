@@ -142,7 +142,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
             return;
         }
 
-        if (!DelubrumProgressionRoles.Roles.Keys.Contains(role.Id))
+        if (!DelubrumProgressionRoles.Roles.ContainsKey(role.Id))
         {
             Log.Information("Role key {RoleKey} is invalid", role.Id);
             return;
@@ -239,10 +239,18 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
         var member = members.FirstOrDefault(m => m.Nickname == $"({potentialUser.World}) {potentialUser.Name}");
         if (member == null) return;
 
-        var (userInfo, _) =
-            await DiscordXIVUser.CreateFromLodestoneSearch(_lodestone, potentialUser.Name, potentialUser.World, member.Id);
-        await _db.AddUser(userInfo);
-        potentialUser.User = userInfo;
+        try
+        {
+            var (userInfo, _) =
+                await DiscordXIVUser.CreateFromLodestoneSearch(_lodestone, potentialUser.Name, potentialUser.World,
+                    member.Id);
+            await _db.AddUser(userInfo);
+            potentialUser.User = userInfo;
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Failed to get user");
+        }
     }
 
     private async Task ReadLog(string logLink)
@@ -279,7 +287,15 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
             .Select(async kvp =>
             {
                 var (id, potentialUser) = kvp;
-                await RegisterUser(members, potentialUser);
+                try
+                {
+                    await RegisterUser(members, potentialUser);
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, "Failed to register user");
+                }
+
                 return new KeyValuePair<int, DiscordXIVUser?>(id, potentialUser.User);
             })
             .ToList();

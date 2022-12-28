@@ -387,7 +387,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
             _logger.LogInformation("Lodestone character forced off of {UserId}", existingDiscordUser.DiscordId);
 
-            var memberRole = GetConfiguredRole(guildConfig, "Member");
+            var memberRole = GetConfiguredRole(guildConfig, member.Guild, "Member");
             if (memberRole == null)
             {
                 await ReplyAsync("No member role is configured!");
@@ -455,10 +455,10 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             return;
         }
         
-        var memberRole = GetConfiguredRole(guildConfig, "Member");
+        var memberRole = GetConfiguredRole(guildConfig, member.Guild, "Member");
         if (memberRole == null)
         {
-            _logger.LogWarning("No member role configured for guild {GuildName}", Context.Guild.Name);
+            _logger.LogWarning("No member role configured for guild {GuildName}", member.Guild.Name);
             await ReplyAsync("No member role is configured!");
             return;
         }
@@ -469,7 +469,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         _logger.LogInformation("Checking Lodestone ID for user {DiscordName}", member.ToString());
         if (oldLodestoneId != dbEntry.LodestoneId)
         {
-            var guild = Context.Guild;
+            var guild = member.Guild;
             var roles = new[]
                 {
                     guild.GetRole(DiademRole),
@@ -478,10 +478,10 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
                 }
                 .Concat(new[]
                 {
-                    GetConfiguredRole(guildConfig, "Arsenal Master"),
-                    GetConfiguredRole(guildConfig, "Cleared"),
-                    GetConfiguredRole(guildConfig, "Cleared Delubrum Savage"),
-                    GetConfiguredRole(guildConfig, "Savage Queen"),
+                    GetConfiguredRole(guildConfig, member.Guild, "Arsenal Master"),
+                    GetConfiguredRole(guildConfig, member.Guild, "Cleared"),
+                    GetConfiguredRole(guildConfig, member.Guild, "Cleared Delubrum Savage"),
+                    GetConfiguredRole(guildConfig, member.Guild, "Savage Queen"),
                 })
                 .Where(r => r != null);
 
@@ -531,7 +531,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             return;
         }
 
-        var contentRole = GetConfiguredRole(guildConfig, MostRecentZoneRole);
+        var contentRole = GetConfiguredRole(guildConfig, member.Guild, MostRecentZoneRole);
         if (contentRole != null)
         {
             await member.AddRoleAsync(contentRole);
@@ -614,10 +614,10 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         var prefix = guildConfig.Prefix == ' ' ? _db.Config.Prefix : guildConfig.Prefix;
 
         var member = await Context.Client.Rest.GetGuildUserAsync(guild.Id, Context.User.Id);
-        var arsenalMaster = GetConfiguredRole(guildConfig, "Arsenal Master");
-        var cleared = GetConfiguredRole(guildConfig, "Cleared");
-        var clearedDRS = GetConfiguredRole(guildConfig, "Cleared Delubrum Savage");
-        var savageQueen = GetConfiguredRole(guildConfig, "Savage Queen");
+        var arsenalMaster = GetConfiguredRole(guildConfig, guild, "Arsenal Master");
+        var cleared = GetConfiguredRole(guildConfig, guild, "Cleared");
+        var clearedDrs = GetConfiguredRole(guildConfig, guild, "Cleared Delubrum Savage");
+        var savageQueen = GetConfiguredRole(guildConfig, guild, "Savage Queen");
 
         using var typing = Context.Channel.EnterTypingState();
 
@@ -654,10 +654,10 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
         var hasAchievement = false;
         var hasMount = false;
-        var hasCastrumLLAchievement1 = false;
-        var hasCastrumLLAchievement2 = false;
-        var hasDRSAchievement1 = false;
-        var hasDRSAchievement2 = false;
+        var hasCastrumLlAchievement1 = false;
+        var hasCastrumLlAchievement2 = false;
+        var hasDrsAchievement1 = false;
+        var hasDrsAchievement2 = false;
         var hasDalriadaAchievement1 = false;
         var hasDalriadaAchievement2 = false;
 
@@ -689,12 +689,12 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             hasAchievement = true;
         }
 
-        if (clearedDRS != null &&
+        if (clearedDrs != null &&
             achievements.Any(achievement => achievement.Id == 2765)) // Operation: Savage Queen of Swords I
         {
-            _logger.LogInformation("Added role {RoleName} to user {DiscordName}", clearedDRS.Name, member.ToString());
-            await member.AddRoleAsync(clearedDRS);
-            await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, clearedDRS.Name));
+            _logger.LogInformation("Added role {RoleName} to user {DiscordName}", clearedDrs.Name, member.ToString());
+            await member.AddRoleAsync(clearedDrs);
+            await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, clearedDrs.Name));
 
             var queenProg = guild.Roles.FirstOrDefault(r => r.Name == "The Queen Progression");
             var contingentRoles = DelubrumProgressionRoles.GetContingentRoles(queenProg?.Id ?? 0);
@@ -706,7 +706,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
                 _logger.LogInformation("Role {RoleName} removed from {DiscordName}", cr.Name, member.ToString());
             }
 
-            hasDRSAchievement1 = true;
+            hasDrsAchievement1 = true;
         }
 
         if (savageQueen != null &&
@@ -715,11 +715,11 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             _logger.LogInformation("Added role {RoleName} to user {DiscordName}", savageQueen.Name, member.ToString());
             await member.AddRoleAsync(savageQueen);
             await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, savageQueen.Name));
-            hasDRSAchievement2 = true;
+            hasDrsAchievement2 = true;
         }
 
-        if (!hasAchievement && !hasMount && !hasCastrumLLAchievement1 && !hasCastrumLLAchievement2 &&
-            !hasDRSAchievement1 && !hasDRSAchievement2 && !hasDalriadaAchievement1 && !hasDalriadaAchievement2)
+        if (!hasAchievement && !hasMount && !hasCastrumLlAchievement1 && !hasCastrumLlAchievement2 &&
+            !hasDrsAchievement1 && !hasDrsAchievement2 && !hasDalriadaAchievement1 && !hasDalriadaAchievement2)
         {
             await ReplyAsync(Properties.Resources.LodestoneMountAchievementNotFoundError);
         }
@@ -735,7 +735,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
     [Description("[FFXIV] Check the character registered to you.")]
     public async Task WhoAmIAsync()
     {
-        if (Context.Guild != null && Context.Guild.Id == SpecialGuilds.CrystalExploratoryMissions)
+        if (Context.Guild is { Id: SpecialGuilds.CrystalExploratoryMissions })
         {
             const ulong welcome = 573350095903260673;
             if (Context.Channel.Id == welcome)
@@ -836,10 +836,10 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         _logger.LogInformation("There are {DBEntryCount} users in the database", _db.Users.Count());
     }
 
-    private IRole? GetConfiguredRole(DiscordGuildConfiguration guildConfig, string roleName)
+    private static IRole? GetConfiguredRole(DiscordGuildConfiguration guildConfig, IGuild guild, string roleName)
     {
         return guildConfig.Roles.ContainsKey(roleName)
-            ? Context.Guild.GetRole(ulong.Parse(guildConfig.Roles[roleName]))
+            ? guild.GetRole(ulong.Parse(guildConfig.Roles[roleName]))
             : null;
     }
 }
