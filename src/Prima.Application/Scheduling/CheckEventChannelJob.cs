@@ -40,6 +40,7 @@ public abstract class CheckEventChannelJob : IJob
             }
             
             await CheckRuns(guild, channelId, 30, OnMatch);
+            await CheckRuns(guild, channelId, 60, OnMatch2);
         }
         catch (Exception e)
         {
@@ -52,6 +53,11 @@ public abstract class CheckEventChannelJob : IJob
     protected abstract Task<ulong> GetChannelId();
 
     protected abstract Task OnMatch();
+
+    protected virtual Task OnMatch2()
+    {
+        return Task.CompletedTask;
+    }
     
     protected async Task NotifyHost(string message)
     {

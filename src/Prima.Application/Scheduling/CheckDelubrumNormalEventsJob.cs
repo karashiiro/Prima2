@@ -8,7 +8,8 @@ namespace Prima.Application.Scheduling;
 
 public class CheckDelubrumNormalEventsJob : CheckEventChannelJob
 {
-    public CheckDelubrumNormalEventsJob(ILogger<CheckDelubrumNormalEventsJob> logger, DiscordSocketClient client, IDbService db) : base(logger, client, db)
+    public CheckDelubrumNormalEventsJob(ILogger<CheckDelubrumNormalEventsJob> logger, DiscordSocketClient client,
+        IDbService db) : base(logger, client, db)
     {
     }
 
@@ -36,16 +37,55 @@ public class CheckDelubrumNormalEventsJob : CheckEventChannelJob
             Logger.LogError("No guild configuration found for the default guild!");
             return;
         }
-        
+
         var guild = Client.GetGuild(SpecialGuilds.CrystalExploratoryMissions);
-        
-        var success = await AssignHostRole(guild);
+
+        var success = await AssignHostPreparingRole(guild);
         if (!success) return;
 
         await NotifyHost("The Delubrum Reginae run you scheduled is set to begin in 30 minutes!");
-        await NotifyMembers($"The Delubrum Reginae run you reacted to (hosted by {HostUser?.Nickname ?? HostUser?.Username}) is beginning in 30 minutes!");
+        await NotifyMembers(
+            $"The Delubrum Reginae run you reacted to (hosted by {HostUser?.Nickname ?? HostUser?.Username}) is beginning in 30 minutes!");
     }
-    
+
+    protected override async Task OnMatch2()
+    {
+        var guildConfig = Db.Guilds.FirstOrDefault(g => g.Id == SpecialGuilds.CrystalExploratoryMissions);
+        if (guildConfig == null)
+        {
+            Logger.LogError("No guild configuration found for the default guild!");
+            return;
+        }
+
+        var guild = Client.GetGuild(SpecialGuilds.CrystalExploratoryMissions);
+
+        var success = await AssignHostRole(guild);
+        if (!success) return;
+
+        await NotifyHost(
+            "The Delubrum Reginae run you scheduled is set to begin in 60 minutes! Your role permissions have been updated.");
+    }
+
+    private async Task<bool> AssignHostPreparingRole(SocketGuild guild)
+    {
+        var preparing = guild.GetRole(RunHostData.PreparingForEventRoleId);
+
+        Logger.LogInformation("Assigning preparing role...");
+        if (HostUser == null || HostUser.HasRole(preparing)) return false;
+
+        try
+        {
+            await HostUser.AddRoleAsync(preparing);
+            await Db.AddTimedRole(preparing.Id, guild.Id, HostUser.Id, DateTime.UtcNow.AddHours(1));
+            return true;
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, "Failed to add preparing role to {User}!", HostUser?.ToString() ?? "null");
+            return false;
+        }
+    }
+
     private async Task<bool> AssignHostRole(SocketGuild guild)
     {
         var currentHost = guild.GetRole(RunHostData.RoleId);
@@ -57,13 +97,13 @@ public class CheckDelubrumNormalEventsJob : CheckEventChannelJob
         try
         {
             await HostUser.AddRolesAsync(new[] { currentHost, runPinner });
-            await Db.AddTimedRole(currentHost.Id, guild.Id, HostUser.Id, DateTime.UtcNow.AddHours(4.5));
-            await Db.AddTimedRole(runPinner.Id, guild.Id, HostUser.Id, DateTime.UtcNow.AddHours(4.5));
+            await Db.AddTimedRole(currentHost.Id, guild.Id, HostUser.Id, DateTime.UtcNow.AddHours(5));
+            await Db.AddTimedRole(runPinner.Id, guild.Id, HostUser.Id, DateTime.UtcNow.AddHours(5));
             return true;
         }
         catch (Exception e)
         {
-            Logger.LogError(e, "Failed to add host role to {User}!", currentHost?.ToString() ?? "null");
+            Logger.LogError(e, "Failed to add host role to {User}!", HostUser?.ToString() ?? "null");
             return false;
         }
     }
