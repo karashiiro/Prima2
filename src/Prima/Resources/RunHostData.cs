@@ -14,6 +14,12 @@
         public const ulong PinnerRoleId = 838109848867569695;
 #endif
 
+#if DEBUG
+        public const ulong PreparingForEventRoleId = 1069391471322607636;
+#else
+        public const ulong PreparingForEventRoleId = 1069387588152082472;
+#endif
+
         public const ulong SocialHostRoleId = 845217720017747970;
     }
 }
