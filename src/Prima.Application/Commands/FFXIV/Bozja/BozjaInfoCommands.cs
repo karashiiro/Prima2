@@ -65,7 +65,7 @@ public class BozjaInfoCommands : ModuleBase<SocketCommandContext>
     [Description("Shows the Bozja/Zadnor Lost Actions loadout guide.")]
     [RateLimit(TimeSeconds = 10, Global = true)]
     [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
-    public Task BozjaKitAsync() => DiscordUtilities.PostImage(_http, Context, "https://i.imgur.com/9aZJDkm.png");
+    public Task BozjaKitAsync() => DiscordUtilities.PostImage(_http, Context, "https://cdn.discordapp.com/attachments/550777867173232661/1058439977748402276/image.png");
 
     [Command("star", RunMode = RunMode.Async)]
     [Description("Shows the Bozjan Southern Front star mob guide.")]
