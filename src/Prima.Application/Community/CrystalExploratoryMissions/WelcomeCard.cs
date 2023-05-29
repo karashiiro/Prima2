@@ -31,7 +31,7 @@ public static class WelcomeCard
                         HowDoesThisWorkChannelLink = "<#877659281481162803>",
                         RulesChannelLink = "<#550707138348187648>",
                         HelpChannelLink = "<#550777867173232661>",
-                        OtherUsefulServersChannelLink = "<#569322805351415808>",
+                        WelcomeChannelLink = "<#573350095903260673>",
                     })
                     .ToEmbedBuilder()
                     .WithColor(Color.Orange)

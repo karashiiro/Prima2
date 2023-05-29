@@ -1,8 +1,8 @@
 ﻿# Welcome to {{.GuildName}}
  
-This server is set up for people to self-organize for Eureka, Bozja, and other Exploratory Mission content for the **Crystal Data Center**. If you are not a member of the Crystal Community but are interested in similar content, please navigate to {{.OtherUsefulServersChannelLink}}, and thank you for stopping by.
+This server is set up for people to self-organize for Eureka, Bozja, and other Exploratory Mission content for the Crystal Data Center. Follow the steps below to get started!
  
-:one: If you know your Discord user ID, paste that into your Lodestone bio. In this channel, send the command `~iam World FirstName LastName`
+:one: If you know your Discord user ID, paste that into your Lodestone bio. In {{.WelcomeChannelLink}}, send the command `~iam World FirstName LastName`
 Example:
 ```yaml
 ~iam Balmung S'rinmi Bahxih
