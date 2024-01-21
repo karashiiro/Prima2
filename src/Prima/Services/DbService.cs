@@ -1,11 +1,11 @@
 ﻿using MongoDB.Driver;
 using Prima.Game.FFXIV;
 using Prima.Models;
-using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Prima.Services
 {
@@ -46,60 +46,80 @@ namespace Prima.Services
         private readonly IMongoCollection<VoteHost> _voteHosts;
         private readonly IMongoCollection<EphemeralPin> _ephemeralPins;
 
-        public DbService()
+        private readonly ILogger<DbService> _logger;
+
+        public DbService(ILogger<DbService> logger)
         {
+            _logger = logger;
+
             var client = new MongoClient(ConnectionString);
             var database = client.GetDatabase(DbName);
 
             _config = database.GetCollection<GlobalConfiguration>("GlobalConfiguration");
-            Log.Information("Global configuration status: {DbStatus} documents found", _config.EstimatedDocumentCount());
+            _logger.LogInformation("Global configuration status: {DbStatus} documents found",
+                _config.EstimatedDocumentCount());
 
             _guildConfig = database.GetCollection<DiscordGuildConfiguration>("GuildConfiguration");
-            Log.Information("Guild configuration collection status: {DbStatus} documents found", _guildConfig.EstimatedDocumentCount());
+            _logger.LogInformation("Guild configuration collection status: {DbStatus} documents found",
+                _guildConfig.EstimatedDocumentCount());
 
             _users = database.GetCollection<DiscordXIVUser>("Users");
-            Log.Information("User collection status: {DbStatus} documents found", _users.EstimatedDocumentCount());
+            _logger.LogInformation("User collection status: {DbStatus} documents found",
+                _users.EstimatedDocumentCount());
 
             _messageCache = database.GetCollection<CachedMessage>("CachedMessages");
-            Log.Information("Message cache collection status: {DbStatus} documents found", _messageCache.EstimatedDocumentCount());
+            _logger.LogInformation("Message cache collection status: {DbStatus} documents found",
+                _messageCache.EstimatedDocumentCount());
 
             _channelDescriptions = database.GetCollection<ChannelDescription>("ChannelDescriptions");
-            Log.Information("Channel description collection status: {DbStatus} documents found", _channelDescriptions.EstimatedDocumentCount());
+            _logger.LogInformation("Channel description collection status: {DbStatus} documents found",
+                _channelDescriptions.EstimatedDocumentCount());
 
             _eventReactions = database.GetCollection<EventReaction>("EventReactions");
-            Log.Information("Event reaction collection status: {DbStatus} documents found", _eventReactions.EstimatedDocumentCount());
+            _logger.LogInformation("Event reaction collection status: {DbStatus} documents found",
+                _eventReactions.EstimatedDocumentCount());
 
             _timedRoles = database.GetCollection<TimedRole>("TimedRoles");
-            Log.Information("Timed role collection status: {DbStatus} documents found", _timedRoles.EstimatedDocumentCount());
+            _logger.LogInformation("Timed role collection status: {DbStatus} documents found",
+                _timedRoles.EstimatedDocumentCount());
 
             _votes = database.GetCollection<Vote>("Votes");
-            Log.Information("Vote collection status: {DbStatus} documents found", _votes.EstimatedDocumentCount());
+            _logger.LogInformation("Vote collection status: {DbStatus} documents found",
+                _votes.EstimatedDocumentCount());
 
             _voteHosts = database.GetCollection<VoteHost>("VoteHosts");
-            Log.Information("Vote host collection status: {DbStatus} documents found", _voteHosts.EstimatedDocumentCount());
+            _logger.LogInformation("Vote host collection status: {DbStatus} documents found",
+                _voteHosts.EstimatedDocumentCount());
 
             _ephemeralPins = database.GetCollection<EphemeralPin>("EphemeralPins");
-            Log.Information("Ephemeral pin collection status: {DbStatus} documents found", _ephemeralPins.EstimatedDocumentCount());
+            _logger.LogInformation("Ephemeral pin collection status: {DbStatus} documents found",
+                _ephemeralPins.EstimatedDocumentCount());
         }
 
         public async Task SetGlobalConfigurationProperty(string key, string value)
         {
+            _logger.LogInformation("Setting global configuration property: {ConfigKey}={ConfigValue}", key, value);
             await AddGlobalConfiguration();
             if (!Config.HasFieldOrProperty(key))
             {
                 throw new ArgumentException($"Property {key} does not exist on GlobalConfiguration.");
             }
+
             var update = Builders<GlobalConfiguration>.Update.Set(key, value);
             await _config.UpdateOneAsync(config => true, update);
         }
 
         public async Task SetGuildConfigurationProperty<T>(ulong guildId, string key, T value)
         {
+            _logger.LogInformation(
+                "Setting guild configuration property for guild {GuildId}: {ConfigKey}={ConfigValue}", guildId, key,
+                value);
             await AddGuildIfAbsent(guildId);
             if (!new DiscordGuildConfiguration(0).HasFieldOrProperty(key))
             {
                 throw new ArgumentException($"Property {key} does not exist on DiscordGuildConfiguration.");
             }
+
             var update = Builders<DiscordGuildConfiguration>.Update.Set(key, value);
             await _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
         }
@@ -108,6 +128,7 @@ namespace Prima.Services
         {
             if (await _config.CountDocumentsAsync(FilterDefinition<GlobalConfiguration>.Empty) == 0)
             {
+                _logger.LogInformation("Creating global configuration");
                 await _config.InsertOneAsync(new GlobalConfiguration());
             }
         }
@@ -116,12 +137,17 @@ namespace Prima.Services
         {
             if (!await (await _guildConfig.FindAsync(guild => guild.Id == config.Id)).AnyAsync().ConfigureAwait(false))
             {
+                _logger.LogInformation("Creating guild configuration for guild {GuildId}", config.Id);
                 await _guildConfig.InsertOneAsync(config);
             }
         }
 
-        public async Task<bool> AddEphemeralPin(ulong guildId, ulong channelId, ulong messageId, ulong pinnerRoleId, ulong pinnerId, DateTime pinTime)
+        public async Task<bool> AddEphemeralPin(ulong guildId, ulong channelId, ulong messageId, ulong pinnerRoleId,
+            ulong pinnerId, DateTime pinTime)
         {
+            _logger.LogInformation(
+                "Creating ephemeral pin in channel {ChannelId} in guild {GuildId}: messageId={MessageId}",
+                channelId, guildId, messageId);
             var existingSet = await _ephemeralPins.FindAsync(e => e.MessageId == messageId);
             if (await existingSet.AnyAsync())
             {
@@ -130,13 +156,18 @@ namespace Prima.Services
                 return true;
             }
 
-            var newEphemeralPin = new EphemeralPin { GuildId = guildId, ChannelId = channelId, MessageId = messageId, PinnerRoleId = pinnerRoleId, PinnerId = pinnerId, PinTime = pinTime };
+            var newEphemeralPin = new EphemeralPin
+            {
+                GuildId = guildId, ChannelId = channelId, MessageId = messageId, PinnerRoleId = pinnerRoleId,
+                PinnerId = pinnerId, PinTime = pinTime
+            };
             await _ephemeralPins.InsertOneAsync(newEphemeralPin);
             return true;
         }
 
         public async Task<bool> RemoveEphemeralPin(ulong messageId)
         {
+            _logger.LogInformation("Removing ephemeral pin: messageId={MessageId}", messageId);
             var existingSet = await _ephemeralPins.FindAsync(e => e.MessageId == messageId);
             if (!await existingSet.AnyAsync()) return false;
             await _ephemeralPins.DeleteManyAsync(e => e.MessageId == messageId);
@@ -145,6 +176,7 @@ namespace Prima.Services
 
         public async Task<bool> AddVoteHost(ulong messageId, ulong ownerId)
         {
+            _logger.LogInformation("Adding vote host: messageId={MessageId}, ownerId={UserId}", messageId, ownerId);
             var existingSet = await _voteHosts.FindAsync(v => v.MessageId == messageId);
             if (await existingSet.AnyAsync()) return false;
             var voteHost = new VoteHost { MessageId = messageId, OwnerId = ownerId };
@@ -154,6 +186,7 @@ namespace Prima.Services
 
         public async Task<bool> RemoveVoteHost(ulong messageId)
         {
+            _logger.LogInformation("Removing vote host: messageId={MessageId}", messageId);
             var existingSet = await _voteHosts.FindAsync(v => v.MessageId == messageId);
             if (!await existingSet.AnyAsync()) return false;
             await _voteHosts.DeleteManyAsync(v => v.MessageId == messageId);
@@ -164,12 +197,15 @@ namespace Prima.Services
         {
             if (!await (await _guildConfig.FindAsync(guild => guild.Id == guildId)).AnyAsync().ConfigureAwait(false))
             {
+                _logger.LogInformation("Creating guild configuration for guild {GuildId}", guildId);
                 await _guildConfig.InsertOneAsync(new DiscordGuildConfiguration(guildId));
             }
         }
 
         public async Task<bool> AddVote(ulong messageId, ulong userId, string reactionName)
         {
+            _logger.LogInformation("Adding vote: messageId={MessageId}, userId={UserId}, reaction={ReactionName}",
+                messageId, userId, reactionName);
             var existingSet = await _votes.FindAsync(v => v.MessageId == messageId && v.ReactionUserId == userId);
             if (await existingSet.AnyAsync()) return false;
             var vote = new Vote { MessageId = messageId, ReactionUserId = userId, ReactionName = reactionName };
@@ -179,6 +215,7 @@ namespace Prima.Services
 
         public async Task<bool> RemoveVote(ulong messageId, ulong userId)
         {
+            _logger.LogInformation("Removing vote: messageId={MessageId}, userId={UserId}", messageId, userId);
             var existingSet = await _votes.FindAsync(v => v.MessageId == messageId && v.ReactionUserId == userId);
             if (!await existingSet.AnyAsync()) return false;
             await _votes.DeleteOneAsync(v => v.MessageId == messageId && v.ReactionUserId == userId);
@@ -187,6 +224,7 @@ namespace Prima.Services
 
         public async Task<bool> AddEventReaction(ulong eventId, ulong userId)
         {
+            _logger.LogInformation("Adding event reaction: eventId={EventId}, userId={UserId}", eventId, userId);
             var existingSet = await _eventReactions.FindAsync(er => er.EventId == eventId && er.UserId == userId);
             if (await existingSet.AnyAsync()) return false;
             var newEventReaction = new EventReaction { EventId = eventId, UserId = userId };
@@ -196,12 +234,15 @@ namespace Prima.Services
 
         public async Task UpdateEventReaction(EventReaction updated)
         {
+            _logger.LogInformation("Updating event reaction: eventId={EventId}, userId={UserId}", updated.EventId,
+                updated.UserId);
             await RemoveEventReaction(updated.EventId, updated.UserId);
             await AddEventReaction(updated.EventId, updated.UserId);
         }
 
         public async Task<bool> RemoveEventReaction(ulong eventId, ulong userId)
         {
+            _logger.LogInformation("Removing event reaction: eventId={EventId}, userId={UserId}", eventId, userId);
             var existingSet = await _eventReactions.FindAsync(er => er.EventId == eventId && er.UserId == userId);
             if (!await existingSet.AnyAsync()) return false;
             await _eventReactions.DeleteOneAsync(er => er.EventId == eventId && er.UserId == userId);
@@ -210,6 +251,7 @@ namespace Prima.Services
 
         public async Task RemoveAllEventReactions(ulong eventId)
         {
+            _logger.LogInformation("Removing all event reactions for event {EventId}", eventId);
             var existingSet = await _eventReactions.FindAsync(er => er.EventId == eventId);
             if (!await existingSet.AnyAsync()) return;
             await _eventReactions.DeleteManyAsync(er => er.EventId == eventId);
@@ -217,20 +259,27 @@ namespace Prima.Services
 
         public async Task AddTimedRole(ulong roleId, ulong guildId, ulong userId, DateTime removalTime)
         {
-            var existingSet = await _timedRoles.FindAsync(tr => tr.RoleId == roleId && tr.GuildId == guildId && tr.UserId == userId);
+            _logger.LogInformation("Adding timed role {RoleId} to user {UserId} in guild {GuildId}", roleId, userId,
+                guildId);
+
+            var existingSet =
+                await _timedRoles.FindAsync(tr => tr.RoleId == roleId && tr.GuildId == guildId && tr.UserId == userId);
             if (await existingSet.AnyAsync())
             {
                 var update = Builders<TimedRole>.Update.Set("RemovalTime", removalTime);
-                await _timedRoles.UpdateOneAsync(tr => tr.RoleId == roleId && tr.GuildId == guildId && tr.UserId == userId, update);
+                await _timedRoles.UpdateOneAsync(
+                    tr => tr.RoleId == roleId && tr.GuildId == guildId && tr.UserId == userId, update);
                 return;
             }
 
-            var newTimedRole = new TimedRole { RoleId = roleId, GuildId = guildId, UserId = userId, RemovalTime = removalTime };
+            var newTimedRole = new TimedRole
+                { RoleId = roleId, GuildId = guildId, UserId = userId, RemovalTime = removalTime };
             await _timedRoles.InsertOneAsync(newTimedRole);
         }
 
         public async Task RemoveTimedRole(ulong roleId, ulong userId)
         {
+            _logger.LogInformation("Removing timed role {RoleId} from user {UserId}", roleId, userId);
             var existingSet = await _timedRoles.FindAsync(tr => tr.RoleId == roleId && tr.UserId == userId);
             if (!await existingSet.AnyAsync()) return;
             await _timedRoles.DeleteOneAsync(tr => tr.RoleId == roleId && tr.UserId == userId);
@@ -238,24 +287,29 @@ namespace Prima.Services
 
         public Task ConfigureRole(ulong guildId, string roleName, ulong roleId)
         {
+            _logger.LogInformation("Configuring role {RoleName} in guild {GuildId}", roleName, guildId);
             var update = Builders<DiscordGuildConfiguration>.Update.Set($"Roles.{roleName}", roleId.ToString());
             return _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
         }
 
         public Task DeconfigureRole(ulong guildId, string roleName)
         {
+            _logger.LogInformation("Deconfiguring role {RoleName} in guild {GuildId}", roleName, guildId);
             var update = Builders<DiscordGuildConfiguration>.Update.Unset($"Roles.{roleName}");
             return _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
         }
 
         public Task ConfigureRoleEmote(ulong guildId, ulong roleId, string emoteId)
         {
+            _logger.LogInformation("Configuring role emote {EmoteId} for role {RoleId} in guild {GuildId}", emoteId,
+                roleId, guildId);
             var update = Builders<DiscordGuildConfiguration>.Update.Set($"RoleEmotes.{emoteId}", roleId.ToString());
             return _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
         }
 
         public Task DeconfigureRoleEmote(ulong guildId, string emoteId)
         {
+            _logger.LogInformation("Deconfiguring role emote {EmoteId} in guild {GuildId}", emoteId, guildId);
             var update = Builders<DiscordGuildConfiguration>.Update.Unset($"RoleEmotes.{emoteId}");
             return _guildConfig.UpdateOneAsync(guild => guild.Id == guildId, update);
         }
@@ -268,7 +322,8 @@ namespace Prima.Services
 
         public async Task RemoveGuildTextDenylistEntry(ulong guildId, string regexString)
         {
-            var denylist = (await (await _guildConfig.FindAsync(guild => guild.Id == guildId)).FirstAsync().ConfigureAwait(false)).TextDenylist;
+            var denylist = (await (await _guildConfig.FindAsync(guild => guild.Id == guildId)).FirstAsync()
+                .ConfigureAwait(false)).TextDenylist;
             if (denylist.Any())
             {
                 var update = Builders<DiscordGuildConfiguration>.Update.Pull("TextBlacklist", regexString);
@@ -284,7 +339,8 @@ namespace Prima.Services
 
         public async Task RemoveGuildTextGreylistEntry(ulong guildId, string regexString)
         {
-            var greylist = (await (await _guildConfig.FindAsync(guild => guild.Id == guildId)).FirstAsync().ConfigureAwait(false)).TextGreylist;
+            var greylist = (await (await _guildConfig.FindAsync(guild => guild.Id == guildId)).FirstAsync()
+                .ConfigureAwait(false)).TextGreylist;
             if (greylist.Any())
             {
                 var update = Builders<DiscordGuildConfiguration>.Update.Pull("TextGreylist", regexString);
@@ -294,6 +350,7 @@ namespace Prima.Services
 
         public async Task AddUser(DiscordXIVUser user)
         {
+            _logger.LogInformation("Registering user {UserId}", user.DiscordId);
             if (await (await _users.FindAsync(u => u.DiscordId == user.DiscordId)).AnyAsync().ConfigureAwait(false))
                 await _users.DeleteOneAsync(u => u.DiscordId == user.DiscordId);
             await _users.InsertOneAsync(user);
@@ -303,6 +360,7 @@ namespace Prima.Services
 
         public async Task<bool> RemoveUser(string world, string name)
         {
+            _logger.LogInformation("Unregistering user with character ({World}) {CharacterName}", world, name);
             var filterBuilder = Builders<DiscordXIVUser>.Filter;
             var filter = filterBuilder.Eq(props => props.World, world) & filterBuilder.Eq(props => props.Name, name);
             var result = await _users.DeleteOneAsync(filter);
@@ -311,6 +369,7 @@ namespace Prima.Services
 
         public async Task<bool> RemoveUser(ulong lodestoneId)
         {
+            _logger.LogInformation("Unregistering user with Lodestone ID {LodestoneId}", lodestoneId);
             var filterBuilder = Builders<DiscordXIVUser>.Filter;
             var filter = filterBuilder.Eq(props => props.LodestoneId, lodestoneId.ToString());
             var result = await _users.DeleteOneAsync(filter);
@@ -344,9 +403,11 @@ namespace Prima.Services
 
         public async Task AddChannelDescription(ulong channelId, string description)
         {
-            if (await (await _channelDescriptions.FindAsync(cd => cd.ChannelId == channelId)).AnyAsync().ConfigureAwait(false))
+            if (await (await _channelDescriptions.FindAsync(cd => cd.ChannelId == channelId)).AnyAsync()
+                .ConfigureAwait(false))
                 await _channelDescriptions.DeleteOneAsync(cd => cd.ChannelId == channelId);
-            await _channelDescriptions.InsertOneAsync(new ChannelDescription { ChannelId = channelId, Description = description });
+            await _channelDescriptions.InsertOneAsync(new ChannelDescription
+                { ChannelId = channelId, Description = description });
         }
 
         public async Task DeleteChannelDescription(ulong channelId)
