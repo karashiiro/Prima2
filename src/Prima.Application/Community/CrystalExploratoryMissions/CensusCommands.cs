@@ -454,7 +454,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             await ReplyAsync("Failed to get guild user!");
             return;
         }
-        
+
         var memberRole = GetConfiguredRole(guildConfig, member.Guild, "Member");
         if (memberRole == null)
         {
@@ -613,6 +613,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         var guildConfig = _db.Guilds.First(g => g.Id == guild.Id);
         var prefix = guildConfig.Prefix == ' ' ? _db.Config.Prefix : guildConfig.Prefix;
 
+        _logger.LogInformation("Fetching user {UserId} from guild {GuildId}", Context.User.Id, guild.Id);
         var member = await Context.Client.Rest.GetGuildUserAsync(guild.Id, Context.User.Id);
         var arsenalMaster = GetConfiguredRole(guildConfig, guild, "Arsenal Master");
         var cleared = GetConfiguredRole(guildConfig, guild, "Cleared");
@@ -630,19 +631,24 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         }
 
         var lodestoneId = ulong.Parse(user.LodestoneId ?? args[0]);
+        _logger.LogInformation("Lodestone ID for user {UserId}: {LodestoneId}", user.DiscordId, user.LodestoneId);
+
         var achievements = new List<CharacterAchievementEntry>();
         try
         {
             var pageNumber = 1;
-            int numPages;
+            var numPages = 0;
             do
             {
+                _logger.LogInformation(
+                    "Fetching page {PageNumber}/{PageCount} of achievements for character {LodestoneId}", pageNumber,
+                    numPages, user.LodestoneId);
                 var page = await _lodestone.GetCharacterAchievement(lodestoneId.ToString(), pageNumber);
                 if (page == null) throw new InvalidOperationException("Failed to get achievements page");
                 achievements.AddRange(page.Achievements);
                 numPages = page.NumPages;
                 pageNumber++;
-            } while (pageNumber != numPages);
+            } while (numPages != 0 && pageNumber != numPages);
         }
         catch (Exception e)
         {
@@ -663,11 +669,18 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
         if (!user.Verified)
         {
+            _logger.LogInformation("Verifying user {UserId} with character {LodestoneId}", Context.User.Id,
+                lodestoneId);
             if (!await LodestoneUtils.VerifyCharacter(_lodestone, lodestoneId, Context.User.Id.ToString()))
             {
+                _logger.LogInformation("Failed to find validation token for user {UserId} on character {LodestoneId}",
+                    Context.User.Id, lodestoneId);
                 await ReplyAsync(Properties.Resources.LodestoneDiscordIdNotFoundError);
                 return;
             }
+
+            _logger.LogInformation("Successfully found validation token for user {UserId} on character {LodestoneId}",
+                Context.User.Id, lodestoneId);
 
             user.Verified = true;
             await _db.UpdateUser(user);
@@ -675,7 +688,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
         if (cleared != null && achievements.Any(achievement => achievement.Id == 2227)) // We're On Your Side I
         {
-            _logger.LogInformation("Added role {RoleName} to user {DiscordName}", cleared.Name, member.ToString());
+            _logger.LogInformation("Adding role {RoleName} to user {DiscordName}", cleared.Name, member.ToString());
             await member.AddRoleAsync(cleared);
             await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, cleared.Name));
             hasMount = true;
@@ -683,7 +696,8 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
         if (arsenalMaster != null && achievements.Any(achievement => achievement.Id == 2229)) // We're On Your Side III
         {
-            _logger.LogInformation("Added role {RoleName} to user {DiscordName}", arsenalMaster.Name, member.ToString());
+            _logger.LogInformation("Adding role {RoleName} to user {DiscordName}", arsenalMaster.Name,
+                member.ToString());
             await member.AddRoleAsync(arsenalMaster);
             await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, arsenalMaster.Name));
             hasAchievement = true;
@@ -692,7 +706,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         if (clearedDrs != null &&
             achievements.Any(achievement => achievement.Id == 2765)) // Operation: Savage Queen of Swords I
         {
-            _logger.LogInformation("Added role {RoleName} to user {DiscordName}", clearedDrs.Name, member.ToString());
+            _logger.LogInformation("Adding role {RoleName} to user {DiscordName}", clearedDrs.Name, member.ToString());
             await member.AddRoleAsync(clearedDrs);
             await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, clearedDrs.Name));
 
@@ -712,7 +726,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         if (savageQueen != null &&
             achievements.Any(achievement => achievement.Id == 2767)) // Operation: Savage Queen of Swords III
         {
-            _logger.LogInformation("Added role {RoleName} to user {DiscordName}", savageQueen.Name, member.ToString());
+            _logger.LogInformation("Adding role {RoleName} to user {DiscordName}", savageQueen.Name, member.ToString());
             await member.AddRoleAsync(savageQueen);
             await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, savageQueen.Name));
             hasDrsAchievement2 = true;
