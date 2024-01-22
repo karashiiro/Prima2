@@ -582,10 +582,23 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         await ReplyAsync("User unlinked.");
     }
 
-    // Verify BA clear status.
+    [Command("verifyuser", RunMode = RunMode.Async)]
+    [Description("[FFXIV] Verify content completion roles for a user.")]
+    [RequireOwner]
+    public async Task VerifyUserAsync(ulong userId)
+    {
+        var user = await Context.Client.GetUserAsync(userId);
+        await VerifyCore(user, Array.Empty<string>());
+    }
+
     [Command("verify", RunMode = RunMode.Async)]
     [Description("[FFXIV] Get content completion vanity roles.")]
     public async Task VerifyAsync(params string[] args)
+    {
+        await VerifyCore(Context.User, args);
+    }
+
+    private async Task VerifyCore(IUser user, IReadOnlyList<string> args)
     {
 #if !DEBUG
         if (Context.Guild != null && Context.Guild.Id == SpecialGuilds.CrystalExploratoryMissions)
@@ -607,14 +620,14 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 #if !DEBUG
             .Where(g => g.Id != SpecialGuilds.PrimaShouji && g.Id != SpecialGuilds.EmoteStorage1)
 #endif
-            .First(g => Context.Client.Rest.GetGuildUserAsync(g.Id, Context.User.Id).GetAwaiter().GetResult() != null);
+            .First(g => Context.Client.Rest.GetGuildUserAsync(g.Id, user.Id).GetAwaiter().GetResult() != null);
         _logger.LogInformation("Mutual guild ID: {GuildId}", guild.Id);
 
         var guildConfig = _db.Guilds.First(g => g.Id == guild.Id);
         var prefix = guildConfig.Prefix == ' ' ? _db.Config.Prefix : guildConfig.Prefix;
 
-        _logger.LogInformation("Fetching user {UserId} from guild {GuildId}", Context.User.Id, guild.Id);
-        var member = await Context.Client.Rest.GetGuildUserAsync(guild.Id, Context.User.Id);
+        _logger.LogInformation("Fetching user {UserId} from guild {GuildId}", user.Id, guild.Id);
+        var member = await Context.Client.Rest.GetGuildUserAsync(guild.Id, user.Id);
         var arsenalMaster = GetConfiguredRole(guildConfig, guild, "Arsenal Master");
         var cleared = GetConfiguredRole(guildConfig, guild, "Cleared");
         var clearedDrs = GetConfiguredRole(guildConfig, guild, "Cleared Delubrum Savage");
@@ -622,16 +635,16 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
         using var typing = Context.Channel.EnterTypingState();
 
-        var user = _db.Users.FirstOrDefault(u => u.DiscordId == Context.User.Id);
-        if (user == null)
+        var dbUser = _db.Users.FirstOrDefault(u => u.DiscordId == user.Id);
+        if (dbUser == null)
         {
             await ReplyAsync(
                 $"Your Lodestone information doesn't seem to be stored. Please register it again with `{prefix}iam`.");
             return;
         }
 
-        var lodestoneId = ulong.Parse(user.LodestoneId ?? args[0]);
-        _logger.LogInformation("Lodestone ID for user {UserId}: {LodestoneId}", user.DiscordId, user.LodestoneId);
+        var lodestoneId = ulong.Parse(dbUser.LodestoneId ?? args[0]);
+        _logger.LogInformation("Lodestone ID for user {UserId}: {LodestoneId}", dbUser.DiscordId, dbUser.LodestoneId);
 
         var achievements = new List<CharacterAchievementEntry>();
         try
@@ -642,7 +655,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             {
                 _logger.LogInformation(
                     "Fetching page {PageNumber}/{PageCount} of achievements for character {LodestoneId}", pageNumber,
-                    numPages, user.LodestoneId);
+                    numPages, dbUser.LodestoneId);
                 var page = await _lodestone.GetCharacterAchievement(lodestoneId.ToString(), pageNumber);
                 if (page == null) throw new InvalidOperationException("Failed to get achievements page");
                 achievements.AddRange(page.Achievements);
@@ -667,23 +680,22 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         var hasDalriadaAchievement1 = false;
         var hasDalriadaAchievement2 = false;
 
-        if (!user.Verified)
+        if (!dbUser.Verified)
         {
-            _logger.LogInformation("Verifying user {UserId} with character {LodestoneId}", Context.User.Id,
-                lodestoneId);
-            if (!await LodestoneUtils.VerifyCharacter(_lodestone, lodestoneId, Context.User.Id.ToString()))
+            _logger.LogInformation("Verifying user {UserId} with character {LodestoneId}", user.Id, lodestoneId);
+            if (!await LodestoneUtils.VerifyCharacter(_lodestone, lodestoneId, user.Id.ToString()))
             {
                 _logger.LogInformation("Failed to find validation token for user {UserId} on character {LodestoneId}",
-                    Context.User.Id, lodestoneId);
+                    user.Id, lodestoneId);
                 await ReplyAsync(Properties.Resources.LodestoneDiscordIdNotFoundError);
                 return;
             }
 
             _logger.LogInformation("Successfully found validation token for user {UserId} on character {LodestoneId}",
-                Context.User.Id, lodestoneId);
+                user.Id, lodestoneId);
 
-            user.Verified = true;
-            await _db.UpdateUser(user);
+            dbUser.Verified = true;
+            await _db.UpdateUser(dbUser);
         }
 
         if (cleared != null && achievements.Any(achievement => achievement.Id == 2227)) // We're On Your Side I
