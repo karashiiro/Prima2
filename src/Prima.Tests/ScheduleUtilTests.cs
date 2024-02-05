@@ -76,10 +76,13 @@ namespace Prima.Tests
         [Test]
         [TestCase("7/29 1:00PM PST", -8, 7, 29, 13, 0, 0)]
         [TestCase("7/29 1:00PM pst", -8, 7, 29, 13, 0, 0)]
+        [TestCase("7/29 1:00PM PDT", -7, 7, 29, 13, 0, 0)]
+        [TestCase("7/29 1:00PM pdt", -7, 7, 29, 13, 0, 0)]
         [TestCase("7/29 1:00PM EST", -5, 7, 29, 13, 0, 0)]
         [TestCase("7/29 1:00PM est", -5, 7, 29, 13, 0, 0)]
         [TestCase("7/29 1:00PM EDT", -4, 7, 29, 13, 0, 0)]
         [TestCase("7/29 1:00PM edt", -4, 7, 29, 13, 0, 0)]
+        [TestCase("1/21 10:00 AM PST", -8, 1, 21, 10, 0, 0)]
         public void ParseTime_WorksAsExpectedWithTimeZone(string input, int expectedOffset, int expectedMonth, int expectedDay, int expectedHour, int expectedMinute, int expectedSecond)
         {
             var (output, tzi) = ScheduleUtils.ParseTime(input);
@@ -118,10 +121,13 @@ namespace Prima.Tests
         [Test]
         [TestCase("7/29/2020 1:00PM PST", -8, 2020, 7, 29, 13, 0, 0)]
         [TestCase("7/29/2020 1:00PM pst", -8, 2020, 7, 29, 13, 0, 0)]
+        [TestCase("7/29/2020 1:00PM PDT", -7, 2020, 7, 29, 13, 0, 0)]
+        [TestCase("7/29/2020 1:00PM pdt", -7, 2020, 7, 29, 13, 0, 0)]
         [TestCase("7/29/2020 1:00PM EST", -5, 2020, 7, 29, 13, 0, 0)]
         [TestCase("7/29/2020 1:00PM est", -5, 2020, 7, 29, 13, 0, 0)]
         [TestCase("7/29/2020 1:00PM EDT", -4, 2020, 7, 29, 13, 0, 0)]
         [TestCase("7/29/2020 1:00PM edt", -4, 2020, 7, 29, 13, 0, 0)]
+        [TestCase("2/11/2024 10:00 AM PST", -8, 2024, 2, 11, 10, 0, 0)]
         public void ParseTime_WorksAsExpectedWithYearAndTimeZone(string input, int expectedOffset, int expectedYear, int expectedMonth, int expectedDay, int expectedHour, int expectedMinute, int expectedSecond)
         {
             var (output, tzi) = ScheduleUtils.ParseTime(input);
