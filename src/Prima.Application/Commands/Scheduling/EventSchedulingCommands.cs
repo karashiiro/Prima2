@@ -106,11 +106,19 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
             .WithFooter(Context.Message.Id.ToString())
             .Build();
 
-        await outputChannel.SendMessageAsync(Context.Message.Id.ToString(), embed: embed);
+        var outputMessage = await outputChannel.SendMessageAsync(Context.Message.Id.ToString(), embed: embed);
+        if (outputChannel is INewsChannel)
+        {
+            // We only crosspost the user-facing schedule message on the initial announcement, since we clear the
+            // channel for sorting frequently. If this isn't sufficient, the regular announcement channels may
+            // need to be made public.
+            await outputMessage.CrosspostSafeAsync(_logger);
+        }
+
         if (announceChannel is INewsChannel newsChannel)
         {
             var announceMessage = await newsChannel.SendMessageAsync(Context.Message.Id.ToString(), embed: embed);
-            await announceMessage.CrosspostAsync();
+            await announceMessage.CrosspostSafeAsync(_logger);
         }
 
         await ReplyAsync(
@@ -257,8 +265,8 @@ public class EventSchedulingCommands : ModuleBase<SocketCommandContext>
                     $"Message Link: https://discordapp.com/channels/{guild.Id}/{Context.Channel.Id}/{embed.Footer?.Text}";
 
                 embedBuilder.WithDescription(trimmedDescription + (calendarLinkLine != null
-                    ? $"\n\n{calendarLinkLine}"
-                    : "") + $"\n{messageLinkLine}");
+                        ? $"\n\n{calendarLinkLine}"
+                        : "") + $"\n{messageLinkLine}");
 
                 var host = Context.Guild.Users.FirstOrDefault(u => u.ToString() == embed.Author?.Name);
                 if (host != null && embed.Timestamp.HasValue)
