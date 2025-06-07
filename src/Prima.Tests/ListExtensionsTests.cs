@@ -15,7 +15,7 @@ namespace Prima.Tests
             list.Remove(i => i == 2);
             for (var i = 0; i < outList.Count; i++)
             {
-                Assert.AreEqual(outList[i], list[i]);
+                Assert.That(outList[i], Is.EqualTo(list[i]));
             }
         }
 
@@ -27,7 +27,7 @@ namespace Prima.Tests
             list.RemoveAll(i => i == 2);
             for (var i = 0; i < outList.Count; i++)
             {
-                Assert.AreEqual(outList[i], list[i]);
+                Assert.That(outList[i], Is.EqualTo(list[i]));
             }
         }
 
@@ -35,7 +35,7 @@ namespace Prima.Tests
         public void IndexOf_Predicate_Works()
         {
             var list = new List<int> { 0, 1, 2, 2, 3, 3, 4, 5, 4, 2, 1 };
-            Assert.IsTrue(list.IndexOf(i => i == 1) == 1);
+            Assert.That(list.IndexOf(i => i == 1), Is.EqualTo(1));
         }
     }
 }

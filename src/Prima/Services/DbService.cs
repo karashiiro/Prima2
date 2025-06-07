@@ -21,14 +21,14 @@ namespace Prima.Services
             {
                 if (!_config.AsQueryable().Any())
                     AddGlobalConfiguration().GetAwaiter().GetResult();
-                return _config.AsQueryable().ToEnumerable().First();
+                return _config.AsQueryable().First();
             }
         }
 
-        public IEnumerable<DiscordGuildConfiguration> Guilds => _guildConfig.AsQueryable().ToEnumerable();
-        public IEnumerable<DiscordXIVUser> Users => _users.AsQueryable().ToEnumerable();
-        public IEnumerable<CachedMessage> CachedMessages => _messageCache.AsQueryable().ToEnumerable();
-        public IEnumerable<ChannelDescription> ChannelDescriptions => _channelDescriptions.AsQueryable().ToEnumerable();
+        public IEnumerable<DiscordGuildConfiguration> Guilds => _guildConfig.AsQueryable();
+        public IEnumerable<DiscordXIVUser> Users => _users.AsQueryable();
+        public IEnumerable<CachedMessage> CachedMessages => _messageCache.AsQueryable();
+        public IEnumerable<ChannelDescription> ChannelDescriptions => _channelDescriptions.AsQueryable();
         public IAsyncEnumerable<EventReaction> EventReactions => _eventReactions.AsQueryable().ToAsyncEnumerable();
         public IAsyncEnumerable<TimedRole> TimedRoles => _timedRoles.AsQueryable().ToAsyncEnumerable();
         public IAsyncEnumerable<Vote> Votes => _votes.AsQueryable().ToAsyncEnumerable();

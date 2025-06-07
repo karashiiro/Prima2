@@ -19,10 +19,9 @@ namespace Prima.Tests
         [Test]
         public void TestFile_Exists()
         {
-            Assert.True(
+            Assert.That(
                 _templates.GetNames().Contains("test.md"),
-                "Expected test.md, got [{0}]",
-                string.Join(',', _templates.GetNames()));
+                $"Expected test.md, got [{string.Join(',', _templates.GetNames())}]");
         }
 
         [Test]
@@ -34,20 +33,17 @@ namespace Prima.Tests
                 Token = token,
             }).Text;
 
-            Assert.True(
+            Assert.That(
                 text.Contains($"Oh, wow, I have a {token}!"),
-                "Expected to find \"Oh, wow, I have a {0}!\", got\n{1}",
-                token,
-                text);
+                $"Expected to find \"Oh, wow, I have a {token}!\", got\n{text}");
         }
 
         [Test]
         public void DirectoryTree_Works()
         {
-            Assert.True(
+            Assert.That(
                 _templates.GetNames().Contains("test/test.md"),
-                "Expected test/test.md, got [{0}]",
-                string.Join(',', _templates.GetNames()));
+                $"Expected test/test.md, got [{string.Join(',', _templates.GetNames())}]");
 
             const string token = "cool token";
             var text = _templates.Execute("test/test.md", new
@@ -55,10 +51,9 @@ namespace Prima.Tests
                 Token = token,
             }).Text;
 
-            Assert.True(
+            Assert.That(
                 text.Contains("This is another template."),
-                "Expected to find \"This is another template.\", got\n{0}",
-                text);
+                $"Expected to find \"This is another template.\", got\n{text}");
         }
 
         [Test]
@@ -71,8 +66,8 @@ namespace Prima.Tests
             });
 
             var embed = rt.ToEmbedBuilder().Build();
-            Assert.AreEqual("This is a cool file.", embed.Title);
-            Assert.AreEqual($"Oh, wow, I have a {token}!", embed.Description);
+            Assert.That("This is a cool file.", Is.EqualTo(embed.Title));
+            Assert.That($"Oh, wow, I have a {token}!", Is.EqualTo(embed.Description));
         }
     }
 }

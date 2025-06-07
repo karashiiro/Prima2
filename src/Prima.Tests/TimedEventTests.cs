@@ -48,7 +48,7 @@ namespace Prima.Tests
         {
             var result = await new TimedEvent(1, 0.05,
                 () => false).GetResult();
-            Assert.IsFalse(result);
+            Assert.That(result, Is.False);
         }
 
         [Test]
@@ -56,7 +56,7 @@ namespace Prima.Tests
         {
             var result = await new TimedEvent(1, 0.05,
                 () => true).GetResult();
-            Assert.IsTrue(result);
+            Assert.That(result);
         }
 
         [Test]
@@ -76,7 +76,7 @@ namespace Prima.Tests
 
                 return true;
             }).GetResult();
-            Assert.IsTrue(once);
+            Assert.That(once);
         }
     }
 }
