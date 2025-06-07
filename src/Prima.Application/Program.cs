@@ -82,7 +82,7 @@ var host = Host.CreateDefaultBuilder()
         sc.AddSingleton<FFXIVWeatherLuminaService>();
         sc.AddSingleton<MuteService>();
         sc.AddSingleton<TimedRoleManager>();
-        sc.AddSingleton<FFLogsClient>();
+        sc.AddSingleton<IFFLogsClient, FFLogsClient>();
         sc.AddSingleton<KeepClean>();
         sc.AddSingleton<EphemeralPinManager>();
 
@@ -237,7 +237,7 @@ client.Ready += () =>
         var keepClean = host.Services.GetRequiredService<KeepClean>();
         var roleRemover = host.Services.GetRequiredService<TimedRoleManager>();
         var ephemeralPinner = host.Services.GetRequiredService<EphemeralPinManager>();
-        var ffLogs = host.Services.GetRequiredService<FFLogsClient>();
+        var ffLogs = host.Services.GetRequiredService<IFFLogsClient>();
 
         keepClean.Initialize();
         roleRemover.Initialize();

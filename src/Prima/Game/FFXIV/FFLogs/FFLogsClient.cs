@@ -9,7 +9,7 @@ using Serilog;
 
 namespace Prima.Game.FFXIV.FFLogs
 {
-    public class FFLogsClient
+    public class FFLogsClient : IFFLogsClient
     {
         private readonly HttpClient _http;
 

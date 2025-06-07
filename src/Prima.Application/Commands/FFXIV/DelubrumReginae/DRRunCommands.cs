@@ -2,8 +2,6 @@
 using Discord.Commands;
 using Discord.Net;
 using NetStone;
-using NetStone.Model.Parseables.Character;
-using NetStone.Search.Character;
 using Prima.DiscordNet;
 using Prima.DiscordNet.Attributes;
 using Prima.Game.FFXIV;
@@ -19,10 +17,10 @@ namespace Prima.Application.Commands.FFXIV.DelubrumReginae;
 public class DRRunCommands : ModuleBase<SocketCommandContext>
 {
     private readonly IDbService _db;
-    private readonly FFLogsClient _ffLogs;
+    private readonly IFFLogsClient _ffLogs;
     private readonly LodestoneClient _lodestone;
 
-    public DRRunCommands(IDbService db, FFLogsClient ffLogs, LodestoneClient lodestone)
+    public DRRunCommands(IDbService db, IFFLogsClient ffLogs, LodestoneClient lodestone)
     {
         _db = db;
         _ffLogs = ffLogs;
