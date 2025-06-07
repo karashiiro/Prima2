@@ -18,10 +18,9 @@ namespace Prima.Game.FFXIV.FFLogs
         
         private DateTime _expirationTime;
 
-        public FFLogsClient()
+        public FFLogsClient(HttpClient http)
         {
-            _http = new HttpClient();
-
+            _http = http;
             _clientId = Environment.GetEnvironmentVariable("FFLOGS_CLIENT_ID");
             _clientSecret = Environment.GetEnvironmentVariable("FFLOGS_CLIENT_SECRET");
         }
