@@ -21,7 +21,7 @@ namespace Prima.Tests
                 .ToList();
             foreach (var cr in contingentRolesExpected)
             {
-                Assert.That(contingentRoles, Contains.Value(cr));
+                Assert.That(contingentRoles, Does.Contain(cr));
             }
         }
 

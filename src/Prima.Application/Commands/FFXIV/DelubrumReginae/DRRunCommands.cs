@@ -251,7 +251,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
         }
     }
 
-    private async Task ReadLog(string logLink)
+    public async Task ReadLog(string logLink)
     {
         using var typing = Context.Channel.EnterTypingState();
 
