@@ -17,7 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Discord.Net" Version="3.17.4" />
+      <PackageReference Include="Discord.Net" Version="3.8.1" />
       <PackageReference Include="FFXIVWeather.Lumina" Version="2.2.0" />
       <PackageReference Include="Google.Apis.Calendar.v3" Version="1.69.0.3746" />
       <PackageReference Include="Lumina" Version="3.15.2" />

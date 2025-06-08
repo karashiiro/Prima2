@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Discord.Net" Version="3.17.4" />
+    <PackageReference Include="Discord.Net" Version="3.8.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.4" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.10" />
   </ItemGroup>
