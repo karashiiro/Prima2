@@ -632,6 +632,8 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         var cleared = GetConfiguredRole(guildConfig, guild, "Cleared");
         var clearedDrs = GetConfiguredRole(guildConfig, guild, "Cleared Delubrum Savage");
         var savageQueen = GetConfiguredRole(guildConfig, guild, "Savage Queen");
+        var clearedForkedTower = GetConfiguredRole(guildConfig, guild, "Cleared Forked Tower");
+        var infamyOfBlood = GetConfiguredRole(guildConfig, guild, "Infamy of Blood");
 
         using var typing = Context.Channel.EnterTypingState();
 
@@ -679,6 +681,8 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         var hasDrsAchievement2 = false;
         var hasDalriadaAchievement1 = false;
         var hasDalriadaAchievement2 = false;
+        var hasForkedTowerBloodAchievement1 = false;
+        var hasForkedTowerBloodAchievement2 = false;
 
         if (!dbUser.Verified)
         {
@@ -700,27 +704,20 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
         if (cleared != null && achievements.Any(achievement => achievement.Id == 2227)) // We're On Your Side I
         {
-            _logger.LogInformation("Adding role {RoleName} to user {DiscordName}", cleared.Name, member.ToString());
-            await member.AddRoleAsync(cleared);
-            await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, cleared.Name));
+            await AddAchievementRole(cleared, member);
             hasMount = true;
         }
 
         if (arsenalMaster != null && achievements.Any(achievement => achievement.Id == 2229)) // We're On Your Side III
         {
-            _logger.LogInformation("Adding role {RoleName} to user {DiscordName}", arsenalMaster.Name,
-                member.ToString());
-            await member.AddRoleAsync(arsenalMaster);
-            await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, arsenalMaster.Name));
+            await AddAchievementRole(arsenalMaster, member);
             hasAchievement = true;
         }
 
         if (clearedDrs != null &&
             achievements.Any(achievement => achievement.Id == 2765)) // Operation: Savage Queen of Swords I
         {
-            _logger.LogInformation("Adding role {RoleName} to user {DiscordName}", clearedDrs.Name, member.ToString());
-            await member.AddRoleAsync(clearedDrs);
-            await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, clearedDrs.Name));
+            await AddAchievementRole(clearedDrs, member);
 
             var queenProg = guild.Roles.FirstOrDefault(r => r.Name == "The Queen Progression");
             var contingentRoles = DelubrumProgressionRoles.GetContingentRoles(queenProg?.Id ?? 0);
@@ -738,14 +735,27 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         if (savageQueen != null &&
             achievements.Any(achievement => achievement.Id == 2767)) // Operation: Savage Queen of Swords III
         {
-            _logger.LogInformation("Adding role {RoleName} to user {DiscordName}", savageQueen.Name, member.ToString());
-            await member.AddRoleAsync(savageQueen);
-            await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, savageQueen.Name));
+            await AddAchievementRole(savageQueen, member);
             hasDrsAchievement2 = true;
         }
 
+        if (clearedForkedTower != null &&
+            achievements.Any(achievement => achievement.Id == 3668)) // A Fork To Be Reckoned With I
+        {
+            await AddAchievementRole(clearedForkedTower, member);
+            hasForkedTowerBloodAchievement1 = true;
+        }
+
+        if (infamyOfBlood != null &&
+            achievements.Any(achievement => achievement.Id == 3671)) // A Fork To Be Reckoned With IV
+        {
+            await AddAchievementRole(infamyOfBlood, member);
+            hasForkedTowerBloodAchievement2 = true;
+        }
+
         if (!hasAchievement && !hasMount && !hasCastrumLlAchievement1 && !hasCastrumLlAchievement2 &&
-            !hasDrsAchievement1 && !hasDrsAchievement2 && !hasDalriadaAchievement1 && !hasDalriadaAchievement2)
+            !hasDrsAchievement1 && !hasDrsAchievement2 && !hasDalriadaAchievement1 && !hasDalriadaAchievement2 &&
+            !hasForkedTowerBloodAchievement1 && !hasForkedTowerBloodAchievement2)
         {
             await ReplyAsync(Properties.Resources.LodestoneMountAchievementNotFoundError);
         }
@@ -754,6 +764,13 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             await ReplyAsync(
                 "If any achievement role was not added, please check <https://na.finalfantasyxiv.com/lodestone/my/setting/account/> and ensure that your achievements are public.");
         }
+    }
+
+    private async Task AddAchievementRole(IRole role, IGuildUser member)
+    {
+        _logger.LogInformation("Adding role {RoleName} to user {DiscordName}", role.Name, member.ToString());
+        await member.AddRoleAsync(role);
+        await ReplyAsync(string.Format(Properties.Resources.LodestoneAchievementRoleSuccess, role.Name));
     }
 
     // Check who this user is.
@@ -864,8 +881,8 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
     private static IRole? GetConfiguredRole(DiscordGuildConfiguration guildConfig, IGuild guild, string roleName)
     {
-        return guildConfig.Roles.ContainsKey(roleName)
-            ? guild.GetRole(ulong.Parse(guildConfig.Roles[roleName]))
+        return guildConfig.Roles.TryGetValue(roleName, out var role)
+            ? guild.GetRole(ulong.Parse(role))
             : null;
     }
 }
