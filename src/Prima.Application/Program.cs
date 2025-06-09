@@ -83,6 +83,7 @@ var host = Host.CreateDefaultBuilder()
         sc.AddSingleton<MuteService>();
         sc.AddSingleton<TimedRoleManager>();
         sc.AddSingleton<IFFLogsClient, FFLogsClient>();
+        sc.AddSingleton<ILogParserService, LogParserService>();
         sc.AddSingleton<KeepClean>();
         sc.AddSingleton<EphemeralPinManager>();
 
