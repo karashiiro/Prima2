@@ -1,22 +1,22 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Prima.Game.FFXIV.FFLogs.Rules;
 using Prima.Models.FFLogs;
-using Prima.Resources;
 using Serilog;
 
 namespace Prima.Game.FFXIV.FFLogs
 {
     public class LogParserService : ILogParserService
     {
-        private readonly FFLogsClient _ffLogs;
+        private readonly IFFLogsClient _ffLogs;
 
-        public LogParserService(FFLogsClient ffLogs)
+        public LogParserService(IFFLogsClient ffLogs)
         {
             _ffLogs = ffLogs;
         }
 
-        public async Task<LogParsingResult> ReadLog(string logLink, IBatchActorMapper actorMapper)
+        public async Task<LogParsingResult> ReadLog(string logLink, IBatchActorMapper actorMapper, ILogParsingRules rules)
         {
             // Log validation
             var logMatch = FFLogsUtils.LogLinkToIdRegex.Match(logLink);
@@ -47,20 +47,27 @@ namespace Prima.Game.FFXIV.FFLogs
             var roleActionsByUsers = new Dictionary<DiscordXIVUser, List<LogParsingResult.RoleAction>>();
             foreach (var encounter in encounters)
             {
-                if (encounter.Difficulty == 100)
+                if (!rules.ShouldProcessEncounter(encounter.Difficulty))
                 {
-                    Log.Warning("Encounter {Encounter} does not appear to be a Savage encounter", encounter.Name);
+                    Log.Warning("Encounter {Encounter} should not be processed based on difficulty {Difficulty}", encounter.Name, encounter.Difficulty);
                     continue;
                 }
 
-                // TODO: Extract logic to allow reusing this for Forked Tower
-                var roleName = encounter.Name;
-                if (roleName == "The Queen's Guard")
-                    roleName = "Queen's Guard";
-                roleName += " Progression";
+                var progressionRoleName = rules.GetProgressionRoleName(encounter.Name);
+                if (progressionRoleName == null)
+                {
+                    Log.Warning("No progression role mapping found for encounter: {EncounterName}", encounter.Name);
+                    continue;
+                }
 
-                var killRoleId = DelubrumProgressionRoles.GetKillRole(roleName);
-                var contingentRoleIds = DelubrumProgressionRoles.GetContingentRoles(killRoleId)
+                var killRoleId = rules.GetKillRoleId(progressionRoleName);
+                if (killRoleId == 0)
+                {
+                    Log.Warning("No kill role ID found for progression role: {ProgressionRole}", progressionRoleName);
+                    continue;
+                }
+
+                var contingentRoleIds = rules.GetContingentRoleIds(killRoleId)
                     .ToList();
 
                 foreach (var id in encounter.FriendlyPlayers)
@@ -85,8 +92,7 @@ namespace Prima.Game.FFXIV.FFLogs
                         roleActionsByUsers.GetValueOrDefault(discordUser, new List<LogParsingResult.RoleAction>());
                     roleActionsByUsers.TryAdd(discordUser, roleActions);
 
-                    // TODO: Extract logic to allow reusing this for Forked Tower
-                    if (killRoleId == DelubrumProgressionRoles.ClearedDelubrumSavage && encounter.Kill == true)
+                    if (killRoleId == rules.FinalClearRoleId && encounter.Kill == true)
                     {
                         // Remove all contingent roles
                         roleActions.AddRange(contingentRoleIds.Select(progRoleId => new LogParsingResult.RoleAction
