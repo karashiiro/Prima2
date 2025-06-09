@@ -5,7 +5,6 @@ using NetStone;
 using Prima.DiscordNet;
 using Prima.DiscordNet.Attributes;
 using Prima.Game.FFXIV.FFLogs;
-using Prima.Game.FFXIV.FFLogs.Rules;
 using Prima.Models.FFLogs;
 using Prima.Resources;
 using Prima.Services;
@@ -225,8 +224,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
     public async Task ReadLog(string logLink)
     {
         var actorMapper = new CommandBatchActorMapper(_db, _lodestone, Context.Guild);
-        var rules = new DelubrumReginaeSavageRules();
-        var logParsingResult = await _logParser.ReadLog(logLink, actorMapper, rules);
+        var logParsingResult = await _logParser.ReadLog(logLink, actorMapper);
         switch (logParsingResult)
         {
             case LogParsingResult.Failure failure:

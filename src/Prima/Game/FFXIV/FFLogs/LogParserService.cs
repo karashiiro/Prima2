@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Prima.Game.FFXIV.FFLogs.Rules;
 using Prima.Models.FFLogs;
 using Serilog;
@@ -10,28 +12,54 @@ namespace Prima.Game.FFXIV.FFLogs
     public class LogParserService : ILogParserService
     {
         private readonly IFFLogsClient _ffLogs;
+        private readonly ILogParsingRulesSelector _logParsingRulesSelector;
+        private readonly ILogger<LogParserService> _logger;
 
-        public LogParserService(IFFLogsClient ffLogs)
+        public LogParserService(IFFLogsClient ffLogs, ILogParsingRulesSelector logParsingRulesSelector,
+            ILogger<LogParserService> logger)
         {
             _ffLogs = ffLogs;
+            _logParsingRulesSelector = logParsingRulesSelector;
+            _logger = logger;
         }
 
-        public async Task<LogParsingResult> ReadLog(string logLink, IBatchActorMapper actorMapper, ILogParsingRules rules)
+        public async Task<LogParsingResult> ReadLog(string logLink, IBatchActorMapper actorMapper)
         {
             // Log validation
-            var logMatch = FFLogsUtils.LogLinkToIdRegex.Match(logLink);
-            if (!logMatch.Success)
+            var validationResult = await ValidateLog(logLink);
+            if (validationResult is LogValidationResult.Failure validationFailure)
             {
-                return LogParsingResult.OfError("That doesn't look like a log link!");
+                return LogParsingResult.OfError(validationFailure.Message);
             }
 
-            var logId = logMatch.Value;
-            var req = FFLogsUtils.BuildLogRequest(logId);
-            var res = (await _ffLogs.MakeGraphQLRequest<LogInfo>(req)).Content.Data.ReportInfo;
-            if (res == null)
+            var res = ((LogValidationResult.Success)validationResult).Report;
+
+            try
             {
-                return LogParsingResult.OfError("That log is private; please make it unlisted or public.");
+                // Extract fight information to determine the most appropriate ruleset
+                var rules = _logParsingRulesSelector.GetParsingRules(res);
+
+                // Read log
+                return await ReadLog(logLink, actorMapper, rules);
             }
+            catch (InvalidOperationException e)
+            {
+                _logger.LogError(e, "Failed to read log");
+                return LogParsingResult.OfError(e.Message);
+            }
+        }
+
+        public async Task<LogParsingResult> ReadLog(string logLink, IBatchActorMapper actorMapper,
+            ILogParsingRules rules)
+        {
+            // Log validation
+            var validationResult = await ValidateLog(logLink);
+            if (validationResult is LogValidationResult.Failure validationFailure)
+            {
+                return LogParsingResult.OfError(validationFailure.Message);
+            }
+
+            var res = ((LogValidationResult.Success)validationResult).Report;
 
             // Extract encounters and fight members
             var encounters = res.Fights
@@ -49,7 +77,8 @@ namespace Prima.Game.FFXIV.FFLogs
             {
                 if (!rules.ShouldProcessEncounter(encounter.Difficulty))
                 {
-                    Log.Warning("Encounter {Encounter} should not be processed based on difficulty {Difficulty}", encounter.Name, encounter.Difficulty);
+                    Log.Warning("Encounter {Encounter} should not be processed based on difficulty {Difficulty}",
+                        encounter.Name, encounter.Difficulty);
                     continue;
                 }
 
@@ -136,6 +165,49 @@ namespace Prima.Game.FFXIV.FFLogs
                 RoleAssignments = roleAssignments,
                 MissedUsers = missedUsers,
             };
+        }
+
+        private async Task<LogValidationResult> ValidateLog(string logLink)
+        {
+            var logMatch = FFLogsUtils.LogLinkToIdRegex.Match(logLink);
+            if (!logMatch.Success)
+            {
+                return LogValidationResult.OfError("That doesn't look like a log link!");
+            }
+
+            var logId = logMatch.Value;
+            var req = FFLogsUtils.BuildLogRequest(logId);
+            var res = (await _ffLogs.MakeGraphQLRequest<LogInfo>(req)).Content.Data.ReportInfo;
+            if (res == null)
+            {
+                return LogValidationResult.OfError("That log is private; please make it unlisted or public.");
+            }
+
+            return new LogValidationResult.Success
+            {
+                Report = res,
+            };
+        }
+
+        private class LogValidationResult
+        {
+            public static LogValidationResult OfError(string message)
+            {
+                return new Failure
+                {
+                    Message = message,
+                };
+            }
+
+            public class Failure : LogValidationResult
+            {
+                public string Message { get; init; }
+            }
+
+            public class Success : LogValidationResult
+            {
+                public LogInfo.ReportDataWrapper.ReportData.Report Report { get; init; }
+            }
         }
     }
 }

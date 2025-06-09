@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Moq;
 using NUnit.Framework;
 using Prima.Game.FFXIV;
 using Prima.Game.FFXIV.FFLogs;
@@ -23,7 +25,8 @@ namespace Prima.Tests
         public void Setup()
         {
             _mockFFLogsClient = new MockFFLogsClient();
-            _service = new LogParserService(_mockFFLogsClient);
+            _service = new LogParserService(_mockFFLogsClient, new DefaultLogParsingRulesSelector(),
+                Mock.Of<ILogger<LogParserService>>());
             _mockActorMapper = new MockBatchActorMapper();
             _logParsingRules = new DelubrumReginaeSavageRules();
         }

@@ -24,6 +24,7 @@ using Prima.DiscordNet.Handlers;
 using Prima.DiscordNet.Logging;
 using Prima.DiscordNet.Services;
 using Prima.Game.FFXIV.FFLogs;
+using Prima.Game.FFXIV.FFLogs.Rules;
 using Prima.Game.FFXIV.XIVAPI;
 using Prima.Services;
 using Quartz;
@@ -83,6 +84,7 @@ var host = Host.CreateDefaultBuilder()
         sc.AddSingleton<MuteService>();
         sc.AddSingleton<TimedRoleManager>();
         sc.AddSingleton<IFFLogsClient, FFLogsClient>();
+        sc.AddSingleton<ILogParsingRulesSelector, DefaultLogParsingRulesSelector>();
         sc.AddSingleton<ILogParserService, LogParserService>();
         sc.AddSingleton<KeepClean>();
         sc.AddSingleton<EphemeralPinManager>();
