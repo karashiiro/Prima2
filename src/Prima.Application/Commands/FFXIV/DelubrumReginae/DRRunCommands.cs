@@ -91,6 +91,8 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
     [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
     public async Task AddDelubrumProgRoleAsync([Remainder] string args)
     {
+        using var typing = Context.Channel.EnterTypingState();
+
         var isFFLogs = FFLogsUtils.IsLogLink(args);
         Log.Information("FFLogs link provided: {IsFFLogsLinkProvided}", isFFLogs);
 
