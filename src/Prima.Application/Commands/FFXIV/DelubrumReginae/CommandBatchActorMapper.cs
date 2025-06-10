@@ -33,8 +33,15 @@ public class CommandBatchActorMapper : IBatchActorMapper
             .Select(async kvp =>
             {
                 var (id, potentialUser) = kvp;
+                if (potentialUser.User != null)
+                {
+                    // Already registered
+                    return new KeyValuePair<int, DiscordXIVUser?>(id, potentialUser.User);
+                }
+
                 try
                 {
+                    // Attempt to register on the fly
                     await RegisterUser(members, potentialUser);
                 }
                 catch (Exception e)
