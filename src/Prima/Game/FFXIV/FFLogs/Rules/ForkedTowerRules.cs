@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Prima.Game.FFXIV.FFLogs.Rules
 {
@@ -6,28 +7,54 @@ namespace Prima.Game.FFXIV.FFLogs.Rules
     {
         public ulong FinalClearRoleId => 1381433968431202424;
 
+        private const ulong DemonTabletProgression = 1381806320612806757;
+        private const ulong DeadStarsProgression = 1381804104199831652;
+        private const ulong MarbleDragonProgression = 1381804200941588518;
+        private const ulong MagitaurProgression = 1381804261297619154;
+
+        public static readonly Dictionary<ulong, string> Roles = new()
+        {
+            {DemonTabletProgression, "Demon Tablet Progression"},
+            {DeadStarsProgression, "Dead Stars Progression"},
+            {MarbleDragonProgression, "Marble Dragon Progression"},
+            {MagitaurProgression, "Magitaur Progression"},
+        };
+
         public string GetProgressionRoleName(string encounterName)
         {
-            // TODO: Implement Forked Tower encounter to role mapping
-            return null;
+            var roleName = encounterName + " Progression";
+            return Roles.Any(kvp => kvp.Value == roleName) ? roleName : null;
         }
 
-        public ulong GetKillRoleId(string progressionRoleName)
+        public ulong GetKillRoleId(string roleName)
         {
-            // TODO: Implement Forked Tower progression to kill role mapping
-            return 0;
+            return roleName switch
+            {
+                "Demon Tablet Progression" => DeadStarsProgression,
+                "Dead Stars Progression" => MarbleDragonProgression,
+                "Marble Dragon Progression" => MagitaurProgression,
+                "Magitaur Progression" => FinalClearRoleId,
+                _ => 0,
+            };
         }
 
-        public IEnumerable<ulong> GetContingentRoleIds(ulong killRoleId)
+        public IEnumerable<ulong> GetContingentRoleIds(ulong roleId)
         {
-            // TODO: Implement Forked Tower contingent roles logic
-            return new List<ulong>();
+            var baseList = new[] { MagitaurProgression, MarbleDragonProgression, DeadStarsProgression, DemonTabletProgression };
+            return roleId switch
+            {
+                MagitaurProgression => baseList,
+                MarbleDragonProgression => baseList[1..],
+                DeadStarsProgression => baseList[2..],
+                DemonTabletProgression => baseList[3..],
+                _ => new List<ulong>(),
+            };
         }
 
         public bool ShouldProcessEncounter(int? difficulty)
         {
-            // TODO: Implement Forked Tower difficulty check
-            return false;
+            // No Normal/Savage split ike DRS
+            return true;
         }
     }
 }

@@ -15,6 +15,10 @@ namespace Prima.Game.FFXIV.FFLogs.Rules
                 {
                     return new DelubrumReginaeSavageRules();
                 }
+                else if (ForkedTowerRules.Roles.Values.Any(roleName => roleName.Contains(encounter.Name)))
+                {
+                    return new ForkedTowerRules();
+                }
             }
 
             throw new InvalidOperationException("Could not determine parsing rules.");
