@@ -97,6 +97,7 @@ namespace Prima.Game.FFXIV.FFLogs
                 }
 
                 var contingentRoleIds = rules.GetContingentRoleIds(killRoleId)
+                    .Except(new[] { killRoleId })
                     .ToList();
 
                 foreach (var id in encounter.FriendlyPlayers)
@@ -142,7 +143,6 @@ namespace Prima.Game.FFXIV.FFLogs
                     {
                         // Give all contingent roles as well as the clear role for the fight if cleared
                         roleActions.AddRange(contingentRoleIds
-                            .Except(new[] { killRoleId })
                             .Select(progRoleId => new LogParsingResult.RoleAction
                             {
                                 ActionType = LogParsingResult.RoleActionType.Add,
