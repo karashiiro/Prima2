@@ -225,7 +225,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
     /// <param name="logLink">The FFLogs log link.</param>
     public async Task ReadLog(string logLink)
     {
-        var actorMapper = new CommandBatchActorMapper(_db, _lodestone, Context.Guild);
+        var actorMapper = new CommandBatchActorMapper(_db);
         var logParsingResult = await _logParser.ReadLog(logLink, actorMapper);
         switch (logParsingResult)
         {
