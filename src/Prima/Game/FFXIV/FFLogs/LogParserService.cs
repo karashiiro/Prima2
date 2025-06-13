@@ -124,8 +124,12 @@ namespace Prima.Game.FFXIV.FFLogs
                     if (killRoleId == rules.FinalClearRoleId && encounter.Kill == true)
                     {
                         // Remove all contingent roles
-                        roleActions.AddRange(contingentRoleIds.Select(progRoleId => new LogParsingResult.RoleAction
-                            { ActionType = LogParsingResult.RoleActionType.Remove, RoleId = progRoleId }));
+                        roleActions.AddRange(contingentRoleIds
+                            .Select(progRoleId => new LogParsingResult.RoleAction
+                            {
+                                ActionType = LogParsingResult.RoleActionType.Remove,
+                                RoleId = progRoleId,
+                            }));
 
                         // Give everyone the clear role if they cleared DRS
                         roleActions.Add(new LogParsingResult.RoleAction
@@ -136,9 +140,14 @@ namespace Prima.Game.FFXIV.FFLogs
                     }
                     else
                     {
-                        // Give all contingent roles as well as the clear role for the fight
-                        roleActions.AddRange(contingentRoleIds.Select(progRoleId => new LogParsingResult.RoleAction
-                            { ActionType = LogParsingResult.RoleActionType.Add, RoleId = progRoleId }));
+                        // Give all contingent roles as well as the clear role for the fight if cleared
+                        roleActions.AddRange(contingentRoleIds
+                            .Except(new[] { killRoleId })
+                            .Select(progRoleId => new LogParsingResult.RoleAction
+                            {
+                                ActionType = LogParsingResult.RoleActionType.Add,
+                                RoleId = progRoleId,
+                            }));
 
                         if (encounter.Kill == true)
                         {
