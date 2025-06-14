@@ -73,6 +73,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             {
                 if (!ulong.TryParse(parameters[0], out lodestoneId))
                 {
+                    _logger.LogInformation("Failed to parse Lodestone ID");
                     var reply = await ReplyAsync(
                         $"{Context.User.Mention}, please enter that command in the format `{prefix}iam World Name Surname`.");
                     await Task.Delay(MessageDeleteDelay);
@@ -82,6 +83,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             }
             else
             {
+                _logger.LogInformation("Invalid iam command syntax");
                 var reply = await ReplyAsync(
                     $"{Context.User.Mention}, please enter that command in the format `{prefix}iam World Name Surname`.");
                 await Task.Delay(MessageDeleteDelay);
@@ -124,8 +126,17 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             }
         }
 
+        _logger.LogInformation("Fetching guild member by ID: {DiscordUserId}", Context.User.Id);
         var member = guild.GetUser(Context.User.Id) ??
                      (IGuildUser)await Context.Client.Rest.GetGuildUserAsync(guild.Id, Context.User.Id);
+        if (member == null)
+        {
+            _logger.LogWarning("Failed to fetch guild member by ID: {DiscordUserId}", Context.User.Id);
+        }
+        else
+        {
+            _logger.LogInformation("Got guild member: {GuildMemberName}", member.DisplayName);
+        }
 
         using var typing = Context.Channel.EnterTypingState();
 
@@ -135,11 +146,13 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         {
             if (parameters.Length == 3)
             {
+                _logger.LogInformation("Searching for user: ({World}) {CharacterName}", world, name);
                 (foundCharacter, lodestoneCharacter) =
                     await DiscordXIVUser.CreateFromLodestoneSearch(_lodestone, name, world, member.Id);
             }
             else
             {
+                _logger.LogInformation("Fetching user by Lodestone ID: {LodestoneId}", lodestoneId);
                 (foundCharacter, lodestoneCharacter) =
                     await DiscordXIVUser.CreateFromLodestoneId(_lodestone, lodestoneId, member.Id);
                 world = foundCharacter?.World ?? "";
@@ -188,6 +201,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
         if (highestCombatLevel < guildConfig.MinimumLevel)
         {
+            _logger.LogInformation("User did not meet level check");
             var reply = await ReplyAsync(
                 $"{Context.User.Mention}, that character does not have any combat jobs at Level {guildConfig.MinimumLevel}.");
             await Task.Delay(MessageDeleteDelay);
