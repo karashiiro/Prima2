@@ -82,8 +82,9 @@ public class ForkedTowerCommands : InteractionModuleBase<SocketInteractionContex
     {
         var roleOrder = new[]
         {
-            ForkedTowerRules.ClearedForkedTower, ForkedTowerRules.MarbleDragonProgression,
-            ForkedTowerRules.DeadStarsProgression, ForkedTowerRules.DemonTabletProgression,
+            ForkedTowerRules.ClearedForkedTower, ForkedTowerRules.MagitaurProgression,
+            ForkedTowerRules.MarbleDragonProgression, ForkedTowerRules.DeadStarsProgression,
+            ForkedTowerRules.DemonTabletProgression,
         };
         return roleOrder.FirstOrDefault(member.HasRole);
     }
