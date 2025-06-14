@@ -96,6 +96,13 @@ namespace Prima.Services
                 _ephemeralPins.EstimatedDocumentCount());
         }
 
+        public async Task<DiscordXIVUser?> GetUserByCharacterInfo(string? world, string? characterName)
+        {
+            if (characterName == null || world == null) return null;
+            _logger.LogInformation("Fetching user: ({World}) {CharacterName}", world, characterName);
+            return await _users.Find(u => u.World == world && u.Name == characterName).FirstOrDefaultAsync();
+        }
+
         public async Task SetGlobalConfigurationProperty(string key, string value)
         {
             _logger.LogInformation("Setting global configuration property: {ConfigKey}={ConfigValue}", key, value);
