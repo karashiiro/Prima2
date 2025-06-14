@@ -5,12 +5,13 @@ namespace Prima.Game.FFXIV.FFLogs.Rules
 {
     public class ForkedTowerRules : ILogParsingRules
     {
-        public ulong FinalClearRoleId => 1381433968431202424;
+        public ulong FinalClearRoleId => ClearedForkedTower;
 
-        private const ulong DemonTabletProgression = 1381806320612806757;
-        private const ulong DeadStarsProgression = 1381804104199831652;
-        private const ulong MarbleDragonProgression = 1381804200941588518;
-        private const ulong MagitaurProgression = 1381804261297619154;
+        public const ulong DemonTabletProgression = 1381806320612806757;
+        public const ulong DeadStarsProgression = 1381804104199831652;
+        public const ulong MarbleDragonProgression = 1381804200941588518;
+        public const ulong MagitaurProgression = 1381804261297619154;
+        public const ulong ClearedForkedTower = 1381433968431202424;
 
         public static readonly Dictionary<ulong, string> Roles = new()
         {
