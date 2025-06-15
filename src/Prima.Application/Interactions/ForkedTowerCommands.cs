@@ -98,6 +98,12 @@ public class ForkedTowerCommands : InteractionModuleBase<SocketInteractionContex
         [SlashCommand("dead-stars-markers", "Shows the Dead Stars markers guide.")]
         public Task DeadStarsMarkers() => RespondAsync("https://i.imgur.com/4lQ43Gw.png");
 
+        [SlashCommand("healer-wings", "Shows the Dead Stars Healer Wings guide.")]
+        public Task HealerWingsMarkers() => RespondAsync("https://i.imgur.com/XEMn7Pj.png");
+
+        [SlashCommand("dead-stars-enrage", "Shows the Dead Stars enrage guide.")]
+        public Task DeadStarsEnrageMarkers() => RespondAsync("https://i.imgur.com/OaomQ9x.png");
+
         [SlashCommand("dragon-markers", "Shows the Marble Dragon markers guide.")]
         public Task MarbleDragonMarkers() => RespondAsync("https://i.imgur.com/qHnzfMC.jpeg");
 
