@@ -94,18 +94,31 @@ public class ForkedTowerCommands : InteractionModuleBase<SocketInteractionContex
     {
         [SlashCommand("demon-markers", "Shows the Demon Tablet markers guide.")]
         public Task DemonTabletMarkers() => RespondAsync("https://i.imgur.com/oEa6Vo3.png");
+        
+        [SlashCommand("hallway-1-traps", "Shows the first hallway traps guide.")]
+        public Task Hallway1Traps() => RespondAsync("https://i.imgur.com/X4rynBh.png");
 
         [SlashCommand("dead-stars-markers", "Shows the Dead Stars markers guide.")]
         public Task DeadStarsMarkers() => RespondAsync("https://i.imgur.com/4lQ43Gw.png");
 
         [SlashCommand("healer-wings", "Shows the Dead Stars Healer Wings guide.")]
-        public Task HealerWingsMarkers() => RespondAsync("https://i.imgur.com/XEMn7Pj.png");
+        public Task HealerWingsMarkers() => RespondAsync(embed: new EmbedBuilder()
+            .WithTitle("Boss 2: Alternative Fire Soak Setup Positions \"Healer Wings\"")
+            .WithDescription("The thought process is to remove the confusion of Left/Right stacking and instead just have Healers always be Left/Right and DPS always be Out. Use the lines on the floor to know where to stand for both groups.\nCredit to Aether Group 2 for the design idea.")
+            .WithImageUrl("https://i.imgur.com/XEMn7Pj.png")
+            .Build());
 
         [SlashCommand("dead-stars-enrage", "Shows the Dead Stars enrage guide.")]
         public Task DeadStarsEnrageMarkers() => RespondAsync("https://i.imgur.com/OaomQ9x.png");
 
         [SlashCommand("dragon-markers", "Shows the Marble Dragon markers guide.")]
         public Task MarbleDragonMarkers() => RespondAsync("https://i.imgur.com/qHnzfMC.jpeg");
+
+        [SlashCommand("lockward-traps", "Shows the Lockward traps guide.")]
+        public Task LockwardTraps() => RespondAsync("https://i.imgur.com/6sUted4.png");
+
+        [SlashCommand("lockward-cheat-sheet", "Shows the Lockward cheat sheet.")]
+        public Task LockwardCheatSheet() => RespondAsync("https://i.imgur.com/YcwUOof.png");
 
         [SlashCommand("magitaur-markers", "Shows the Magitaur markers guide.")]
         public Task MagitaurMarkers() => RespondAsync("https://i.imgur.com/oljHU1i.jpeg");
