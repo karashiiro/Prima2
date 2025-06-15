@@ -88,4 +88,20 @@ public class ForkedTowerCommands : InteractionModuleBase<SocketInteractionContex
         };
         return roleOrder.FirstOrDefault(member.HasRole);
     }
+
+    [Group("guide", "Guide macros")]
+    public class GuideCommands : InteractionModuleBase<SocketInteractionContext>
+    {
+        [SlashCommand("demon-markers", "Shows the Demon Tablet markers guide.")]
+        public Task DemonTabletMarkers() => RespondAsync("https://i.imgur.com/oEa6Vo3.png");
+
+        [SlashCommand("dead-stars-markers", "Shows the Dead Stars markers guide.")]
+        public Task DeadStarsMarkers() => RespondAsync("https://i.imgur.com/4lQ43Gw.png");
+
+        [SlashCommand("dragon-markers", "Shows the Marble Dragon markers guide.")]
+        public Task MarbleDragonMarkers() => RespondAsync("https://i.imgur.com/qHnzfMC.jpeg");
+
+        [SlashCommand("magitaur-markers", "Shows the Magitaur markers guide.")]
+        public Task MagitaurMarkers() => RespondAsync("https://i.imgur.com/oljHU1i.jpeg");
+    }
 }
