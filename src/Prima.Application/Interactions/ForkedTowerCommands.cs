@@ -103,5 +103,8 @@ public class ForkedTowerCommands : InteractionModuleBase<SocketInteractionContex
 
         [SlashCommand("magitaur-markers", "Shows the Magitaur markers guide.")]
         public Task MagitaurMarkers() => RespondAsync("https://i.imgur.com/oljHU1i.jpeg");
+
+        [SlashCommand("bridges", "Shows the bridges guide.")]
+        public Task BridgeMarkers() => RespondAsync("https://i.imgur.com/dAiTIrk.png");
     }
 }
