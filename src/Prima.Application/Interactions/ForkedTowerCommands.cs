@@ -94,7 +94,10 @@ public class ForkedTowerCommands : InteractionModuleBase<SocketInteractionContex
     {
         [SlashCommand("demon-markers", "Shows the Demon Tablet markers guide.")]
         public Task DemonTabletMarkers() => RespondAsync("https://i.imgur.com/oEa6Vo3.png");
-        
+
+        [SlashCommand("demon-meteors", "Shows the Demon Tablet meteors guide.")]
+        public Task DemonTabletMeteors() => RespondAsync("https://i.imgur.com/K0HMR3K.png");
+
         [SlashCommand("hallway-1-traps", "Shows the first hallway traps guide.")]
         public Task Hallway1Traps() => RespondAsync("https://i.imgur.com/X4rynBh.png");
 
@@ -104,7 +107,8 @@ public class ForkedTowerCommands : InteractionModuleBase<SocketInteractionContex
         [SlashCommand("healer-wings", "Shows the Dead Stars Healer Wings guide.")]
         public Task HealerWingsMarkers() => RespondAsync(embed: new EmbedBuilder()
             .WithTitle("Boss 2: Alternative Fire Soak Setup Positions \"Healer Wings\"")
-            .WithDescription("The thought process is to remove the confusion of Left/Right stacking and instead just have Healers always be Left/Right and DPS always be Out. Use the lines on the floor to know where to stand for both groups.\nCredit to Aether Group 2 for the design idea.")
+            .WithDescription(
+                "The thought process is to remove the confusion of Left/Right stacking and instead just have Healers always be Left/Right and DPS always be Out. Use the lines on the floor to know where to stand for both groups.\nCredit to Aether Group 2 for the design idea.")
             .WithImageUrl("https://i.imgur.com/XEMn7Pj.png")
             .Build());
 
