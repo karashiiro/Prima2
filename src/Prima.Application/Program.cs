@@ -27,6 +27,8 @@ using Prima.Game.FFXIV.FFLogs;
 using Prima.Game.FFXIV.FFLogs.Rules;
 using Prima.Game.FFXIV.XIVAPI;
 using Prima.Services;
+using Prometheus;
+using Prometheus.DotNetRuntime;
 using Quartz;
 
 var googleApiSecretPath = Environment.GetEnvironmentVariable("PRIMA_GOOGLE_SECRET") ??
@@ -48,6 +50,24 @@ var lodestone = await LodestoneClient.GetClientAsync(gameDataProvider);
 var host = Host.CreateDefaultBuilder()
     .ConfigureServices((_, sc) =>
     {
+        var metricsServer = new MetricServer(3000);
+        try
+        {
+            metricsServer.Start();
+        }
+        catch (HttpListenerException ex)
+        {
+            // ReSharper disable LocalizableElement
+            Console.WriteLine($"Failed to start metric server: {ex.Message}");
+            Console.WriteLine("You may need to grant permissions to your user account if not running as Administrator:");
+            Console.WriteLine("netsh http add urlacl url=http://+:1234/metrics user=DOMAIN\\user");
+            // ReSharper restore LocalizableElement
+            return;
+        }
+
+        sc.AddSingleton(metricsServer);
+        sc.AddSingleton(DotNetRuntimeStatsBuilder.Default().StartCollecting());
+
         var disConfig = new DiscordSocketConfig
         {
             AlwaysDownloadUsers = true,
