@@ -99,7 +99,7 @@ public class ForkedTowerCommands : InteractionModuleBase<SocketInteractionContex
         public Task DemonTabletMeteors() => RespondAsync("https://i.imgur.com/K0HMR3K.png");
 
         [SlashCommand("hallway-1-traps", "Shows the first hallway traps guide.")]
-        public Task Hallway1Traps() => RespondAsync("https://i.imgur.com/X4rynBh.png");
+        public Task Hallway1Traps() => RespondAsync("https://i.imgur.com/eYcyC2l.png");
 
         [SlashCommand("dead-stars-markers", "Shows the Dead Stars markers guide.")]
         public Task DeadStarsMarkers() => RespondAsync("https://i.imgur.com/4lQ43Gw.png");
@@ -119,10 +119,10 @@ public class ForkedTowerCommands : InteractionModuleBase<SocketInteractionContex
         public Task MarbleDragonMarkers() => RespondAsync("https://i.imgur.com/qHnzfMC.jpeg");
 
         [SlashCommand("lockward-traps", "Shows the Lockward traps guide.")]
-        public Task LockwardTraps() => RespondAsync("https://i.imgur.com/6sUted4.png");
+        public Task LockwardTraps() => RespondAsync("https://i.imgur.com/e0xulg2.png");
 
         [SlashCommand("lockward-cheat-sheet", "Shows the Lockward cheat sheet.")]
-        public Task LockwardCheatSheet() => RespondAsync("https://i.imgur.com/YcwUOof.png");
+        public Task LockwardCheatSheet() => RespondAsync("https://i.imgur.com/tcYJ5Co.jpeg");
 
         [SlashCommand("magitaur-markers", "Shows the Magitaur markers guide.")]
         public Task MagitaurMarkers() => RespondAsync("https://i.imgur.com/oljHU1i.jpeg");
