@@ -316,14 +316,33 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         var guildConfig = _db.Guilds.Single(g => g.Id == Context.Guild.Id);
         var prefix = guildConfig.Prefix == ' ' ? _db.Config.Prefix : guildConfig.Prefix;
 
-        if (parameters.Length < 3)
-        {
-            await ReplyAsync(
-                $"{Context.User.Mention}, please enter that command in the format `{prefix}theyare Mention World Name Surname`.");
-            return;
-        }
-
         var userMention = await DiscordUtilities.GetUserFromMention(userMentionStr, Context);
+
+        ulong lodestoneId = 0;
+        if (parameters.Length != 3)
+        {
+            if (parameters.Length == 1)
+            {
+                if (!ulong.TryParse(parameters[0], out lodestoneId))
+                {
+                    _logger.LogInformation("Failed to parse Lodestone ID");
+                    var reply = await ReplyAsync(
+                        $"{Context.User.Mention}, please enter that command in the format `{prefix}theyare Mention World Name Surname`.");
+                    await Task.Delay(MessageDeleteDelay);
+                    await reply.DeleteAsync();
+                    return;
+                }
+            }
+            else
+            {
+                _logger.LogInformation("Invalid theyare command syntax");
+                var reply = await ReplyAsync(
+                    $"{Context.User.Mention}, please enter that command in the format `{prefix}theyare Mention World Name Surname`.");
+                await Task.Delay(MessageDeleteDelay);
+                await reply.DeleteAsync();
+                return;
+            }
+        }
 
         var world = parameters[0].ToLower();
         var name = parameters[1] + " " + parameters[2];
@@ -359,8 +378,19 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         LodestoneCharacter? character;
         try
         {
-            (foundCharacter, character) =
-                await DiscordXIVUser.CreateFromLodestoneSearch(_lodestone, name, world, member.Id);
+            if (parameters.Length == 4)
+            {
+                _logger.LogInformation("Searching for user: ({World}) {CharacterName}", world, name);
+                (foundCharacter, character) =
+                    await DiscordXIVUser.CreateFromLodestoneSearch(_lodestone, name, world, member.Id);
+            }
+            else
+            {
+                _logger.LogInformation("Fetching user by Lodestone ID: {LodestoneId}", lodestoneId);
+                (foundCharacter, character) =
+                    await DiscordXIVUser.CreateFromLodestoneId(_lodestone, lodestoneId, member.Id);
+                world = foundCharacter?.World ?? "";
+            }
         }
         catch (Exception e)
         {
@@ -380,7 +410,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         if (!force && !await LodestoneUtils.VerifyCharacter(_lodestone, ulong.Parse(foundCharacter.LodestoneId),
                 member.Id.ToString()))
         {
-            await ReplyAsync("That character does not have their Lodestone ID in their bio; please have them add it. " +
+            await ReplyAsync("That character does not have their Discord ID in their bio; please have them add it. " +
                              "Alternatively, append `force` to the end of the command to skip this check.");
             return;
         }
