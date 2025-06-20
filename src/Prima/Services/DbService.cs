@@ -4,6 +4,7 @@ using Prima.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
@@ -13,6 +14,7 @@ namespace Prima.Services
     {
         private const string ConnectionString = "mongodb://localhost:27017";
         private const string DbName = "PrimaDb";
+        private const double LockTimeoutSeconds = 30;
 
         // Hide types of the database implementation from callers.
         public GlobalConfiguration Config
@@ -48,9 +50,12 @@ namespace Prima.Services
 
         private readonly ILogger<DbService> _logger;
 
+        private readonly SemaphoreSlim _lock;
+
         public DbService(ILogger<DbService> logger)
         {
             _logger = logger;
+            _lock = new SemaphoreSlim(80, 80);
 
             var client = new MongoClient(ConnectionString);
             var database = client.GetDatabase(DbName);
@@ -96,11 +101,14 @@ namespace Prima.Services
                 _ephemeralPins.EstimatedDocumentCount());
         }
 
-        public async Task<DiscordXIVUser?> GetUserByCharacterInfo(string? world, string? characterName)
+        public Task<DiscordXIVUser?> GetUserByCharacterInfo(string? world, string? characterName)
         {
-            if (characterName == null || world == null) return null;
-            _logger.LogInformation("Fetching user: ({World}) {CharacterName}", world, characterName);
-            return await _users.Find(u => u.World == world && u.Name == characterName).FirstOrDefaultAsync();
+            return WithLock(async () =>
+            {
+                if (characterName == null || world == null) return null;
+                _logger.LogInformation("Fetching user: ({World}) {CharacterName}", world, characterName);
+                return await _users.Find(u => u.World == world && u.Name == characterName).FirstOrDefaultAsync();
+            });
         }
 
         public async Task SetGlobalConfigurationProperty(string key, string value)
@@ -424,6 +432,24 @@ namespace Prima.Services
             if (message != null)
             {
                 await _channelDescriptions.DeleteOneAsync(cd => cd.ChannelId == channelId);
+            }
+        }
+
+        private async Task<T> WithLock<T>(Func<Task<T>> action)
+        {
+            if (!await _lock.WaitAsync(TimeSpan.FromSeconds(LockTimeoutSeconds)).ConfigureAwait(false))
+            {
+                _logger.LogWarning("Could not acquire database lock");
+                throw new TimeoutException("Could not acquire database lock");
+            }
+
+            try
+            {
+                return await action();
+            }
+            finally
+            {
+                _lock.Release();
             }
         }
     }
