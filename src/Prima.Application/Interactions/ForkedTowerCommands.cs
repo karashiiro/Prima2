@@ -128,6 +128,6 @@ public class ForkedTowerCommands : InteractionModuleBase<SocketInteractionContex
         public Task MagitaurMarkers() => RespondAsync("https://i.imgur.com/oljHU1i.jpeg");
 
         [SlashCommand("bridges", "Shows the bridges guide.")]
-        public Task BridgeMarkers() => RespondAsync("https://i.imgur.com/dAiTIrk.png");
+        public Task BridgeMarkers() => RespondAsync("https://i.imgur.com/OHgehU1.png");
     }
 }
