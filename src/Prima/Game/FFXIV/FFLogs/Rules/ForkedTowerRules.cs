@@ -44,6 +44,7 @@ namespace Prima.Game.FFXIV.FFLogs.Rules
             var baseList = new[] { MagitaurProgression, MarbleDragonProgression, DeadStarsProgression, DemonTabletProgression };
             return roleId switch
             {
+                ClearedForkedTower => baseList,
                 MagitaurProgression => baseList,
                 MarbleDragonProgression => baseList[1..],
                 DeadStarsProgression => baseList[2..],

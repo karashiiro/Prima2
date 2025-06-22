@@ -1,10 +1,10 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.Net;
-using NetStone;
 using Prima.DiscordNet;
 using Prima.DiscordNet.Attributes;
 using Prima.Game.FFXIV.FFLogs;
+using Prima.Game.FFXIV.FFLogs.Rules;
 using Prima.Models.FFLogs;
 using Prima.Resources;
 using Prima.Services;
@@ -17,13 +17,11 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
 {
     private readonly IDbService _db;
     private readonly ILogParserService _logParser;
-    private readonly LodestoneClient _lodestone;
 
-    public DRRunCommands(IDbService db, ILogParserService logParser, LodestoneClient lodestone)
+    public DRRunCommands(IDbService db, ILogParserService logParser)
     {
         _db = db;
         _logParser = logParser;
-        _lodestone = lodestone;
     }
 
     [Command("setroler", RunMode = RunMode.Async)]
@@ -250,7 +248,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
                         switch (roleAction.ActionType)
                         {
                             case LogParsingResult.RoleActionType.Add:
-                                if (await AssignProgressionRole(role, user))
+                                if (await AssignProgressionRole(role, user, success.Rules))
                                 {
                                     addedAny = true;
                                 }
@@ -281,8 +279,14 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
         }
     }
 
-    private static async Task<bool> AssignProgressionRole(IRole role, IGuildUser user)
+    private static async Task<bool> AssignProgressionRole(IRole role, IGuildUser user, ILogParsingRules rules)
     {
+        if (user.HasRole(rules.FinalClearRoleId))
+        {
+            Log.Information("User {DiscordName} already has clear role", user.ToString());
+            return false;
+        }
+
         Log.Information("Checking role {RoleName} on user {DiscordName}", role.Name,
             user.ToString());
         if (!user.HasRole(role))

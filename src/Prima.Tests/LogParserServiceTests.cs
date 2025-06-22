@@ -66,13 +66,13 @@ namespace Prima.Tests
                 { 1, new DiscordXIVUser { Name = "TestPlayer", World = "TestWorld", DiscordId = 12345 } },
             });
 
-            var result = await _service.ReadLog("https://www.fflogs.com/reports/abcde12345", _mockActorMapper,
-                _logParsingRules);
+            var result = await _service.ReadLog("https://www.fflogs.com/reports/abcde12345", _mockActorMapper);
 
             Assert.That(result, Is.InstanceOf<LogParsingResult.Success>());
             var success = (LogParsingResult.Success)result;
             Assert.That(success.HasAnyChanges, Is.True);
             Assert.That(success.RoleAssignments.Count, Is.EqualTo(1));
+            Assert.That(success.Rules, Is.InstanceOf<DelubrumReginaeSavageRules>());
         }
 
         [Test]
@@ -95,7 +95,7 @@ namespace Prima.Tests
         }
 
         [Test]
-        public async Task ReadLog_TrinitySeeker_AssignsCorrectRoles()
+        public async Task ReadLog_DRS_TrinitySeeker_AssignsCorrectRoles()
         {
             var testLog = CreateTestLogWithEncounter("Trinity Seeker", true, 101);
             _mockFFLogsClient.SetupLog(testLog);
@@ -104,12 +104,12 @@ namespace Prima.Tests
                 { 1, new DiscordXIVUser { Name = "TestPlayer", World = "TestWorld", DiscordId = 12345 } },
             });
 
-            var result = await _service.ReadLog("https://www.fflogs.com/reports/abcde12345", _mockActorMapper,
-                _logParsingRules);
+            var result = await _service.ReadLog("https://www.fflogs.com/reports/abcde12345", _mockActorMapper);
 
             Assert.That(result, Is.InstanceOf<LogParsingResult.Success>());
             var success = (LogParsingResult.Success)result;
             Assert.That(success.RoleAssignments.Count, Is.EqualTo(1));
+            Assert.That(success.Rules, Is.InstanceOf<DelubrumReginaeSavageRules>());
 
             var assignment = success.RoleAssignments[0];
             var roleActions = assignment.RoleActions;
@@ -128,7 +128,7 @@ namespace Prima.Tests
         }
 
         [Test]
-        public async Task ReadLog_TheQueenKill_RemovesProgressionRolesAndAddsClear()
+        public async Task ReadLog_DRS_TheQueenKill_RemovesProgressionRolesAndAddsClear()
         {
             var testLog = CreateTestLogWithEncounter("The Queen", true, 101);
             _mockFFLogsClient.SetupLog(testLog);
@@ -137,19 +137,22 @@ namespace Prima.Tests
                 { 1, new DiscordXIVUser { Name = "TestPlayer", World = "TestWorld", DiscordId = 12345 } },
             });
 
-            var result = await _service.ReadLog("https://www.fflogs.com/reports/abcde12345", _mockActorMapper,
-                _logParsingRules);
+            var result = await _service.ReadLog("https://www.fflogs.com/reports/abcde12345", _mockActorMapper);
 
             Assert.That(result, Is.InstanceOf<LogParsingResult.Success>());
             var success = (LogParsingResult.Success)result;
+            Assert.That(success.Rules, Is.InstanceOf<DelubrumReginaeSavageRules>());
 
             var assignment = success.RoleAssignments[0];
             var roleActions = assignment.RoleActions;
 
+            // Remove actions for each progression role, add action for DRS cleared role
+            Assert.That(roleActions.Count, Is.EqualTo(DelubrumProgressionRoles.Roles.Count + 1));
+
             // Should have remove actions for all progression roles
             var removeActions = roleActions.Where(ra => ra.ActionType == LogParsingResult.RoleActionType.Remove)
                 .ToList();
-            Assert.That(removeActions.Count, Is.GreaterThan(0));
+            Assert.That(removeActions.Count, Is.EqualTo(DelubrumProgressionRoles.Roles.Count));
 
             // Should add DRS Cleared role
             Assert.That(roleActions.Any(ra =>
@@ -158,7 +161,7 @@ namespace Prima.Tests
         }
 
         [Test]
-        public async Task ReadLog_NormalMode_SkipsEncounter()
+        public async Task ReadLog_DRS_NormalMode_SkipsEncounter()
         {
             var testLog = CreateTestLogWithEncounter("Trinity Seeker", true, 100); // difficulty 100 = normal
             _mockFFLogsClient.SetupLog(testLog);
@@ -207,6 +210,81 @@ namespace Prima.Tests
             var success = (LogParsingResult.Success)result;
             Assert.That(success.MissedUsers.Count, Is.EqualTo(1));
             Assert.That(success.MissedUsers[0].Name, Is.EqualTo("TestPlayer"));
+        }
+
+        [Test]
+        public async Task ReadLog_ForkedTower_MarbleDragon_AssignsCorrectRoles()
+        {
+            var testLog = CreateTestLogWithEncounter("Marble Dragon", true, 100);
+            _mockFFLogsClient.SetupLog(testLog);
+            _mockActorMapper.SetupUsers(new Dictionary<int, DiscordXIVUser>
+            {
+                { 1, new DiscordXIVUser { Name = "TestPlayer", World = "TestWorld", DiscordId = 12345 } },
+            });
+
+            var result = await _service.ReadLog("https://www.fflogs.com/reports/abcde12345", _mockActorMapper);
+
+            Assert.That(result, Is.InstanceOf<LogParsingResult.Success>());
+            var success = (LogParsingResult.Success)result;
+            Assert.That(success.RoleAssignments.Count, Is.EqualTo(1));
+            Assert.That(success.Rules, Is.InstanceOf<ForkedTowerRules>());
+
+            var assignment = success.RoleAssignments[0];
+            var roleActions = assignment.RoleActions;
+            Assert.That(roleActions.Count, Is.EqualTo(4));
+
+            // Should add Demon Tablet Progression role
+            Assert.That(roleActions.Any(ra =>
+                ra.ActionType == LogParsingResult.RoleActionType.Add &&
+                ra.RoleId == ForkedTowerRules.DemonTabletProgression));
+
+            // Should add Dead Stars Progression role
+            Assert.That(roleActions.Any(ra =>
+                ra.ActionType == LogParsingResult.RoleActionType.Add &&
+                ra.RoleId == ForkedTowerRules.DeadStarsProgression));
+
+            // Should add Marble Dragon Progression role
+            Assert.That(roleActions.Any(ra =>
+                ra.ActionType == LogParsingResult.RoleActionType.Add &&
+                ra.RoleId == ForkedTowerRules.MarbleDragonProgression));
+
+            // Should add Magitaur Progression role (kill role)
+            Assert.That(roleActions.Any(ra =>
+                ra.ActionType == LogParsingResult.RoleActionType.Add &&
+                ra.RoleId == ForkedTowerRules.MagitaurProgression));
+        }
+
+        [Test]
+        public async Task ReadLog_ForkedTower_MagitaurKill_RemovesProgressionRolesAndAddsClear()
+        {
+            var testLog = CreateTestLogWithEncounter("Magitaur", true, 100);
+            _mockFFLogsClient.SetupLog(testLog);
+            _mockActorMapper.SetupUsers(new Dictionary<int, DiscordXIVUser>
+            {
+                { 1, new DiscordXIVUser { Name = "TestPlayer", World = "TestWorld", DiscordId = 12345 } },
+            });
+
+            var result = await _service.ReadLog("https://www.fflogs.com/reports/abcde12345", _mockActorMapper);
+
+            Assert.That(result, Is.InstanceOf<LogParsingResult.Success>());
+            var success = (LogParsingResult.Success)result;
+            Assert.That(success.Rules, Is.InstanceOf<ForkedTowerRules>());
+
+            var assignment = success.RoleAssignments[0];
+            var roleActions = assignment.RoleActions;
+
+            // Remove actions for each progression role, add action for FT cleared role
+            Assert.That(roleActions.Count, Is.EqualTo(ForkedTowerRules.Roles.Count + 1));
+
+            // Should have remove actions for all progression roles
+            var removeActions = roleActions.Where(ra => ra.ActionType == LogParsingResult.RoleActionType.Remove)
+                .ToList();
+            Assert.That(removeActions.Count, Is.EqualTo(ForkedTowerRules.Roles.Count));
+
+            // Should add FT Cleared role
+            Assert.That(roleActions.Any(ra =>
+                ra.ActionType == LogParsingResult.RoleActionType.Add &&
+                ra.RoleId == ForkedTowerRules.ClearedForkedTower));
         }
 
         private static LogInfo CreateTestDRSLog()

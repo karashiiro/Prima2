@@ -71,6 +71,23 @@ namespace Prima.Tests
         }
 
         [Test]
+        public void GetContingentRoleIds_QueenKill_ReturnsAllProgressionRoles()
+        {
+            var contingentRoles = _rules.GetContingentRoleIds(_rules.FinalClearRoleId).ToList();
+
+            // Should return all progression roles when cleared
+            var expectedRoles = DelubrumProgressionRoles.Roles
+                .Where(kvp => kvp.Value.EndsWith("Progression") && kvp.Value != "debug delub role")
+                .Select(kvp => kvp.Key)
+                .ToList();
+
+            foreach (var expectedRole in expectedRoles)
+            {
+                Assert.That(contingentRoles, Does.Contain(expectedRole));
+            }
+        }
+
+        [Test]
         public void GetContingentRoleIds_QueenProgression_ReturnsAllProgressionRoles()
         {
             var queenRole = DelubrumProgressionRoles.Roles

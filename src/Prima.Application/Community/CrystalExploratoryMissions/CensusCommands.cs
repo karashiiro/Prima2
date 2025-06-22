@@ -8,6 +8,7 @@ using NetStone.Model.Parseables.Character.Achievement;
 using Prima.DiscordNet;
 using Prima.DiscordNet.Attributes;
 using Prima.Game.FFXIV;
+using Prima.Game.FFXIV.FFLogs.Rules;
 using Prima.Models;
 using Prima.Resources;
 using Prima.Services;
@@ -763,8 +764,8 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         {
             await AddAchievementRole(clearedDrs, member);
 
-            var queenProg = guild.Roles.FirstOrDefault(r => r.Name == "The Queen Progression");
-            var contingentRoles = DelubrumProgressionRoles.GetContingentRoles(queenProg?.Id ?? 0);
+            var fightRules = new DelubrumReginaeSavageRules();
+            var contingentRoles = fightRules.GetContingentRoleIds(fightRules.FinalClearRoleId);
             foreach (var crId in contingentRoles)
             {
                 var cr = guild.GetRole(crId);
@@ -787,6 +788,17 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             achievements.Any(achievement => achievement.Id == 3668)) // A Fork To Be Reckoned With I
         {
             await AddAchievementRole(clearedForkedTower, member);
+
+            var fightRules = new ForkedTowerRules();
+            var contingentRoles = fightRules.GetContingentRoleIds(fightRules.FinalClearRoleId);
+            foreach (var crId in contingentRoles)
+            {
+                var cr = guild.GetRole(crId);
+                if (!member.HasRole(cr)) continue;
+                await member.RemoveRoleAsync(cr);
+                _logger.LogInformation("Role {RoleName} removed from {DiscordName}", cr.Name, member.ToString());
+            }
+
             hasForkedTowerBloodAchievement1 = true;
         }
 

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Prima.Game.FFXIV;
+using Prima.Game.FFXIV.FFLogs.Rules;
 
 namespace Prima.Models.FFLogs
 {
@@ -18,6 +19,7 @@ namespace Prima.Models.FFLogs
             public List<UserRoleAssignment> RoleAssignments { get; init; } = new();
             public List<LogInfo.ReportDataWrapper.ReportData.Report.Master.Actor> MissedUsers { get; init; } = new();
             public bool HasAnyChanges => RoleAssignments.Count > 0;
+            public ILogParsingRules Rules { get; init; }
         }
 
         public class Failure : LogParsingResult

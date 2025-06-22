@@ -132,7 +132,7 @@ namespace Prima.Game.FFXIV.FFLogs
                                 RoleId = progRoleId,
                             }));
 
-                        // Give everyone the clear role if they cleared DRS
+                        // Add the clear role
                         roleActions.Add(new LogParsingResult.RoleAction
                         {
                             ActionType = LogParsingResult.RoleActionType.Add,
@@ -173,6 +173,7 @@ namespace Prima.Game.FFXIV.FFLogs
             {
                 RoleAssignments = roleAssignments,
                 MissedUsers = missedUsers,
+                Rules = rules,
             };
         }
 

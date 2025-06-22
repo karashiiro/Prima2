@@ -88,6 +88,23 @@ namespace Prima.Tests
         }
 
         [Test]
+        public void GetContingentRoleIds_MagitaurKill_ReturnsAllProgressionRoles()
+        {
+            var contingentRoles = _rules.GetContingentRoleIds(_rules.FinalClearRoleId).ToList();
+
+            // Should return all progression roles when cleared
+            var expectedRoles = ForkedTowerRules.Roles
+                .Where(kvp => kvp.Value.EndsWith("Progression"))
+                .Select(kvp => kvp.Key)
+                .ToList();
+
+            foreach (var expectedRole in expectedRoles)
+            {
+                Assert.That(contingentRoles, Does.Contain(expectedRole));
+            }
+        }
+
+        [Test]
         public void GetContingentRoleIds_DemonTabletProgression_ReturnsSelfOnly()
         {
             var demonTabletRole = ForkedTowerRules.Roles
