@@ -11,6 +11,11 @@ namespace Prima.Game.FFXIV.FFLogs.Rules
         {
             foreach (var encounter in report.Fights)
             {
+                if (string.IsNullOrWhiteSpace(encounter.Name))
+                {
+                    continue;
+                }
+
                 if (DelubrumProgressionRoles.Roles.Values.Any(roleName => roleName.Contains(encounter.Name)))
                 {
                     return new DelubrumReginaeSavageRules();

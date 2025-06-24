@@ -52,6 +52,8 @@ namespace Prima.Game.FFXIV.FFLogs
         public async Task<LogParsingResult> ReadLog(string logLink, IBatchActorMapper actorMapper,
             ILogParsingRules rules)
         {
+            _logger.LogInformation("Parsing log with ruleset {RulesetName}", rules.GetType().Name);
+            
             // Log validation
             var validationResult = await ValidateLog(logLink);
             if (validationResult is LogValidationResult.Failure validationFailure)
@@ -77,7 +79,7 @@ namespace Prima.Game.FFXIV.FFLogs
             {
                 if (!rules.ShouldProcessEncounter(encounter.Difficulty))
                 {
-                    Log.Warning("Encounter {Encounter} should not be processed based on difficulty {Difficulty}",
+                    _logger.LogWarning("Encounter {Encounter} should not be processed based on difficulty {Difficulty}",
                         encounter.Name, encounter.Difficulty);
                     continue;
                 }
@@ -85,14 +87,16 @@ namespace Prima.Game.FFXIV.FFLogs
                 var progressionRoleName = rules.GetProgressionRoleName(encounter.Name);
                 if (progressionRoleName == null)
                 {
-                    Log.Warning("No progression role mapping found for encounter: {EncounterName}", encounter.Name);
+                    _logger.LogWarning("No progression role mapping found for encounter: {EncounterName}",
+                        encounter.Name);
                     continue;
                 }
 
                 var killRoleId = rules.GetKillRoleId(progressionRoleName);
                 if (killRoleId == 0)
                 {
-                    Log.Warning("No kill role ID found for progression role: {ProgressionRole}", progressionRoleName);
+                    _logger.LogWarning("No kill role ID found for progression role: {ProgressionRole}",
+                        progressionRoleName);
                     continue;
                 }
 
@@ -107,6 +111,8 @@ namespace Prima.Game.FFXIV.FFLogs
                         var actor = actors.Find(a => a.Id == id);
                         if (actor != null)
                         {
+                            _logger.LogWarning("Can't find Discord user for actor {ActorId}: ({World}) {CharacterName}",
+                                actor.Id, actor.Server, actor.Name);
                             missedUsers.Add(actor);
                         }
 
@@ -115,6 +121,7 @@ namespace Prima.Game.FFXIV.FFLogs
 
                     if (discordUser == null)
                     {
+                        _logger.LogWarning("Can't find Discord user {DiscordId}", id);
                         continue;
                     }
 
@@ -124,6 +131,9 @@ namespace Prima.Game.FFXIV.FFLogs
 
                     if (killRoleId == rules.FinalClearRoleId && encounter.Kill == true)
                     {
+                        _logger.LogInformation("Adding clear role for {EncounterName} to Discord user {DiscordName}",
+                            encounter.Name, discordUser.ToString());
+
                         // Remove all contingent roles
                         roleActions.AddRange(contingentRoleIds
                             .Select(progRoleId => new LogParsingResult.RoleAction
@@ -141,6 +151,9 @@ namespace Prima.Game.FFXIV.FFLogs
                     }
                     else
                     {
+                        _logger.LogInformation("Adding prog roles for {EncounterName} to Discord user {DiscordName}",
+                            encounter.Name, discordUser.ToString());
+
                         // Give all contingent roles as well as the clear role for the fight if cleared
                         roleActions.AddRange(contingentRoleIds
                             .Select(progRoleId => new LogParsingResult.RoleAction
@@ -151,6 +164,9 @@ namespace Prima.Game.FFXIV.FFLogs
 
                         if (encounter.Kill == true)
                         {
+                            _logger.LogInformation("Adding kill role for {EncounterName} to Discord user {DiscordName}",
+                                encounter.Name, discordUser.ToString());
+
                             roleActions.Add(new LogParsingResult.RoleAction
                             {
                                 ActionType = LogParsingResult.RoleActionType.Add,
@@ -169,6 +185,8 @@ namespace Prima.Game.FFXIV.FFLogs
                     RoleActions = kvp.Value,
                 })
                 .ToList();
+
+            _logger.LogInformation("Successfully parsed log with ruleset {RulesetName}", rules.GetType().Name);
             return new LogParsingResult.Success
             {
                 RoleAssignments = roleAssignments,

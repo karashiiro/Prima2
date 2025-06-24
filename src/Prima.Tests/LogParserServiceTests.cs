@@ -213,6 +213,43 @@ namespace Prima.Tests
         }
 
         [Test]
+        public async Task ReadLog_ForkedTower_DeadStars_AssignsCorrectRoles()
+        {
+            var testLog = CreateTestLogWithEncounter("Dead Stars", true, 100);
+            _mockFFLogsClient.SetupLog(testLog);
+            _mockActorMapper.SetupUsers(new Dictionary<int, DiscordXIVUser>
+            {
+                { 1, new DiscordXIVUser { Name = "TestPlayer", World = "TestWorld", DiscordId = 12345 } },
+            });
+
+            var result = await _service.ReadLog("https://www.fflogs.com/reports/abcde12345", _mockActorMapper);
+
+            Assert.That(result, Is.InstanceOf<LogParsingResult.Success>());
+            var success = (LogParsingResult.Success)result;
+            Assert.That(success.RoleAssignments.Count, Is.EqualTo(1));
+            Assert.That(success.Rules, Is.InstanceOf<ForkedTowerRules>());
+
+            var assignment = success.RoleAssignments[0];
+            var roleActions = assignment.RoleActions;
+            Assert.That(roleActions.Count, Is.EqualTo(3));
+
+            // Should add Demon Tablet Progression role
+            Assert.That(roleActions.Any(ra =>
+                ra.ActionType == LogParsingResult.RoleActionType.Add &&
+                ra.RoleId == ForkedTowerRules.DemonTabletProgression));
+
+            // Should add Dead Stars Progression role
+            Assert.That(roleActions.Any(ra =>
+                ra.ActionType == LogParsingResult.RoleActionType.Add &&
+                ra.RoleId == ForkedTowerRules.DeadStarsProgression));
+
+            // Should add Marble Dragon Progression role (kill role)
+            Assert.That(roleActions.Any(ra =>
+                ra.ActionType == LogParsingResult.RoleActionType.Add &&
+                ra.RoleId == ForkedTowerRules.MarbleDragonProgression));
+        }
+
+        [Test]
         public async Task ReadLog_ForkedTower_MarbleDragon_AssignsCorrectRoles()
         {
             var testLog = CreateTestLogWithEncounter("Marble Dragon", true, 100);

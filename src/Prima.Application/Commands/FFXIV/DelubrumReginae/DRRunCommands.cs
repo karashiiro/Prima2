@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.Net;
+using Microsoft.Extensions.Logging;
 using Prima.DiscordNet;
 using Prima.DiscordNet.Attributes;
 using Prima.Game.FFXIV.FFLogs;
@@ -8,7 +9,6 @@ using Prima.Game.FFXIV.FFLogs.Rules;
 using Prima.Models.FFLogs;
 using Prima.Resources;
 using Prima.Services;
-using Serilog;
 
 namespace Prima.Application.Commands.FFXIV.DelubrumReginae;
 
@@ -17,11 +17,13 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
 {
     private readonly IDbService _db;
     private readonly ILogParserService _logParser;
+    private readonly ILogger<DRRunCommands> _logger;
 
-    public DRRunCommands(IDbService db, ILogParserService logParser)
+    public DRRunCommands(IDbService db, ILogParserService logParser, ILogger<DRRunCommands> logger)
     {
         _db = db;
         _logParser = logParser;
+        _logger = logger;
     }
 
     [Command("setroler", RunMode = RunMode.Async)]
@@ -55,7 +57,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
         }
         catch (HttpException e) when (e.DiscordCode == DiscordErrorCode.CannotSendMessageToUser)
         {
-            Log.Warning("Can't send direct message to user {DiscordName}", member.ToString());
+            _logger.LogWarning("Can't send direct message to user {DiscordName}", member.ToString());
         }
     }
 
@@ -85,14 +87,14 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
     [Command("addprogrole", RunMode = RunMode.Async)]
     [Alias("addprogroles")]
     [Description(
-        "Adds progression roles to server members from a log. Rolers can also manually add roles using this command.")]
+        "Adds progression roles to server members from a _logger. Rolers can also manually add roles using this command.")]
     [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
     public async Task AddDelubrumProgRoleAsync([Remainder] string args)
     {
         using var typing = Context.Channel.EnterTypingState();
 
         var isFFLogs = FFLogsUtils.IsLogLink(args);
-        Log.Information("FFLogs link provided: {IsFFLogsLinkProvided}", isFFLogs);
+        _logger.LogInformation("FFLogs link provided: {IsFFLogsLinkProvided}", isFFLogs);
 
         if (isFFLogs)
         {
@@ -105,7 +107,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
             && !executor.HasRole(579916868035411968, Context) // or Mentor
             && !executor.GuildPermissions.KickMembers) // or can kick users
         {
-            Log.Information("User does not have roler role");
+            _logger.LogInformation("User does not have roler role");
             var res = await ReplyAsync($"{Context.User.Mention}, you don't have the roler role!");
             await Task.Delay(5000);
             await res.DeleteAsync();
@@ -131,7 +133,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
                 StringComparison.InvariantCultureIgnoreCase));
         if (role == null)
         {
-            Log.Information("Role name {RoleName} is invalid", roleName);
+            _logger.LogInformation("Role name {RoleName} is invalid", roleName);
             var res = await ReplyAsync(
                 $"{Context.User.Mention}, no role by that name exists! Make sure you spelled it correctly.");
             await Task.Delay(5000);
@@ -141,7 +143,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
 
         if (!DelubrumProgressionRoles.Roles.ContainsKey(role.Id))
         {
-            Log.Information("Role key {RoleKey} is invalid", role.Id);
+            _logger.LogInformation("Role key {RoleKey} is invalid", role.Id);
             return;
         }
 
@@ -158,7 +160,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
                 }
                 catch (Exception e)
                 {
-                    Log.Error(e, "Failed to add roles to user {DiscordName}", m.ToString());
+                    _logger.LogError(e, "Failed to add roles to user {DiscordName}", m.ToString());
                     return Task.CompletedTask;
                 }
             }));
@@ -209,7 +211,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
                 }
                 catch (Exception e)
                 {
-                    Log.Error(e, "Failed to remove role from user {DiscordName}", m.ToString());
+                    _logger.LogError(e, "Failed to remove role from user {DiscordName}", m.ToString());
                     return Task.CompletedTask;
                 }
             }));
@@ -228,7 +230,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
         switch (logParsingResult)
         {
             case LogParsingResult.Failure failure:
-                Log.Error("Failed to read log: {ErrorMessage}", failure.ErrorMessage);
+                _logger.LogError("Failed to read log: {ErrorMessage}", failure.ErrorMessage);
                 await ReplyAsync(failure.ErrorMessage);
                 return;
             case LogParsingResult.Success success:
@@ -279,20 +281,20 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
         }
     }
 
-    private static async Task<bool> AssignProgressionRole(IRole role, IGuildUser user, ILogParsingRules rules)
+    private async Task<bool> AssignProgressionRole(IRole role, IGuildUser user, ILogParsingRules rules)
     {
         if (user.HasRole(rules.FinalClearRoleId))
         {
-            Log.Information("User {DiscordName} already has clear role", user.ToString());
+            _logger.LogInformation("User {DiscordName} already has clear role", user.ToString());
             return false;
         }
 
-        Log.Information("Checking role {RoleName} on user {DiscordName}", role.Name,
+        _logger.LogInformation("Checking role {RoleName} on user {DiscordName}", role.Name,
             user.ToString());
         if (!user.HasRole(role))
         {
             await user.AddRoleAsync(role);
-            Log.Information("Added role {RoleName} to user {DiscordName}", role.Name,
+            _logger.LogInformation("Added role {RoleName} to user {DiscordName}", role.Name,
                 user.ToString());
             return true;
         }
@@ -300,14 +302,14 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
         return false;
     }
 
-    private static async Task RemoveProgressionRole(IRole role, IGuildUser user)
+    private async Task RemoveProgressionRole(IRole role, IGuildUser user)
     {
-        Log.Information("Checking role {RoleName} on user {DiscordName}", role.Name,
+        _logger.LogInformation("Checking role {RoleName} on user {DiscordName}", role.Name,
             user.ToString());
         if (user.HasRole(role))
         {
             await user.RemoveRoleAsync(role);
-            Log.Information("Removed role {RoleName} from user {DiscordName}", role.Name,
+            _logger.LogInformation("Removed role {RoleName} from user {DiscordName}", role.Name,
                 user.ToString());
         }
     }
