@@ -309,6 +309,13 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         await finalReply.DeleteAsync();
     }
 
+    [Command("theyare2", RunMode = RunMode.Async)]
+    [RequireUserPermission(GuildPermission.ManageGuild)]
+    public Task TheyAre2Async(string userMentionStr, params string[] parameters)
+    {
+        return TheyAreAsync(userMentionStr, parameters);
+    }
+
     // Set someone else's character.
     [Command("theyare", RunMode = RunMode.Async)]
     [RequireUserPermission(GuildPermission.KickMembers)]
@@ -320,23 +327,11 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         var userMention = await DiscordUtilities.GetUserFromMention(userMentionStr, Context);
 
         ulong lodestoneId = 0;
-        if (parameters.Length != 3)
+        if (parameters.Length < 3)
         {
-            if (parameters.Length == 1)
+            if (!ulong.TryParse(parameters[0], out lodestoneId))
             {
-                if (!ulong.TryParse(parameters[0], out lodestoneId))
-                {
-                    _logger.LogInformation("Failed to parse Lodestone ID");
-                    var reply = await ReplyAsync(
-                        $"{Context.User.Mention}, please enter that command in the format `{prefix}theyare Mention World Name Surname`.");
-                    await Task.Delay(MessageDeleteDelay);
-                    await reply.DeleteAsync();
-                    return;
-                }
-            }
-            else
-            {
-                _logger.LogInformation("Invalid theyare command syntax");
+                _logger.LogInformation("Failed to parse Lodestone ID");
                 var reply = await ReplyAsync(
                     $"{Context.User.Mention}, please enter that command in the format `{prefix}theyare Mention World Name Surname`.");
                 await Task.Delay(MessageDeleteDelay);
@@ -345,23 +340,28 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             }
         }
 
-        var world = parameters[0].ToLower();
-        var name = parameters[1] + " " + parameters[2];
-        world = RegexSearches.NonAlpha.Replace(world, string.Empty);
-        name = RegexSearches.AngleBrackets.Replace(name, string.Empty);
-        name = RegexSearches.UnicodeApostrophe.Replace(name, string.Empty);
-        world = world.ToLower();
-        world = world[0].ToString().ToUpper() + world[1..];
-        if (world == "Courel" || world == "Couerl")
+        var world = "";
+        var name = "";
+        if (parameters.Length >= 3)
         {
-            world = "Coeurl";
-        }
-        else if (world == "Diablos")
-        {
-            world = "Diabolos";
+            world = parameters[0].ToLower();
+            name = parameters[1] + " " + parameters[2];
+            world = RegexSearches.NonAlpha.Replace(world, string.Empty);
+            name = RegexSearches.AngleBrackets.Replace(name, string.Empty);
+            name = RegexSearches.UnicodeApostrophe.Replace(name, string.Empty);
+            world = world.ToLower();
+            world = world[0].ToString().ToUpper() + world[1..];
+            if (world == "Courel" || world == "Couerl")
+            {
+                world = "Coeurl";
+            }
+            else if (world == "Diablos")
+            {
+                world = "Diabolos";
+            }
         }
 
-        var force = parameters.Length >= 4 && parameters[3].ToLower() == "force";
+        var force = parameters[^1].ToLower() == "force";
 
         var guild = Context.Guild ?? Context.Client.Guilds
 #if !DEBUG
@@ -379,7 +379,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
         LodestoneCharacter? character;
         try
         {
-            if (parameters.Length == 4)
+            if (parameters.Length >= 3)
             {
                 _logger.LogInformation("Searching for user: ({World}) {CharacterName}", world, name);
                 (foundCharacter, character) =
