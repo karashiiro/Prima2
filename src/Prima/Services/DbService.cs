@@ -111,6 +111,15 @@ namespace Prima.Services
             });
         }
 
+        public Task<DiscordXIVUser?> GetUserByDiscordId(ulong discordId)
+        {
+            return WithLock(async () =>
+            {
+                _logger.LogInformation("Fetching user by Discord ID: {DiscordId}", discordId);
+                return await _users.Find(u => u.DiscordId == discordId).FirstOrDefaultAsync();
+            });
+        }
+
         public async Task SetGlobalConfigurationProperty(string key, string value)
         {
             _logger.LogInformation("Setting global configuration property: {ConfigKey}={ConfigValue}", key, value);
@@ -363,23 +372,29 @@ namespace Prima.Services
             }
         }
 
-        public async Task AddUser(DiscordXIVUser user)
+        public Task AddUser(DiscordXIVUser user)
         {
-            _logger.LogInformation("Registering user {UserId}", user.DiscordId);
-            if (await (await _users.FindAsync(u => u.DiscordId == user.DiscordId)).AnyAsync().ConfigureAwait(false))
-                await _users.DeleteOneAsync(u => u.DiscordId == user.DiscordId);
-            await _users.InsertOneAsync(user);
+            return WithLock(async () =>
+            {
+                _logger.LogInformation("Registering user {UserId}", user.DiscordId);
+                if (await (await _users.FindAsync(u => u.DiscordId == user.DiscordId)).AnyAsync().ConfigureAwait(false))
+                    await _users.DeleteOneAsync(u => u.DiscordId == user.DiscordId);
+                await _users.InsertOneAsync(user);
+            });
         }
 
         public Task UpdateUser(DiscordXIVUser user) => AddUser(user);
 
-        public async Task<bool> RemoveUser(string world, string name)
+        public Task<bool> RemoveUser(string world, string name)
         {
-            _logger.LogInformation("Unregistering user with character ({World}) {CharacterName}", world, name);
-            var filterBuilder = Builders<DiscordXIVUser>.Filter;
-            var filter = filterBuilder.Eq(props => props.World, world) & filterBuilder.Eq(props => props.Name, name);
-            var result = await _users.DeleteOneAsync(filter);
-            return result.DeletedCount > 0;
+            return WithLock(async () =>
+            {
+                _logger.LogInformation("Unregistering user with character ({World}) {CharacterName}", world, name);
+                var filterBuilder = Builders<DiscordXIVUser>.Filter;
+                var filter = filterBuilder.Eq(props => props.World, world) & filterBuilder.Eq(props => props.Name, name);
+                var result = await _users.DeleteOneAsync(filter);
+                return result.DeletedCount > 0;
+            });
         }
 
         public async Task<bool> RemoveUser(ulong lodestoneId)
@@ -432,6 +447,24 @@ namespace Prima.Services
             if (message != null)
             {
                 await _channelDescriptions.DeleteOneAsync(cd => cd.ChannelId == channelId);
+            }
+        }
+
+        private async Task WithLock(Func<Task> action)
+        {
+            if (!await _lock.WaitAsync(TimeSpan.FromSeconds(LockTimeoutSeconds)).ConfigureAwait(false))
+            {
+                _logger.LogWarning("Could not acquire database lock");
+                throw new TimeoutException("Could not acquire database lock");
+            }
+
+            try
+            {
+                await action();
+            }
+            finally
+            {
+                _lock.Release();
             }
         }
 

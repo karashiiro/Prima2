@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using MongoDB.Bson;
@@ -34,6 +35,25 @@ namespace Prima.Game.FFXIV
         public string Timezone;
 
         public bool Verified;
+
+        // Keyed on guild ID (keys must be represented as strings)
+        public Dictionary<string, IList<ulong>> VanityRoles = new();
+
+        public IList<ulong> GetVanityRoles(ulong guildId)
+        {
+            return VanityRoles?.GetValueOrDefault(guildId.ToString(), new List<ulong>()) ?? new List<ulong>();
+        }
+
+        public void AddVanityRoles(ulong guildId, IEnumerable<ulong> roles)
+        {
+            VanityRoles ??= new Dictionary<string, IList<ulong>>();
+            if (!VanityRoles.ContainsKey(guildId.ToString())) VanityRoles.Add(guildId.ToString(), new List<ulong>());
+
+            foreach (var role in roles)
+            {
+                VanityRoles[guildId.ToString()].Add(role);
+            }
+        }
 
         public static async Task<(DiscordXIVUser?, LodestoneCharacter?)> CreateFromLodestoneId(
             LodestoneClient lodestone,
