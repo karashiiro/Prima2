@@ -14,7 +14,7 @@ namespace Prima.Services
     {
         private const string ConnectionString = "mongodb://localhost:27017";
         private const string DbName = "PrimaDb";
-        private const double LockTimeoutSeconds = 30;
+        private const double LockTimeoutSeconds = 120;
 
         // Hide types of the database implementation from callers.
         public GlobalConfiguration Config

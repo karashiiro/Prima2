@@ -12,5 +12,10 @@
             World = world;
             User = user;
         }
+
+        public override string ToString()
+        {
+            return $"({World}) {Name}";
+        }
     }
 }
