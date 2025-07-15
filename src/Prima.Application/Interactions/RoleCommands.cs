@@ -19,6 +19,51 @@ public class RoleCommands : InteractionModuleBase<SocketInteractionContext>
         _db = db;
     }
 
+    [SlashCommand("set-main-vanity-role", "Sets your primary vanity role in this server. Temporarily removes all other vanity roles.")]
+    public async Task SetMainVanityRole(IRole role)
+    {
+        var guild = Context.Guild;
+        if (guild == null)
+        {
+            await ReplyAsync("This command can only be used in a guild.");
+            return;
+        }
+
+        _logger.LogInformation("Setting main vanity role for {User} to {Role}", Context.User.Username, role.Name);
+
+        var user = await Context.Client.Rest.GetGuildUserAsync(guild.Id, Context.User.Id);
+
+        // Register any untracked vanity roles
+        await user.UpdateVanityRoles(_db, _logger);
+        
+        var dbUser = await _db.GetUserByDiscordId(user.Id);
+        if (dbUser == null)
+        {
+            await RespondAsync("You are not currently registered. Please register yourself with `~iam`.",
+                ephemeral: true);
+            return;
+        }
+
+        // Get the vanity roles the user has, according to the guild
+        var roleIds = dbUser.GetVanityRoles(guild.Id);
+        _logger.LogInformation("Found {RoleCount} vanity roles for {User}", roleIds.Count, Context.User.Username);
+
+        if (!roleIds.Contains(role.Id))
+        {
+            await RespondAsync("You don't have that role! Check your vanity roles with /list-vanity-roles.",
+                ephemeral: true);
+            return;
+        }
+
+        // Remove all vanity roles except the main one
+        foreach (var roleId in roleIds)
+        {
+            if (roleId == role.Id) continue;
+            await user.RemoveRoleAsync(roleId);
+        }
+        await user.AddRoleAsync(role.Id);
+    }
+
     [SlashCommand("list-vanity-roles", "Check your vanity roles on this server.")]
     public async Task ListVanityRoles()
     {
