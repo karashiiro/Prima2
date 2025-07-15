@@ -1,8 +1,8 @@
 ﻿using Discord;
 using Discord.Interactions;
 using Microsoft.Extensions.Logging;
+using Prima.DiscordNet;
 using Prima.DiscordNet.Attributes;
-using Prima.Resources;
 using Prima.Services;
 
 namespace Prima.Application.Interactions;
@@ -41,7 +41,7 @@ public class RoleCommands : InteractionModuleBase<SocketInteractionContext>
         }
 
         // Register any untracked vanity roles
-        await UpdateVanityRoles(user);
+        await user.UpdateVanityRoles(_db, _logger);
 
         // Get the vanity roles the user has, according to the guild
         var roleIds = dbUser.GetVanityRoles(guild.Id);
@@ -60,22 +60,5 @@ public class RoleCommands : InteractionModuleBase<SocketInteractionContext>
                 .WithDescription(string.Join("\n", roles.Select(r => r.Mention)))
                 .Build(),
             ephemeral: true);
-    }
-
-    private async Task UpdateVanityRoles(IGuildUser user)
-    {
-        var dbUser = await _db.GetUserByDiscordId(user.Id);
-        if (dbUser == null)
-        {
-            return;
-        }
-
-        var allGuildVanityRoles = SpecialGuildVanityRoles.GetRoles(user.GuildId);
-        var vanityRoles = user.RoleIds.Where(roleId => allGuildVanityRoles.Contains(roleId)).ToList();
-
-        dbUser.AddVanityRoles(user.GuildId, vanityRoles);
-
-        _logger.LogInformation("Updating vanity roles for {User}", user.Username);
-        await _db.UpdateUser(dbUser);
     }
 }
