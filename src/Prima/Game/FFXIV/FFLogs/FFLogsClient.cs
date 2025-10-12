@@ -9,7 +9,7 @@ using Serilog;
 
 namespace Prima.Game.FFXIV.FFLogs
 {
-    public class FFLogsClient
+    public class FFLogsClient : IFFLogsClient
     {
         private readonly HttpClient _http;
 
@@ -18,10 +18,9 @@ namespace Prima.Game.FFXIV.FFLogs
         
         private DateTime _expirationTime;
 
-        public FFLogsClient()
+        public FFLogsClient(HttpClient http)
         {
-            _http = new HttpClient();
-
+            _http = http;
             _clientId = Environment.GetEnvironmentVariable("FFLOGS_CLIENT_ID");
             _clientSecret = Environment.GetEnvironmentVariable("FFLOGS_CLIENT_SECRET");
         }

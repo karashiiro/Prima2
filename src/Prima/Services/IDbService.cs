@@ -20,6 +20,10 @@ namespace Prima.Services
         IAsyncEnumerable<VoteHost> VoteHosts { get; }
         IAsyncEnumerable<EphemeralPin> EphemeralPins { get; }
 
+        Task<DiscordXIVUser?> GetUserByDiscordId(ulong discordId);
+
+        Task<DiscordXIVUser?> GetUserByCharacterInfo(string? world, string? characterName);
+
         Task SetGlobalConfigurationProperty(string key, string value);
 
         Task SetGuildConfigurationProperty<T>(ulong guildId, string key, T value);

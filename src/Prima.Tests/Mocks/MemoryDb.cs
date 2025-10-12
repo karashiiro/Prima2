@@ -50,6 +50,16 @@ namespace Prima.Tests.Mocks
             Config = new GlobalConfiguration();
         }
 
+        public Task<DiscordXIVUser> GetUserByCharacterInfo(string world, string characterName)
+        {
+            return Task.FromResult(_users.FirstOrDefault(u => u.World == world && u.Name == characterName));
+        }
+
+        public Task<DiscordXIVUser> GetUserByDiscordId(ulong discordId)
+        {
+            return Task.FromResult(_users.FirstOrDefault(u => u.DiscordId == discordId));
+        }
+
         public Task SetGlobalConfigurationProperty(string key, string value)
         {
             var field = typeof(GlobalConfiguration).GetField(key);

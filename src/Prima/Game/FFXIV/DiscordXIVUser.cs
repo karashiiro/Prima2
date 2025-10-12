@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
@@ -34,6 +36,42 @@ namespace Prima.Game.FFXIV
         public string Timezone;
 
         public bool Verified;
+
+        public Dictionary<string, ulong?> PrioritizedVanityRole = new();
+
+        // Keyed on guild ID (keys must be represented as strings)
+        public Dictionary<string, IList<ulong>> VanityRoles = new();
+
+        public bool TryGetPrioritizedVanityRole(ulong guildId, out ulong? roleId)
+        {
+            roleId = PrioritizedVanityRole?.GetValueOrDefault(guildId.ToString());
+            return roleId.HasValue;
+        }
+
+        public void SetPrioritizedVanityRole(ulong guildId, ulong? roleId)
+        {
+            PrioritizedVanityRole ??= new Dictionary<string, ulong?>();
+            PrioritizedVanityRole[guildId.ToString()] = roleId;
+        }
+
+        public IList<ulong> GetVanityRoles(ulong guildId)
+        {
+            return VanityRoles?.GetValueOrDefault(guildId.ToString(), new List<ulong>()) ?? new List<ulong>();
+        }
+
+        public void AddVanityRoles(ulong guildId, IEnumerable<ulong> roles)
+        {
+            VanityRoles ??= new Dictionary<string, IList<ulong>>();
+            if (!VanityRoles.ContainsKey(guildId.ToString())) VanityRoles.Add(guildId.ToString(), new List<ulong>());
+
+            foreach (var role in roles)
+            {
+                if (!VanityRoles[guildId.ToString()].Contains(role)) VanityRoles[guildId.ToString()].Add(role);
+            }
+            
+            // Temporary hack since some users have duplicates already
+            VanityRoles[guildId.ToString()] = new HashSet<ulong>(VanityRoles[guildId.ToString()]).ToList();
+        }
 
         public static async Task<(DiscordXIVUser?, LodestoneCharacter?)> CreateFromLodestoneId(
             LodestoneClient lodestone,

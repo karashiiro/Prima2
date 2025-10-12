@@ -4,7 +4,7 @@
     {
         public const ulong CrystalExploratoryMissions =
 #if DEBUG
-            550910482194890781
+            PrimaShouji
 #else
             550702475112480769
 #endif

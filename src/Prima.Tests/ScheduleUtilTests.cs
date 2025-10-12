@@ -23,7 +23,7 @@ namespace Prima.Tests
         {
             var tzi = ScheduleUtils.TimeZoneFromAbbr(abbr);
             var expectedOffsetUtc = TimeSpan.FromHours(expectedOffset);
-            Assert.That(tzi?.BaseUtcOffset.Hours == expectedOffset, "Expected {0}, got {1}.", expectedOffsetUtc, tzi?.BaseUtcOffset);
+            Assert.That(tzi.BaseUtcOffset.Hours == expectedOffset, $"Expected {expectedOffsetUtc}, got {tzi.BaseUtcOffset}.");
         }
 
         [TestCase("HT", -10, -10)]
@@ -37,8 +37,8 @@ namespace Prima.Tests
             var tzi = ScheduleUtils.TimeZoneFromAbbr(abbr);
             var expectedOffset1Utc = TimeSpan.FromHours(expectedOffset1);
             var expectedOffset2Utc = TimeSpan.FromHours(expectedOffset2);
-            Assert.That(tzi?.BaseUtcOffset.Hours == expectedOffset1 || tzi?.BaseUtcOffset.Hours == expectedOffset2,
-                "Expected {0} or {1}, got {2}.", expectedOffset1Utc, expectedOffset2Utc, tzi?.BaseUtcOffset);
+            Assert.That(tzi.BaseUtcOffset.Hours == expectedOffset1 || tzi.BaseUtcOffset.Hours == expectedOffset2,
+                $"Expected {expectedOffset1Utc} or {expectedOffset2Utc}, got {tzi.BaseUtcOffset}.");
         }
 
         [Test]
@@ -46,9 +46,9 @@ namespace Prima.Tests
         {
             var (output, _) = ScheduleUtils.ParseTime("7/30 12:00PM");
             
-            Assert.AreEqual(12, output.Hour);
-            Assert.AreEqual(0, output.Minute);
-            Assert.AreEqual(0, output.Second);
+            Assert.That(12 == output.Hour);
+            Assert.That(0 == output.Minute);
+            Assert.That(0 == output.Second);
         }
 
         [Test]
@@ -58,11 +58,11 @@ namespace Prima.Tests
         {
             var (output, _) = ScheduleUtils.ParseTime(input);
 
-            Assert.AreEqual(expectedMonth, output.Month);
-            Assert.AreEqual(expectedDay, output.Day);
-            Assert.AreEqual(expectedHour, output.Hour);
-            Assert.AreEqual(expectedMinute, output.Minute);
-            Assert.AreEqual(expectedSecond, output.Second);
+            Assert.That(expectedMonth == output.Month);
+            Assert.That(expectedDay == output.Day);
+            Assert.That(expectedHour == output.Hour);
+            Assert.That(expectedMinute == output.Minute);
+            Assert.That(expectedSecond == output.Second);
         }
 
         [Test]
@@ -70,7 +70,7 @@ namespace Prima.Tests
         public void ParseTime_WorksAsExpectedWithYear(string input, int expectedYear, int expectedMonth, int expectedDay, int expectedHour, int expectedMinute, int expectedSecond)
         {
             var (output, _) = ScheduleUtils.ParseTime(input);
-            Assert.AreEqual(new DateTime(expectedYear, expectedMonth, expectedDay, expectedHour, expectedMinute, expectedSecond), output.DateTime);
+            Assert.That(new DateTime(expectedYear, expectedMonth, expectedDay, expectedHour, expectedMinute, expectedSecond), Is.EqualTo(output.DateTime));
         }
 
         [Test]
@@ -87,14 +87,14 @@ namespace Prima.Tests
         {
             var (output, tzi) = ScheduleUtils.ParseTime(input);
 
-            Assert.AreEqual(expectedMonth, output.Month);
-            Assert.AreEqual(expectedDay, output.Day);
-            Assert.AreEqual(expectedHour, output.Hour);
-            Assert.AreEqual(expectedMinute, output.Minute);
-            Assert.AreEqual(expectedSecond, output.Second);
+            Assert.That(expectedMonth == output.Month);
+            Assert.That(expectedDay == output.Day);
+            Assert.That(expectedHour == output.Hour);
+            Assert.That(expectedMinute == output.Minute);
+            Assert.That(expectedSecond == output.Second);
 
             var expectedOffsetUtc = TimeSpan.FromHours(expectedOffset);
-            Assert.That(tzi?.BaseUtcOffset.Hours == expectedOffset, "Expected {0}, got {1}.", expectedOffsetUtc, tzi?.BaseUtcOffset);
+            Assert.That(tzi?.BaseUtcOffset.Hours == expectedOffset, $"Expected {expectedOffsetUtc}, got {tzi?.BaseUtcOffset}.");
         }
 
         [Test]
@@ -106,16 +106,16 @@ namespace Prima.Tests
         {
             var (output, tzi) = ScheduleUtils.ParseTime(input);
 
-            Assert.AreEqual(expectedMonth, output.Month);
-            Assert.AreEqual(expectedDay, output.Day);
-            Assert.AreEqual(expectedHour, output.Hour);
-            Assert.AreEqual(expectedMinute, output.Minute);
-            Assert.AreEqual(expectedSecond, output.Second);
+            Assert.That(expectedMonth == output.Month);
+            Assert.That(expectedDay == output.Day);
+            Assert.That(expectedHour == output.Hour);
+            Assert.That(expectedMinute == output.Minute);
+            Assert.That(expectedSecond == output.Second);
 
             var expectedOffset1Utc = TimeSpan.FromHours(expectedOffset1);
             var expectedOffset2Utc = TimeSpan.FromHours(expectedOffset2);
             Assert.That(tzi?.BaseUtcOffset.Hours == expectedOffset1 || tzi?.BaseUtcOffset.Hours == expectedOffset2,
-                "Expected {0} or {1}, got {2}.", expectedOffset1Utc, expectedOffset2Utc, tzi?.BaseUtcOffset);
+                $"Expected {expectedOffset1Utc} or {expectedOffset2Utc}, got {tzi?.BaseUtcOffset}.");
         }
 
         [Test]
@@ -132,15 +132,15 @@ namespace Prima.Tests
         {
             var (output, tzi) = ScheduleUtils.ParseTime(input);
 
-            Assert.AreEqual(expectedYear, output.Year);
-            Assert.AreEqual(expectedMonth, output.Month);
-            Assert.AreEqual(expectedDay, output.Day);
-            Assert.AreEqual(expectedHour, output.Hour);
-            Assert.AreEqual(expectedMinute, output.Minute);
-            Assert.AreEqual(expectedSecond, output.Second);
+            Assert.That(expectedYear == output.Year);
+            Assert.That(expectedMonth == output.Month);
+            Assert.That(expectedDay == output.Day);
+            Assert.That(expectedHour == output.Hour);
+            Assert.That(expectedMinute == output.Minute);
+            Assert.That(expectedSecond == output.Second);
 
             var expectedOffsetUtc = TimeSpan.FromHours(expectedOffset);
-            Assert.That(tzi?.BaseUtcOffset.Hours == expectedOffset, "Expected {0}, got {1}.", expectedOffsetUtc, tzi?.BaseUtcOffset);
+            Assert.That(tzi?.BaseUtcOffset.Hours == expectedOffset, $"Expected {expectedOffsetUtc}, got {tzi?.BaseUtcOffset}.");
         }
     }
 }

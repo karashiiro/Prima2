@@ -99,7 +99,7 @@ public class DRInfoCommands : ModuleBase<SocketCommandContext>
     [RateLimit(TimeSeconds = 10, Global = true)]
     [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
     public Task SpecialBoysAsync() => DiscordUtilities.PostImage(_http, Context,
-        "https://cdn.discordapp.com/attachments/908419620279574578/922266962363568188/Philippe_QG.png");
+        "https://i.imgur.com/ERMS7cw.png");
 
     [Command("drnspeedrun", RunMode = RunMode.Async)]
     [Description("Shows DRN speedrun loadouts.")]

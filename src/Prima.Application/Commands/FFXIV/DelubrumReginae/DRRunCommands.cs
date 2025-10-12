@@ -1,17 +1,14 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.Net;
-using NetStone;
-using NetStone.Model.Parseables.Character;
-using NetStone.Search.Character;
+using Microsoft.Extensions.Logging;
 using Prima.DiscordNet;
 using Prima.DiscordNet.Attributes;
-using Prima.Game.FFXIV;
 using Prima.Game.FFXIV.FFLogs;
+using Prima.Game.FFXIV.FFLogs.Rules;
 using Prima.Models.FFLogs;
 using Prima.Resources;
 using Prima.Services;
-using Serilog;
 
 namespace Prima.Application.Commands.FFXIV.DelubrumReginae;
 
@@ -19,14 +16,14 @@ namespace Prima.Application.Commands.FFXIV.DelubrumReginae;
 public class DRRunCommands : ModuleBase<SocketCommandContext>
 {
     private readonly IDbService _db;
-    private readonly FFLogsClient _ffLogs;
-    private readonly LodestoneClient _lodestone;
+    private readonly ILogParserService _logParser;
+    private readonly ILogger<DRRunCommands> _logger;
 
-    public DRRunCommands(IDbService db, FFLogsClient ffLogs, LodestoneClient lodestone)
+    public DRRunCommands(IDbService db, ILogParserService logParser, ILogger<DRRunCommands> logger)
     {
         _db = db;
-        _ffLogs = ffLogs;
-        _lodestone = lodestone;
+        _logParser = logParser;
+        _logger = logger;
     }
 
     [Command("setroler", RunMode = RunMode.Async)]
@@ -60,7 +57,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
         }
         catch (HttpException e) when (e.DiscordCode == DiscordErrorCode.CannotSendMessageToUser)
         {
-            Log.Warning("Can't send direct message to user {DiscordName}", member.ToString());
+            _logger.LogWarning("Can't send direct message to user {DiscordName}", member.ToString());
         }
     }
 
@@ -75,7 +72,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
             .Select(r => Context.Guild.GetRole(r))
             .ToList();
 
-        var clearedRole = Context.Guild.GetRole(806362589134454805);
+        var clearedRole = Context.Guild.GetRole(DelubrumProgressionRoles.ClearedDelubrumSavage);
         var cleared = Context.Guild.Users
             .Where(u => u.HasRole(clearedRole));
 
@@ -90,12 +87,14 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
     [Command("addprogrole", RunMode = RunMode.Async)]
     [Alias("addprogroles")]
     [Description(
-        "Adds progression roles to server members from a log. Rolers can also manually add roles using this command.")]
+        "Adds progression roles to server members from a _logger. Rolers can also manually add roles using this command.")]
     [RestrictToGuilds(SpecialGuilds.CrystalExploratoryMissions)]
     public async Task AddDelubrumProgRoleAsync([Remainder] string args)
     {
+        using var typing = Context.Channel.EnterTypingState();
+
         var isFFLogs = FFLogsUtils.IsLogLink(args);
-        Log.Information("FFLogs link provided: {IsFFLogsLinkProvided}", isFFLogs);
+        _logger.LogInformation("FFLogs link provided: {IsFFLogsLinkProvided}", isFFLogs);
 
         if (isFFLogs)
         {
@@ -108,7 +107,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
             && !executor.HasRole(579916868035411968, Context) // or Mentor
             && !executor.GuildPermissions.KickMembers) // or can kick users
         {
-            Log.Information("User does not have roler role");
+            _logger.LogInformation("User does not have roler role");
             var res = await ReplyAsync($"{Context.User.Mention}, you don't have the roler role!");
             await Task.Delay(5000);
             await res.DeleteAsync();
@@ -134,7 +133,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
                 StringComparison.InvariantCultureIgnoreCase));
         if (role == null)
         {
-            Log.Information("Role name {RoleName} is invalid", roleName);
+            _logger.LogInformation("Role name {RoleName} is invalid", roleName);
             var res = await ReplyAsync(
                 $"{Context.User.Mention}, no role by that name exists! Make sure you spelled it correctly.");
             await Task.Delay(5000);
@@ -144,7 +143,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
 
         if (!DelubrumProgressionRoles.Roles.ContainsKey(role.Id))
         {
-            Log.Information("Role key {RoleKey} is invalid", role.Id);
+            _logger.LogInformation("Role key {RoleKey} is invalid", role.Id);
             return;
         }
 
@@ -161,7 +160,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
                 }
                 catch (Exception e)
                 {
-                    Log.Error(e, "Failed to add roles to user {DiscordName}", m.ToString());
+                    _logger.LogError(e, "Failed to add roles to user {DiscordName}", m.ToString());
                     return Task.CompletedTask;
                 }
             }));
@@ -201,7 +200,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
             return;
         }
 
-        if (!DelubrumProgressionRoles.Roles.Keys.Contains(role.Id)) return;
+        if (!DelubrumProgressionRoles.Roles.ContainsKey(role.Id)) return;
 
         await Task.WhenAll(members
             .Select(m =>
@@ -212,7 +211,7 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
                 }
                 catch (Exception e)
                 {
-                    Log.Error(e, "Failed to remove role from user {DiscordName}", m.ToString());
+                    _logger.LogError(e, "Failed to remove role from user {DiscordName}", m.ToString());
                     return Task.CompletedTask;
                 }
             }));
@@ -220,199 +219,99 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
         await ReplyAsync("Roles removed!");
     }
 
-    private class PotentialDbUser
+    /// <summary>
+    /// Reads a fight log and updates user roles based on fight progression.
+    /// </summary>
+    /// <param name="logLink">The FFLogs log link.</param>
+    public async Task ReadLog(string logLink)
     {
-        public string Name { get; }
-        public string World { get; }
-        public DiscordXIVUser? User { get; set; }
-
-        public PotentialDbUser(string name, string world, DiscordXIVUser? user = null)
+        var actorMapper = new CommandBatchActorMapper(_db);
+        var logParsingResult = await _logParser.ReadLog(logLink, actorMapper);
+        switch (logParsingResult)
         {
-            Name = name;
-            World = world;
-            User = user;
-        }
-    }
-
-    private async Task RegisterUser(IEnumerable<IGuildUser> members, PotentialDbUser potentialUser)
-    {
-        var member = members.FirstOrDefault(m => m.Nickname == $"({potentialUser.World}) {potentialUser.Name}");
-        if (member == null) return;
-
-        try
-        {
-            var (userInfo, _) =
-                await DiscordXIVUser.CreateFromLodestoneSearch(_lodestone, potentialUser.Name, potentialUser.World,
-                    member.Id);
-            await _db.AddUser(userInfo);
-            potentialUser.User = userInfo;
-        }
-        catch (Exception e)
-        {
-            Log.Error(e, "Failed to get user");
-        }
-    }
-
-    private async Task ReadLog(string logLink)
-    {
-        using var typing = Context.Channel.EnterTypingState();
-
-        var logMatch = FFLogsUtils.LogLinkToIdRegex.Match(logLink);
-        if (!logMatch.Success)
-        {
-            await ReplyAsync("That doesn't look like a log link!");
-            return;
-        }
-
-        var logId = logMatch.Value;
-        var req = FFLogsUtils.BuildLogRequest(logId);
-        var res = (await _ffLogs.MakeGraphQLRequest<LogInfo>(req)).Content.Data.ReportInfo;
-        if (res == null)
-        {
-            await ReplyAsync("That log is private; please make it unlisted or public.");
-            return;
-        }
-
-        var encounters = res.Fights
-            .Where(f => f.Kill != null && f.FriendlyPlayers != null);
-        var originalUsers = res.MasterData.Actors
-            .Where(a => a.Server != null)
-            .ToList();
-        var members = Context.Guild.Users;
-        var potentialUsers = originalUsers.ToDictionary(a => a.Id, a => a)
-            .Select(kvp => new KeyValuePair<int, PotentialDbUser>(kvp.Key, new PotentialDbUser(kvp.Value.Name,
-                kvp.Value.Server, _db.Users.FirstOrDefault(u =>
-                    string.Equals(u.Name, kvp.Value.Name, StringComparison.InvariantCultureIgnoreCase)
-                    && string.Equals(u.World, kvp.Value.Server, StringComparison.InvariantCultureIgnoreCase)))))
-            .Select(async kvp =>
+            case LogParsingResult.Failure failure:
+                _logger.LogError("Failed to read log: {ErrorMessage}", failure.ErrorMessage);
+                await ReplyAsync(failure.ErrorMessage);
+                return;
+            case LogParsingResult.Success success:
             {
-                var (id, potentialUser) = kvp;
-                try
+                var addedAny = false;
+                var missedUsers = success.MissedUsers;
+                var roleAssignments = success.RoleAssignments;
+
+                foreach (var roleAssignment in roleAssignments)
                 {
-                    await RegisterUser(members, potentialUser);
-                }
-                catch (Exception e)
-                {
-                    Log.Error(e, "Failed to register user");
-                }
-
-                return new KeyValuePair<int, DiscordXIVUser?>(id, potentialUser.User);
-            })
-            .ToList();
-        // We can't cleanly go from a KeyValuePair<int, Task<DiscordXIVUser>>
-        // to a KeyValuePair<int, DiscordXIVUser>, so let's break it up into
-        // multiple queries.
-        var users = (await Task.WhenAll(potentialUsers))
-            .Where(kvp => kvp.Value != null)
-            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        var missedUsers = new List<LogInfo.ReportDataWrapper.ReportData.Report.Master.Actor>();
-
-        var addedAny = false;
-        foreach (var encounter in encounters)
-        {
-            if (encounter.Difficulty == 100)
-            {
-                Log.Error("Encounter {Encounter} does not appear to be a Savage encounter", encounter.Name);
-                continue;
-            }
-
-            var roleName = encounter.Name;
-            if (roleName == "The Queen's Guard")
-                roleName = "Queen's Guard";
-            roleName += " Progression";
-            var role = Context.Guild.Roles.FirstOrDefault(r => r.Name == roleName);
-            if (role == null)
-            {
-                Log.Error("Role {RoleName} does not exist!", roleName);
-                continue;
-            }
-
-            var contingentRoles = DelubrumProgressionRoles.GetContingentRoles(role.Id)
-                .Select(r => Context.Guild.GetRole(r))
-                .ToList();
-
-            var killRole = Context.Guild.GetRole(DelubrumProgressionRoles.GetKillRole(role.Name));
-
-            foreach (var id in encounter.FriendlyPlayers)
-            {
-                if (!users.ContainsKey(id))
-                {
-                    var actor = originalUsers.Find(a => a.Id == id);
-                    if (actor != null)
+                    foreach (var roleAction in roleAssignment.RoleActions)
                     {
-                        missedUsers.Add(actor);
-                    }
+                        var role = Context.Guild.GetRole(roleAction.RoleId);
+                        var user = Context.Guild.GetUser(roleAssignment.User.DiscordId);
+                        if (user == null) continue;
 
-                    continue;
-                }
-
-                var user = Context.Guild.GetUser(users[id]!.DiscordId);
-                if (user == null || user.HasRole(806362589134454805)) continue;
-
-                if (killRole.Id == 806362589134454805 && encounter.Kill == true)
-                {
-                    addedAny = true;
-
-                    // Remove all contingent roles (this is bodge and should be refactored)
-                    foreach (var progRole in contingentRoles)
-                    {
-                        Log.Information("Checking role {RoleName} on user {DiscordName}", progRole.Name,
-                            user.ToString());
-                        if (user.HasRole(progRole))
+                        switch (roleAction.ActionType)
                         {
-                            await user.RemoveRoleAsync(progRole);
-                            Log.Information("Removed role {RoleName} from user {DiscordName}", progRole.Name,
-                                user.ToString());
+                            case LogParsingResult.RoleActionType.Add:
+                                if (await AssignProgressionRole(role, user, success.Rules))
+                                {
+                                    addedAny = true;
+                                }
+
+                                break;
+                            case LogParsingResult.RoleActionType.Remove:
+                                await RemoveProgressionRole(role, user);
+                                break;
+                            default:
+                                throw new InvalidOperationException(
+                                    $"Unknown role action type: {roleAction.ActionType}");
                         }
                     }
-
-                    // Give everyone the clear role if they cleared DRS
-                    Log.Information("Checking role {RoleName} on user {DiscordName}", killRole.Name, user.ToString());
-                    if (!user.HasRole(killRole))
-                    {
-                        await user.AddRoleAsync(killRole);
-                        Log.Information("Added role {RoleName} to {DiscordName}", killRole.Name, user.ToString());
-                    }
                 }
+
+                if (addedAny)
+                    await ReplyAsync("Roles added!");
                 else
-                {
-                    // Give all contingent roles as well as the clear role for the fight
-                    foreach (var progRole in contingentRoles)
-                    {
-                        Log.Information("Checking role {RoleName} on user {DiscordName}", progRole.Name,
-                            user.ToString());
-                        if (!user.HasRole(progRole))
-                        {
-                            addedAny = true;
-                            await user.AddRoleAsync(progRole);
-                            Log.Information("Added role {RoleName} to user {DiscordName}", progRole.Name,
-                                user.ToString());
-                        }
-                    }
+                    await ReplyAsync("No roles to add.");
 
-                    if (encounter.Kill == true)
-                    {
-                        Log.Information("Checking role {RoleName} on user {DiscordName}", killRole.Name,
-                            user.ToString());
-                        if (!user.HasRole(killRole))
-                        {
-                            addedAny = true;
-                            await user.AddRoleAsync(killRole);
-                            Log.Information("Added role {RoleName} to {DiscordName}", killRole.Name, user.ToString());
-                        }
-                    }
-                }
+                if (missedUsers.Any())
+                    await ReplyAsync(
+                        $"Missed users: ```{missedUsers.Select(a => $"({a.Server}) {a.Name}").Distinct().Aggregate("", (agg, next) => agg + $"{next}\n") + "```"}\nThey may need to re-register with `~iam`.");
+                return;
             }
+            default:
+                throw new InvalidOperationException($"Unknown log parsing result: {logParsingResult}");
+        }
+    }
+
+    private async Task<bool> AssignProgressionRole(IRole role, IGuildUser user, ILogParsingRules rules)
+    {
+        if (user.HasRole(rules.FinalClearRoleId))
+        {
+            _logger.LogInformation("User {DiscordName} already has clear role", user.ToString());
+            return false;
         }
 
-        if (addedAny)
-            await ReplyAsync("Roles added!");
-        else
-            await ReplyAsync("No roles to add.");
+        _logger.LogInformation("Checking role {RoleName} on user {DiscordName}", role.Name,
+            user.ToString());
+        if (!user.HasRole(role))
+        {
+            await user.AddRoleAsync(role);
+            _logger.LogInformation("Added role {RoleName} to user {DiscordName}", role.Name,
+                user.ToString());
+            return true;
+        }
 
-        if (missedUsers.Any())
-            await ReplyAsync(
-                $"Missed users: ```{missedUsers.Select(a => $"({a.Server}) {a.Name}").Distinct().Aggregate("", (agg, next) => agg + $"{next}\n") + "```"}\nThey may need to re-register with `~iam`.");
+        return false;
+    }
+
+    private async Task RemoveProgressionRole(IRole role, IGuildUser user)
+    {
+        _logger.LogInformation("Checking role {RoleName} on user {DiscordName}", role.Name,
+            user.ToString());
+        if (user.HasRole(role))
+        {
+            await user.RemoveRoleAsync(role);
+            _logger.LogInformation("Removed role {RoleName} from user {DiscordName}", role.Name,
+                user.ToString());
+        }
     }
 
     [Command("progcounts", RunMode = RunMode.Async)]

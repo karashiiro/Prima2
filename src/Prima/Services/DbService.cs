@@ -4,6 +4,7 @@ using Prima.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
@@ -13,6 +14,7 @@ namespace Prima.Services
     {
         private const string ConnectionString = "mongodb://localhost:27017";
         private const string DbName = "PrimaDb";
+        private const double LockTimeoutSeconds = 120;
 
         // Hide types of the database implementation from callers.
         public GlobalConfiguration Config
@@ -21,14 +23,14 @@ namespace Prima.Services
             {
                 if (!_config.AsQueryable().Any())
                     AddGlobalConfiguration().GetAwaiter().GetResult();
-                return _config.AsQueryable().ToEnumerable().First();
+                return _config.AsQueryable().First();
             }
         }
 
-        public IEnumerable<DiscordGuildConfiguration> Guilds => _guildConfig.AsQueryable().ToEnumerable();
-        public IEnumerable<DiscordXIVUser> Users => _users.AsQueryable().ToEnumerable();
-        public IEnumerable<CachedMessage> CachedMessages => _messageCache.AsQueryable().ToEnumerable();
-        public IEnumerable<ChannelDescription> ChannelDescriptions => _channelDescriptions.AsQueryable().ToEnumerable();
+        public IEnumerable<DiscordGuildConfiguration> Guilds => _guildConfig.AsQueryable();
+        public IEnumerable<DiscordXIVUser> Users => _users.AsQueryable();
+        public IEnumerable<CachedMessage> CachedMessages => _messageCache.AsQueryable();
+        public IEnumerable<ChannelDescription> ChannelDescriptions => _channelDescriptions.AsQueryable();
         public IAsyncEnumerable<EventReaction> EventReactions => _eventReactions.AsQueryable().ToAsyncEnumerable();
         public IAsyncEnumerable<TimedRole> TimedRoles => _timedRoles.AsQueryable().ToAsyncEnumerable();
         public IAsyncEnumerable<Vote> Votes => _votes.AsQueryable().ToAsyncEnumerable();
@@ -48,9 +50,12 @@ namespace Prima.Services
 
         private readonly ILogger<DbService> _logger;
 
+        private readonly SemaphoreSlim _lock;
+
         public DbService(ILogger<DbService> logger)
         {
             _logger = logger;
+            _lock = new SemaphoreSlim(80, 80);
 
             var client = new MongoClient(ConnectionString);
             var database = client.GetDatabase(DbName);
@@ -94,6 +99,25 @@ namespace Prima.Services
             _ephemeralPins = database.GetCollection<EphemeralPin>("EphemeralPins");
             _logger.LogInformation("Ephemeral pin collection status: {DbStatus} documents found",
                 _ephemeralPins.EstimatedDocumentCount());
+        }
+
+        public Task<DiscordXIVUser?> GetUserByCharacterInfo(string? world, string? characterName)
+        {
+            return WithLock(async () =>
+            {
+                if (characterName == null || world == null) return null;
+                _logger.LogInformation("Fetching user: ({World}) {CharacterName}", world, characterName);
+                return await _users.Find(u => u.World == world && u.Name == characterName).FirstOrDefaultAsync();
+            });
+        }
+
+        public Task<DiscordXIVUser?> GetUserByDiscordId(ulong discordId)
+        {
+            return WithLock(async () =>
+            {
+                _logger.LogInformation("Fetching user by Discord ID: {DiscordId}", discordId);
+                return await _users.Find(u => u.DiscordId == discordId).FirstOrDefaultAsync();
+            });
         }
 
         public async Task SetGlobalConfigurationProperty(string key, string value)
@@ -348,23 +372,29 @@ namespace Prima.Services
             }
         }
 
-        public async Task AddUser(DiscordXIVUser user)
+        public Task AddUser(DiscordXIVUser user)
         {
-            _logger.LogInformation("Registering user {UserId}", user.DiscordId);
-            if (await (await _users.FindAsync(u => u.DiscordId == user.DiscordId)).AnyAsync().ConfigureAwait(false))
-                await _users.DeleteOneAsync(u => u.DiscordId == user.DiscordId);
-            await _users.InsertOneAsync(user);
+            return WithLock(async () =>
+            {
+                _logger.LogInformation("Registering user {UserId}", user.DiscordId);
+                if (await (await _users.FindAsync(u => u.DiscordId == user.DiscordId)).AnyAsync().ConfigureAwait(false))
+                    await _users.DeleteOneAsync(u => u.DiscordId == user.DiscordId);
+                await _users.InsertOneAsync(user);
+            });
         }
 
         public Task UpdateUser(DiscordXIVUser user) => AddUser(user);
 
-        public async Task<bool> RemoveUser(string world, string name)
+        public Task<bool> RemoveUser(string world, string name)
         {
-            _logger.LogInformation("Unregistering user with character ({World}) {CharacterName}", world, name);
-            var filterBuilder = Builders<DiscordXIVUser>.Filter;
-            var filter = filterBuilder.Eq(props => props.World, world) & filterBuilder.Eq(props => props.Name, name);
-            var result = await _users.DeleteOneAsync(filter);
-            return result.DeletedCount > 0;
+            return WithLock(async () =>
+            {
+                _logger.LogInformation("Unregistering user with character ({World}) {CharacterName}", world, name);
+                var filterBuilder = Builders<DiscordXIVUser>.Filter;
+                var filter = filterBuilder.Eq(props => props.World, world) & filterBuilder.Eq(props => props.Name, name);
+                var result = await _users.DeleteOneAsync(filter);
+                return result.DeletedCount > 0;
+            });
         }
 
         public async Task<bool> RemoveUser(ulong lodestoneId)
@@ -417,6 +447,42 @@ namespace Prima.Services
             if (message != null)
             {
                 await _channelDescriptions.DeleteOneAsync(cd => cd.ChannelId == channelId);
+            }
+        }
+
+        private async Task WithLock(Func<Task> action)
+        {
+            if (!await _lock.WaitAsync(TimeSpan.FromSeconds(LockTimeoutSeconds)).ConfigureAwait(false))
+            {
+                _logger.LogWarning("Could not acquire database lock");
+                throw new TimeoutException("Could not acquire database lock");
+            }
+
+            try
+            {
+                await action();
+            }
+            finally
+            {
+                _lock.Release();
+            }
+        }
+
+        private async Task<T> WithLock<T>(Func<Task<T>> action)
+        {
+            if (!await _lock.WaitAsync(TimeSpan.FromSeconds(LockTimeoutSeconds)).ConfigureAwait(false))
+            {
+                _logger.LogWarning("Could not acquire database lock");
+                throw new TimeoutException("Could not acquire database lock");
+            }
+
+            try
+            {
+                return await action();
+            }
+            finally
+            {
+                _lock.Release();
             }
         }
     }

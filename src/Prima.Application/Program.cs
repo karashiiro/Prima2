@@ -24,8 +24,11 @@ using Prima.DiscordNet.Handlers;
 using Prima.DiscordNet.Logging;
 using Prima.DiscordNet.Services;
 using Prima.Game.FFXIV.FFLogs;
+using Prima.Game.FFXIV.FFLogs.Rules;
 using Prima.Game.FFXIV.XIVAPI;
 using Prima.Services;
+using Prometheus;
+using Prometheus.DotNetRuntime;
 using Quartz;
 
 var googleApiSecretPath = Environment.GetEnvironmentVariable("PRIMA_GOOGLE_SECRET") ??
@@ -47,6 +50,24 @@ var lodestone = await LodestoneClient.GetClientAsync(gameDataProvider);
 var host = Host.CreateDefaultBuilder()
     .ConfigureServices((_, sc) =>
     {
+        var metricsServer = new MetricServer(3000);
+        try
+        {
+            metricsServer.Start();
+        }
+        catch (HttpListenerException ex)
+        {
+            // ReSharper disable LocalizableElement
+            Console.WriteLine($"Failed to start metric server: {ex.Message}");
+            Console.WriteLine("You may need to grant permissions to your user account if not running as Administrator:");
+            Console.WriteLine("netsh http add urlacl url=http://+:1234/metrics user=DOMAIN\\user");
+            // ReSharper restore LocalizableElement
+            return;
+        }
+
+        sc.AddSingleton(metricsServer);
+        sc.AddSingleton(DotNetRuntimeStatsBuilder.Default().StartCollecting());
+
         var disConfig = new DiscordSocketConfig
         {
             AlwaysDownloadUsers = true,
@@ -82,7 +103,9 @@ var host = Host.CreateDefaultBuilder()
         sc.AddSingleton<FFXIVWeatherLuminaService>();
         sc.AddSingleton<MuteService>();
         sc.AddSingleton<TimedRoleManager>();
-        sc.AddSingleton<FFLogsClient>();
+        sc.AddSingleton<IFFLogsClient, FFLogsClient>();
+        sc.AddSingleton<ILogParsingRulesSelector, DefaultLogParsingRulesSelector>();
+        sc.AddSingleton<ILogParserService, LogParserService>();
         sc.AddSingleton<KeepClean>();
         sc.AddSingleton<EphemeralPinManager>();
 
@@ -237,7 +260,7 @@ client.Ready += () =>
         var keepClean = host.Services.GetRequiredService<KeepClean>();
         var roleRemover = host.Services.GetRequiredService<TimedRoleManager>();
         var ephemeralPinner = host.Services.GetRequiredService<EphemeralPinManager>();
-        var ffLogs = host.Services.GetRequiredService<FFLogsClient>();
+        var ffLogs = host.Services.GetRequiredService<IFFLogsClient>();
 
         keepClean.Initialize();
         roleRemover.Initialize();
