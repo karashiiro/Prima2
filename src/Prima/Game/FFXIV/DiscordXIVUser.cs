@@ -37,22 +37,11 @@ namespace Prima.Game.FFXIV
 
         public bool Verified;
 
+        [Obsolete("No longer used.")]
         public Dictionary<string, ulong?> PrioritizedVanityRole = new();
 
         // Keyed on guild ID (keys must be represented as strings)
         public Dictionary<string, IList<ulong>> VanityRoles = new();
-
-        public bool TryGetPrioritizedVanityRole(ulong guildId, out ulong? roleId)
-        {
-            roleId = PrioritizedVanityRole?.GetValueOrDefault(guildId.ToString());
-            return roleId.HasValue;
-        }
-
-        public void SetPrioritizedVanityRole(ulong guildId, ulong? roleId)
-        {
-            PrioritizedVanityRole ??= new Dictionary<string, ulong?>();
-            PrioritizedVanityRole[guildId.ToString()] = roleId;
-        }
 
         public IList<ulong> GetVanityRoles(ulong guildId)
         {

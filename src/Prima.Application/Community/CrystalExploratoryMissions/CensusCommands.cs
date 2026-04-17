@@ -820,6 +820,9 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             await ReplyAsync(
                 "If any achievement role was not added, please check <https://na.finalfantasyxiv.com/lodestone/my/setting/account/> and ensure that your achievements are public.");
         }
+
+        // Update vanity roles
+        await member.UpdateVanityRoles(_db, _logger);
     }
 
     private async Task AddAchievementRole(IRole role, IGuildUser member)

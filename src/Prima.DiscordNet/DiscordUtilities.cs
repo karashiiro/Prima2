@@ -8,7 +8,10 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using Discord.Rest;
+using Microsoft.Extensions.Logging;
 using Prima.DiscordNet.Attributes;
+using Prima.Resources;
+using Prima.Services;
 
 namespace Prima.DiscordNet
 {
@@ -98,6 +101,23 @@ namespace Prima.DiscordNet
         public static bool HasRole(this RestGuildUser member, IRole role)
         {
             return member.HasRole(role?.Id ?? 0);
+        }
+
+        public static async Task UpdateVanityRoles(this IGuildUser user, IDbService db, ILogger logger)
+        {
+            var dbUser = await db.GetUserByDiscordId(user.Id);
+            if (dbUser == null)
+            {
+                return;
+            }
+
+            var allGuildVanityRoles = SpecialGuildVanityRoles.GetRoles(user.GuildId);
+            var vanityRoles = user.RoleIds.Where(roleId => allGuildVanityRoles.Contains(roleId)).ToList();
+
+            dbUser.AddVanityRoles(user.GuildId, vanityRoles);
+
+            logger.LogInformation("Updating vanity roles for {User}", user.Username);
+            await db.UpdateUser(dbUser);
         }
     }
 }

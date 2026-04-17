@@ -296,6 +296,10 @@ public class DRRunCommands : ModuleBase<SocketCommandContext>
             await user.AddRoleAsync(role);
             _logger.LogInformation("Added role {RoleName} to user {DiscordName}", role.Name,
                 user.ToString());
+
+            // Update vanity roles
+            await user.UpdateVanityRoles(_db, _logger);
+
             return true;
         }
 
