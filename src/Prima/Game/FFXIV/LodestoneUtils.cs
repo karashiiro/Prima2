@@ -1,6 +1,5 @@
-﻿using Serilog;
+using Serilog;
 using System.Threading.Tasks;
-using NetStone;
 
 namespace Prima.Game.FFXIV
 {

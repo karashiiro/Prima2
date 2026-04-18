@@ -1,13 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-using NetStone;
-using NetStone.Model.Parseables.Character;
-using NetStone.Search.Character;
 
 namespace Prima.Game.FFXIV
 {
@@ -57,7 +54,7 @@ namespace Prima.Game.FFXIV
             {
                 if (!VanityRoles[guildId.ToString()].Contains(role)) VanityRoles[guildId.ToString()].Add(role);
             }
-            
+
             // Temporary hack since some users have duplicates already
             VanityRoles[guildId.ToString()] = new HashSet<ulong>(VanityRoles[guildId.ToString()]).ToList();
         }
@@ -76,9 +73,9 @@ namespace Prima.Game.FFXIV
             {
                 DiscordId = discordId,
                 LodestoneId = lodestoneId.ToString(),
-                World = character.Server,
+                World = character.World,
                 Name = character.Name,
-                Avatar = character.Avatar.ToString(),
+                Avatar = character.Avatar,
             }, character);
         }
 
@@ -86,43 +83,26 @@ namespace Prima.Game.FFXIV
             LodestoneClient lodestone,
             string name, string world, ulong discordId)
         {
-            int numPages;
-            var pageNumber = 1;
-            var lodestoneId = "";
-            LodestoneCharacter? character = null;
-            do
+            var id = await lodestone.SearchCharacter(name, world);
+            if (id == null)
             {
-                var page = await lodestone.SearchCharacter(new CharacterSearchQuery
-                    { CharacterName = name, World = world }, pageNumber);
-                if (page == null) throw new InvalidOperationException("Failed to retrieve search page");
-                numPages = page.NumPages;
-
-                foreach (var c in page.Results)
-                {
-                    if (!string.Equals(c.Name, name, StringComparison.InvariantCultureIgnoreCase)) continue;
-
-                    lodestoneId = c.Id;
-                    character = await c.GetCharacter();
-                    if (character == null) continue;
-                    if (string.Equals(character.Name, name, StringComparison.InvariantCultureIgnoreCase)) break;
-                }
-
-                pageNumber++;
-            } while (pageNumber != numPages && pageNumber < 10);
-
-            if (character != null)
-            {
-                return (new DiscordXIVUser
-                {
-                    DiscordId = discordId,
-                    LodestoneId = lodestoneId,
-                    World = character.Server,
-                    Name = character.Name,
-                    Avatar = character.Avatar.ToString(),
-                }, character);
+                return (null, null);
             }
 
-            return (null, null);
+            var character = await lodestone.GetCharacter(id.Value.ToString());
+            if (character == null)
+            {
+                return (null, null);
+            }
+
+            return (new DiscordXIVUser
+            {
+                DiscordId = discordId,
+                LodestoneId = id.Value.ToString(),
+                World = character.World,
+                Name = character.Name,
+                Avatar = character.Avatar,
+            }, character);
         }
     }
 }

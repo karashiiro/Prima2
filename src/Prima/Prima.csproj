@@ -59,8 +59,5 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\lib\NetStone\NetStone\NetStone.csproj" />
-  </ItemGroup>
 
 </Project>

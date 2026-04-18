@@ -9,8 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
-using NetStone;
-using NetStone.GameData.Lumina;
+using Prima.Game.FFXIV;
 using Prima.Application;
 using Prima.Application.Community;
 using Prima.Application.Community.CrystalExploratoryMissions;
@@ -43,9 +42,8 @@ var (calendarConfig, calendarConfigException) = await CalendarConfig.FromFileSaf
 
 var gameDataPath = LuminaLoader.GetGameDataPath();
 var gameData = LuminaLoader.Load(gameDataPath);
-var gameDataDir = new DirectoryInfo(gameDataPath);
-var gameDataProvider = new LuminaGameDataProvider(gameDataDir);
-var lodestone = await LodestoneClient.GetClientAsync(gameDataProvider);
+var lodestoneApiUrl = Environment.GetEnvironmentVariable("LODESTONE_API") ?? "https://lodestone.universalis.app";
+var lodestone = new LodestoneClient(lodestoneApiUrl);
 
 var host = Host.CreateDefaultBuilder()
     .ConfigureServices((_, sc) =>
