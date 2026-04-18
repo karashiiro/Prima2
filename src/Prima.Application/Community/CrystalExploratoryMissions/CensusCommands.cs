@@ -177,39 +177,6 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             return;
         }
 
-        var highestCombatLevel = 0;
-        var classJobInfo = await lodestoneCharacter.GetClassJobInfo();
-        if (classJobInfo == null)
-        {
-            var reply = await ReplyAsync($"{Context.User.Mention}, failed to get character information.");
-            await Task.Delay(MessageDeleteDelay);
-            await reply.DeleteAsync();
-            return;
-        }
-
-        foreach (var (classJob, classJobEntry) in classJobInfo.ClassJobDict)
-        {
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-            if (classJobEntry == null) continue;
-
-            // Skip non-DoW/DoM or BLU
-            if ((int)classJob is >= 8 and <= 18 or 36) continue;
-            if (classJobEntry.Level > highestCombatLevel)
-            {
-                highestCombatLevel = classJobEntry.Level;
-            }
-        }
-
-        if (highestCombatLevel < guildConfig.MinimumLevel)
-        {
-            _logger.LogInformation("User did not meet level check");
-            var reply = await ReplyAsync(
-                $"{Context.User.Mention}, that character does not have any combat jobs at Level {guildConfig.MinimumLevel}.");
-            await Task.Delay(MessageDeleteDelay);
-            await reply.DeleteAsync();
-            return;
-        }
-
         if (!await LodestoneUtils.VerifyCharacter(_lodestone, ulong.Parse(foundCharacter.LodestoneId),
                 Context.User.Id.ToString()))
         {
@@ -538,54 +505,7 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             _logger.LogInformation("Nothing to do");
         }
 
-        _logger.LogInformation("Checking default content level for user {DiscordName}", member.ToString());
-
-        var lodestoneId = ulong.Parse(dbEntry.LodestoneId);
-        var data = await _lodestone.GetCharacter(dbEntry.LodestoneId);
-        if (data == null)
-        {
-            _logger.LogError("Failed to get Lodestone character (id={LodestoneId})", lodestoneId);
-            await ReplyAsync("Failed to get your Lodestone character!");
-            return;
-        }
-
-        var classJobs = await data.GetClassJobInfo();
-        if (classJobs == null)
-        {
-            _logger.LogError("Failed to get ClassJobs from Lodestone character (id={LodestoneId})", lodestoneId);
-            await ReplyAsync("Failed to get info from your Lodestone character!");
-            return;
-        }
-
-        var highestCombatLevel = 0;
-        foreach (var (classJob, classJobEntry) in classJobs.ClassJobDict)
-        {
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-            if (classJobEntry == null) continue;
-
-            // Skip non-DoW/DoM or BLU
-            if ((int)classJob is >= 8 and <= 18 or 36) continue;
-            if (classJobEntry.Level > highestCombatLevel)
-            {
-                highestCombatLevel = classJobEntry.Level;
-            }
-        }
-
-        if (highestCombatLevel < 80)
-        {
-            return;
-        }
-
-        var contentRole = GetConfiguredRole(guildConfig, member.Guild, MostRecentZoneRole);
-        if (contentRole != null)
-        {
-            await member.AddRoleAsync(contentRole);
-            _logger.LogInformation("Added {DiscordName} to {Role}", member.ToString(), contentRole.Name);
-        }
-        else
-        {
-            _logger.LogWarning("Failed to get content role {RoleName}", MostRecentZoneRole);
-        }
+        // TODO: Restore level check and content role assignment after adding class/job data to the Lodestone Lambda
     }
 
     [Command("unlink", RunMode = RunMode.Async)]

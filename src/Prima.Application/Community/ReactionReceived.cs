@@ -1,6 +1,5 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using NetStone;
 using Prima.Game.FFXIV;
 using Prima.Models;
 using Prima.Services;
@@ -51,48 +50,7 @@ public static class ReactionReceived
                         return;
                     }
 
-                    var lodestoneId = ulong.Parse(dbEntry.LodestoneId);
-                    var data = await lodestone.GetCharacter(dbEntry.LodestoneId);
-                    if (data == null)
-                    {
-                        Log.Error("Failed to get Lodestone character (id={LodestoneId})", lodestoneId);
-                        return;
-                    }
-
-                    var classJobs = await data.GetClassJobInfo();
-                    if (classJobs == null)
-                    {
-                        Log.Error("Failed to get ClassJobs from Lodestone character (id={LodestoneId})", lodestoneId);
-                        return;
-                    }
-
-                    var highestCombatLevel = 0;
-                    foreach (var (classJob, classJobEntry) in classJobs.ClassJobDict)
-                    {
-                        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-                        if (classJobEntry == null) continue;
-
-                        // Skip non-DoW/DoM or BLU
-                        if ((int)classJob is >= 8 and <= 18 or 36) continue;
-                        if (classJobEntry.Level > highestCombatLevel)
-                        {
-                            highestCombatLevel = classJobEntry.Level;
-                        }
-                    }
-
-                    if (roleId == BozjaRole && highestCombatLevel < 80)
-                    {
-                        await member.SendMessageAsync("You must be at least level 80 to access that category.");
-                        return;
-                    }
-
-                    if (roleId == EurekaRole && highestCombatLevel < 70)
-                    {
-                        await member.SendMessageAsync("You must be at least level 70 to access that category.");
-                        return;
-                    }
-
-                    // 60 is already the minimum requirement to register.
+                    // TODO: Restore level check after adding class/job data to the Lodestone Lambda
 
                     await member.AddRoleAsync(role);
                     Log.Information("Role {Role} was added to {DiscordUser}", role.Name, member.ToString());
