@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -83,11 +84,19 @@ namespace Prima.Game.FFXIV
         }
 
         /// <summary>
-        /// Not yet implemented via the Lodestone Lambda.
+        /// Fetches all achievement IDs for a character.
         /// </summary>
-        public Task GetCharacterAchievement(string id, int page)
+        public async Task<AchievementResult> GetCharacterAchievements(string id)
         {
-            throw new NotSupportedException();
+            var body = JsonConvert.SerializeObject(new { id });
+            var response = await _client.PostAsync("/character/achievements",
+                new StringContent(body, Encoding.UTF8, "application/json"));
+
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<AchievementResult>(json);
         }
 
         public void Dispose()
@@ -100,5 +109,14 @@ namespace Prima.Game.FFXIV
             [JsonProperty("id")]
             public ulong Id { get; set; }
         }
+    }
+
+    public class AchievementResult
+    {
+        [JsonProperty("achievements")]
+        public List<uint> Achievements { get; set; } = new();
+
+        [JsonProperty("private")]
+        public bool Private { get; set; }
     }
 }

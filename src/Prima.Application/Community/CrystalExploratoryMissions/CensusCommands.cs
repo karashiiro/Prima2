@@ -590,6 +590,12 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
         _logger.LogInformation("Fetching user {UserId} from guild {GuildId}", user.Id, guild.Id);
         var member = await Context.Client.Rest.GetGuildUserAsync(guild.Id, user.Id);
+        var arsenalMaster = GetConfiguredRole(guildConfig, guild, "Arsenal Master");
+        var cleared = GetConfiguredRole(guildConfig, guild, "Cleared");
+        var clearedDrs = GetConfiguredRole(guildConfig, guild, "Cleared Delubrum Savage");
+        var savageQueen = GetConfiguredRole(guildConfig, guild, "Savage Queen");
+        var clearedForkedTower = GetConfiguredRole(guildConfig, guild, "Cleared Forked Tower");
+        var infamyOfBlood = GetConfiguredRole(guildConfig, guild, "Infamy of Blood");
 
         using var typing = Context.Channel.EnterTypingState();
 
@@ -603,6 +609,31 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
 
         var lodestoneId = ulong.Parse(dbUser.LodestoneId ?? args[0]);
         _logger.LogInformation("Lodestone ID for user {UserId}: {LodestoneId}", dbUser.DiscordId, dbUser.LodestoneId);
+
+        AchievementResult achievementResult;
+        try
+        {
+            _logger.LogInformation("Fetching achievements for character {LodestoneId}", dbUser.LodestoneId);
+            achievementResult = await _lodestone.GetCharacterAchievements(lodestoneId.ToString());
+            if (achievementResult == null)
+                throw new InvalidOperationException("Failed to get achievements");
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to fetch Lodestone character achievements (id={LodestoneId})", lodestoneId);
+            await ReplyAsync("You don't seem to have your achievements public. " +
+                             "Please temporarily make them public at <https://na.finalfantasyxiv.com/lodestone/my/setting/account/>.");
+            return;
+        }
+
+        if (achievementResult.Private)
+        {
+            await ReplyAsync("You don't seem to have your achievements public. " +
+                             "Please temporarily make them public at <https://na.finalfantasyxiv.com/lodestone/my/setting/account/>.");
+            return;
+        }
+
+        var achievements = achievementResult.Achievements;
 
         if (!dbUser.Verified)
         {
@@ -622,8 +653,82 @@ public class CensusCommands : ModuleBase<SocketCommandContext>
             await _db.UpdateUser(dbUser);
         }
 
-        // TODO: Restore achievement-based role verification after adding achievement support to the Lodestone Lambda
-        await ReplyAsync("Achievement verification is temporarily unavailable. Please try again later.");
+        var hasAchievement = false;
+        var hasMount = false;
+        var hasDrsAchievement1 = false;
+        var hasDrsAchievement2 = false;
+        var hasForkedTowerBloodAchievement1 = false;
+        var hasForkedTowerBloodAchievement2 = false;
+
+        if (cleared != null && achievements.Contains(2227)) // We're On Your Side I
+        {
+            await AddAchievementRole(cleared, member);
+            hasMount = true;
+        }
+
+        if (arsenalMaster != null && achievements.Contains(2229)) // We're On Your Side III
+        {
+            await AddAchievementRole(arsenalMaster, member);
+            hasAchievement = true;
+        }
+
+        if (clearedDrs != null && achievements.Contains(2765)) // Operation: Savage Queen of Swords I
+        {
+            await AddAchievementRole(clearedDrs, member);
+
+            var fightRules = new DelubrumReginaeSavageRules();
+            var contingentRoles = fightRules.GetContingentRoleIds(fightRules.FinalClearRoleId);
+            foreach (var crId in contingentRoles)
+            {
+                var cr = guild.GetRole(crId);
+                if (!member.HasRole(cr)) continue;
+                await member.RemoveRoleAsync(cr);
+                _logger.LogInformation("Role {RoleName} removed from {DiscordName}", cr.Name, member.ToString());
+            }
+
+            hasDrsAchievement1 = true;
+        }
+
+        if (savageQueen != null && achievements.Contains(2767)) // Operation: Savage Queen of Swords III
+        {
+            await AddAchievementRole(savageQueen, member);
+            hasDrsAchievement2 = true;
+        }
+
+        if (clearedForkedTower != null && achievements.Contains(3668)) // A Fork To Be Reckoned With I
+        {
+            await AddAchievementRole(clearedForkedTower, member);
+
+            var fightRules = new ForkedTowerRules();
+            var contingentRoles = fightRules.GetContingentRoleIds(fightRules.FinalClearRoleId);
+            foreach (var crId in contingentRoles)
+            {
+                var cr = guild.GetRole(crId);
+                if (!member.HasRole(cr)) continue;
+                await member.RemoveRoleAsync(cr);
+                _logger.LogInformation("Role {RoleName} removed from {DiscordName}", cr.Name, member.ToString());
+            }
+
+            hasForkedTowerBloodAchievement1 = true;
+        }
+
+        if (infamyOfBlood != null && achievements.Contains(3671)) // A Fork To Be Reckoned With IV
+        {
+            await AddAchievementRole(infamyOfBlood, member);
+            hasForkedTowerBloodAchievement2 = true;
+        }
+
+        if (!hasAchievement && !hasMount &&
+            !hasDrsAchievement1 && !hasDrsAchievement2 &&
+            !hasForkedTowerBloodAchievement1 && !hasForkedTowerBloodAchievement2)
+        {
+            await ReplyAsync(Properties.Resources.LodestoneMountAchievementNotFoundError);
+        }
+        else
+        {
+            await ReplyAsync(
+                "If any achievement role was not added, please check <https://na.finalfantasyxiv.com/lodestone/my/setting/account/> and ensure that your achievements are public.");
+        }
 
         // Update vanity roles
         await member.UpdateVanityRoles(_db, _logger);
